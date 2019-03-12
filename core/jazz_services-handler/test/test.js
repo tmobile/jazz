@@ -152,8 +152,9 @@ describe('jazz_services-handler', function () {
 	it('checkInterest should resolve for valid input', function () {
 		var sequenceNumber = event.Records[0].kinesis.sequenceNumber;
 		var encodedPayload = event.Records[0].kinesis.data;
-		var checkInterest = index.checkInterest(encodedPayload, sequenceNumber);
-		expect(checkInterest.then(function (res) {
+		var checkInterest = index.checkInterest(encodedPayload, sequenceNumber, configData);
+		expect(checkInterest
+			.then(function (res) {
 			return res.interested_event;
 		})).to.become(true);
 	});
@@ -161,8 +162,9 @@ describe('jazz_services-handler', function () {
 	it('checkInterest should resolve with valid response for valid input', function () {
 		var sequenceNumber = event.Records[0].kinesis.sequenceNumber;
 		var encodedPayload = event.Records[0].kinesis.data;
-		var checkInterest = index.checkInterest(encodedPayload, sequenceNumber);
-		expect(checkInterest.then((res) => {
+		var checkInterest = index.checkInterest(encodedPayload, sequenceNumber, configData);
+		expect(checkInterest
+			.then((res) => {
 			return res;
 		})).to.eventually.have.property('payload');
 	});
@@ -286,7 +288,7 @@ describe('jazz_services-handler', function () {
 		})).to.be.become(message);
 	}));
 
-	it('processRecords should resolve with updating',sinonTest( async function () {
+	it('processRecords should resolve with updating',sinonTest(function () {
 		event.Records =  [
 			{
 				"kinesis": {
@@ -333,7 +335,7 @@ describe('jazz_services-handler', function () {
 		})).to.be.become(message);
 	}));
 
-	it('processRecords should indicate error if crud.update fails for kinesis data with defined and completed endingEvent',sinonTest( async function () {
+	it('processRecords should indicate error if crud.update fails for kinesis data with defined and completed endingEvent',sinonTest(function () {
 		event.Records =  [
 			{
 				"kinesis": {
@@ -430,7 +432,7 @@ describe('jazz_services-handler', function () {
 		})).to.be.become(message);
 	}));
 
-	it('processRecord should resolve with updating',sinonTest( async function () {
+	it('processRecord should resolve with updating',sinonTest(function () {
 		event.Records =  [
 			{
 				"kinesis": {
@@ -477,7 +479,7 @@ describe('jazz_services-handler', function () {
 		})).to.be.become(message);
 	}));
 
-	it('processRecord should indicate error if crud.update fails for kinesis data with defined and completed endingEvent',sinonTest( async function () {
+	it('processRecord should indicate error if crud.update fails for kinesis data with defined and completed endingEvent',sinonTest(function () {
 		event.Records =  [
 			{
 				"kinesis": {

@@ -74,6 +74,8 @@ export class ServiceOverviewComponent implements OnInit {
   tags_temp: string = '';
   desc_temp: string = '';
   bitbucketRepo: string = "";
+  initialRateInterval: string = "";
+  initialDuration: string = "";
   repositorylink: string = "";
   islink: boolean = false;
   showCancel: boolean = false;
@@ -91,6 +93,7 @@ export class ServiceOverviewComponent implements OnInit {
   serviceStatusStarted: boolean = true;
   serviceStatusStartedD: boolean = false;
   statusFailed: boolean = false;
+  rateData: any = ['Minutes', 'Hours', 'Days'];
   statusInfo: string = 'Service Creation started';
   private intervalSubscription: Subscription;
   swaggerUrl: string = '';
@@ -144,6 +147,10 @@ export class ServiceOverviewComponent implements OnInit {
   eventExpression = new EventExpression("awsEventsNone", undefined, undefined, undefined, undefined);
   viewMode: boolean = true;
   cronFieldValidity: any;
+  showGeneralField: boolean = false;
+  editEvents: boolean = false;
+  generalAdvanceDisable: boolean = true;
+  eventDisable  : boolean = true;
 
   constructor(
     private router: Router,
@@ -233,9 +240,28 @@ export class ServiceOverviewComponent implements OnInit {
 
   }
 
+  shouldSaveEnable(){
+    if(this.desc_temp != this.service.description)
+      this.generalAdvanceDisable = false;
+    else
+      this.generalAdvanceDisable = true;
+    if(!this.hide_slack_error){
+        this.generalAdvanceDisable = true;
+    }
+  }
+
+  onSelectedDr(selected) {
+    this.rateExpression.interval = selected;
+    this.generateExpression(this.rateExpression);
+  }
+
   openSidebar() {
     this.open_sidebar.emit(true);
+  }
 
+  onEditGeneral(){
+      this.onCancelClick();
+      this.showGeneralField = true;
   }
 
   private isCronObjValid(cronObj) {
@@ -284,6 +310,40 @@ export class ServiceOverviewComponent implements OnInit {
       } else {
         this.rateExpression.isValid = true;
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+        if(this.rateExpression.interval === "Minutes" || this.rateExpression.interval === "Hours"){
+          let cronExp = JSON.parse(JSON.stringify(this.rateExpression.cronStr));
+          cronExp = cronExp.split(" ");
+          if((cronExp[0].includes("0/") && cronExp[1].includes("*")) || (cronExp[1].includes("0/") && cronExp[0].includes("0"))){
+            if(cronExp[0].includes("0/")){
+              let duration = cronExp[0].split("/");
+              duration = parseInt(duration[1]);
+              this.rateExpression.duration = duration;
+              this.rateExpression.interval = "Minutes";
+            } else {
+              let duration = cronExp[1].split("/");
+              duration = parseInt(duration[1]);
+              this.rateExpression.duration = duration;
+              this.rateExpression.interval = "Hours";
+            }
+          } else {
+            this.rateExpression.duration = "5";
+            this.rateExpression.interval = "Minutes";
+          }
+        } else {
+          this.rateExpression.duration = "5";
+          this.rateExpression.interval = "Minutes";
+        }
+      }
+    }if (this.rateExpression.type != 'none') {
+      this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+      let tempExp = `cron(${this.rateExpression.cronStr})`;
+      if( tempExp == this.service.eventScheduleRate){
+        this.eventDisable = true;
+      }
+      if((this.initialRateInterval === this.rateExpression.interval) && (parseInt(this.initialDuration) === parseInt(this.rateExpression.duration))){
+        this.eventDisable = true;
+      } else {
+        this.eventDisable = false;
       }
     }
 
@@ -294,15 +354,19 @@ export class ServiceOverviewComponent implements OnInit {
     } else if (this.rateExpression.isValid === true) {
       return this.rateExpression.cronStr;
     }
+    
+
   }
 
   onEditClick() {
     this.loadPlaceholders();
+    this.showGeneralField = false;
     this.disp_show = false;
   }
 
   onEditClickAdvanced() {
     this.disp_show2 = false;
+    this.showGeneralField = false;
     this.publicSelected = this.publicInitial;
     this.cdnConfigSelected = this.cdnConfigInitial;
 
@@ -310,18 +374,31 @@ export class ServiceOverviewComponent implements OnInit {
 
   onCompleteClick() {
     this.isPUTLoading = true;
+    if(this.rateExpression.type === "none"){
+      this.rateExpression.duration = "5";
+      this.rateExpression.interval = "Minutes";
+      this.cronObj.minutes = "0/5";
+      this.cronObj.hours = "*";
+      this.cronObj.dayOfMonth = "*";
+      this.cronObj.month = "*";
+      this.cronObj.dayOfWeek = "?";
+      this.cronObj.year = "*";
+    }
     this.http.put('/jazz/services/' + this.service.id, this.PutPayload, this.service.id)
       .subscribe(
         (Response) => {
-          // debugger
           this.isPUTLoading = false;
+          this.showGeneralField = false;
           this.disp_show = true;
+          this.disp_show2 =true;
           this.isLoadingService = true;
           this.serviceDetail.onDataFetched(Response.data.updatedService);
           this.isLoadingService = false;
           this.loadPlaceholders()
           this.disp_show = true;
           this.saveClicked = false;
+          this.editEvents = false;
+          this.advancedSaveClicked = false;
           let successMessage = this.toastmessage.successMessage(Response, "updateService");
           this.toast_pop('success', "", "Data for service: " + this.service.name + " " + successMessage);
         },
@@ -330,6 +407,8 @@ export class ServiceOverviewComponent implements OnInit {
           this.isPUTLoading = false;
           this.disp_show = true;
           this.saveClicked = false;
+          this.editEvents = false;
+          this.advancedSaveClicked = false;
           this.edit_save = 'SAVE';
           let errorMessage = this.toastmessage.errorMessage(Error, "updateService");
           this.toast_pop('error', 'Oops!', errorMessage)
@@ -343,6 +422,7 @@ export class ServiceOverviewComponent implements OnInit {
     this.saveClicked = false;
     this.advancedSaveClicked = true;
     let payload = {};
+    let eventObj = {};
 
     if (this.advancedSaveClicked) {
       if (this.rateExpression.type != 'none') {
@@ -350,41 +430,23 @@ export class ServiceOverviewComponent implements OnInit {
         if (this.rateExpression.cronStr == 'invalid') {
           return;
         } else if (this.rateExpression.cronStr !== undefined) {
-          payload["rateExpression"] = this.rateExpression.cronStr;
+          eventObj['eventScheduleRate'] = `cron(${this.rateExpression.cronStr})`;
+          eventObj['eventScheduleEnable'] = true;
         }
+      } else {
+        eventObj['eventScheduleRate'] = null;
+        eventObj['eventScheduleEnable'] = false;
       }
-
-      if (this.eventExpression.type !== "awsEventsNone") {
-        var event = {};
-        event["type"] = this.eventExpression.type;
-        if (this.eventExpression.type === "dynamodb") {
-          event["source"] = "arn:aws:dynamodb:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/" + this.eventExpression.dynamoTable;
-          event["action"] = "PutItem";
-        } else if (this.eventExpression.type === "kinesis") {
-          event["source"] = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/" + this.eventExpression.streamARN;
-          event["action"] = "PutRecord";
-        } else if (this.eventExpression.type === "s3") {
-          event["source"] = this.eventExpression.S3BucketName;
-          event["action"] = "s3:ObjectCreated:*";
-        }
-        payload["events"] = [];
-        payload["events"].push(event);
-      }
-
-      if (this.publicSelected !== this.publicInitial) {
-        payload["is_public_endpoint"] = this.publicSelected;
-      }
-      if (this.cdnConfigSelected !== this.cdnConfigInitial) {
-        payload["create_cloudfront_url"] = this.cdnConfigSelected;
-      }
-
     }
+
+    payload['metadata'] = eventObj;
     this.PutPayload = payload;
     if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
   }
 
   onSaveClick() {
     this.saveClicked = true;
+    this.generalAdvanceDisable = true;
     this.advancedSaveClicked = false;
 
     let payload = {};
@@ -402,14 +464,42 @@ export class ServiceOverviewComponent implements OnInit {
     if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
   }
 
+  descriptionChange(){
+    this.update_payload.description = this.desc_temp;
+    this.shouldSaveEnable();
+  }
+
+  onAdvanceClick(){
+    this.saveClicked = false;
+    this.advancedSaveClicked = false;
+    this.shouldSaveEnable()
+  }
+
   onCancelClick() {
+    if(this.service.serviceType === "function" && this.service.eventScheduleEnable !== undefined){
+      if(this.service.eventScheduleEnable === false){
+        this.rateExpression.type = "none"
+      } else if(this.service.eventScheduleRate !== null && this.service.eventScheduleRate.includes('cron')){
+        this.rateExpression.type = "cron"
+      }
+    }
+    this.rateExpression.cronStr = this.service.eventScheduleRate;
+    this.rateExpression.duration = this.initialDuration;
+    this.rateExpression.interval = this.initialRateInterval;
+    this.eventDisable  = true;
+    this.showGeneralField = false;
+    this.editEvents = false;
+    this.generalAdvanceDisable = true;
     this.update_payload = {};
     this.disp_show = true;
+    this.slackChannel_temp = this.service.slackChannel;
+    this.desc_temp = this.service.description;
     this.disp_show2 = true;
     this.edit_save = 'EDIT';
     this.showCancel = false;
     this.hide_email_error = true;
     this.hide_slack_error = true;
+    this.setEventScheduleRate();
     this.isSlackAvailable = true;
     if (this.subscription !== undefined) {
       this.subscription.unsubscribe();
@@ -418,8 +508,64 @@ export class ServiceOverviewComponent implements OnInit {
     this.disableSaveBtn();
   }
 
+  setEventScheduleRate() {
+    let cronValue;
+    if(this.service.serviceType === "function" && this.service.eventScheduleEnable !== undefined){
+      if(this.rateExpression.cronStr !== "" && (this.service.eventScheduleRate !== this.rateExpression.cronStr)){
+        cronValue = this.rateExpression.cronStr;
+      } else {
+        cronValue = this.service.eventScheduleRate;
+      }
+      if(cronValue !== null){
+          let localEvenSchedule = cronValue;
+        !!localEvenSchedule &&
+          (localEvenSchedule = localEvenSchedule.replace(/[\(\)']+/g, ' '));
+        if(cronValue.includes('cron')){
+          localEvenSchedule = localEvenSchedule.split(' ');
+          this.rateExpression.type = localEvenSchedule[0];
+          localEvenSchedule.shift();
+        } else {
+          localEvenSchedule = localEvenSchedule.split(' ');
+        }
+        
+        if((localEvenSchedule[0].includes("0/") && localEvenSchedule[1].includes("*")) || (localEvenSchedule[1].includes("0/") && localEvenSchedule[0].includes("0"))){
+          if(localEvenSchedule[0].includes("0/")){
+            let duration = localEvenSchedule[0].split("/");
+            duration = parseInt(duration[1]);
+            this.rateExpression.duration = duration;
+            this.rateExpression.interval = "Minutes";
+          } else {
+            let duration = localEvenSchedule[1].split("/");
+            duration = parseInt(duration[1]);
+            this.rateExpression.duration = duration;
+            this.rateExpression.interval = "Hours";
+          }
+        } else {
+          this.rateExpression.duration = "5";
+          this.rateExpression.interval = "Minutes";
+        }
+  
+        this.cronObj.minutes = localEvenSchedule[0];
+        this.cronObj.hours = localEvenSchedule[1];
+        this.cronObj.dayOfMonth = localEvenSchedule[2];
+        this.cronObj.month = localEvenSchedule[3];
+        this.cronObj.dayOfWeek = localEvenSchedule[4];
+        this.cronObj.year = localEvenSchedule[5];
+      }
+    }
+  }
+
+
   onEventScheduleChange(val) {
     this.rateExpression.type = val;
+    this.eventExpression.type = 'awsEventsNone';
+    if (val == 'cron' && this.service.eventScheduleRate) {
+      this.setEventScheduleRate();
+    } else if(this.service.eventScheduleRate === null){
+      this.eventDisable = false;
+    } else if(val == 'none'){
+      this.eventDisable = false;
+    }
   }
   onAWSEventChange(val) {
     this.eventExpression.type = val;
@@ -444,6 +590,11 @@ export class ServiceOverviewComponent implements OnInit {
     return this.eventExpression.type === 's3';
   }
 
+  changeSlack() {
+    this.generalAdvanceDisable = true;
+    this.update_payload.slack_channel = this.slackChannel_temp;
+  }
+
   toast_pop(error, oops, errorMessage) {
     var tst = document.getElementById('toast-container');
     tst.classList.add('toaster-anim');
@@ -466,7 +617,7 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   checkSlackNameAvailability() {
-
+    this.advancedSaveClicked = false;
     this.validateChannelName();
     return;
   }
@@ -499,6 +650,7 @@ export class ServiceOverviewComponent implements OnInit {
       this.isSlackAvailable = true;
       this.hide_slack_error = true;
       this.show_loader = false;
+      this.shouldSaveEnable();
     } else {
       if (this.subscription) {
         this.subscription.unsubscribe();
@@ -517,17 +669,18 @@ export class ServiceOverviewComponent implements OnInit {
 
             }
             this.show_loader = false;
+            this.shouldSaveEnable();
           },
           (error) => {
             var err = error;
             // console.log(err);
             this.show_loader = false;
+            this.shouldSaveEnable();
 
           }
 
         );
     }
-
   }
 
   disableSaveBtn() {
@@ -988,11 +1141,23 @@ export class ServiceOverviewComponent implements OnInit {
   internal_build: boolean = true;
 
   ngOnChanges(x: any) {
+    if(this.service){
+      if(this.service.eventScheduleEnable !== undefined){
+        this.service['eventScheduleEnablePresent'] = true
+      }
+    }
+    if(this.rateExpression && this.rateExpression.interval){
+      this.initialRateInterval = this.rateExpression.interval
+    }
+    if(this.rateExpression && this.rateExpression.duration){
+      this.initialDuration = this.rateExpression.duration
+    }
     if (environment.multi_env) this.is_multi_env = true;
     if (environment.envName == 'oss') this.internal_build = false;
     var obj;
     this.prodEnv = {};
     this.stgEnv = {};
+    this.desc_temp = this.service.description;
 
     this.check_empty_fields();
 
@@ -1029,6 +1194,9 @@ export class ServiceOverviewComponent implements OnInit {
     this.creation_status = this.service.status;
     this.animatingDots = "...";
     this.testingStatus();
+    if (this.service.eventScheduleRate) {
+      this.setEventScheduleRate();
+    }
 
     // request status api call
     if (this.service.status === 'creation started' && !this.serviceStatusCompleted && this.service_request_id != undefined) {
@@ -1044,6 +1212,12 @@ export class ServiceOverviewComponent implements OnInit {
     if ((this.service.status === 'creation started' || this.service.status === 'deletion started') && this.intervalSubscription) {
       this.intervalSubscription.unsubscribe();
     }
+  }
+
+  onEditEvents(){
+    this.onCancelClick();
+    this.editEvents = true;
+    this.disp_show2 = false;
   }
 
 

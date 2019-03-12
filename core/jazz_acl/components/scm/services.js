@@ -23,7 +23,8 @@ const getServiceMetadata = async (config, authToken, serviceId) => {
       uri: `${config.BASE_API_URL}${config.SERVICE_API}/${serviceId}`,
       method: 'GET',
       headers: {
-        'Authorization': authToken
+        'Authorization': authToken,
+        'Jazz-Service-ID': serviceId
       },
       rejectUnauthorized: false
     };

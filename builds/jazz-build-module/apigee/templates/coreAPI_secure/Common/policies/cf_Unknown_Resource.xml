@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<RaiseFault async="false" continueOnError="false" enabled="true" name="cf_Unknown_Resource">
+    <FaultResponse>
+        <Set>
+            <StatusCode>501</StatusCode>
+            <ReasonPhrase>Not Implemented</ReasonPhrase>
+            <Payload contentType="application/json">{"errors":{"error":[{"code":"SECURITY-0017","userMessage":"Requested Resource or Method is not implemented.","systemMessage":"ERROR_SOURCE:API; Requested Resource or Method is not implemented."}]}}</Payload>
+        </Set>
+    </FaultResponse>
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+</RaiseFault>

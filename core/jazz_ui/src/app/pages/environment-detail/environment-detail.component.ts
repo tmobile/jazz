@@ -7,8 +7,6 @@ import {DataService} from "../data-service/data.service";
 import {environment} from './../../../environments/environment';
 import {environment as env_internal} from './../../../environments/environment.internal';
 import {environment as env_oss} from './../../../environments/environment.oss';
-
-
 import {EnvDeploymentsSectionComponent} from './../environment-deployment/env-deployments-section.component';
 
 
@@ -58,6 +56,7 @@ export class EnvironmentDetailComponent implements OnInit {
   isDeployAccess: boolean = false;
   isAdminAccess: boolean =false;
   currentUser: any = {};
+  isError403: boolean = false;
 
   constructor(
     private toasterService: ToasterService,
@@ -128,7 +127,8 @@ export class EnvironmentDetailComponent implements OnInit {
         runtime: service.runtime,
         status: service.status,
         domain: service.domain,
-        repository: service.repository
+        repository: service.repository,
+        deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type]
       }
     }
   };
@@ -187,6 +187,9 @@ export class EnvironmentDetailComponent implements OnInit {
 
       },
       err => {
+        if(err.status === 403) {
+          this.isError403 = true;
+        }
         this.isLoadingService = false;
         let errorMessage = this.messageservice.errorMessage(err, "serviceDetail");
         this.toast_pop('error', 'Oops!', errorMessage)

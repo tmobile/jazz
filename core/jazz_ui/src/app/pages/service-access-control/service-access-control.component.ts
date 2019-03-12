@@ -4,9 +4,10 @@
  * @author
 */
 
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, EventEmitter, Output} from '@angular/core';
 import { ToasterService } from 'angular2-toaster';
 import { RequestService, MessageService } from '../../core/services';
+import { Router, ActivatedRoute } from '@angular/router';
 
 
 @Component({
@@ -18,6 +19,8 @@ import { RequestService, MessageService } from '../../core/services';
 export class ServiceAccessControlComponent implements OnInit {
  @Input() service: any = {};
  @Input() isAdminAccess: boolean = false;
+
+ @Output() updateAdminAccess:EventEmitter<any> = new EventEmitter<any>();
 
  accessGranted:Boolean = false;
  i: number = 0;
@@ -60,11 +63,14 @@ export class ServiceAccessControlComponent implements OnInit {
  adminAccessRule: boolean = false;
  addAsAdmin: any = {};
  categoryArray: any = ['manage', 'code', 'deploy'];
+ selectedServiceId: string = "";
+ currentUser: string = "";
 
  constructor(
    private request: RequestService,
    private toasterService: ToasterService,
-   private messageservice: MessageService
+   private messageservice: MessageService,
+   private route: ActivatedRoute
  ) {
    this.http = request;
    this.toastmessage = messageservice;
@@ -137,23 +143,24 @@ export class ServiceAccessControlComponent implements OnInit {
  deletegroup(i,category){
    this.toDelete = {};
    if (this.access[category].length > 1) {
-     if (category === "manage") {
+     if (category === "manage" && this.access[category][i].userId && this.usersList.indexOf(this.access[category][i].userId) !== -1) {
        this.deleteManageRule = true;
-       this.confirmationHeader = this.toastmessage.customMessage("finalConfirmationHeader", "aclConfirmation");
+       this.confirmationHeader = this.toastmessage.customMessage("acknowledgementHeader", "aclConfirmation");
        this.confirmationText = this.toastmessage.customMessage("removeAdminRule", "aclConfirmation");
        this.toDelete["index"] = i;
        this.toDelete["category"] = category;
      } else {
-       this.addToList(category, this.access[category][i].userId);
+       if (this.access[category][i].userId) {
+        this.addToList(category, this.access[category][i].userId);
+        this.isAddOrDelete = true;
+       }
        this.access[category].splice(i, 1);
-       this.isAddOrDelete = true;
      }
    } else {
      this.removeUser = true;
      this.confirmationHeader = this.toastmessage.customMessage("errorIndicationHeader", "aclConfirmation");
      this.confirmationText = this.toastmessage.customMessage( "errorIndicationMsg", "aclConfirmation");
    }
-
  }
 
  //function for adding group
@@ -180,19 +187,18 @@ addgroup(category){
    this.confirmationText = this.toastmessage.customMessage("finalConfirmationMsg", "aclConfirmation");
  }
 
- //on cancel restore the changes
- onCancelClick(){
-   if (this.isAddOrDelete) {
-     this.originalAccess.manage.map((item,index)=>{
-       item.permission = this.manageAccess[index].permission
-     })
-     let policies = Object.keys(this.originalAccess).map(eachcat => (this.originalAccess[eachcat]));
-     policies = [].concat.apply([], policies);
-     this.access = this.restructureRes(policies);
-     this.getUsersList()
-   }
-   this.showDisplay = true;
-   this.isAddOrDelete = false;
+  //on cancel restore the changes
+  onCancelClick(){
+    if (this.isAddOrDelete) {
+      let res = JSON.parse(JSON.stringify(this.originalAccessDetails));
+      let policyDetails = this.restructureRes(res)
+      let policies = Object.keys(policyDetails).map(eachcat => (policyDetails[eachcat]));
+      policies = [].concat.apply([], policies);
+      this.access = this.restructureRes(policies);
+      this.getUsersList()
+    }
+    this.showDisplay = true;
+    this.isAddOrDelete = false;
  }
 
  // on complete send request to updateAclPolicies()
@@ -207,12 +213,20 @@ addgroup(category){
      this.removeUser = false;
    }
 
-
    if (this.deleteManageRule && Object.keys(this.toDelete).length > 0) {
      let category = this.toDelete.category;
      let i = this.toDelete.index;
-     this.addToList(category, this.access[category][i].userId);
+     let user = this.access[category][i].userId;
+     this.addToList(category, user);
      this.access[category].splice(i, 1);
+     ['code', 'deploy'].forEach(eachCat => {
+       for(let k = 0; k < this.access[eachCat].length; k++) {
+         if (this.access[eachCat][k].userId === user) {
+          this.addToList(eachCat, user);
+          this.access[eachCat].splice(k, 1);
+         }
+       }
+     });
      this.isAddOrDelete = true;
      this.deleteManageRule = false;
      this.toDelete = {};
@@ -226,14 +240,19 @@ addgroup(category){
      })
      this.isAddOrDelete = true;
      this.adminAccessRule = false;
+     this.addAsAdmin = {}
    }
 
  }
 
  //on refresh load the acl view
  refresh(){
-   this.getAclPolicies(this.service.id);
+   this.getAclPolicies(this.selectedServiceId);
    this.getUsersList()
+ }
+
+ refresh_env() {
+   this.refresh()
  }
 
  reportIssue() {}
@@ -242,7 +261,7 @@ addgroup(category){
    if (category === "manage" && value === "admin") {
      this.addAsAdmin = {};
      this.adminAccessRule = true;
-     this.confirmationHeader = this.toastmessage.customMessage("finalConfirmationHeader", "aclConfirmation");
+     this.confirmationHeader = this.toastmessage.customMessage("acknowledgementHeader", "aclConfirmation");
      this.confirmationText = this.toastmessage.customMessage("addAdminRule", "aclConfirmation");
      this.addAsAdmin = {
        "category": category,
@@ -295,9 +314,14 @@ addgroup(category){
  }
 
  ngOnInit() {
+  this.route.params.subscribe(params => {
+    this.selectedServiceId = params['id'];
+  });
+  this.currentUser = JSON.parse(localStorage.getItem("currentUser")).username;
    this.getUsersList()
-   this.getAclPolicies(this.service.id);
+   this.getAclPolicies(this.selectedServiceId);
    this.isValidData();
+
  }
 
  // restructure the response
@@ -329,6 +353,13 @@ addgroup(category){
          let accessData = JSON.parse(JSON.stringify(response.data.policies));
          this.access = this.restructureRes(accessData);
          this.manageAccess = JSON.parse(JSON.stringify(this.access.manage));
+         for(let eachUser of this.access.manage) {
+           if(eachUser.userId === this.currentUser && eachUser.permission !== "admin") {
+             this.isAdminAccess = false;
+             this.updateAdminAccess.emit(this.isAdminAccess);
+             break;
+           }
+         }
          this.removeExistingUser(this.originalAccessDetails);
        } else {
          this.isDataNotAvailable = true;
@@ -355,16 +386,16 @@ addgroup(category){
  // update policies
  updateAclPolicies(payload) {
    this.isLoading = true;
-   this.http.post('/jazz/acl/policies', payload, this.service.id).subscribe(
+   this.http.post('/jazz/acl/policies', payload, this.selectedServiceId).subscribe(
      response=> {
        let successMessage = this.toastmessage.successMessage(response, "updateServicePolicies");
        this.toast_pop('success', "", "Policies for service: " + this.service.name + " are " + successMessage);
-       this.getAclPolicies(this.service.id)
+       this.getAclPolicies(this.selectedServiceId)
      },
      error => {
        let errorMessage = this.toastmessage.errorMessage(error, "updateServicePolicies");
        this.toast_pop('error', 'Oops!', errorMessage)
-       this.getAclPolicies(this.service.id)
+       this.getAclPolicies(this.selectedServiceId)
      }
    );
  }

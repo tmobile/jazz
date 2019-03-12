@@ -632,3 +632,27 @@ search-box {
     padding: 7rem 1.25rem;
   }
 }
+
+.filter-modal-position {
+  position: absolute;
+  top: 0;
+  right: -2rem;
+  z-index: 1;
+}
+
+.z-index-2 {
+  z-index: 2;
+}
+.z-index-0 {
+  z-index: 0;
+}
+
+.jz-btn-icon{
+  margin-right: -2rem;
+  height: 32px;
+  padding: 6px;
+}
+
+.metrics-section{
+  height: calc(100vh - 12rem);
+}
