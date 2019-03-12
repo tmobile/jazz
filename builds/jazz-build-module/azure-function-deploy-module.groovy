@@ -262,7 +262,6 @@ def selectConfig(serviceInfo) {
   } else if (serviceInfo.isQueueEnabled) {
 
     def resourceName = azureUtil.getQueueName(config, envId)
-//    serviceInfo.namespace = azureUtil.getServicebusNamespace(config, envId, config.storageAccountName)
     writeConfig(functionName, "servicebus", resourceName, serviceInfo, "3.0.0")
 
   } else if (serviceInfo.isStreamEnabled) {
