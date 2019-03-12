@@ -89,7 +89,16 @@ export class ServicesListComponent implements OnInit {
       filter: {
         type: ''
       }
-    },{
+    },
+    {
+      label: 'Platform',
+      key: 'platform',
+      sort: true,
+      filter: {
+        type: 'input'
+      }
+    },
+    {
       label: 'Namespace',
       key: 'domain',
       sort: true,
@@ -159,6 +168,7 @@ export class ServicesListComponent implements OnInit {
       let serviceRow = {
         name: service.service,
         type: service.type,
+        platform: service.platform,
         domain: service.domain,
         health: 2,
         status: service.status.replace('_',' '),

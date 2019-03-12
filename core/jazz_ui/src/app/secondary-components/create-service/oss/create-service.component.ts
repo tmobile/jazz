@@ -552,7 +552,7 @@ export class CreateServiceComponent implements OnInit {
     if(this.rateExpression.error != undefined && this.typeOfService == 'function' && this.rateExpression.type != 'none'){
         return true
     }
-    if(this.eventExpression.type == 'awsEventsNone' && this.typeOfService == 'function'){
+    if(this.eventExpression.type == 'awsEventsNone' && this.typeOfService == 'function' && this.rateExpression.type == 'none'){
       return true;
     }
     if(this.eventExpression.type == 'dynamodb' && this.eventExpression.dynamoTable == undefined){

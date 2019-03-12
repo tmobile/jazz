@@ -46,6 +46,7 @@
             <div class="table-row pointer" [class.hide]="serviceListEmpty" *ngFor="let row of serviceList; let i = index" (click)="onRowClicked(row, i)" [class.deletingRow]="row.id==deletedServiceId || row.status=='deletion started'">
                 <div class="column">{{row.name}}</div>
                 <div class="column">{{row.type}}</div>
+                <div class="column">{{row.platform}}</div>
                 <div class="column">{{row.domain}}</div>
                 <div class="column">{{row.lastModified}}</div>
                 <!-- <div class="column">{{row.lastModified | amDateFormat: 'YYYY-MM-DD HH:mm:ss'}}</div> -->
