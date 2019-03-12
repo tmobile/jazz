@@ -109,7 +109,7 @@ def invokeAzureCreation(serviceInfo){
         checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
         sh "npm install -s"
         try {
-          azureUtil.invokeAzureService(data, "createResourceGroup")
+
           createStorageAccount(data, serviceInfo)
 
           if (type) {

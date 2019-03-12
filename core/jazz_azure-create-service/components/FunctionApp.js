@@ -60,12 +60,6 @@ module.exports = class FunctionApp {
 
   }
 
-  async createResourceGroup(){
-    await this.init();
-    await this.resourceFactory.createResourceGroupOnlyIfNotExists(this.data.resourceGroupName, this.data.location, this.data.tags);
-
-  }
-
   async getMasterKey(){
     await this.init();
     let masterKey = await this.resourceFactory.getMasterKey(this.data.stackName);
