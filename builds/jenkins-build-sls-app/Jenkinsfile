@@ -337,7 +337,7 @@ node() {
           // reset Credentials
           resetCredentials(credsId)
           if (domain != "jazz") {
-            createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
+            createSubscriptionFilters(config, configLoader.AWS.REGION, roleId);
           }
 
           if (domain && domain == "jazz") {
@@ -704,31 +704,37 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(stackName, region, roleId) {
-  def lambda = "/aws/lambda/${stackName}"
-  def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
+def createSubscriptionFilters(config, region, roleId) {
+  def dd = config['deployment_descriptor']
+  def doc = dd ? readYaml(text: dd) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
+  def functionsElem = doc['functions']
+  functionsElem.each{funcName, funcConfig ->
+    def name = funcConfig['name'] ? funcConfig['name'] : funcName
+    def lambda = "/aws/lambda/${name}"
+    def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
 
-  try {
-    sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
-  } catch (Exception ex) { } // ignore if already existing
+    try {
+      sh "aws logs create-log-group --log-group-name ${lambda} --region ${region}"
+    } catch (Exception ex) { } // ignore if already existing
 
-  try {
-    filter_json = sh(
-      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${region}",
-      returnStdout: true
-    ).trim()
-    echo "${filter_json}"
-    def resultJson = parseJson(filter_json)
-    filtername = resultJson.subscriptionFilters[0].filterName
-    echo "removing existing filter... $filtername"
-    if (filtername != "" && !filtername.equals(lambda)) {
-      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${region}"
+    try {
+      filter_json = sh(
+        script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${region}",
+        returnStdout: true
+      ).trim()
+      echo "${filter_json}"
+      def resultJson = parseJson(filter_json)
+      filtername = resultJson.subscriptionFilters[0].filterName
+      echo "removing existing filter... $filtername"
+      if (filtername != "" && !filtername.equals(lambda)) {
+        sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${region}"
+      }
+    } catch (Exception ex) { } // ignore error if not created yet
+    try {
+      sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID}"
+    } catch (Exception ex) {
+      echo "error occured: " + ex.getMessage()
     }
-  } catch (Exception ex) { } // ignore error if not created yet
-  try {
-    sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID}"
-  } catch (Exception ex) {
-    echo "error occured: " + ex.getMessage()
   }
 }
 
