@@ -50,7 +50,7 @@ node() {
   def gitCommitHash
   def context_map
   def environment_logical_id
-  def dataObjValues
+  def accountDetails
 
   if (domain && domain != "") {
     repo_name = params.domain + "_" + params.service_name
@@ -91,7 +91,7 @@ node() {
     }
   }
 
-  dataObjValues = utilModule.getAccountInfo(config);
+  accountDetails = utilModule.getAccountInfo(config);
 
   if (!config) {
     error "Failed to fetch service metadata from catalog"
@@ -239,7 +239,7 @@ node() {
       events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 
       withCredentials([
-        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: dataObjValues.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
         try {
           // initialize aws credentials
@@ -262,11 +262,11 @@ node() {
             }
           }
 
-          writeServerlessFile(config, environment_logical_id, dataObjValues)
+          writeServerlessFile(config, environment_logical_id, accountDetails)
 
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           echoServerlessFile()
-          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId, env_key, dataObjValues)
+          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId, env_key, accountDetails)
 
           if (deployOutput != 'success') {
             if (config['event_source_s3']) {
@@ -321,7 +321,7 @@ node() {
           // reset Credentials
           resetCredentials(credsId)
           if (domain != "jazz") {
-            createSubscriptionFilters(stackName, env_key, credsId, dataObjValues);
+            createSubscriptionFilters(stackName, env_key, credsId, accountDetails);
           }
 
           if (domain && domain == "jazz") {
@@ -453,9 +453,9 @@ def echoServerlessFile() {
   echo "serverless file data $serverlessyml"
 }
 
-def servelessDeploy(env, envBucketKey, credsId, env_key, dataObjValues){
+def servelessDeploy(env, envBucketKey, credsId, env_key, accountDetails){
   def s3BucketNameValue;
-  for (item in dataObjValues.REGIONS) {
+  for (item in accountDetails.REGIONS) {
     if(item.REGION == service_config.region){
       s3BucketNameValue = item.S3[env_key]
     }
@@ -749,7 +749,7 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(stackName, env_key, credsId, dataObjValues) {
+def createSubscriptionFilters(stackName, env_key, credsId, accountDetails) {
   def lambda = "/aws/lambda/${stackName}"
   def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
 
@@ -776,7 +776,7 @@ def createSubscriptionFilters(stackName, env_key, credsId, dataObjValues) {
       if(item.ACCOUNTID == service_config.accountId){
         if(!item.PRIMARY){
           def destARN
-          for (data in dataObjValues.REGIONS) {
+          for (data in accountDetails.REGIONS) {
             if(data.REGION == service_config.region){
               destARN = data.LOGS[env_key]
             }
@@ -836,9 +836,14 @@ def updatePolicy(env, destARN){
 }
 
 
-def writeServerlessFile(config, env, dataObjValues) {
+def writeServerlessFile(config, env, accountDetails) {
 
-  def iamRoleArnValue = dataObjValues.IAM.USERSERVICES_ROLEID;
+  def iamRoleArnValue;
+  if(config['domain'] == 'jazz'){
+      iamRoleArnValue = config['iamRoleARN']
+  } else {
+      iamRoleArnValue = accountDetails.IAM.USERSERVICES_ROLEID;
+  }
 
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
