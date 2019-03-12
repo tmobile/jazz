@@ -28,7 +28,7 @@ module.exports = class FunctionApp {
 
   async createStorage() {
     await this.init();
-    return await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags, this.data.location);
+    await this.resourceFactory.createStorageAccountOnlyIfNotExists(this.data.appName, this.data.tags, this.data.location);
 
   }
 

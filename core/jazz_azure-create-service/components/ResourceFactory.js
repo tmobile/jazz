@@ -482,5 +482,12 @@ module.exports = class ResourceFactory {
 
   }
 
+  async createStorageAccountOnlyIfNotExists(storageAccountName, tags = {}, location = 'westus') {
+    let client = await this.factory.getResource("StorageManagementClient");
+    let result = await client.storageAccounts.checkNameAvailability(storageAccountName);
+    if (result.nameAvailable) {
+      await this.createStorageAccount(storageAccountName, tags, location);
+    }
+  }
 
 }

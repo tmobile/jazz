@@ -35,7 +35,7 @@ module.exports.handler = (event, context, cb) => {
       "bar": "bar-value",
       "configKeys": myVal
     };
-    logger.info('success ' + sampleResponse);
+
     return cb(null, responseObj(sampleResponse, event));
 
   } catch (e) {
