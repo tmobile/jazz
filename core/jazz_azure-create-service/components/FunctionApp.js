@@ -28,33 +28,18 @@ module.exports = class FunctionApp {
 
   async createStorage() {
     await this.init();
-    let stack = await this.resourceFactory.createStorageAccount(this.data.appName, this.data.tags, this.data.location);
-    let output = {
-      id: stack.id
-    };
-    return output;
+    await this.resourceFactory.createStorageAccountOnlyIfNotExists(this.data.appName, this.data.tags, this.data.location);
+
   }
 
   async createEventResource() {
     await this.init();
-    let stack = await this.resourceFactory.createDependency(this.data);
-    let id = '';
-    if (stack) {
-      id = stack.id;
-    }
-    let output = {
-      id: id
-    };
-    return output;
+    await this.resourceFactory.createDependency(this.data);
   }
 
   async createfunction(){
     await this.init();
-    let stack = await this.resourceFactory.createFunctionWithConnectionString(this.data);
-    let output = {
-      id: stack.id
-    };
-    return output;
+    await this.resourceFactory.createFunctionWithConnectionString(this.data);
   }
 
   async deployFunction(){
@@ -71,12 +56,7 @@ module.exports = class FunctionApp {
 
   async createDatabase(){
     await this.init();
-    let stack = await this.resourceFactory.createDatabase(this.data);
-
-    let output = {
-      id: stack.id
-    };
-    return output;
+    await this.resourceFactory.createDatabase(this.data);
 
   }
 
@@ -90,4 +70,8 @@ module.exports = class FunctionApp {
 
   }
 
+  async getResourcesByServiceName() {
+    await this.init();
+    return await this.resourceFactory.getResourcesByServiceName(this.data.tagName, this.data.tagValue);
+  }
 }

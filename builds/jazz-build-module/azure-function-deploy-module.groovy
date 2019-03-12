@@ -21,27 +21,12 @@ def initialize(configLoader, utilModule, scmModule, events, azureUtil){
 
 }
 
-def setAzureVar(envId) {
-
-  if (configLoader.AZURE && configLoader.AZURE.RESOURCE_GROUPS) {
-    if (envId == 'prod') {
-      configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.PRODUCTION
-    } else {
-      configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.DEVELOPMENT
-    }
-
-  }
-
-}
-
 
 def createFunction(serviceInfo){
-  def assetList = []
-  setAzureVar(serviceInfo.envId)
+  azureUtil.setAzureVar(serviceInfo)
   loadAzureConfig(serviceInfo)
 
-  def masterKey = invokeAzureCreation(serviceInfo, assetList)
-  sendAssetCompletedEvent(serviceInfo, assetList)
+  def masterKey = invokeAzureCreation(serviceInfo)
 
   def endpoint = "https://${serviceInfo.stackName}.azurewebsites.net/admin/functions/${serviceInfo.stackName}?code=$masterKey"
   return endpoint
@@ -51,15 +36,44 @@ def createFunction(serviceInfo){
 
 def sendAssetCompletedEvent(serviceInfo, assetList) {
 
-  for (item in assetList) {
-    def id = item.azureResourceId
-    def assetType = item.type
+  def data = azureUtil.getAzureRequestPayload(serviceInfo)
+  data.tagName = 'service'
+  data.tagValue = serviceInfo.stackName
+  def output = azureUtil.invokeAzureService(data, "getResourcesByServiceName")
+
+  for (item in output.data.result) {
+    def assetType = item.kind
+    def id = item.id
+    switch (item.type) {
+      case "Microsoft.Storage/storageAccounts":
+        assetType = "storage_account"
+        break
+      case "Microsoft.ServiceBus/namespaces":
+        assetType = "servicebus_namespace"
+        break
+      case "Microsoft.EventHub/namespaces":
+        assetType = "eventhubs_namespace"
+        break
+      case "Microsoft.DocumentDB/databaseAccounts":
+        assetType = "cosmosdb_account"
+        break
+    }
+
     events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['platform'], id, assetType, serviceInfo.serviceCatalog), serviceInfo.envId)
 
   }
+
+  if (assetList) {
+    for (item in assetList) {
+      def id = item.azureResourceId
+      def assetType = item.type
+      events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['platform'], id, assetType, serviceInfo.serviceCatalog), serviceInfo.envId)
+
+    }
+  }
 }
 
-def invokeAzureCreation(serviceInfo, assetList){
+def invokeAzureCreation(serviceInfo){
 
   sh "rm -rf _azureconfig"
 
@@ -91,23 +105,23 @@ def invokeAzureCreation(serviceInfo, assetList){
 
     dir(repo_name)
       {
+        def assetList =[]
         checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
         sh "npm install -s"
         try {
-          def item = createStorageAccount(data)
-          assetList.add(item)
+
+          createStorageAccount(data, serviceInfo)
+
           if (type) {
-            item = createEventResource(data, type)
-            if (item) {
-              assetList.addAll(item)
-            }
+            assetList = createEventResource(data, type, serviceInfo)
           }
 
-          item = createFunctionApp(data)
-          assetList.add(item)
-          output = azureUtil.invokeAzureService(data, "getMasterKey")
+          createFunctionApp(data)
+
+          def output = azureUtil.invokeAzureService(data, "getMasterKey")
           masterKey = output.data.result.key
           deployFunction(data, zip, type)
+          sendAssetCompletedEvent(serviceInfo, assetList)
           return masterKey
         } catch (ex) {
           echo "error occur $ex, rollback starting..."
@@ -132,8 +146,7 @@ def deleteResourceByTag(serviceInfo) {
 }
 
 def createFunctionApp(data) {
-  def output = azureUtil.invokeAzureService(data, "createfunction")
-  return getAssetDetails(output.data.result.id, "functionapp")
+  azureUtil.invokeAzureService(data, "createfunction")
 
 }
 def deployFunction(data, zip, type) {
@@ -148,31 +161,36 @@ def deployFunction(data, zip, type) {
 
 }
 
-def createStorageAccount(data) {
-
-  def output = azureUtil.invokeAzureService(data, "createStorage")
-  getAssetDetails(output.data.result.id, "storage_account")
+def createStorageAccount(data, serviceInfo) {
+  data.appName = azureUtil.getStorageAccount(serviceInfo.serviceCatalog, serviceInfo.envId, serviceInfo.storageAccountName)
+  azureUtil.invokeAzureService(data, "createStorage")
 
 }
 
-def createEventResource(data, type) {
+def createEventResource(data, type, serviceInfo) {
 
   data.eventSourceType = type
-  def output = azureUtil.invokeAzureService(data, "createEventResource")
+
   def items =[]
   if (type == 'CosmosDB') {
-
+    data.database_account = azureUtil.getCosmosAccount(serviceInfo.serviceCatalog, serviceInfo.envId, serviceInfo.storageAccountName)
+    data.database = azureUtil.getCosmosDatabase(serviceInfo.serviceCatalog, serviceInfo.envId, data.resourceName)
+    data.table = azureUtil.getCosmosTable(serviceInfo.serviceCatalog, serviceInfo.envId, data.resourceName)
+    azureUtil.invokeAzureService(data, "createEventResource")
     output = azureUtil.invokeAzureService(data, "createDatabase")
-    items.add(getAssetDetails(output.data.result.id, "cosmosdb_account"))
     items.add(getAssetDetails(data.resourceName, "cosmosdb_database"))
     items.add(getAssetDetails(data.resourceName, "cosmosdb_collection"))
   } else if (type == 'ServiceBus') {
-    items.add(getAssetDetails(output.data.result.id, "servicebus_namespace"))
+    data.namespace = azureUtil.getServicebusNamespace(serviceInfo.serviceCatalog, serviceInfo.envId, serviceInfo.storageAccountName)
+    azureUtil.invokeAzureService(data, "createEventResource")
     items.add(getAssetDetails(data.resourceName, "servicebus_queue"))
   } else if (type == 'EventHubs') {
-    items.add(getAssetDetails(output.data.result.id, "eventhubs_namespace"))
+    data.namespace = azureUtil.getEventhubsNamespace(serviceInfo.serviceCatalog, serviceInfo.envId, serviceInfo.storageAccountName)
+    azureUtil.invokeAzureService(data, "createEventResource")
     items.add(getAssetDetails(data.resourceName, "eventhubs_eventhub"))
   } else if (type == 'Storage') {
+
+    azureUtil.invokeAzureService(data, "createEventResource")
     items.add(getAssetDetails(data.resourceName, "storage_blob_container"))
   }
 
@@ -272,7 +290,7 @@ def registerBindingExtension(type) {
 
 }
 
-def getAssetDetails(id, name, assetType, resourceType) {
+def getAssetDetails(id, assetType) {
 
 
   def assetItem = [

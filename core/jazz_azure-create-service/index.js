@@ -18,7 +18,7 @@ module.exports = async () => {
     })));
   } catch (error) {
     console.log(JSON.stringify(responseObj({
-      error: error
+      error: error.toString()
     })));
   }
 

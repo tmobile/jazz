@@ -15,9 +15,6 @@ async function create(data, client){
     return await client.blobContainers.create(data.resourceGroupName, data.appName, data.resourceName);
   }
 
-
-
-
 }
 
 module.exports = {

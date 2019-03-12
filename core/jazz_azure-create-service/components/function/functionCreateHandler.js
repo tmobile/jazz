@@ -6,24 +6,23 @@ const storageHandler = require('./storageblobHandler');
 async function createDependency(data, factory) {
 
   let type = data.eventSourceType;
-  let resource;
+
   switch (type) {
     case 'Storage':
-      resource = await storageHandler.create(data, await factory.getResource('StorageManagementClient'));
+      await storageHandler.create(data, await factory.getResource('StorageManagementClient'));
       break;
     case 'CosmosDB':
-      resource = await dbHandler.create(data, await factory.getResource('CosmosDBManagementClient'));
+      await dbHandler.create(data, await factory.getResource('CosmosDBManagementClient'));
       break;
     case 'EventHubs':
-      resource = await ehHandler.create(data, await factory.getResource('EventHubManagementClient'));
+      await ehHandler.create(data, await factory.getResource('EventHubManagementClient'));
       break;
     case 'ServiceBus':
-      resource = await sbHandler.create(data, await factory.getResource('ServiceBusManagementClient'));
+      await sbHandler.create(data, await factory.getResource('ServiceBusManagementClient'));
       break;
     default:
   }
 
-  return resource;
 }
 
 

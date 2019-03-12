@@ -462,8 +462,8 @@ module.exports = class ResourceFactory {
   }
 
   async deleteResourcesByServiceName(tagName, tagValue) {
-    let client = await this.factory.getResource("ResourceManagementClient");
-    let resources = await client.resources.list({filter: `tagName eq '${tagName}' and tagValue eq '${tagValue}'`});
+
+    let resources = await getResourcesByServiceName(tagName, tagValue);
     let message ='total resources ' + resources.length + ' ';
 
     for (const resource of resources) {
@@ -476,5 +476,18 @@ module.exports = class ResourceFactory {
     return message;
   }
 
+  async getResourcesByServiceName(tagName, tagValue) {
+    let client = await this.factory.getResource("ResourceManagementClient");
+    return await client.resources.list({filter: `tagName eq '${tagName}' and tagValue eq '${tagValue}'`});
+
+  }
+
+  async createStorageAccountOnlyIfNotExists(storageAccountName, tags = {}, location = 'westus') {
+    let client = await this.factory.getResource("StorageManagementClient");
+    let result = await client.storageAccounts.checkNameAvailability(storageAccountName);
+    if (result.nameAvailable) {
+      await this.createStorageAccount(storageAccountName, tags, location);
+    }
+  }
 
 }
