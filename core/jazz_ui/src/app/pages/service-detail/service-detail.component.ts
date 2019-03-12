@@ -122,9 +122,15 @@ export class ServiceDetailComponent implements OnInit {
         returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;
         returnObject["eventScheduleRate"] = service.metadata.eventScheduleRate;
         if(service.metadata.event_source){
+          if(service.platform === 'azure'){
+            service.metadata.event_source = 'documentdb';
+          }
           returnObject["event_source"] = service.metadata.event_source;
         }
         if(service.metadata.event_source_dynamodb){
+          if(service.platform === 'azure'){
+            service.metadata.event_source_dynamodb = service.metadata.event_source_dynamodb.split('/')[1];
+          }
           returnObject["event_source_arn"] = service.metadata.event_source_dynamodb;
         }
         if(service.metadata.event_source_kinesis){
