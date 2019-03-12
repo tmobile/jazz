@@ -23,6 +23,7 @@ import groovy.json.JsonSlurperClassic
 @Field def sonarModule
 @Field def lambdaEvents
 @Field def azureDeployer
+@Field def azureUtil
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -121,7 +122,7 @@ node {
 				flowType = "API"
 				loadServerlessConfig()
 				updateSwaggerConfig()
-			} else if (fileExists('build.lambda')) {
+			} else if (fileExists('build.lambda') || fileExists('build.function')) {
 				flowType = "LAMBDA"
 				loadServerlessConfig()
 			} else if (fileExists('build.website')) {
@@ -1260,11 +1261,11 @@ def loadBuildModules(buildModuleUrl){
     resourceUtility.initialize(configLoader)
     echo "resource util init successfully."
 
-    def azureUtility = load "azure-utility.groovy"
-    azureUtility.initialize(configLoader, resourceUtility)
+    azureUtil = load "azure-utility.groovy"
+    azureUtil.initialize(configLoader, resourceUtility)
     echo "Azure util init successfully."
     azureDeployer = load "azure-function-deploy-module.groovy"
-    azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtility)
+    azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtil)
     echo "Azure deploy module init successfully."
 	}
 }
@@ -1317,7 +1318,7 @@ def deleteResourceByTag(env) {
     'storageAccountName': 'NA'
   ]
 
-  azureDeployer.setAzureVar(env)
+  azureUtil.setAzureVar(serviceInfo)
 	withCredentials([
 			[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
 			[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
