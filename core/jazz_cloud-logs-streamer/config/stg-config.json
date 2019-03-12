@@ -1,4 +1,3 @@
 {
-    "ES_ENDPOINT": "{inst_elastic_search_hostname}"
+  "ES_ENDPOINT": "{inst_elastic_search_hostname}"
 }
-  
