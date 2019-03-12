@@ -63,17 +63,18 @@ def sendAssetCompletedEvent(serviceInfo, assetList) {
 
   }
 
+  if (assetList) {
+    for (item in assetList) {
+      def id = item.azureResourceId
+      def assetType = item.type
+      events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['platform'], id, assetType, serviceInfo.serviceCatalog), serviceInfo.envId)
 
-  for (item in assetList) {
-    def id = item.azureResourceId
-    def assetType = item.type
-    events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['platform'], id, assetType, serviceInfo.serviceCatalog), serviceInfo.envId)
-
+    }
   }
 }
 
 def invokeAzureCreation(serviceInfo){
-  def assetList = []
+
   sh "rm -rf _azureconfig"
 
   sh "zip -qr content.zip ."
@@ -104,6 +105,7 @@ def invokeAzureCreation(serviceInfo){
 
     dir(repo_name)
       {
+        def assetList =[]
         checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
         sh "npm install -s"
         try {
@@ -111,10 +113,7 @@ def invokeAzureCreation(serviceInfo){
           createStorageAccount(data, serviceInfo)
 
           if (type) {
-            def item = createEventResource(data, type, serviceInfo)
-            if (item) {
-              assetList.addAll(item)
-            }
+            assetList = createEventResource(data, type, serviceInfo)
           }
 
           createFunctionApp(data)
