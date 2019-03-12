@@ -47,7 +47,7 @@ node()  {
 	def requestId = params.request_id
 	def gitCommitOwner
 	def gitCommitHash
-	def dataObjValues
+	def accountDetails
 
 	if (domain && domain != "") {
 		repo_name = params.domain + "_" + params.service_name
@@ -93,11 +93,11 @@ node()  {
 	environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
 	def environment_logical_id
-	dataObjValues = utilModule.getAccountInfo(service_config);
+	accountDetails = utilModule.getAccountInfo(service_config);
 	if (params.scm_branch == 'master') {
 		environment_logical_id = 'prod'
 		current_environment = 'PROD'
-		for (item in dataObjValues.REGIONS) {
+		for (item in accountDetails.REGIONS) {
 			if(item.REGION == service_config.region){
 				s3Bucket = item.S3[current_environment]
 			}
@@ -108,7 +108,7 @@ node()  {
 			error "The environment has not been created yet and its missing the logical Id"
 		}
 		current_environment = "DEV"
-		for (item in s3BucketValue.REGIONS) {
+		for (item in accountDetails.REGIONS) {
 			if(item.REGION == service_config.region){
 				s3Bucket = item.S3[current_environment]
 			}
@@ -174,12 +174,12 @@ node()  {
 			def randomString = utilModule.generateRequestId();
 			def credsId = "jazz-${randomString}";
 
-			def origin_access_identity_ID = dataObjValues.CLOUDFRONT.CLOUDFRONT_ORIGIN_ID.split("/");
+			def origin_access_identity_ID = accountDetails.CLOUDFRONT.CLOUDFRONT_ORIGIN_ID.split("/");
 			origin_access_identity_ID = origin_access_identity_ID[origin_access_identity_ID.length - 1];
 
 			events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
 			events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: dataObjValues.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 				sh "aws configure set profile.${credsId}.region ${service_config.region}"
 				sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
 				sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
