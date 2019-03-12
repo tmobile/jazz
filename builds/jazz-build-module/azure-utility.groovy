@@ -15,6 +15,22 @@ def initialize(configData, resourceUtility){
 }
 
 
+def setAzureVar(serviceInfo) {
+  if (serviceInfo.serviceCatalog['event_source_resource_group']) {
+    configLoader.AZURE.RESOURCE_GROUP = resourceUtil.getResourceName(serviceInfo.serviceCatalog['event_source_resource_group'], serviceInfo.envId)
+  } else {
+    if (configLoader.AZURE && configLoader.AZURE.RESOURCE_GROUPS) {
+      if (serviceInfo.envId == 'prod') {
+        configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.PRODUCTION
+      } else {
+        configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.DEVELOPMENT
+      }
+
+    }
+  }
+
+}
+
 
 //TODO this is not needed after we fix the UI
 def getQueueName(serviceMetadata, env) {

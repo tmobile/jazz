@@ -21,26 +21,12 @@ def initialize(configLoader, utilModule, scmModule, events, azureUtil){
 
 }
 
-def setAzureVar(envId) {
-
-  if (configLoader.AZURE && configLoader.AZURE.RESOURCE_GROUPS) {
-    if (envId == 'prod') {
-      configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.PRODUCTION
-    } else {
-      configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.DEVELOPMENT
-    }
-
-  }
-
-}
-
 
 def createFunction(serviceInfo){
-  def assetList = []
-  setAzureVar(serviceInfo.envId)
+  azureUtil.setAzureVar(serviceInfo)
   loadAzureConfig(serviceInfo)
 
-  def masterKey = invokeAzureCreation(serviceInfo, assetList)
+  def masterKey = invokeAzureCreation(serviceInfo)
 
   def endpoint = "https://${serviceInfo.stackName}.azurewebsites.net/admin/functions/${serviceInfo.stackName}?code=$masterKey"
   return endpoint
@@ -86,8 +72,8 @@ def sendAssetCompletedEvent(serviceInfo, assetList) {
   }
 }
 
-def invokeAzureCreation(serviceInfo, assetList){
-
+def invokeAzureCreation(serviceInfo){
+  def assetList = []
   sh "rm -rf _azureconfig"
 
   sh "zip -qr content.zip ."
@@ -121,6 +107,7 @@ def invokeAzureCreation(serviceInfo, assetList){
         checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
         sh "npm install -s"
         try {
+          azureUtil.invokeAzureService(data, "createResourceGroup")
           createStorageAccount(data, serviceInfo)
 
           if (type) {

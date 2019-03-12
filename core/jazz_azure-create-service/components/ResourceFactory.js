@@ -471,4 +471,13 @@ module.exports = class ResourceFactory {
     return await client.resources.list({filter: `tagName eq '${tagName}' and tagValue eq '${tagValue}'`});
 
   }
+
+  async createResourceGroupOnlyIfNotExists(resourceGroupName = this.resourceGroupName, location = 'westus', tags = {}) {
+    let client = await this.factory.getResource("ResourceManagementClient");
+    let exists = await client.resourceGroups.checkExistence(resourceGroupName);
+    if (!exists) {
+      await this.createResourceGroup(resourceGroupName, location, tags);
+    }
+  }
+
 }
