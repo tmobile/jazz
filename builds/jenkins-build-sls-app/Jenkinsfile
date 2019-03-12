@@ -125,7 +125,6 @@ node() {
   def isS3EventEnabled = isEnabled(config, "event_source_s3")
   def isSQSEventEnabled = isEnabled(config, "event_source_sqs")
   def isEc2EventEnabled = isEnabled(config, "event_source_ec2")
-  def isEventSchdld = false
   def internalAccess = config['require_internal_access']
   domain = config['domain']
 
@@ -133,10 +132,6 @@ node() {
 
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-
-  if (isScheduleEnabled || isEc2EventEnabled || isS3EventEnabled || isStreamEnabled || isDynamoDbEnabled || isSQSEventEnabled){
-    isEventSchdld = true
-  }
 
   def requestId = utilModule.generateRequestId()
   if (requestId != null) {
@@ -368,93 +363,6 @@ node() {
 
       } //end of withCredentials
     } //end of deployment to an environment
-  }
-}
-
-def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld) {
-  def s3BucketErrString = "CloudFormation - CREATE_FAILED - AWS::S3::Bucket - "
-  s3BucketName = lambdaEvents.getEventResourceNamePerEnvironment(s3BucketName, environment_logical_id, "-")
-  if (deployOutput.contains(s3BucketErrString)) {
-    if (lambdaEvents.checkS3BucketExists(s3BucketName)) {
-      isLambdaUpdateRequired = true
-      lambdaEvents.removeS3EventsFromServerless(isEventSchdld)
-      deleteAndRedeployService(environment_logical_id, envBucketKey)
-    } else {
-      error "Error occured while accessing the s3 bucket"
-    }
-  } else {
-    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
-    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
-  }
-}
-
-def handleSqsError(deployOutput, service_config, environment_logical_id, envBucketKey) {
-  def event_source_sqs_arn = service_config['event_source_sqs']
-  def sqsErrString = "CloudFormation - CREATE_FAILED - AWS::SQS::Queue - "
-  if (deployOutput.contains(sqsErrString)) {
-    def event_source_sqs = lambdaEvents.getSqsQueueName(event_source_sqs_arn, environment_logical_id)
-    event_source_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_sqs_arn, environment_logical_id, "_")
-    def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
-    if (lambdaEvents.checkSqsQueueExists(event_source_sqs)) {
-      if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn)) {
-        error "Queue contains a different function trigger already. Please remove the existing function trigger and try again."
-      }
-      lambdaEvents.updateSqsResourceServerless()
-      deleteAndRedeployService(environment_logical_id, envBucketKey)
-    } else {
-      error "Error occured while accessing the SQS queue"
-    }
-  } else {
-    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
-    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
-  }
-}
-
-def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, environment_logical_id, envBucketKey) {
-  def kinesisStreamErrString = "CloudFormation - CREATE_FAILED - AWS::Kinesis::Stream - "
-  def event_source_kinesis = lambdaEvents.splitAndGetResourceName(event_source_kinesis_stream_arn, environment_logical_id)
-  event_source_kinesis_stream_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_kinesis_stream_arn, environment_logical_id, "_")
-  def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
-  if (deployOutput.contains(kinesisStreamErrString)) {
-    if (lambdaEvents.checkKinesisStreamExists(event_source_kinesis)) {
-      if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_kinesis_stream_arn, lambda_arn)) {
-        error "Kinesis stream contains a different function trigger already. Please remove the existing function trigger and try again."
-      }
-      lambdaEvents.updateKinesisResourceServerless(event_source_kinesis_stream_arn)
-      deleteAndRedeployService(environment_logical_id, envBucketKey)
-    } else {
-      error "Error occured while accessing the Kinesis stream"
-    }
-  } else {
-    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
-    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
-  }
-}
-
-def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_id, envBucketKey) {
-  def dynamodbTableErrString = "CloudFormation - CREATE_FAILED - AWS::DynamoDB::Table - "
-  def event_source_dynamodb_table_arn = service_config['event_source_dynamodb']
-  def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(event_source_dynamodb_table_arn, environment_logical_id)
-  event_source_dynamodb_table_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_dynamodb_table_arn, environment_logical_id, "_")
-  def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
-  if (deployOutput.contains(dynamodbTableErrString)) {
-    if (lambdaEvents.checkDynamoDbTableExists(event_source_dynamodb)) {
-      def stream_details = lambdaEvents.getDynamoDbStreamDetails(event_source_dynamodb)
-      if (!stream_details.isNewStream) {
-        if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(stream_details.StreamArn, lambda_arn)) {
-          error "Dynamodb stream contains a different function trigger already. Please remove the existing function trigger and try again."
-        }
-      } else {
-        events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", stream_details.StreamArn, "dynamodb_stream", service_config), environment_logical_id);
-      }
-      lambdaEvents.updateDynamoDbResourceServerless(stream_details.StreamArn)
-      deleteAndRedeployService(environment_logical_id, envBucketKey)
-    } else {
-      error "Error occured while accessing the dynamodb stream"
-    }
-  } else {
-    echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
-    error "Exception occured while serverless deployment to ${environment_logical_id} environment"
   }
 }
 
