@@ -47,12 +47,10 @@ async function namespaceAvailable(data, client) {
   };
   const result = await client.namespaces.checkNameAvailabilityMethod(params);
   return result.nameAvailable;
-
 }
 
 
 async function queueExists(data, client) {
-
 
   const queueList = await client.queues.listByNamespace(data.resourceGroupName, data.namespace);
   if (queueList) {
@@ -63,7 +61,6 @@ async function queueExists(data, client) {
     }
   }
   return false;
-
 }
 
 module.exports = {

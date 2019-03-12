@@ -13,7 +13,6 @@ async function create(data, client){
   }
 }
 
-
 async function createNamespace(data, client) {
 
   if (await namespaceAvailable(data, client)) {

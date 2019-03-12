@@ -49,7 +49,6 @@ module.exports = function () {
   const setLevel = (level, context) => {
     // LOG_LEVEL is 'info' by default
     this.context = context;
-    // this.config.requestDetails = context.invocationId;
 
     if (level && logLevels[level]) {
       // If LOG_LEVEL if explicitly specified , set it as the curLogLevel
