@@ -452,8 +452,8 @@ module.exports = class ResourceFactory {
   }
 
   async deleteResourcesByServiceName(tagName, tagValue) {
-    let client = await this.factory.getResource("ResourceManagementClient");
-    let resources = await client.resources.list({filter: `tagName eq '${tagName}' and tagValue eq '${tagValue}'`});
+
+    let resources = await getResourcesByServiceName(tagName, tagValue);
     let message ='total resources ' + resources.length + ' ';
 
     for (const resource of resources) {
@@ -466,5 +466,9 @@ module.exports = class ResourceFactory {
     return message;
   }
 
+  async getResourcesByServiceName(tagName, tagValue) {
+    let client = await this.factory.getResource("ResourceManagementClient");
+    return await client.resources.list({filter: `tagName eq '${tagName}' and tagValue eq '${tagValue}'`});
 
+  }
 }

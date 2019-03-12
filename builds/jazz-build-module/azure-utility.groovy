@@ -59,18 +59,44 @@ def getExtensionName(serviceInfo) {
   return name
 }
 
-def getDatabaseAccountName(serviceInfo) {
-  return serviceInfo.storageAccountName
 
+def getServicebusNamespace(serviceMetadata, env, defaultIfNull) {
+
+    return getMetadatabyKey(serviceMetadata, env, 'event_source_servicebus_namespace', defaultIfNull)
+}
+
+def getEventhubsNamespace(serviceMetadata, env, defaultIfNull) {
+
+    return getMetadatabyKey(serviceMetadata, env, 'event_source_eventhubs_namespace', defaultIfNull)
 }
 
 
-def getNamespace(serviceInfo) {
-  return serviceInfo.storageAccountName
+def getStorageAccount(serviceMetadata, env, defaultIfNull) {
 
-
+    return getMetadatabyKey(serviceMetadata, env, 'event_source_storage_account', defaultIfNull)
 }
 
+def getCosmosAccount(serviceMetadata, env, defaultIfNull) {
+
+     return getMetadatabyKey(serviceMetadata, env, 'event_source_cosmosdb_account', defaultIfNull)
+}
+
+def getCosmosDatabase(serviceMetadata, env, defaultIfNull) {
+
+    return getMetadatabyKey(serviceMetadata, env, 'event_source_cosmosdb_database', defaultIfNull)
+}
+
+def getCosmosTable(serviceMetadata, env, defaultIfNull) {
+
+    return getMetadatabyKey(serviceMetadata, env, 'event_source_cosmosdb_table', defaultIfNull)
+}
+
+def getMetadatabyKey(serviceMetadata, env, key, defaultIfNull) {
+
+  def userInput = serviceMetadata[key]
+
+  return userInput? resourceUtil.getResourceName(userInput, env) : defaultIfNull
+}
 
 def getRuntimeType(serviceInfo) {
 

@@ -35,10 +35,11 @@ module.exports.handler = (event, context, cb) => {
       "bar": "bar-value",
       "configKeys": myVal
     };
-
+    logger.info('success ' + sampleResponse);
     return cb(null, responseObj(sampleResponse, event));
 
   } catch (e) {
+    logger.error('Runtime errors or unexpected conditions.');
     //Sample Error response for internal server error
     return cb(JSON.stringify(errorHandler.throwInternalServerError("Sample error message")));
 
