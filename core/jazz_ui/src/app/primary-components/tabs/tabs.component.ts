@@ -77,7 +77,6 @@ export class TabsComponent implements OnInit {
   }
 
   ngOnChanges(x:any) {
-    // console.log("admin access:", this.isAdminAccess);
     this.disabletabs();
     this.disableENVtabs();
   }
