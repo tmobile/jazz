@@ -41,7 +41,6 @@ def createFunction(serviceInfo){
   loadAzureConfig(serviceInfo)
 
   def masterKey = invokeAzureCreation(serviceInfo, assetList)
- // sendAssetCompletedEvent(serviceInfo, assetList)
 
   def endpoint = "https://${serviceInfo.stackName}.azurewebsites.net/admin/functions/${serviceInfo.stackName}?code=$masterKey"
   return endpoint
