@@ -838,7 +838,12 @@ def updatePolicy(env, destARN){
 
 def writeServerlessFile(config, env, dataObjValues) {
 
-  def iamRoleArnValue = dataObjValues.IAM.USERSERVICES_ROLEID;
+  def iamRoleArnValue;
+  if(config['domain'] == 'jazz'){
+      iamRoleArnValue = config['iamRoleARN']
+  } else {
+      iamRoleArnValue = dataObjValues.IAM.USERSERVICES_ROLEID;
+  }
 
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
