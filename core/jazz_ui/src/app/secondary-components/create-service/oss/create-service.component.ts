@@ -27,9 +27,9 @@ import { environment as env_oss } from './../../../../environments/environment.o
 export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
-  sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
-  kinesisStreamString:string = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/";
-  dynamoStreamString:string = "arn:aws:dynamo:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/";
+  sqsStreamString:string;
+  kinesisStreamString:string;
+  dynamoStreamString:string;
   SlackEnabled:boolean = false;
   docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
@@ -131,6 +131,13 @@ export class CreateServiceComponent implements OnInit {
     })
     this.regionList = this.accountMap[0].regions;
     this.regionSelected = this.regionList[0];
+    this.setAccountandRegion();
+  }
+
+  setAccountandRegion(){
+    this.sqsStreamString = "arn:aws:sqs:" + this.regionSelected + ":" + this.accountSelected + ":";
+    this.kinesisStreamString = "arn:aws:kinesis:" + this.regionSelected + ":" + this.accountSelected + ":stream/";
+    this.dynamoStreamString = "arn:aws:dynamo:" + this.regionSelected + ":" + this.accountSelected + ":table/";
   }
 
   chkDynamodb() {
@@ -173,9 +180,11 @@ export class CreateServiceComponent implements OnInit {
         this.regionSelected = this.regionList[0];
       }
     })
+    this.setAccountandRegion()    ;
   }
   onregionSelected(event){
     this.regionSelected = event;
+    this.setAccountandRegion();
   }
 
 
@@ -374,16 +383,16 @@ export class CreateServiceComponent implements OnInit {
         var event = {};
         event["type"] = this.eventExpression.type;
         if(this.eventExpression.type === "dynamodb") {
-          event["source"] = "arn:aws:dynamodb:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":table/" + this.eventExpression.dynamoTable;
+          event["source"] = "arn:aws:dynamodb:" + this.regionSelected + ":"+this.accountSelected+":table/" + this.eventExpression.dynamoTable;
           event["action"] = "PutItem";
         } else if(this.eventExpression.type === "kinesis") {
-          event["source"] = "arn:aws:kinesis:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":stream/" + this.eventExpression.streamARN;
+          event["source"] = "arn:aws:kinesis:" + this.regionSelected + ":"+this.accountSelected+":stream/" + this.eventExpression.streamARN;
           event["action"] = "PutRecord";
         } else if(this.eventExpression.type === "s3") {
           event["source"] = this.eventExpression.S3BucketName;
           event["action"] = "s3:ObjectCreated:*";
         } else if (this.eventExpression.type === "sqs") {
-          event["source"] = "arn:aws:sqs:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":"+ this.eventExpression.SQSstreamARN;
+          event["source"] = "arn:aws:sqs:" + this.regionSelected + ":"+this.accountSelected+":"+ this.eventExpression.SQSstreamARN;
         }
         payload["events"] = [];
         payload["events"].push(event);

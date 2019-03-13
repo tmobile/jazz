@@ -314,7 +314,7 @@ node() {
 
           if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3']) {
             def role_name = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-            def role_arn = lambdaEvents.getRoleArn(role_name)
+            def role_arn = lambdaEvents.getRoleArn(role_name, credsId)
             events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], role_arn, "iam_role", config), environment_logical_id);
           }
 
