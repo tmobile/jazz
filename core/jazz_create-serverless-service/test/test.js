@@ -489,14 +489,15 @@ describe('create-serverless-service', function () {
         .then((input) => {
           let action = 'event_action_' + each;
           let source = 'event_source_' + each;
-          expect(input.METADATA).to.have.all.keys(action, source)
+          let provider = 'providerRuntime';
+          expect(input.METADATA).to.have.all.keys(action, source, provider)
         });
       })
     });
 
     it("should return input error for invalid input parameters for service type function (for different event sources)", () => {
       let authToken = "temp-auth-token";
-      let eventsList = ["", "invalidEvent"];
+      let eventsList = ["","invalidEvent"];
       service_creation_data.rateExpression = ""
       let config = configModule.getConfig(event, context);
 
@@ -511,7 +512,13 @@ describe('create-serverless-service', function () {
 
         index.getServiceData(service_creation_data, authToken, config)
         .catch(error => {
-          expect(error).to.include({ result: 'inputError', message: each + ' name is invalid.' });
+          let message;
+          if(each == ""){
+            message = 'Event type and/or source name cannot be empty.';
+          } else {
+            message = "Event type " + "\'" + each + "\'" + " is invalid.";
+          }
+          expect(error).to.include({ result: 'inputError', message: message });
         });
       })
     });
@@ -533,7 +540,7 @@ describe('create-serverless-service', function () {
 
         index.getServiceData(service_creation_data, authToken, config)
         .catch(error => {
-          expect(error).to.include({ result: 'inputError', message: 'S3 name is invalid.' });
+          expect(error).to.include({ result: 'inputError', message: each + ' cannot begin or end with special character' });
         });
       })
     })
