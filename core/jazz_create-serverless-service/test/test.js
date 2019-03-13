@@ -89,7 +89,7 @@ describe('create-serverless-service', function () {
           "service_type": "function",
           "domain": "test-domain",
           "runtime": "nodejs",
-          "deployment_accounts" : [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true}],
+          "deployment_accounts" : [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
           "approvers": ['tw1light_$pArkle'],
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
