@@ -24,7 +24,11 @@
 const parser = require('aws-arn-parser');
 const metricConfig = require("./metrics.json");
 const global_config = require("../config/global-config.json");
+<<<<<<< HEAD
 const logger = require("../components/logger.js")();
+=======
+const logger = require("./logger.js")(); //Import the logging module.
+>>>>>>> cloudfront region fix
 const AWS = require("aws-sdk");
 
 function massageData(assetResults, eventBody, account) {
@@ -307,9 +311,9 @@ function getCloudWatch(tempcreds, region) {
   return cloudwatch;
 }
 
-function getCloudfrontCloudWatch(tempcreds , region) {
+function getCloudfrontCloudWatch(tempcreds) {
   tempcreds.apiVersion = '2010-08-01';
-  tempcreds.region = region
+  tempcreds.region = global_config.CF_REGION;
   var cloudwatch = new AWS.CloudWatch(tempcreds);
   return cloudwatch;
 }
@@ -352,6 +356,7 @@ function AssumeRole(accountID, configJson) {
             "message": "Unknown internal error occurred"
           })
         } else {
+          logger.debug("Temporary Credentials are : ", JSON.stringify(data));
           accessparams = {
             accessKeyId: data.Credentials.AccessKeyId,
             secretAccessKey: data.Credentials.SecretAccessKey,
