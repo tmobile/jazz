@@ -1,0 +1,20 @@
+{
+  "name": "jazz_apigee-proxy-aws",
+  "version": "0.0.1",
+  "description": "Common lambda integrator for API proxies(like Apigee)",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "aws-sdk": "*"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^v3.0.0",
+    "aws-sdk-mock": "*",
+    "aws-lambda-mock-context": "*"
+  }
+}

@@ -21,6 +21,7 @@ import groovy.json.JsonSlurperClassic
 @Field def serviceMetadataLoader
 @Field def environmentMetadataLoader
 @Field def sonarModule
+@Field def apigeeModule
 @Field def lambdaEvents
 
 @Field def g_base_url = ''
@@ -144,6 +145,7 @@ node {
 				stage('Undeploy Service') {
 					updateServiceNameConfig()
 					def path = getResourcePath()
+					def apiPlatform = service_config.deployment_targets.api;
 					for (_envId in environmentIds) {
 						current_environment_id = _envId
 						try {
@@ -158,7 +160,18 @@ node {
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
 							echo 'undeploying service for environment: ' + _envId
 
-							cleanUpApiGatewayResources(_envId, path)
+							switch(apiPlatform) {
+								case 'aws_apigateway':
+									cleanUpApiGatewayResources(_envId, path)
+									break
+								case 'gcp_apigee':
+									def env_key = _envId.endsWith("-dev") ? "DEV" : "PROD"
+									apigeeModule.delete("swagger/swagger.json", env_key, _envId, service_config)
+									break
+								default:
+									error "Deployment platform not recognized."
+							}
+
 							cleanUpApiDocs(_envId)
 							unDeployService(_envId)
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
@@ -1208,6 +1221,12 @@ def loadBuildModules(buildModuleUrl){
 
 		sonarModule = load "sonar-module.groovy"
 		echo "Sonar module loaded successfully."
+
+		if (configLoader.APIGEE && configLoader.APIGEE.ENABLE_APIGEE instanceof Boolean && configLoader.APIGEE.ENABLE_APIGEE) {
+			apigeeModule = load "apigee-module.groovy"
+			apigeeModule.initialize(configLoader.APIGEE, events)
+			echo "Apigee module loaded successfully."
+		}
 
     lambdaEvents = load "aws-lambda-events-module.groovy"
     lambdaEvents.initialize(configLoader, utilModule)
