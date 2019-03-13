@@ -135,7 +135,7 @@ describe('User Management', function () {
 
 	it("should throw a invalid or missing arguments for undefined method", function () {
 		event = {
-			"method": 'GET',
+			"method": 'DELETE',
 			"stage": "test",
 			"resourcePath": "reset",
 			"body": {
@@ -148,6 +148,43 @@ describe('User Management', function () {
 		var bool = index.handler(event, context, callback).includes("Service operation not supported") &&
 			index.handler(event, context, callback).includes("101");
 		assert.isTrue(bool);
+	});
+
+	it('should throw error validateUserListQuery', function () {
+		config.USER_POOL_ID = "us-east-1_01234567"
+		var queryParams = {
+			"limit": "qwer"
+		}
+		index.validateUserListQuery(queryParams, config)
+			.catch(error => expect(error).to.include({
+				errorCode: '102',
+				errorType: 'BadRequest',
+				message: 'Limit is invalid'
+			}));
+	});
+
+	it('should throw error validateUserPayloadDetails for invalid UserId', function () {
+		event.body = {
+			"status": 1
+		}
+		index.validateUserPayloadDetails(1, event.body)
+			.catch(error => expect(error).to.include({
+				errorCode: '102',
+				errorType: 'BadRequest',
+				message: 'user id is invalid'
+			}));
+	});
+
+	it('should throw error validateUserPayloadDetails for invalid status', function () {
+		event.body = {
+			"status": "active"
+		}
+		index.validateUserPayloadDetails('qwerty-1233445', event.body)
+			.catch(error => expect(error).to.include({
+				errorCode: '102',
+				errorType: 'BadRequest',
+				message: 'status is invalid'
+			}));
 	});
 });
 
@@ -484,6 +521,138 @@ describe("inside index handler else condition", function () {
 			createUser.restore();
 			getRequestToCreateSCMUser.restore();
 			rpStub.restore();
+		});
+	});
+});
+
+describe("inside index handler GET method", function () {
+	beforeEach(function () {
+		event = {
+			"method": "GET",
+			"stage": "test",
+			"resourcePath": "test/service/user"
+		};
+		context = awsContext();
+		config = configModule.getConfig(event, context);
+		callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			} else {
+				return JSON.stringify(responseObj);
+			}
+		};
+
+	});
+
+	it('Should return userList ', function () {
+		const validateUserListQuery = sinon.stub(index, "validateUserListQuery").resolves("success");
+		const getUserList = sinon.stub(index, "getUserList").resolves({ Users: [] });
+
+		index.handler(event, context, (err, res) => {
+			expect(res.data.result).to.eq('Success');
+			sinon.assert.calledOnce(validateUserListQuery);
+			sinon.assert.calledOnce(getUserList);
+			validateUserListQuery.restore();
+			getUserList.restore();
+		});
+	});
+
+	it('Should return error', function () {
+		const validateUserListQuery = sinon.stub(index, "validateUserListQuery").returns(Promise.reject({
+			result: 'reject'
+		}));
+		const getUserList = sinon.stub(index, "getUserList").resolves({ Users: [] });
+		index.handler(event, context, (err, res) => {
+			expect(JSON.parse(err).errorCode).to.eq("500");
+			sinon.assert.calledOnce(validateUserListQuery);
+			sinon.assert.notCalled(getUserList);
+			validateUserListQuery.restore();
+			getUserList.restore();
+		});
+	});
+
+	it('Should return validation error', function () {
+		const validateUserListQuery = sinon.stub(index, "validateUserListQuery").returns(Promise.reject({
+			errorType: "102",
+			message: "error"
+		}));
+		const getUserList = sinon.stub(index, "getUserList").resolves();
+		index.handler(event, context, (err, res) => {
+			expect(JSON.parse(err).errorType).to.eq("102");
+			sinon.assert.calledOnce(validateUserListQuery);
+			validateUserListQuery.restore();
+			sinon.assert.notCalled(getUserList);
+			getUserList.restore();
+		});
+	});
+});
+
+describe("Inside index handler for PUT method", function () {
+	beforeEach(function () {
+		event = {
+			"method": "PUT",
+			"stage": "test",
+			"resourcePath": "test/service/user/qwerty-123456",
+			"path": {
+				"id": "qwerty-123456",
+			},
+			"body": {
+				"status": 1
+			}
+		};
+		context = awsContext();
+		config = configModule.getConfig(event, context);
+		callback = (err, responseObj) => {
+			if (err) {
+				return err;
+			} else {
+				return JSON.stringify(responseObj);
+			}
+		};
+
+	});
+
+	it('Should return Success message while updateUserDetails', function () {
+		const validateUserPayloadDetails = sinon.stub(index, "validateUserPayloadDetails").resolves("success");
+		const updateUserDetails = sinon.stub(index, "updateUserDetails").resolves({});
+
+		index.handler(event, context, (err, res) => {
+			expect(res.data.result).to.eq('Success');
+			sinon.assert.calledOnce(validateUserPayloadDetails);
+			sinon.assert.calledOnce(updateUserDetails);
+			validateUserPayloadDetails.restore();
+			updateUserDetails.restore();
+		});
+	});
+
+	it('Should return Error code as 500  updateUserDetails', function () {
+		const validateUserPayloadDetails = sinon.stub(index, "validateUserPayloadDetails").returns(Promise.reject({
+			result: 'reject'
+		}));
+		const updateUserDetails = sinon.stub(index, "updateUserDetails").resolves({});
+		
+		index.handler(event, context, (err, res) => {
+			expect(JSON.parse(err).errorCode).to.eq("500");
+			sinon.assert.calledOnce(validateUserPayloadDetails);
+			sinon.assert.notCalled(updateUserDetails);
+			validateUserPayloadDetails.restore();
+			updateUserDetails.restore();
+		});
+	});
+
+	it('Should return Error code as 102  updateUserDetails', function () {
+		const validateUserPayloadDetails = sinon.stub(index, "validateUserPayloadDetails").returns(Promise.reject({
+			errorType: "102",
+			message: "error"
+		}));
+		const updateUserDetails = sinon.stub(index, "updateUserDetails").resolves({});
+
+		index.handler(event, context, (err, res) => {
+			expect(JSON.parse(err).errorType).to.eq("102");
+			sinon.assert.calledOnce(validateUserPayloadDetails);
+			sinon.assert.notCalled(updateUserDetails);
+			validateUserPayloadDetails.restore();
+			updateUserDetails.restore();
 		});
 	});
 });
