@@ -46,14 +46,14 @@ export class RequestService {
     get(url: string, params?, serviceId?): Observable<any> {
       url = this.constructUrl(url);
       this.token = this.authenticationService.getToken();
-        
+
         // Add Authentication token to headers
         let headerObj = {
             'Authorization': this.token,
             'Content-Type': 'application/json',
             'accept':'application/json'
         };
-    
+
         if(serviceId){
             headerObj['Jazz-Service-ID'] = serviceId
         }
@@ -84,7 +84,7 @@ export class RequestService {
 
     post(url: string, body: any, serviceId?): Observable<any> {
         // Make a POST request to url
-        
+
         // Construct url
         url = this.constructUrl(url);
 
