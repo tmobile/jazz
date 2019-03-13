@@ -19,4 +19,14 @@ export class AdminUtilsService {
           return response.data.config;
       })
   }
+    getAdminUsers(pageToken) {
+    console.log("token", pageToken)
+    let pageLimit = 10;
+    return this.http.get(`/jazz/usermanagement?limit=${pageLimit}&paginationtoken=${pageToken}`)
+      .toPromise()
+      .then((response) => {
+        if (response && response.data && response.data.users)
+          return response.data;
+      })
+  }
 }
