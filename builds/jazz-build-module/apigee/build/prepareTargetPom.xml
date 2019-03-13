@@ -1,0 +1,103 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>apigee</groupId>
+	<artifactId>clone-new-template-pom</artifactId>
+	<version>1.0</version>
+	<name>apigee-template</name>
+	<packaging>pom</packaging>
+	
+	<build>
+	  	<plugins>
+
+			<plugin>
+				<artifactId>maven-resources-plugin</artifactId>
+				<version>2.6</version>
+				<executions>
+					<!--  ${targetService} proxy -  targets, policies, and resources folders copy to target-->
+
+					<execution>
+						<id>copy-${targetService}-targets-to-target</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<overwrite>true</overwrite>
+							<includeEmptyDirs>true</includeEmptyDirs>
+							<outputDirectory>${basedir}/temp/apiproxy/targets</outputDirectory>
+							<resources>
+								<resource>
+									<directory>../Targets/${targetService}/${version}/target</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>copy-${targetService}-policies-to-target</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<overwrite>true</overwrite>
+							<includeEmptyDirs>true</includeEmptyDirs>
+							<outputDirectory>${basedir}/temp/apiproxy/policies</outputDirectory>
+							<resources>
+								<resource>
+									<directory>../Targets/${targetService}/${version}/policies</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+
+					<execution>
+						<id>copy-${targetService}-resource-to-target</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<overwrite>true</overwrite>
+							<includeEmptyDirs>true</includeEmptyDirs>
+							<outputDirectory>${basedir}/temp/apiproxy/resources</outputDirectory>
+							<resources>
+								<resource>
+									<directory>../Targets/${targetService}/${version}/resources</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+
+	
+				<!-- Common, ${apiname}, ${targetService}, ${service2name}  flowfragments   copy to target   -->
+
+
+					<execution>
+						<id>copy-${targetService}-fragments-to-target</id>
+						<phase>generate-sources</phase>
+						<goals>
+							<goal>copy-resources</goal>
+						</goals>
+						<configuration>
+							<overwrite>true</overwrite>
+							<includeEmptyDirs>true</includeEmptyDirs>
+							<outputDirectory>${basedir}/temp/apiproxy/proxies</outputDirectory>
+							<resources>
+								<resource>
+									<directory>../Targets/${targetService}/${version}/flowfragments</directory>
+								</resource>
+							</resources>
+						</configuration>
+					</execution>
+
+
+				</executions>
+			</plugin> <!-- DONE COPING -->
+
+			
+		</plugins>
+	</build>
+</project>

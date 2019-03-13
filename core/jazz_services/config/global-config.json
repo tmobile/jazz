@@ -1,143 +1,156 @@
 {
-    "SERVICE_FIELDS_METADATA": [
+  "SERVICE_FIELDS_METADATA": [
+    {
+      "key": "description",
+      "required": false,
+      "editable": true,
+      "isEmptyAllowed": true,
+      "type": "String"
+    },
+    {
+      "key": "email",
+      "required": false,
+      "editable": true,
+      "isEmptyAllowed": true,
+      "type": "String"
+    },
+    {
+      "key": "slack_channel",
+      "required": false,
+      "editable": true,
+      "isEmptyAllowed": true,
+      "type": "String"
+    },
+    {
+      "key": "tags",
+      "required": false,
+      "editable": true,
+      "isEmptyAllowed": true,
+      "type": "Array"
+    },
+    {
+      "key": "repository",
+      "required": false,
+      "editable": true,
+      "isEmptyAllowed": false,
+      "type": "String"
+    },
+    {
+      "key": "service",
+      "required": true,
+      "editable": false,
+      "isEmptyAllowed": false,
+      "type": "String"
+    },
+    {
+      "key": "domain",
+      "required": true,
+      "editable": false,
+      "isEmptyAllowed": false,
+      "type": "String"
+    },
+    {
+      "key": "type",
+      "required": true,
+      "editable": false,
+      "isEmptyAllowed": false,
+      "type": "String"
+    },
+    {
+      "key": "created_by",
+      "required": true,
+      "editable": false,
+      "isEmptyAllowed": false,
+      "type": "String"
+    },
+    {
+      "key": "status",
+      "required": true,
+      "editable": true,
+      "isEmptyAllowed": false,
+      "type": "String"
+    },
+    {
+      "key": "runtime",
+      "required": true,
+      "editable": false,
+      "isEmptyAllowed": false,
+      "type": "String"
+    },
+    {
+      "key": "region",
+      "required": false,
+      "editable": true,
+      "isEmptyAllowed": false,
+      "type": "Array"
+    },
+    {
+      "key": "is_public_endpoint",
+      "required": false,
+      "editable": true,
+      "isEmptyAllowed": false,
+      "type": "Boolean"
+    },
+    {
+      "key": "metadata",
+      "required": false,
+      "editable": true,
+      "isEmptyAllowed": false,
+      "type": "Object"
+    },
+    {
+      "key": "deployment_accounts",
+      "required": true,
+      "editable": false,
+      "isEmptyAllowed": false,
+      "type": "Array"
+    },
+    {
+      "key": "deployment_targets",
+      "required": true,
+      "editable": false,
+      "isEmptyAllowed": false,
+      "type": "Object"
+    }
+  ],
+  "SERVICE_STATUS": [
+    "creation_started",
+    "creation_failed",
+    "creation_completed",
+    "deletion_started",
+    "deletion_failed",
+    "deletion_completed",
+    "active",
+    "inactive"
+  ],
+  "SERVICE_RUNTIMES": [
+    "nodejs8.10",
+    "python2.7",
+    "python3.6",
+    "java8",
+    "go1.x"
+  ],
+  "TYPE_FIELD_KEY": "type",
+  "SERVICE_INTER_DEPENDENT_FIELDS_MAP": [
+    {
+      "type": "api",
+      "fields": [
         {
-            "key": "description",
-            "required": false,
-            "editable": true,
-            "isEmptyAllowed": true,
-            "type": "String"
-        },
-        {
-            "key": "email",
-            "required": false,
-            "editable": true,
-            "isEmptyAllowed": true,
-            "type": "String"
-        },
-        {
-            "key": "slack_channel",
-            "required": false,
-            "editable": true,
-            "isEmptyAllowed": true,
-            "type": "String"
-        },
-        {
-            "key": "tags",
-            "required": false,
-            "editable": true,
-            "isEmptyAllowed": true,
-            "type": "Array"
-        },
-        {
-            "key": "repository",
-            "required": false,
-            "editable": true,
-            "isEmptyAllowed": false,
-            "type": "String"
-        },
-        {
-            "key": "service",
-            "required": true,
-            "editable": false,
-            "isEmptyAllowed": false,
-            "type": "String"
-        },
-        {
-            "key": "domain",
-            "required": true,
-            "editable": false,
-            "isEmptyAllowed": false,
-            "type": "String"
-        },
-        {
-            "key": "type",
-            "required": true,
-            "editable": false,
-            "isEmptyAllowed": false,
-            "type": "String"
-        },
-        {
-            "key": "created_by",
-            "required": true,
-            "editable": false,
-            "isEmptyAllowed": false,
-            "type": "String"
-        },
-        {
-            "key": "status",
-            "required": true,
-            "editable": true,
-            "isEmptyAllowed": false,
-            "type": "String"
-        },
-        {
-            "key": "runtime",
-            "required": true,
-            "editable": false,
-            "isEmptyAllowed": false,
-            "type": "String"
-        },
-        {
-            "key": "region",
-            "required": false,
-            "editable": true,
-            "isEmptyAllowed": false,
-            "type": "Array"
-        },
-        {
-            "key": "is_public_endpoint",
-            "required": false,
-            "editable": true,
-            "isEmptyAllowed": false,
-            "type": "Boolean"
-        },
-        {
-            "key": "metadata",
-            "required": false,
-            "editable": true,
-            "isEmptyAllowed": false,
-            "type": "Object"
-        },
-        {
-            "key": "deployment_accounts",
-            "required": true,
-            "editable": false,
-            "isEmptyAllowed": false,
-            "type": "Array"
-        }       
-    ],
-    "SERVICE_STATUS": [
-        "creation_started",
-        "creation_failed",
-        "creation_completed",
-        "deletion_started",
-        "deletion_failed",
-        "deletion_completed",
-        "active",
-        "inactive"
-    ],
-    "SERVICE_RUNTIMES": ["nodejs8.10", "python2.7", "python3.6", "java8", "go1.x"],
-    "TYPE_FIELD_KEY": "type",
-    "SERVICE_INTER_DEPENDENT_FIELDS_MAP": [
-        {
-            "type": "api",
-            "fields": [
-                {
-                    "key": "runtime"
-                }
-            ]
-        },
-        {
-            "type": "function",
-            "fields": [
-                {
-                    "key": "runtime"
-                }
-            ]
-        },
-        {
-            "type": "website",
-            "fields": []
+          "key": "runtime"
         }
-    ]
+      ]
+    },
+    {
+      "type": "function",
+      "fields": [
+        {
+          "key": "runtime"
+        }
+      ]
+    },
+    {
+      "type": "website",
+      "fields": []
+    }
+  ]
 }
