@@ -1,1 +1,0 @@
-Environment Event Handler to handle events related to jazz environment catalog updates

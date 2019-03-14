@@ -1,1 +1,0 @@
-Event handler for notifying events through slack.

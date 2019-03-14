@@ -1,1 +1,0 @@
-Service environments catalog API for Jazz.

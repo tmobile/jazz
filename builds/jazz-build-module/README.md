@@ -1,1 +1,0 @@
-## Service Metadata Loader module

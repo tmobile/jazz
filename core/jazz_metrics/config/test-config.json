@@ -1,7 +1,0 @@
-{
-  "SERVICE_API_URL": "https://test.execute-api.test-region.amazonaws.com",
-  "ASSETS_URL": "/test/jazz/assets",
-  "TOKEN_URL": "/test/jazz/login",
-  "SERVICE_USER": "xyz@abc.com",
-  "TOKEN_CREDS": "aqaqaaqaqaqaqaq"
-}

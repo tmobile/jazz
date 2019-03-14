@@ -1,5 +1,0 @@
-{
-  "slack_channel_token": "xxxxxxxxxxxxxxxxx",
-  "public_channel_endpoint": "https://slack.com/api/channels.list?",
-  "priv_channel_endpoint": "https://slack.com/api/groups.list?"
-}
