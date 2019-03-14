@@ -2,12 +2,12 @@ import {
   Component, OnInit, Input, ViewChild, AfterViewInit
 } from '@angular/core';
 import * as moment from 'moment';
-import {UtilsService} from '../../core/services/utils.service';
-import {ActivatedRoute} from '@angular/router';
-import {RequestService} from '../../core/services';
-import {Observable} from 'rxjs/Observable';
-import * as _ from 'lodash';
-declare let Promise;
+import { UtilsService } from "../../core/services/utils.service";
+import { ActivatedRoute } from "@angular/router";
+import { RequestService } from "../../core/services";
+import { Observable } from "rxjs/Observable";
+import * as _ from "lodash";
+
 @Component({
   selector: 'service-metrics',
   templateUrl: './service-metrics.component.html',
@@ -16,7 +16,7 @@ declare let Promise;
 export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   @Input() service;
   @ViewChild('filters') filters;
-
+  public allData: any;
   public serviceType;
   public environmentFilter;
   public formFields: any = [
@@ -48,11 +48,14 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       column: 'View By:',
       label: 'PERIOD',
       type: 'select',
-      options: ['1 Minute', '1 Hour', '1 Day'],
-      values: [moment(0).add(1, 'minute').valueOf() / 1000,
-        moment(0).add(1, 'hour').valueOf() / 1000,
-        moment(0).add(1, 'day').valueOf() / 1000],
-      selected: '1 Minute'
+      options: ['15 Minutes', '1 Hour', '6 Hours', '1 Day', '7 Days', '30 Days'],
+      values: [moment(0).add(15, 'minute').valueOf() / 1000,
+      moment(0).add(1, 'hour').valueOf() / 1000,
+      moment(0).add(6, 'hour').valueOf() / 1000,
+      moment(0).add(1, 'day').valueOf() / 1000,
+      moment(0).add(7, 'day').valueOf() / 1000,
+      moment(0).add(30, 'day').valueOf() / 1000],
+      selected: '15 Minutes'
     },
     {
       column: 'View By:',
@@ -67,21 +70,20 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public selectedAsset;
   public selectedMetric;
   public queryDataRaw;
-  public sectionStatus = "empty";
+  public sectionStatus;
   public errorData = {};
   public graphData;
   private http;
 
 
   constructor(private request: RequestService,
-              private utils: UtilsService,
-              private activatedRoute: ActivatedRoute) {
+    private utils: UtilsService,
+    private activatedRoute: ActivatedRoute) {
     this.http = this.request;
   }
 
   ngAfterViewInit() {
-    setTimeout(() => {
-      this.sectionStatus = 'loading';
+    this.sectionStatus = 'loading';
 
     if (!this.activatedRoute.snapshot.params['env']) {
       return this.getEnvironments()
@@ -92,24 +94,10 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       return this.applyFilter();
     }
 
-    })
   }
 
   ngOnInit() {
     this.serviceType = this.service.type || this.service.serviceType;
-    this.setPeriodFilters();
-  }
-
-  setPeriodFilters() {
-    if (this.service.deployment_targets === 'gcp_apigee'){
-      const periodFilterIndex = this.formFields.findIndex(formField => formField.label === 'PERIOD');
-      this.formFields[periodFilterIndex].options =  ['1 Minutes', '1 Hour', '1 Day'];
-      this.formFields[periodFilterIndex].values = [moment(0).add(1, 'minute').valueOf() / 1000,
-        moment(0).add(1, 'hour').valueOf() / 1000,
-        moment(0).add(1, 'day').valueOf() / 1000,
-      ];
-      this.formFields[periodFilterIndex].selected =  '1 Minutes';
-    }
   }
 
   refresh() {
@@ -120,17 +108,19 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     return this.http.get('/jazz/environments', {
       domain: this.service.domain,
       service: this.service.name
-    }, this.service.id).toPromise()
+    }).toPromise()
       .then((response: any) => {
         if (response && response.data && response.data.environment && response.data.environment.length) {
           let serviceEnvironments = _(response.data.environment).map('logical_id').uniq().value();
           this.environmentFilter = {
             column: 'Filter By:',
             label: 'ENVIRONMENT',
+            type: 'select',
             options: serviceEnvironments,
             values: serviceEnvironments,
             selected: 'prod'
           };
+
           let environmentField = this.filters.getFieldValueOfLabel('ENVIRONMENT');
           if (!environmentField) {
             this.formFields.splice(0, 0, this.environmentFilter);
@@ -142,103 +132,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       })
   }
 
-  findIndexOfObjectWithKey(array,key,value){
-    for(let i = 0; i < array.length; i++ ){
-      if(array[i][key] == value){
-        return i;
-      }
-    }
-  }
-
   applyFilter(changedFilter?) {
-
-    if(changedFilter){
-      let index = this.findIndexOfObjectWithKey(this.formFields,'label','PERIOD');
-      if(this.service.deployment_targets === 'gcp_apigee'){
-        switch(changedFilter.selected){
-          case 'Day':{
-            this.formFields[index].options =  ['1 Minutes', '1 Hour', '1 Day'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'minute').valueOf() / 1000,
-                moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(1, 'day').valueOf() / 1000,];
-            this.filters.changeFilter('1 Minutes',this.formFields[index]);
-            break;
-          }
-          case 'Week':{
-            this.formFields[index].options =  ['1 Hour', '1 Day', '7 Days'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,];
-            this.filters.changeFilter('1 Hour',this.formFields[index]);
-            break;
-          }
-          case 'Month':{
-            this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,
-                moment(0).add(30, 'day').valueOf() / 1000];
-            this.filters.changeFilter('1 Day',this.formFields[index]);
-            break;
-          }
-          case 'Year':{
-            this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,
-                moment(0).add(30, 'day').valueOf() / 1000];
-            this.filters.changeFilter('1 Day',this.formFields[index]);
-            break;
-          }
-        }
-      }
-      else{
-        switch(changedFilter.selected){
-          case 'Day':{
-            this.formFields[index].options =  ['1 Minutes', '1 Hour', '1 Day'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'minute').valueOf() / 1000,
-                moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(1, 'day').valueOf() / 1000,];
-            this.filters.changeFilter('1 Minutes',this.formFields[index]);
-            break;
-          }
-          case 'Week':{
-            this.formFields[index].options =  ['1 Hour', '1 Day', '7 Days'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,];
-            this.filters.changeFilter('1 Hour',this.formFields[index]);
-            break;
-          }
-          case 'Month':{
-            this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,
-                moment(0).add(30, 'day').valueOf() / 1000];
-            this.filters.changeFilter('1 Day',this.formFields[index]);
-            break;
-
-          }
-          case 'Year':{
-            this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,
-                moment(0).add(30, 'day').valueOf() / 1000];
-            this.filters.changeFilter('1 Day',this.formFields[index]);
-            break;
-          }
-        }
-      }
-
-
-    }
-
     if (changedFilter && (changedFilter.label === 'ASSET' ||
       changedFilter.label === 'METHOD' ||
       changedFilter.label === 'PATH')) {
@@ -247,6 +141,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       return this.queryMetricsData();
     }
   }
+
 
   queryMetricsData() {
     this.sectionStatus = 'loading';
@@ -262,34 +157,32 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         statistics: this.filters.getFieldValueOfLabel('AGGREGATION')
       }
     };
-    return this.http.post(request.url, request.body, this.service.id)
+    return this.http.post(request.url, request.body)
       .toPromise()
       .then((response) => {
         this.sectionStatus = 'empty';
-        if (response && response.data && response.data.assets && response.data.assets.length) {
+        if (response && response.data && response.data.length) {
           this.queryDataRaw = response.data;
-          this.queryDataRaw.assets = this.filterAssetType(response.data);
-          this.setAssetsFilter();
-          this.setAsset();
+          this.getAllData(response.data);
         }
-      },
-      (error) => {
+      })
+      .catch((error) => {
         this.sectionStatus = 'error';
-        this.errorData['response'] = error;
-      });
-
+        console.log(error);
+      })
   }
-
+  getAllData(data) {
+    this.allData = data;
+    this.queryDataRaw.assets = this.filterAssetType(this.allData[0]);
+    this.setAssetsFilter();
+    this.setAsset();
+  }
   filterAssetType(data) {
     return data.assets.filter((asset) => {
       if (this.serviceType === 'api') {
-        if (this.service.deployment_targets === "gcp_apigee") {
-          return asset.type === 'apigee_proxy';
-        }else{
-          return asset.type === 'apigateway';
-        }
+        return asset.type === 'apigateway';
       } else if (this.serviceType === 'function') {
-        return asset.type === 'lambda';
+        return asset.type === 'lambda'
       } else if (this.serviceType === 'website') {
         return (asset.type === 's3') || (asset.type === 'cloudfront');
       }
@@ -306,12 +199,12 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         let paths = _(this.queryDataRaw.assets)
           .map('asset_name.Resource')
           .uniq().value();
-        this.filters.addField('Filter By:', 'METHOD', methods, null);
-        this.filters.addField('Filter By:', 'PATH', paths);
+        this.filters.addField('Filter By:', 'METHOD', methods, 'select', null, 'GET');
+        this.filters.addField('Filter By:', 'PATH', paths, 'select', null, null);
         break;
       case 'website':
         let websiteAssets = _(this.queryDataRaw.assets).map('type').uniq().value();
-        this.filters.addField('Filter By:', 'ASSET', websiteAssets, null, 'cloudfront');
+        this.filters.addField('Filter By:', 'ASSET', websiteAssets, 'select', null, 'cloudfront');
         break;
     }
   }
@@ -330,7 +223,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         break;
       case 'website':
         let assetType = this.filters.getFieldValueOfLabel('ASSET');
-        this.selectedAsset = _.find(this.queryDataRaw.assets, {type: assetType});
+        this.selectedAsset = _.find(this.queryDataRaw.assets, { type: assetType });
         break;
     }
 
@@ -366,16 +259,10 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         return moment(pointA.Timestamp).diff(moment(pointB.Timestamp));
       })
       .map((dataPoint) => {
-
-        let obj = {
+        return {
           x: moment(dataPoint.Timestamp).valueOf(),
           y: parseInt(dataPoint[valueProperty])
         };
-
-        if(!obj['y']){
-          obj['y'] = parseInt(dataPoint[valueProperty.toLowerCase()])
-        }
-        return obj;
       });
 
     let timeRange = this.filters.getFieldValueOfLabel('TIME RANGE');
@@ -418,5 +305,4 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       metric.datapoints = datapoints;
     })
   }
-
 }

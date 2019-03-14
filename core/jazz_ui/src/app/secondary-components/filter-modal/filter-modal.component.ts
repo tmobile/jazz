@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnInit, Output, ViewChild} from '@angular/core';
+import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 // import {IonRangeSliderModule} from 'ng2-ion-range-slider';
 import { CheckboxGroupComponent } from './../../primary-components/checkbox-group/checkbox-group.component'
 import { CheckboxGroupRegionComponent } from './../../primary-components/checkbox-group-region/checkbox-group-region.component'
@@ -20,9 +20,9 @@ export class FilterModalComponent implements OnInit {
 
 
 
-  multiColumns:boolean = false;
-  sliderMax:number = 7;
-  sliderPercentFrom:number = 0;
+  multiColumns: boolean = false;
+  sliderMax: number = 7;
+  sliderPercentFrom: number = 0;
 
   public form = {
     columns: []
@@ -32,12 +32,12 @@ export class FilterModalComponent implements OnInit {
   constructor() {
   }
 
-  getRange(e){
+  getRange(e) {
 
   }
 
 
-  reOrderFilterColumns(){
+  reOrderFilterColumns() {
     let columnA = this.form.columns[0];
     let columnB = this.form.columns[1];
     let columnt;
@@ -49,14 +49,14 @@ export class FilterModalComponent implements OnInit {
     this.form.columns[0] = columnA;
     this.form.columns[1] = columnB;
   }
-  ngOnChanges(){
+  ngOnChanges() {
     this.initialize();
   }
   ngOnInit() {
     this.initialize()
   }
 
-  paintCheckboxes(){
+  paintCheckboxes() {
 
   }
 
@@ -64,17 +64,17 @@ export class FilterModalComponent implements OnInit {
     this.initialize();
   }
 
-  resetFiltersAfterCancel(updatedFields){
-    this.checkboxGroup.reset(updatedFields.selected,updatedFields.options);
+  resetFiltersAfterCancel(updatedFields) {
+    this.checkboxGroup.reset(updatedFields.selected, updatedFields.options);
   }
 
-  resetFiltersAfterRegionCancel(updatedFields){
-    this.checkboxGroupRegion.resetRegion(updatedFields.selected,updatedFields.options);
+  resetFiltersAfterRegionCancel(updatedFields) {
+    this.checkboxGroupRegion.resetRegion(updatedFields.selected, updatedFields.options);
 
   }
 
-  initialize(updatedFields?){
-    if(updatedFields){
+  initialize(updatedFields?) {
+    if (updatedFields) {
       this.fields = updatedFields;
     }
     let columns = _(this.fields)
@@ -88,8 +88,8 @@ export class FilterModalComponent implements OnInit {
       .value();
 
     this.form.columns = columns;
-    if(columns.length > 1){
-      if(columns.length > 2){
+    if (columns.length > 1) {
+      if (columns.length > 2) {
         this.multiColumns = true;
       }
       this.reOrderFilterColumns();
@@ -103,7 +103,7 @@ export class FilterModalComponent implements OnInit {
     this.formChange.emit(filterField);
   }
 
-  changeCheckboxFilter(filterSelected,filterField){
+  changeCheckboxFilter(filterSelected, filterField) {
     /* debugger */
     filterField.selected = filterSelected;
     this.formChange.emit(filterField);
@@ -119,7 +119,7 @@ export class FilterModalComponent implements OnInit {
       })];
 
       return value;
-    } catch(error) {
+    } catch (error) {
       return null;
     }
   }
@@ -134,9 +134,9 @@ export class FilterModalComponent implements OnInit {
     this.opened = !this.opened;
   }
 
-  addField(column, label, options, values?, defaultOption?) {
-    let columnIndex = _.findIndex(this.form.columns, {label: column});
-    if(!~columnIndex) {
+  addField(column, label, options, type, values?, defaultOption?) {
+    let columnIndex = _.findIndex(this.form.columns, { label: column });
+    if (!~columnIndex) {
       this.form.columns.push({
         label: column,
         fields: []
@@ -144,8 +144,8 @@ export class FilterModalComponent implements OnInit {
       columnIndex = this.form.columns.length - 1;
     }
     let selected = options[0];
-    if(defaultOption) {
-      let foundDefault = _.find(options, (option) => {return option === defaultOption});
+    if (defaultOption) {
+      let foundDefault = _.find(options, (option) => { return option === defaultOption });
       selected = foundDefault;
     }
 
@@ -153,8 +153,10 @@ export class FilterModalComponent implements OnInit {
       column: column,
       label: label,
       options: options,
+      type: type,
       values: values || options,
-      selected: selected
+      selected: selected,
+
     };
     this.form.columns[columnIndex].fields.push(field);
   }
