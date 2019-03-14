@@ -67,7 +67,7 @@ def aws_configure() {
 node ()  {
   stage('Loading Config-Loader') {
     def jazzBuildModuleURL = getBuildModuleUrl()
-	  loadBuildModules(jazzBuildModuleURL)
+    loadBuildModules(jazzBuildModuleURL)
   }
   stage('Configure AWS CLI') {
     aws_configure()
@@ -76,7 +76,7 @@ node ()  {
   stage('Checking out Jazz_UI repo') {
     dir('jazz_ui') {
       checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz_ui")]]])
-	    def jazz_prod_api_id = utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])
+      def jazz_prod_api_id = utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])
 
       if(config_loader.UI_CONFIG.service_tabs.overview)   sh "sed -i 's/{overview}/overview/g' ./src/environments/environment.oss.ts";
       if(config_loader.UI_CONFIG.service_tabs.access_control)   sh "sed -i 's/{access control}/access control/g' ./src/environments/environment.oss.ts";
@@ -123,6 +123,19 @@ node ()  {
       def uiAccountMap = JsonOutput.toJson(eachAccountMap)
       sh "sed -i 's/{accountMap}/${uiAccountMap}/g' ./src/environments/environment.oss.ts"
 
+      /* Getting the deployment targets */
+      sh "sed -i 's/{api_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.API_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+
+      sh "sed -i 's/{function_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.FUNCTION_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{website_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.WEBSITE_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+
+      def uiConfig = JsonOutput.toJson(config_loader.UI_CONFIG)
+      def importUICommand = "sed -i 's/{INSTALLER_VARS}/$uiConfig/g' ./src/environments/environment.oss.ts"
+      sh importUICommand
+
+      if (config_loader.APIGEE.ENABLE_APIGEE && config_loader.APIGEE.ENABLE_APIGEE.toString() == "true") sh "sed -i 's/{apigee_support}/true/g' ./src/environments/environment.oss.ts"
+      else sh "sed -i 's/{apigee_support}/false/g' ./src/environments/environment.oss.ts"
+
       def envFile = readFile('./src/environments/environment.oss.ts');
       echo "displaying env file : ${envFile}"
     }
@@ -160,13 +173,13 @@ load build modules
 */
 def loadBuildModules(buildModuleUrl){
 
-	try {
-		dir('scm-loader') {
-			checkout([$class: 'GitSCM', branches: [
-				[name: '*/master']
-			], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-				[credentialsId: repo_credential_id, url: buildModuleUrl]
-			]])
+  try {
+    dir('scm-loader') {
+      checkout([$class: 'GitSCM', branches: [
+        [name: '*/master']
+      ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+        [credentialsId: repo_credential_id, url: buildModuleUrl]
+      ]])
 
       configModule = load "config-loader.groovy"
       configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
@@ -176,17 +189,17 @@ def loadBuildModules(buildModuleUrl){
       scmModule.initialize(configLoader)
 
       utilModule = load "utility-loader.groovy"
-		}
-	}catch(ex) {
-		error "loadBuildModules failed: " + ex.toString()
-	}
+    }
+  } catch(ex) {
+    error "loadBuildModules failed: " + ex.toString()
+  }
 }
 
 def getBuildModuleUrl() {
     if (scm_type && scm_type != "bitbucket") {
       // right now only bitbucket has this additional tag scm in its git clone path
       return "http://${repo_base}/${repo_core}/jazz-build-module.git"
-    }else {
+    } else {
       return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
     }
 }

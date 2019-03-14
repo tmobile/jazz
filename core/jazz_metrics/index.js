@@ -20,6 +20,7 @@ Fetch metrics per service using CloudWatch APIs
 @version: 1.0
  **/
 
+const moment = require('moment');
 const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
@@ -27,6 +28,8 @@ const logger = require("./components/logger.js")(); //Import the logging module.
 const request = require('request');
 const utils = require("./components/utils.js"); //Import the utils module.
 const validateUtils = require("./components/validation.js");
+const global_config = require("./config/global-config.json");
+const metricConfig = require("./components/metrics.json");
 
 function handler(event, context, cb) {
   var errorHandler = errorHandlerModule();
@@ -46,56 +49,57 @@ function handler(event, context, cb) {
 		 *    }
 		 */
     var eventBody = event.body;
-    var metricsResponse=[];
+    var metricsResponse = [];
+    let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
     var genValidation = exportable.genericValidation(event);
     var token = exportable.getToken(config);
     var valGenFields = validateUtils.validateGeneralFields(eventBody);
     Promise.all([genValidation, token, valGenFields])
-    .then((results) => {
-      const authToken = results[1];
-      exportable.getConfigJson(config, authToken).then((configobject) => {
-      const configJson = configobject;
-      exportable.getserviceMetaData(config, eventBody, authToken)
-      .then((serviceMetaData) => {
-        const serviceData = serviceMetaData;
-        exportable.getAssetsDetails(config, eventBody, authToken)
-        .then((res) => exportable.validateAssets(res, eventBody))
-        .then((res) => {
-          const deploymentAccounts = serviceData.data.services[0].deployment_accounts
-          var promiseCollection = [];
-          deploymentAccounts.forEach(function (item) {
-            const accountId = item.accountId;
-            const region = item.region;
-            var getpromise = utils.AssumeRole(accountId, configJson)
-            .then((creds) => exportable.getMetricsDetails(res,creds,region))
-            .then((res) => {
-                var finalObj = utils.massageData(res, eventBody, item);
-                metricsResponse.push(finalObj);
-              })
-            promiseCollection.push(getpromise);
-          })
-          Promise.all(promiseCollection).then(() => {
-            return cb(null, responseObj(metricsResponse, eventBody))
-          })
+      .then((results) => {
+        const authToken = results[1];
+        exportable.getConfigJson(config, authToken).then((configobject) => {
+          const configJson = configobject;
+          exportable.getserviceMetaData(config, eventBody, authToken)
+            .then((serviceMetaData) => {
+              const serviceData = serviceMetaData;
+              exportable.getAssetsDetails(config, eventBody, authToken, event.headers[header_key])
+                .then((res) => exportable.validateAssets(res, eventBody))
+                .then((res) => {
+                  const deploymentAccounts = serviceData.data.services[0].deployment_accounts
+                  var promiseCollection = [];
+                  deploymentAccounts.forEach(function (item) {
+                    const accountId = item.accountId;
+                    const region = item.region;
+                    var getpromise = utils.AssumeRole(accountId, configJson)
+                      .then((creds) => exportable.getMetricsDetails(res, eventBody, config, creds, region))
+                      .then((res) => {
+                        var finalObj = utils.massageData(res, eventBody, item);
+                        metricsResponse.push(finalObj);
+                      })
+                    promiseCollection.push(getpromise);
+                  })
+                  Promise.all(promiseCollection).then(() => {
+                    return cb(null, responseObj(metricsResponse, eventBody))
+                  })
+                })
+            })
         })
-      })
-    })
-  }).catch(error => {
-      if (error.result === "inputError") {
-        return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
-      } else if (error.result === "unauthorized") {
-        return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
-      } else {
-        return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
-      }
-    });
+      }).catch(error => {
+        if (error.result === "inputError") {
+          return cb(JSON.stringify(errorHandler.throwInputValidationError(error.message)));
+        } else if (error.result === "unauthorized") {
+          return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
+        } else {
+          return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
+        }
+      });
   } catch (e) {
-    return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
+    return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching metrics")));
   }
 
 };
 
-function genericValidation(event) {
+function genericValidation(event, header_key) {
   return new Promise((resolve, reject) => {
     if (!event && !event.body) {
       reject({
@@ -110,10 +114,18 @@ function genericValidation(event) {
         message: "Invalid method"
       });
     }
+
     if (!event.principalId) {
       reject({
         result: "unauthorized",
         message: "Unauthorized"
+      });
+    }
+
+    if (!event.headers[header_key]) {
+      reject({
+        result: "inputError",
+        message: "No service id provided"
       });
     }
 
@@ -140,10 +152,11 @@ function getToken(config) {
       } else {
         var message = "";
         if (error) {
-          message = error.message
+          message = error.message;
         } else {
           message = response.body.message
         }
+        logger.error(message);
         reject({
           "error": "Could not get authentication token for updating service catalog.",
           "message": message
@@ -156,13 +169,13 @@ function getToken(config) {
 function getConfigJson(config, token) {
   return new Promise((resolve, reject) => {
     var config_json_api_options = {
-      url : `${config.SERVICE_API_URL}${config.CONFIG_URL}`,
-      headers : {
-        "Content-Type" : "application/json",
-        "Authorization" : token
+      url: `${config.SERVICE_API_URL}${config.CONFIG_URL}`,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token
       },
       method: "GET",
-      rejectUnauthorized:false,
+      rejectUnauthorized: false,
       requestCert: true,
       async: true
     };
@@ -174,7 +187,7 @@ function getConfigJson(config, token) {
         if (response.statusCode && response.statusCode === 200) {
           var responseBody = JSON.parse(body);
           resolve(responseBody.data)
-        }else{
+        } else {
           logger.debug("Service not found for this service, domain, environment. ", JSON.stringify(config_json_api_options));
           resolve([])
         }
@@ -183,8 +196,8 @@ function getConfigJson(config, token) {
   })
 }
 
-function getserviceMetaData(config, eventBody, authToken){
-  return new Promise((resolve, reject) =>  {
+function getserviceMetaData(config, eventBody, authToken) {
+  return new Promise((resolve, reject) => {
     var service_api_options = {
       url: `${config.SERVICE_API_URL}${config.SERVICE_URL}?domain=${eventBody.domain}&service=${eventBody.service}&environment=${eventBody.environment}`,
       headers: {
@@ -204,7 +217,7 @@ function getserviceMetaData(config, eventBody, authToken){
         if (response.statusCode && response.statusCode === 200) {
           var responseBody = JSON.parse(body);
           resolve(responseBody)
-        }else{
+        } else {
           logger.debug("Service not found for this service, domain, environment. ", JSON.stringify(service_api_options));
           resolve([])
         }
@@ -213,13 +226,14 @@ function getserviceMetaData(config, eventBody, authToken){
   });
 }
 
-function getAssetsDetails(config, eventBody, authToken) {
+function getAssetsDetails(config, eventBody, authToken, serviceId) {
   return new Promise((resolve, reject) => {
     var asset_api_options = {
       url: `${config.SERVICE_API_URL}${config.ASSETS_URL}?domain=${eventBody.domain}&service=${eventBody.service}&environment=${eventBody.environment}`,
       headers: {
         "Content-Type": "application/json",
-        "Authorization": authToken
+        "Authorization": authToken,
+        "Jazz-Service-ID": serviceId
       },
       method: "GET",
       rejectUnauthorized: false,
@@ -230,6 +244,7 @@ function getAssetsDetails(config, eventBody, authToken) {
     logger.info("asset_api_options :- " + JSON.stringify(asset_api_options));
     request(asset_api_options, (error, response, body) => {
       if (error) {
+        logger.error(error);
         reject(error);
       } else {
         if (response.statusCode && response.statusCode === 200) {
@@ -258,7 +273,7 @@ function validateAssets(assetsArray, eventBody) {
     if (assetsArray.length > 0) {
       var newAssetArray = [];
       var invalidTypeCount = 0;
-
+      logger.debug("Validating assets");
       assetsArray.forEach((assetItem) => {
         if (assetItem.isError) {
           logger.error(assetItem.isError);
@@ -271,26 +286,47 @@ function validateAssets(assetsArray, eventBody) {
           }
         } else {
           var paramMetrics = [];
-          var getAssetNameDetails = utils.getNameSpaceAndMetricDimensons(assetItem.type);
+          var getAssetNameDetails = utils.getNameSpaceAndMetricDimensons(assetItem.type, assetItem.provider);
 
           if (!getAssetNameDetails.isError) {
             paramMetrics = getAssetNameDetails.paramMetrics;
-            exportable.getActualParam(paramMetrics, getAssetNameDetails.awsNameSpace, assetItem, eventBody)
-              .then(res => {
-                newAssetArray.push({
-                  "actualParam": res,
-                  "userParam": assetItem
+
+            if (assetItem.provider === 'aws') {
+              exportable.getActualParam(paramMetrics, getAssetNameDetails.nameSpace, assetItem, eventBody)
+                .then(res => {
+                  newAssetArray.push({
+                    "nameSpace": "aws",
+                    "actualParam": res,
+                    "userParam": assetItem
+                  });
+                  logger.debug("Validated Assets: " + JSON.stringify(newAssetArray));
+                  resolve(newAssetArray);
+                })
+                .catch(error => {
+                  logger.error(error);
+                  reject(error);
                 });
-                resolve(newAssetArray);
-              })
-              .catch(error => {
-                reject(error);
-              });
+            } else if (assetItem.provider === 'gcp') {
+              exportable.getApigeeParam(paramMetrics, eventBody)
+                .then(res => {
+                  newAssetArray.push({
+                    "nameSpace": "gcp",
+                    "actualParam": res,
+                    "userParam": assetItem
+                  });
+                  logger.debug("Validated Assets: " + JSON.stringify(newAssetArray));
+                  resolve(newAssetArray);
+                })
+                .catch(error => {
+                  logger.error(error);
+                  reject(error);
+                });
+            }
           } else {
-            logger.error("Unsupported metric type. ");
+            logger.error(getAssetNameDetails.message);
             reject({
               result: "inputError",
-              message: "Unsupported metric type."
+              message: getAssetNameDetails.message
             });
           }
         }
@@ -301,6 +337,23 @@ function validateAssets(assetsArray, eventBody) {
         message: "Metric not found for requested asset"
       });
     }
+  });
+}
+
+function getApigeeParam(paramMetrics, eventBody) {
+  return new Promise((resolve, reject) => {
+    let actualParam = [];
+    paramMetrics.forEach(param => {
+      const metricStatistics = param.Statistics.toLowerCase();
+      const clonedObj = {};
+      if (global_config.APIGEE.STATISTICS_MAP[eventBody.statistics] === metricStatistics) {
+        clonedObj.MetricName = param.MetricName;
+        clonedObj.Statistics = metricStatistics;
+        actualParam.push(clonedObj);
+      }
+    });
+    logger.verbose("Get Apigee params: " + actualParam);
+    resolve(actualParam);
   });
 }
 
@@ -370,31 +423,106 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
   });
 }
 
-function getMetricsDetails(newAssetArray,tempCreds,region) {
+function getMetricsDetails(newAssetArray, eventBody, config, tempCreds, region) {
   return new Promise((resolve, reject) => {
     logger.debug("Inside getMetricsDetails" + JSON.stringify(newAssetArray));
     var metricsStatsArray = [];
     newAssetArray.forEach(assetParam => {
-      exportable.cloudWatchDetails(assetParam,tempCreds,region)
-        .then(res => {
-          metricsStatsArray.push(res);
-          if (metricsStatsArray.length === newAssetArray.length) {
-            resolve(metricsStatsArray);
-          }
-        })
-        .catch(error => {
-          reject(error);
-        });
+      if (assetParam.nameSpace === 'aws') {
+        exportable.cloudWatchDetails(assetParam, tempCreds, region)
+          .then(res => {
+            metricsStatsArray.push(res);
+            if (metricsStatsArray.length === newAssetArray.length) {
+              resolve(metricsStatsArray);
+            }
+          })
+          .catch(error => reject(error));
+      }
+      else if (assetParam.nameSpace === 'gcp') {
+        exportable.apigeeMetricDetails(assetParam, eventBody, config)
+          .then(res => {
+            metricsStatsArray.push(res);
+            if (metricsStatsArray.length === newAssetArray.length) {
+              resolve(metricsStatsArray);
+            }
+          })
+          .catch(error => reject(error));
+      }
     });
   });
 }
 
-function cloudWatchDetails(assetParam,tempCreds,region) {
+function apigeeMetricDetails(assetParam, eventBody, config) {
+  const DATE_FORMAT = 'MM/DD/YYYY%20HH:MM';
+
+  return new Promise((resolve, reject) => {
+    let metricsList = assetParam.actualParam.map(param => `${param.Statistics}(${param.MetricName})`);
+    let metricString = metricsList.join(",");
+    let endTime = moment(eventBody.end_time).format(DATE_FORMAT);
+    let startTime = moment(eventBody.start_time).format(DATE_FORMAT);
+    let timeUnit = global_config.APIGEE.INTERVAL_MAP[eventBody.interval];
+
+    const servicePayload = {
+      url: `${config.APIGEE.URL}${assetParam.userParam.asset_name.apiproxy}?select=${metricString}&timeRange=${startTime}~${endTime}&timeUnit=${timeUnit}`,
+      headers: {
+        "Authorization": "Basic " + new Buffer(`${config.APIGEE.USER}:${config.APIGEE.PASSWORD}`).toString("base64"),
+      },
+      method: "GET",
+      rejectUnauthorized: false,
+      json: true
+    };
+
+    var metricData = metricConfig.namespaces.gcp.apigee_proxy.metrics.map(item => {
+      let data = {
+        label: item.Label,
+        unit: item.Unit,
+        metricName: `${item.Statistics.toLowerCase()}(${item.MetricName})`
+      };
+      return data;
+    });
+
+    logger.debug("Get Apigee metrics using URL : " + servicePayload.url);
+    request(servicePayload, (error, response, body) => {
+      if (error) {
+        reject(error);
+      } else if (response && response.statusCode === 200 && body && body.environments) {
+        const metricResult = body.environments[0].metrics;
+        let metricsStats = [];
+        metricResult.forEach(metric => {
+          if (metricsList.indexOf(metric.name) > -1) {
+            let deatils = metricData.find(item => {
+              if (item.metricName === metric.name) return item;
+            })
+            let unit = deatils.unit;
+            let dataPoints = metric.values.map(val => ({
+              Timestamp: moment(val.timestamp),
+              [eventBody.statistics]: Number.parseFloat(val.value).toFixed(2),
+              Unit: unit
+            }));
+
+            const metricObj = {
+              Label: deatils.label,
+              Datapoints: dataPoints
+            };
+            metricsStats.push(metricObj);
+          }
+        });
+        const assetObj = utils.assetData(metricsStats, assetParam.userParam);
+        resolve(assetObj);
+      } else {
+        logger.error(body.message);
+        reject(body.message);
+      }
+    });
+  });
+}
+
+function cloudWatchDetails(assetParam, tempCreds, region) {
   logger.debug("Inside cloudWatchDetails");
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
-      let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch(tempCreds,region) : utils.getCloudWatch(tempCreds, region);
+      let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch(tempCreds, region) : utils.getCloudWatch(tempCreds, region);
 
       cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {
@@ -432,8 +560,10 @@ const exportable = {
   getAssetsDetails,
   validateAssets,
   getActualParam,
+  getApigeeParam,
   getMetricsDetails,
-  cloudWatchDetails
+  cloudWatchDetails,
+  apigeeMetricDetails
 }
 
 module.exports = exportable;

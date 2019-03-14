@@ -34,8 +34,11 @@ const crud = require("./components/crud")();
 var user_id;
 var serviceId;
 var serviceDataObject;
+var authToken;
 var handler = (event, context, cb) => {
 
+  let deploymentTargets = {};
+  let deploymentAccounts = [];
   var errorHandler = errorHandlerModule();
   var config = configModule.getConfig(event, context);
   logger.init(event, context);
@@ -60,24 +63,76 @@ var handler = (event, context, cb) => {
     } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
     }
+    // validate service types
+    const allowedSvcTypes = Object.keys(config.DEPLOYMENT_TARGETS);
+    if (allowedSvcTypes.indexOf(service_creation_data.service_type) !== -1) {
+      logger.info(`Valid service type provided ${service_creation_data.service_type}`);
+    } else {
+      return cb(JSON.stringify(errorHandler.throwInputValidationError(`Invalid service type provided - ${service_creation_data.service_type}`)));
+    }
+    // validate deployment targets
+    if (service_creation_data.deployment_targets && typeof service_creation_data.deployment_targets === "object") {
+      const allowedSubServiceType = config.DEPLOYMENT_TARGETS[service_creation_data.service_type];
+      deploymentTargets = validateDeploymentTargets(allowedSubServiceType, service_creation_data.deployment_targets, service_creation_data.service_type)
+      if (deploymentTargets.error) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError(deploymentTargets.error)));
+      }
+    } else {
+      return cb(JSON.stringify(errorHandler.throwInputValidationError(`Deployment targets is missing or is not in a valid format`)));
+    }
+    // Validate and set deployment accounts
+    let primaryAccountCount = 0;
+    
+    if (Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts) {
+      for (let eachDeploymentAccount of service_creation_data.deployment_accounts) {
+        if (eachDeploymentAccount.primary) {
+          primaryAccountCount++
+          let deploymentAccount = {
+            'accountId': eachDeploymentAccount.accountId || config.PRIMARY_DEPLOYMENT_ACCOUNT.accountId,
+            'region': eachDeploymentAccount.region || config.PRIMARY_DEPLOYMENT_ACCOUNT.region,
+            'provider': eachDeploymentAccount.provider || config.PRIMARY_DEPLOYMENT_ACCOUNT.provider,
+            'primary': eachDeploymentAccount.primary
+          }
+          deploymentAccounts.push(deploymentAccount);
+        } else {
+          if (eachDeploymentAccount.accountId && eachDeploymentAccount.region && eachDeploymentAccount.provider) {
+            deploymentAccounts.push(eachDeploymentAccount);
+          } else {
+            logger.error('accountId, region and provider are required for a non-primary deployment account');
+            return cb(JSON.stringify(errorHandler.throwInputValidationError('accountId, region and provider are required for a non-primary deployment account')));
+          }
+        }
+      }
+
+      if (primaryAccountCount == 0) {
+        logger.error('Invalid input! At least one primary deployment account is required')
+        return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid input! At least one primary deployment account is required')))
+      }
+      if (primaryAccountCount > 1) {
+        logger.error('Invalid input! Only one primary deployment account is allowed')
+        return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid input! Only one primary deployment account is allowed')))
+      }
+    } else {
+      return cb(JSON.stringify(errorHandler.throwInputValidationError(`Deployment accounts is missing or is not in a valid format`)));
+    }
 
     user_id = event.principalId;
     if (!user_id) {
-      logger.error('Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!');
-      return cb(JSON.stringify(errorHandler.throwUnAuthorizedError("User is not authorized to access this service")));
+      logger.error(`Authorizer did not send the user information, please check if authorizer is enabled and is functioning as expected!`);
+      return cb(JSON.stringify(errorHandler.throwUnAuthorizedError(`User is not authorized to access this service`)));
     }
 
-    logger.info("Request event: " + JSON.stringify(event));
+    logger.info(`Request event: ${JSON.stringify(event)}`);
 
     getToken(config)
-      .then((authToken) => getServiceData(service_creation_data, authToken, config))
+      .then((authToken) => getServiceData(service_creation_data, authToken, config, deploymentTargets, deploymentAccounts))
       .then((inputs) => createService(inputs))
-      .then((service_id) => startServiceOnboarding(service_creation_data, config, service_id))
+      .then(() => startServiceOnboarding(service_creation_data, config, serviceId))
       .then((result) => {
-        cb(null, responseObj(result, service_creation_data));
+        return cb(null, responseObj(result, service_creation_data));
       })
       .catch(function (err) {
-        logger.error('Error while creating service : ' + JSON.stringify(err));
+        logger.error(`Error while creating service : ${JSON.stringify(err)}`);
         if (err.jenkins_api_failure) {
           serviceDataObject.body = {
             "STATUS": "creation_failed"
@@ -85,12 +140,12 @@ var handler = (event, context, cb) => {
           crud.update(serviceId, serviceDataObject, (serviceUpdateError, results) => {
             if (serviceUpdateError) {
               var errorMessage = {
-                "message": "Error occurred while updating service with failed status.",
+                "message": `Error occurred while updating service with failed status.`,
                 "error": err
               };
               return cb(JSON.stringify(errorHandler.throwInternalServerError(errorMessage)));
             } else {
-              logger.error("Updated service catalog with failed status.");
+              logger.error(`Updated service catalog with failed status.`);
               return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
             }
           });
@@ -132,16 +187,16 @@ var startServiceOnboarding = (service_creation_data, config, service_id) => {
         qs: input
       }, function (err, response, body) {
         if (err) {
-          logger.error('Error while starting service onboarding: ' + err);
+          logger.error(`Error while starting service onboarding: ${err}`);
           err.jenkins_api_failure = true;
           reject(err);
         } else {
           if (response.statusCode <= 299) { // handle all 2xx response codes as success
-            resolve("Successfully created your service.");
+            resolve(`Successfully created your service.`);
           } else {
-            logger.error("Failed while request to service onboarding job " + JSON.stringify(response));
+            logger.error(`Failed while request to service onboarding job ${JSON.stringify(response)}`);
             var message = {
-              'message': "Failed to kick off service onboarding job.",
+              'message': `Failed to kick off service onboarding job.`,
               'jenkins_api_failure': true
             };
             reject(message);
@@ -149,7 +204,7 @@ var startServiceOnboarding = (service_creation_data, config, service_id) => {
         }
       });
     } catch (e) {
-      logger.error('Error during startServiceOnboarding: ' + e.message);
+      logger.error(`Error during startServiceOnboarding: ${e.message}`);
       reject(e);
     }
   });
@@ -169,11 +224,11 @@ var getToken = (configData) => {
 
     request(svcPayload, (error, response, body) => {
       if (response.statusCode === 200 && body && body.data) {
-        var authToken = body.data.token;
+        authToken = body.data.token;
         return resolve(authToken);
       } else {
         return reject({
-          "error": "Could not get authentication token for updating service catalog.",
+          "error": `Could not get authentication token for updating service catalog.`,
           "message": response.body.message
         });
       }
@@ -189,15 +244,15 @@ var createService = (service_data) => {
           "message": err.error
         });
       } else {
-        logger.info("created a new service in service catalog.");
         serviceId = results.data.service_id;
+        logger.info(`created a new service in service catalog with service Id: ${serviceId}`);
         resolve(results.data.service_id);
       }
     });
   });
 }
 
-var getServiceData = (service_creation_data, authToken, configData) => {
+var getServiceData = (service_creation_data, authToken, configData, deploymentTargets, deploymentAccounts) => {
   return new Promise((resolve, reject) => {
     var inputs = {
       "TOKEN": authToken,
@@ -208,6 +263,7 @@ var getServiceData = (service_creation_data, authToken, configData) => {
       "DESCRIPTION": service_creation_data.description,
       "TYPE": service_creation_data.service_type,
       "RUNTIME": service_creation_data.runtime,
+      "REGION": service_creation_data.region,
       "USERNAME": user_id,
       "IS_PUBLIC_ENDPOINT": service_creation_data.is_public_endpoint || false,
       "STATUS": "creation_started"
@@ -230,42 +286,6 @@ var getServiceData = (service_creation_data, authToken, configData) => {
       serviceMetadataObj.require_internal_access = service_creation_data.require_internal_access;
     }
 
-    // Set deployment_accounts to the propertiesObject variable
-    let primaryAccountCount = 0;
-    let deployment_accounts = [];
-
-    if (service_creation_data.deployment_accounts) {
-      for (let eachDeploymentAccount of service_creation_data.deployment_accounts) {
-        if (eachDeploymentAccount.primary) {
-          primaryAccountCount++
-          let deploymentAccount = {
-            'accountId': eachDeploymentAccount.accountId || config.PRIMARY_DEPLOYMENT_ACCOUNT.accountId,
-            'region': eachDeploymentAccount.region || config.PRIMARY_DEPLOYMENT_ACCOUNT.region,
-            'provider': eachDeploymentAccount.provider || config.PRIMARY_DEPLOYMENT_ACCOUNT.provider,
-            'primary': eachDeploymentAccount.primary
-          }
-          deployment_accounts.push(deploymentAccount);
-        } else {
-          if (eachDeploymentAccount.accountId && eachDeploymentAccount.region && eachDeploymentAccount.provider) {
-            deployment_accounts.push(eachDeploymentAccount);
-          } else {
-            logger.error('accountId, region and provider are required for a non-primary deployment account');
-            return cb(JSON.stringify(errorHandler.throwInputValidationError('accountId, region and provider are required for a non-primary deployment account')));
-          }
-        }
-      }
-
-      if (primaryAccountCount == 0) {
-        logger.error('Invalid input! At least one primary deployment account is required')
-        return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid input! At least one primary deployment account is required')))
-      }
-      if (primaryAccountCount > 1) {
-        logger.error('Invalid input! Only one primary deployment account is allowed')
-        return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid input! Only one primary deployment account is allowed')))
-      }
-      inputs["DEPLOYMENT_ACCOUNTS"] = deployment_accounts
-    }
-
     //Adding providerRuntime key in service catalog
     if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
       serviceMetadataObj.providerRuntime = service_creation_data.runtime;
@@ -273,6 +293,8 @@ var getServiceData = (service_creation_data, authToken, configData) => {
 
     // Pass the flag to enable authentication on API
     if (service_creation_data.service_type === "api") {
+      inputs.DEPLOYMENT_TARGETS = deploymentTargets;
+      inputs.DEPLOYMENT_ACCOUNTS = deploymentAccounts;
       serviceMetadataObj.enable_api_security = service_creation_data.enable_api_security || false;
       if (service_creation_data.authorizer_arn) {
         // Validate ARN format - arn:aws:lambda:region:account-id:function:function-name
@@ -290,19 +312,17 @@ var getServiceData = (service_creation_data, authToken, configData) => {
       serviceMetadataObj.enable_api_security = false;
     }
 
-    // Disabling require_internal_access and enable_api_security when is_public_endpoint is true
-    if (service_creation_data.service_type === "api" && service_creation_data.is_public_endpoint) {
-      serviceMetadataObj.require_internal_access = false;
-      serviceMetadataObj.enable_api_security = false;
-    }
-
     if (service_creation_data.service_type === "website") {
+      inputs.DEPLOYMENT_TARGETS = deploymentTargets;
+      inputs.DEPLOYMENT_ACCOUNTS = deploymentAccounts;
       var create_cloudfront_url = "true";
       serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
       inputs.RUNTIME = 'n/a';
     }
     // Add rate expression to the propertiesObject;
     if (service_creation_data.service_type === "function") {
+      inputs.DEPLOYMENT_TARGETS = deploymentTargets;
+      inputs.DEPLOYMENT_ACCOUNTS = deploymentAccounts;
       if (service_creation_data.rateExpression) {
         var cronExpValidator = CronParser.validateCronExpression(service_creation_data.rateExpression);
         if (cronExpValidator.result === 'valid') {
@@ -354,6 +374,20 @@ var getServiceData = (service_creation_data, authToken, configData) => {
     serviceDataObject = inputs;
     resolve(inputs);
   });
+}
+
+function validateDeploymentTargets(allowedSubServiceType, deployment_targets, svcType) {
+  console.log('deployment_targets here',deployment_targets, svcType)
+  if (deployment_targets.hasOwnProperty(svcType)) {
+    const type = deployment_targets[svcType];
+    if (allowedSubServiceType.indexOf(type) !== -1) {
+      return deployment_targets;
+    } else {
+      return { error: `Invalid deployment_target: ${type} for service type: ${svcType}, valid deployment_targets: ${allowedSubServiceType}` };
+    }
+  } else {
+    return { error: `No deployment_targets are defined for this service type - ${svcType}` };
+  }
 }
 
 var validateEventName = (eventType, sourceName, config) => {

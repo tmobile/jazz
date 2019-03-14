@@ -113,7 +113,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 	relativeUrl:string = '/jazz/assets';
 
 
-  @Input() service: any = {};
+	@Input() service: any = {};
 
   constructor(
 		private request:RequestService,
@@ -192,8 +192,7 @@ export class EnvAssetsSectionComponent implements OnInit {
       limit: this.limitValue,
       offset: this.offsetval
     };
-
-    this.subscription = this.http.get(this.relativeUrl, payload).subscribe(
+    this.subscription = this.http.get(this.relativeUrl, payload, this.service.id).subscribe(
       (response) => {
 
         if((response.data == undefined) || (response.data.length == 0)){
@@ -477,7 +476,7 @@ public goToAbout(hash){
       case 'endpoint_url':
         return 'URL';
       default:
-        return 'ARN';
+        return 'Provider ID';
     }
   }
 
