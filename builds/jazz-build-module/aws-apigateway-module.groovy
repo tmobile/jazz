@@ -67,6 +67,7 @@ def parseJson(jsonString) {
 }
 
 def injectLambdaIntegration(method, filePath) {
+  echo "Injecting Amazon Api Gateway lambda integration spec"
   if (method == 'options') {
     sh "sed -i '/\"$method\":.*{/ r optionsSpecTemp.txt' $filePath"
   } else {
