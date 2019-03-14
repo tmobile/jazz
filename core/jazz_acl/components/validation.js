@@ -17,21 +17,21 @@
 const errorHandlerModule = require("./error-handler.js")();
 
 function validateBasicInput(userInput) {
-    if (!userInput) {
-      throw (errorHandlerModule.throwInternalServerError("Input parameters are missing"));
-    }
+  if (!userInput) {
+    throw (errorHandlerModule.throwInternalServerError("Input parameters are missing"));
+  }
 
-		if (!userInput.method) {
-			throw (errorHandlerModule.throwInputValidationError("Method is missing"));
-    }
+  if (!userInput.method) {
+    throw (errorHandlerModule.throwInputValidationError("Method is missing"));
+  }
 
-    if (!userInput.resourcePath) {
-			throw (errorHandlerModule.throwInputValidationError("Missing the resource path"));
-		}
+  if (!userInput.resourcePath) {
+    throw (errorHandlerModule.throwInputValidationError("Missing the resource path"));
+  }
 
-		if (!userInput.principalId) {
-			throw (errorHandlerModule.throwForbiddenError("You aren't authorized to access this resource"));
-		}
+  if (!userInput.principalId) {
+    throw (errorHandlerModule.throwForbiddenError("You aren't authorized to access this resource"));
+  }
 }
 
 function validateGetPoliciesInput(userInput) {

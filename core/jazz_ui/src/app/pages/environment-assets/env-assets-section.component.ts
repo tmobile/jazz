@@ -112,7 +112,6 @@ export class EnvAssetsSectionComponent implements OnInit {
 	count: any = [];
 	relativeUrl:string = '/jazz/assets';
 
-
 	@Input() service: any = {};
 
   constructor(
