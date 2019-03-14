@@ -43,18 +43,23 @@ export class RequestService {
         }
     }
 
-    get(url: string, params?): Observable<any> {
+    get(url: string, params?, serviceId?): Observable<any> {
       url = this.constructUrl(url);
       this.token = this.authenticationService.getToken();
+        
+        // Add Authentication token to headers
+        let headerObj = {
+            'Authorization': this.token,
+            'Content-Type': 'application/json',
+            'accept':'application/json'
+        };
+    
+        if(serviceId){
+            headerObj['Jazz-Service-ID'] = serviceId
+        }
 
-      let options = new RequestOptions({
-        headers: new Headers({
-          'Authorization': this.token,
-          'Content-Type': 'application/json',
-          'accept': 'application/json'
-        }),
-        search: null
-      });
+        let headers = new Headers(headerObj);
+        let options = new RequestOptions({ headers: headers, search: null });
 
       url = params ? (url + this.utils.queryString(params)) : url;
         return this.http.get(url, options )
@@ -77,9 +82,9 @@ export class RequestService {
             })
     }
 
-    post(url: string, body: any): Observable<any> {
+    post(url: string, body: any, serviceId?): Observable<any> {
         // Make a POST request to url
-
+        
         // Construct url
         url = this.constructUrl(url);
 
@@ -92,6 +97,11 @@ export class RequestService {
             'Content-Type': 'application/json',
             'accept':'application/json'
         };
+
+        if(serviceId){
+            headerObj['Jazz-Service-ID'] = serviceId
+        }
+
         let headers = new Headers(headerObj);
         let options = new RequestOptions({ headers: headers });
         let router = this.router;
@@ -113,7 +123,7 @@ export class RequestService {
             })
     }
 
-    put(url: string, body: any): Observable<any> {
+    put(url: string, body: any, serviceId?): Observable<any> {
         // Make a PUT request to url
 
         // Construct url
@@ -128,6 +138,11 @@ export class RequestService {
             'Content-Type': 'application/json',
             'accept': 'application/json'
         };
+
+        if(serviceId){
+            headerObj['Jazz-Service-ID'] = serviceId
+        }
+
         let headers = new Headers(headerObj);
         let options = new RequestOptions({ headers: headers });
         let router = this.router;
@@ -151,7 +166,7 @@ export class RequestService {
     }
     private handleError(error: any, router:any) {
         console.log(error);
-       if(error.status === 401 || error.status === 403){
+       if(error.status === 401){
             if (router) {
                router.navigateByUrl('');//route to landing page
                this.authenticationService.logout();
