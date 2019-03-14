@@ -1,0 +1,4 @@
+#
+# Force creation of empty directory.
+# .gitignore files are filtered during install, so .empty is used.
+#

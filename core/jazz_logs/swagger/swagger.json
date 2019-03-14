@@ -35,7 +35,7 @@
                 "application/json": "$input.json('$')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -106,6 +106,12 @@
             "schema": {
               "$ref": "#/definitions/InputObj"
             }
+          },
+          {
+            "name": "Jazz-Service-ID",
+            "in": "header",
+            "required": true,
+            "type": "string"
           }
         ],
         "consumes": [
@@ -253,7 +259,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -264,7 +270,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -275,7 +281,7 @@
                 "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -286,7 +292,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -297,7 +303,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -308,7 +314,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -409,7 +415,7 @@
         "service",
         "domain",
         "environment",
-		"category"
+        "category"
       ],
       "properties": {
         "service": {
@@ -429,22 +435,22 @@
           "type": "string",
           "description": "Environment in which the service is deployed"
         },
-		"category": {
-		  "enum": [
+        "category": {
+          "enum": [
             "api",
             "function"
           ],
           "type": "string",
           "description": "Service type"
         },
-		"start_time": {
+        "start_time": {
           "type": "string",
-		  "format": "date-time",
+          "format": "date-time",
           "description": "start time"
         },
         "end_time": {
           "type": "string",
-		  "format": "date-time",
+          "format": "date-time",
           "description": "end time"
         },
         "size": {
@@ -455,16 +461,16 @@
           "type": "number",
           "description": "Starting record number"
         },
-		"type": {
-		  "enum": [
-		    "warn",
-			"error",
-		    "info",
-		    "debug"		    
-		  ],
-		  "type": "string",
-		  "description": "log type"
-	    }
+        "type": {
+          "enum": [
+            "warn",
+            "error",
+            "info",
+            "debug"
+          ],
+          "type": "string",
+          "description": "log type"
+        }
       }
     },
     "OutputObj": {
@@ -480,7 +486,7 @@
                 "type": "string",
                 "description": "request id of the log message"
               },
-			  "timestamp": {
+              "timestamp": {
                 "type": "string",
                 "description": "time of the log message"
               },
@@ -489,12 +495,12 @@
                 "description": "log message"
               },
               "type": {
-			    "enum": [
-				 "debug",
-				 "info",
-				 "warn",
-				 "error"
-				],
+                "enum": [
+                  "debug",
+                  "info",
+                  "warn",
+                  "error"
+                ],
                 "type": "string",
                 "description": "log type"
               }

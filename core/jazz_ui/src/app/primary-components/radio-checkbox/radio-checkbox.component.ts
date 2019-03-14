@@ -12,7 +12,7 @@ export class RadioCheckboxComponent implements OnInit {
   @Input()
   set options(value) {
       this._options = value;
-      //this.selected = this.options[this.defaultIndex].value;
+      this.selected = this.options[this.defaultIndex].value;
   }
   get options() {
       return this._options;
@@ -31,10 +31,8 @@ export class RadioCheckboxComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
-    if (!this.selected){
-      this.selected = this.options[this.defaultIndex].value;
-    }
   }
+
 
   select(value) {
     this.selected = value;
