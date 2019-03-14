@@ -270,13 +270,13 @@ node() {
 
           if (deployOutput != 'success') {
             if (config['event_source_s3']) {
-              handleS3BucketError(deployOutput, config['event_source_s3'], environment_logical_id, envBucketKey, isEventSchdld)
+              handleS3BucketError(deployOutput, config['event_source_s3'], environment_logical_id, envBucketKey, isEventSchdld, credsId)
             } else if (config['event_source_sqs']) {
-              handleSqsError(deployOutput, config, environment_logical_id, envBucketKey)
+              handleSqsError(deployOutput, config, environment_logical_id, envBucketKey, credsId)
             } else if (config['event_source_kinesis']) {
-              handleKinesisStreamError(deployOutput, config['event_source_kinesis'], environment_logical_id, envBucketKey)
+              handleKinesisStreamError(deployOutput, config['event_source_kinesis'], environment_logical_id, envBucketKey, credsId)
             } else if (config['event_source_dynamodb']) {
-              handleDynamoDbStreamError(deployOutput, config, environment_logical_id, envBucketKey)
+              handleDynamoDbStreamError(deployOutput, config, environment_logical_id, envBucketKey, credsId)
             } else {
               handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId)
             }
@@ -308,7 +308,7 @@ node() {
 
           if (isLambdaUpdateRequired) {
             def event_source_s3 = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_s3'], environment_logical_id, "-")
-            lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, event_source_s3, config['event_action_s3'])
+            lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, event_source_s3, config['event_action_s3'], credsId)
           }
 
           if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3']) {
@@ -350,11 +350,11 @@ node() {
 }
 
 
-def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld) {
+def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld, credsId) {
   def s3BucketErrString = "CloudFormation - CREATE_FAILED - AWS::S3::Bucket - "
   s3BucketName = lambdaEvents.getEventResourceNamePerEnvironment(s3BucketName, environment_logical_id, "-")
   if (deployOutput.contains(s3BucketErrString)) {
-    if (lambdaEvents.checkS3BucketExists(s3BucketName)) {
+    if (lambdaEvents.checkS3BucketExists(s3BucketName, credsId)) {
       isLambdaUpdateRequired = true
       lambdaEvents.removeS3EventsFromServerless(isEventSchdld)
       deleteAndRedeployService(environment_logical_id, envBucketKey)
@@ -367,15 +367,15 @@ def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envB
   }
 }
 
-def handleSqsError(deployOutput, service_config, environment_logical_id, envBucketKey) {
+def handleSqsError(deployOutput, service_config, environment_logical_id, envBucketKey, credsId) {
   def event_source_sqs_arn = service_config['event_source_sqs']
   def sqsErrString = "CloudFormation - CREATE_FAILED - AWS::SQS::Queue - "
   if (deployOutput.contains(sqsErrString)) {
     def event_source_sqs = lambdaEvents.getSqsQueueName(event_source_sqs_arn, environment_logical_id)
     event_source_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_sqs_arn, environment_logical_id, "_")
     def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
-    if (lambdaEvents.checkSqsQueueExists(event_source_sqs)) {
-      if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn)) {
+    if (lambdaEvents.checkSqsQueueExists(event_source_sqs, credsId)) {
+      if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn, credsId)) {
         error "Queue contains a different function trigger already. Please remove the existing function trigger and try again."
       }
       lambdaEvents.updateSqsResourceServerless()
@@ -389,14 +389,14 @@ def handleSqsError(deployOutput, service_config, environment_logical_id, envBuck
   }
 }
 
-def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, environment_logical_id, envBucketKey) {
+def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, environment_logical_id, envBucketKey, credsId) {
   def kinesisStreamErrString = "CloudFormation - CREATE_FAILED - AWS::Kinesis::Stream - "
   def event_source_kinesis = lambdaEvents.splitAndGetResourceName(event_source_kinesis_stream_arn, environment_logical_id)
   event_source_kinesis_stream_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_kinesis_stream_arn, environment_logical_id, "_")
   def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
   if (deployOutput.contains(kinesisStreamErrString)) {
-    if (lambdaEvents.checkKinesisStreamExists(event_source_kinesis)) {
-      if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_kinesis_stream_arn, lambda_arn)) {
+    if (lambdaEvents.checkKinesisStreamExists(event_source_kinesis, credsId)) {
+      if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_kinesis_stream_arn, lambda_arn, credsId)) {
         error "Kinesis stream contains a different function trigger already. Please remove the existing function trigger and try again."
       }
       lambdaEvents.updateKinesisResourceServerless(event_source_kinesis_stream_arn)
@@ -410,7 +410,7 @@ def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, envi
   }
 }
 
-def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_id, envBucketKey) {
+def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_id, envBucketKey, credsId) {
   def dynamodbTableErrString = "CloudFormation - CREATE_FAILED - AWS::DynamoDB::Table - "
   def event_source_dynamodb_table_arn = service_config['event_source_dynamodb']
   def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(event_source_dynamodb_table_arn, environment_logical_id)
@@ -420,7 +420,7 @@ def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_
     if (lambdaEvents.checkDynamoDbTableExists(event_source_dynamodb)) {
       def stream_details = lambdaEvents.getDynamoDbStreamDetails(event_source_dynamodb)
       if (!stream_details.isNewStream) {
-        if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(stream_details.StreamArn, lambda_arn)) {
+        if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(stream_details.StreamArn, lambda_arn, credsId)) {
           error "Dynamodb stream contains a different function trigger already. Please remove the existing function trigger and try again."
         }
       } else {
