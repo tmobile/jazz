@@ -1,5 +1,4 @@
 {
-<<<<<<< HEAD
   "REQUIRED_FIELDS": [
     "service",
     "domain",
@@ -22,12 +21,10 @@
     "samplecount"
   ],
   "CF_REGION": "{conf-region}",
-=======
   "REQUIRED_FIELDS": ["service", "domain", "environment", "end_time", "start_time", "interval", "statistics"],
   "ASSET_REQUIRED_FIELDS": ["type", "asset_name", "statistics"],
   "STATISTICS_TYPE": ["sum", "average", "maximum", "minimum", "samplecount"],
   "CF_REGION": "{cf-region}",
->>>>>>> cloudfront region fix
   "APINAME": {
     "{conf-apikey-dev}": "{conf_stack_prefix}-dev",
     "{conf-apikey-stg}": "{conf_stack_prefix}-stg",

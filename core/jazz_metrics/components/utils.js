@@ -24,11 +24,7 @@
 const parser = require('aws-arn-parser');
 const metricConfig = require("./metrics.json");
 const global_config = require("../config/global-config.json");
-<<<<<<< HEAD
 const logger = require("../components/logger.js")();
-=======
-const logger = require("./logger.js")(); //Import the logging module.
->>>>>>> cloudfront region fix
 const AWS = require("aws-sdk");
 
 function massageData(assetResults, eventBody, account) {

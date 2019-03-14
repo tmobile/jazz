@@ -524,11 +524,7 @@ function cloudWatchDetails(assetParam, tempCreds, region) {
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
-<<<<<<< HEAD
-      let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch(tempCreds, region) : utils.getCloudWatch(tempCreds, region);
-=======
       let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch(tempCreds) : utils.getCloudWatch(tempCreds, region);
->>>>>>> cloudfront region fix
 
       cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {
