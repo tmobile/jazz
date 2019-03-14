@@ -104,6 +104,13 @@
           "editable": false,
           "isEmptyAllowed": false,
           "type": "String"
+        },
+        {
+            "key": "deployment_targets",
+            "required": true,
+            "editable": false,
+            "isEmptyAllowed": false,
+            "type": "Object"
         }
     ],
     "SERVICE_STATUS": [

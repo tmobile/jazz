@@ -42,9 +42,9 @@ node()  {
   def domain = params.domain
   def service = params.service_name
   def repo_name = params.service_name
-  def gitCommitOwner
-  def gitCommitHash
-
+	def requestId = params.request_id
+	def gitCommitOwner
+	def gitCommitHash
 
   if (domain && domain != "") {
     repo_name = params.domain + "_" + params.service_name
@@ -101,13 +101,17 @@ node()  {
   gitCommitHash = scmModule.getRepoCommitHash()
   gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
 
-  def requestId = utilModule.generateRequestId()
-  if (requestId != null) {
+   echo "requestId: $requestId"
+   if (requestId != null) {
     events.setRequestId(requestId)
     environmentDeploymentMetadata.setRequestId(requestId)
   } else {
-    error "Request Id Generation failed"
-  }
+		requestId = utilModule.generateRequestId()
+		events.setRequestId(requestId)
+		environmentDeploymentMetadata.setRequestId(requestId)
+		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
+	}
+
 
   dir(repo_name)
     {
@@ -216,92 +220,92 @@ node()  {
       }
 
       if (servicePlatform == 'aws'){
-        stage("Deployment to ${servicePlatform}  ${current_environment} Env"){
-          events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
-          events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
-          withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-            echo "AWS Configure ......."
 
-            sh "aws configure set profile.cloud-api.region ${configLoader.AWS.REGION}"
-            sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-            sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-            sh "aws configure set preview.cloudfront true"
+		stage("Deployment to ${current_environment} Env"){
+			def randomString = utilModule.generateRequestId();
+			def credsId = "jazz-${randomString}";
+			events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
+			events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+				sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+				sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+				sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+				sh "aws configure set preview.cloudfront true"
 
             generateAssetInfo()
             def assetInfo = "S3 Folder - /${asset_info}"
 
             echo "Checking if the website already exists.."
+				if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
+					def isBucketExists = checkIfBucketExists(s3Bucket)
+					if (!isBucketExists) {
+						echo "creating a new website with name $s3Bucket"
+						sh "aws s3 mb s3://$s3Bucket --region ${configLoader.AWS.REGION}"
+					}
+				}
+				def isBucketwithEnvExists = checkIfBucketExists(asset_info)
+				def asset_event
+				def asset_event_message
+				if (isBucketwithEnvExists) {
+					asset_event = 'UPDATE_ASSET'
+					asset_event_message = 'update'
+				} else {
+					asset_event = 'CREATE_ASSET'
+					asset_event_message = 'create'
+				}
+				events.sendStartedEvent(asset_event, "${asset_event_message} assets starts", utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config))
+				try {
+					sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
+					sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+					events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config), environment);
+					def url
+					if (create_cloudfront_url == true) {
+						updateOrCreateCF()
+						def cloudFrontDistribution = getCloudFrontARN()
+						cfArn = cloudFrontDistribution.ARN
+						events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", cfArn, "cloudfront", service_config), environment);
 
-            if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
-              def isBucketExists = checkIfBucketExists(s3Bucket)
-              if (!isBucketExists) {
-                echo "creating a new website with name $s3Bucket"
-                sh "aws s3 mb s3://$s3Bucket --region ${configLoader.AWS.REGION}"
-              }
-            }
-            def isBucketwithEnvExists = checkIfBucketExists(asset_info)
-            def asset_event
-            def asset_event_message
-            if (isBucketwithEnvExists) {
-              asset_event = 'UPDATE_ASSET'
-              asset_event_message = 'update'
-            } else {
-              asset_event = 'CREATE_ASSET'
-              asset_event_message = 'create'
-            }
-            events.sendStartedEvent(asset_event, "${asset_event_message} assets starts", utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config))
-            try {
-              sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
-              sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
-              events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config), environment);
-              def url
-              if (create_cloudfront_url == true) {
-                updateOrCreateCF()
-                def cloudFrontDistribution = getCloudFrontARN()
-                cfArn = cloudFrontDistribution.ARN
-                events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", cfArn, "cloudfront", service_config), environment);
+						def cloudFrontDistributionDetails = getCloudFrontDetails()
+						url = 'https://' + cloudFrontDistributionDetails['Distribution']
 
-                def cloudFrontDistributionDetails = getCloudFrontDetails()
-                url = 'https://' + cloudFrontDistributionDetails['Distribution']
+						invalidateCloudFrontCache()
+						generateBucketPolicy(true)
+						echo "CLOUDFRONT UPDATED"
+						echo "You can access the website at $url"
+					} else {
+						def distributionID = getDistributionId()
+						if (distributionID != null && distributionID != "") {
+							cleanupCloudFrontDistribution()
+						}
+						generateBucketPolicy(false)
+						sh "aws s3 website s3://$s3Bucket --index-document index.html --error-document error.html"
+						url = generateAssetUrl()
+						echo "You can access the website at $url"
+					}
+					def svc_status = "You can access your website using following link: ${url}"
+					echo svc_status
+					environmentDeploymentMetadata.setEnvironmentEndpoint(url)
+					send_status_email('COMPLETED', svc_status)
 
-                invalidateCloudFrontCache()
-                generateBucketPolicy(true)
-                echo "CLOUDFRONT UPDATED"
-                echo "You can access the website at $url"
-              } else {
-                def distributionID = getDistributionId()
-                if (distributionID != null && distributionID != "") {
-                  cleanupCloudFrontDistribution()
-                }
-                generateBucketPolicy(false)
-                sh "aws s3 website s3://$s3Bucket --index-document index.html --error-document error.html"
-                url = generateAssetUrl()
-                echo "You can access the website at $url"
-              }
-              def svc_status = "You can access your website using following link: ${url}"
-              echo svc_status
-              environmentDeploymentMetadata.setEnvironmentEndpoint(url)
-              send_status_email('COMPLETED', svc_status)
+					events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("aws", url, "endpoint_url", service_config),environment)
+					events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
+					events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment, null), environment)
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
+				} catch (ex) {
+					send_status_email('FAILED', '')
+					events.sendFailureEvent(asset_event, ex.getMessage(), context_map)
+					events.sendFailureEvent('UPDATE_DEPLOYMENT',  ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
+					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment, null), environment)
+					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
+					error "Deployment Failed. "+ ex.getMessage()
+				}
 
-              events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("aws", url, "endpoint_url", service_config),environment)
-              events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
-              events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment, null), environment)
-              events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
-            } catch (ex) {
-              send_status_email('FAILED', '')
-              events.sendFailureEvent(asset_event, ex.getMessage(), context_map)
-              events.sendFailureEvent('UPDATE_DEPLOYMENT',  ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
-              events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment, null), environment)
-              events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
-              error "Deployment Failed. "+ ex.getMessage()
-            }
-
-          }
-          // reset Credentials
+			}
+			// reset Credentials
           resetCredentials()
         }
-      }
-    }
+		}
+	}
 }
 
 def generateAssetUrl(){
@@ -700,10 +704,12 @@ def LoadConfiguration() {
 /**
  Reset credentials
  */
-def resetCredentials() {
+def resetCredentials(credsId) {
   echo "resetting AWS credentials"
-  sh "aws configure set profile.cloud-api.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-  sh "aws configure set profile.cloud-api.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+  def credPath = System.getenv().HOME + "/.aws/credentials"
+  def confPath = System.getenv().HOME + "/.aws/config"
+  sh "sed -i '/${credsId}/,+2d' ${credPath}"
+  sh "sed -i '/${credsId}/,+1d' ${confPath}"
 }
 
 /**

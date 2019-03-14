@@ -4,6 +4,12 @@
   "TOKEN_URL": "/dev/jazz/login",
   "SERVICE_USER": "{jazz_admin}",
   "TOKEN_CREDS": "{jazz_admin_creds}",
+  "APIGEE": {
+    "URL": "{apigee_mgmt_host}/v1/o/{apigee_mgmt_org}/environments/{apigee_mgmt_env}/stats/apiproxy/",
+    "USER": "{apigee_user}",
+    "PASSWORD": "{apigee_password}"
+  },
+  "TOKEN_CREDS": "{jazz_admin_creds}",
   "AZURE": {
     "SUBSCRIPTIONID": "{azure_subscriptionid}",
     "CLIENTID": "{azure_clientid}",

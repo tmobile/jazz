@@ -15,11 +15,12 @@
 // =========================================================================
 
 /**
-Fetch metrics per service using CloudWatch APIs
-@author:
-@version: 1.0
+ Fetch metrics per service using CloudWatch APIs
+ @author:
+ @version: 1.0
  **/
 
+const moment = require('moment');
 const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
@@ -29,35 +30,34 @@ const validateUtils = require("./components/validation.js");
 const request = require('request');
 const monitorManagementClient = require('azure-arm-monitor');
 const msRestAzure = require('ms-rest-azure');
-const moment = require("moment-timezone");
 const momentDurationFormatSetup = require("moment-duration-format");
-
-
+const global_config = require("./config/global-config.json");
+const metricConfig = require("./components/metrics.json");
 
 function handler(event, context, cb) {
   var errorHandler = errorHandlerModule();
   var config = configObj.getConfig(event, context);
 
   try {
-		/*
-		 * event input format :
-		 *   {
-		 *        "domain": "jazztest",
-		 *        "service": "get-monitoring-data",
-		 *        "environment": "prod",
-		 *        "end_time": "2017-06-27T06:56:00.000Z",
-		 *        "start_time": "2017-06-27T05:55:00.000Z",
-		 *        "interval":"300",
-		 *        "statistics":"average"
-		 *    }
-		 */
+    /*
+         * event input format :
+         *   {
+         *        "domain": "jazztest",
+         *        "service": "get-monitoring-data",
+         *        "environment": "prod",
+         *        "end_time": "2017-06-27T06:56:00.000Z",
+         *        "start_time": "2017-06-27T05:55:00.000Z",
+         *        "interval":"300",
+         *        "statistics":"average"
+         *    }
+         */
     var eventBody = event.body;
     exportable.genericValidation(event)
       .then(() => validateUtils.validateGeneralFields(eventBody))
       .then(() => exportable.getToken(config))
       .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken))
       .then(res => exportable.validateAssets(res, eventBody))
-      .then(res => exportable.getMetricsDetails(res, config, eventBody))
+      .then(res => exportable.getMetricsDetails(res, eventBody, config))
       .then(res => {
         var finalObj = utils.massageData(res, eventBody);
         return cb(null, responseObj(finalObj, eventBody));
@@ -68,11 +68,11 @@ function handler(event, context, cb) {
         } else if (error.result === "unauthorized") {
           return cb(JSON.stringify(errorHandler.throwUnauthorizedError(error.message)));
         } else {
-          return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
+          return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching metrics")));
         }
       });
   } catch (e) {
-    return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching cloudwatch metrics")));
+    return cb(JSON.stringify(errorHandler.throwInternalServerError("Error in fetching metrics")));
   }
 
 };
@@ -122,10 +122,11 @@ function getToken(config) {
       } else {
         var message = "";
         if (error) {
-          message = error.message
+          message = error.message;
         } else {
           message = response.body.message
         }
+        logger.error(message);
         reject({
           "error": "Could not get authentication token for updating service catalog.",
           "message": message
@@ -152,6 +153,7 @@ function getAssetsDetails(config, eventBody, authToken) {
     logger.info("asset_api_options :- " + JSON.stringify(asset_api_options));
     request(asset_api_options, (error, response, body) => {
       if (error) {
+        logger.error(error);
         reject(error);
       } else {
         if (response.statusCode && response.statusCode === 200) {
@@ -181,6 +183,7 @@ function validateAssets(assetsArray, eventBody) {
       var newAssetArray = [];
       var invalidTypeCount = 0;
 
+      logger.debug("Validating assets");
       assetsArray.filter(assetItem => assetItem.provider == 'aws').forEach((assetItem) => {
         if (assetItem.isError) {
           logger.error(assetItem.isError);
@@ -197,23 +200,44 @@ function validateAssets(assetsArray, eventBody) {
 
           if (!getAssetNameDetails.isError) {
             paramMetrics = getAssetNameDetails.paramMetrics;
-            exportable.getActualParam(paramMetrics, getAssetNameDetails.awsNameSpace, assetItem, eventBody)
-              .then(res => {
-                newAssetArray.push({
-                  "actualParam": res,
-                  "userParam": assetItem,
-                  "provider": assetItem.provider
+
+            if (assetItem.provider === 'aws') {
+              exportable.getActualParam(paramMetrics, getAssetNameDetails.nameSpace, assetItem, eventBody)
+                .then(res => {
+                  newAssetArray.push({
+                    "nameSpace": "aws",
+                    "actualParam": res,
+                    "userParam": assetItem
+                  });
+                  logger.debug("Validated Assets: " + JSON.stringify(newAssetArray));
+                  resolve(newAssetArray);
+                })
+                .catch(error => {
+                  logger.error(error);
+                  reject(error);
                 });
-                resolve(newAssetArray);
-              })
-              .catch(error => {
-                reject(error);
-              });
+            } else if (assetItem.provider === 'gcp') {
+              exportable.getApigeeParam(paramMetrics, eventBody)
+                .then(res => {
+                  newAssetArray.push({
+                    "nameSpace": "gcp",
+                    "actualParam": res,
+                    "userParam": assetItem,
+                    "provider": assetItem.provider
+                  });
+                  logger.debug("Validated Assets: " + JSON.stringify(newAssetArray));
+                  resolve(newAssetArray);
+                })
+                .catch(error => {
+                  logger.error(error);
+                  reject(error);
+                });
+            }
           } else {
-            logger.error("Unsupported metric type. ");
+            logger.error(getAssetNameDetails.message);
             reject({
               result: "inputError",
-              message: "Unsupported metric type."
+              message: getAssetNameDetails.message
             });
           }
         }
@@ -231,8 +255,8 @@ function validateAssets(assetsArray, eventBody) {
           }
         } else {
 
-            newAssetArray.push(assetItem);
-            resolve(newAssetArray);
+          newAssetArray.push(assetItem);
+          resolve(newAssetArray);
         }
       });
     } else {
@@ -241,6 +265,23 @@ function validateAssets(assetsArray, eventBody) {
         message: "Metric not found for requested asset"
       });
     }
+  });
+}
+
+function getApigeeParam(paramMetrics, eventBody) {
+  return new Promise((resolve, reject) => {
+    let actualParam = [];
+    paramMetrics.forEach(param => {
+      const metricStatistics = param.Statistics.toLowerCase();
+      const clonedObj = {};
+      if (global_config.APIGEE.STATISTICS_MAP[eventBody.statistics] === metricStatistics) {
+        clonedObj.MetricName = param.MetricName;
+        clonedObj.Statistics = metricStatistics;
+        actualParam.push(clonedObj);
+      }
+    });
+    logger.verbose("Get Apigee params: " + actualParam);
+    resolve(actualParam);
   });
 }
 
@@ -310,21 +351,32 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
   });
 }
 
-function getMetricsDetails(newAssetArray, config, eventBody) {
+function getMetricsDetails(newAssetArray, eventBody, config) {
+
   return new Promise((resolve, reject) => {
     logger.debug("Inside getMetricsDetails" + JSON.stringify(newAssetArray));
     var metricsStatsArray = [];
-    newAssetArray.filter(assetParam => assetParam.provider == 'aws').forEach(assetParam => {
-      exportable.cloudWatchDetails(assetParam)
-        .then(res => {
-          metricsStatsArray.push(res);
-          if (metricsStatsArray.length === newAssetArray.length) {
-            resolve(metricsStatsArray);
-          }
-        })
-        .catch(error => {
-          reject(error);
-        });
+    newAssetArray.forEach(assetParam => {
+      if (assetParam.nameSpace === 'aws') {
+        exportable.cloudWatchDetails(assetParam)
+          .then(res => {
+            metricsStatsArray.push(res);
+            if (metricsStatsArray.length === newAssetArray.length) {
+              resolve(metricsStatsArray);
+            }
+          })
+          .catch(error => reject(error));
+      }
+      else if (assetParam.nameSpace === 'gcp') {
+        exportable.apigeeMetricDetails(assetParam, eventBody, config)
+          .then(res => {
+            metricsStatsArray.push(res);
+            if (metricsStatsArray.length === newAssetArray.length) {
+              resolve(metricsStatsArray);
+            }
+          })
+          .catch(error => reject(error));
+      }
     });
 
     // call azure api if 'azure' is found as a provider
@@ -339,7 +391,71 @@ function getMetricsDetails(newAssetArray, config, eventBody) {
           reject(error);
         });
     });
+  });
+}
 
+function apigeeMetricDetails(assetParam, eventBody, config) {
+  const DATE_FORMAT = 'MM/DD/YYYY%20HH:MM';
+
+  return new Promise((resolve, reject) => {
+    let metricsList = assetParam.actualParam.map(param =>`${param.Statistics}(${param.MetricName})`);
+    let metricString = metricsList.join(",");
+    let endTime = moment(eventBody.end_time).format(DATE_FORMAT);
+    let startTime = moment(eventBody.start_time).format(DATE_FORMAT);
+    let timeUnit = global_config.APIGEE.INTERVAL_MAP[eventBody.interval];
+
+    const servicePayload = {
+      url: `${config.APIGEE.URL}${assetParam.userParam.asset_name.apiproxy}?select=${metricString}&timeRange=${startTime}~${endTime}&timeUnit=${timeUnit}`,
+      headers: {
+        "Authorization": "Basic " + new Buffer(`${config.APIGEE.USER}:${config.APIGEE.PASSWORD}`).toString("base64"),
+      },
+      method: "GET",
+      rejectUnauthorized: false,
+      json: true
+    };
+
+    var metricData = metricConfig.namespaces.gcp.apigee_proxy.metrics.map(item => {
+      let data = {
+        label: item.Label,
+        unit: item.Unit,
+        metricName: `${item.Statistics.toLowerCase()}(${item.MetricName})`
+      };
+      return data;
+    });
+
+    logger.debug("Get Apigee metrics using URL : " + servicePayload.url);
+    request(servicePayload, (error, response, body) => {
+      if (error) {
+        reject(error);
+      } else if (response && response.statusCode === 200 && body && body.environments) {
+        const metricResult = body.environments[0].metrics;
+        let metricsStats = [];
+        metricResult.forEach(metric => {
+          if (metricsList.indexOf(metric.name) > -1) {
+            let deatils = metricData.find(item => {
+              if (item.metricName === metric.name) return item;
+            })
+            let unit =  deatils.unit;
+            let dataPoints = metric.values.map(val => ({
+              Timestamp: moment(val.timestamp),
+              [eventBody.statistics]: Number.parseFloat(val.value).toFixed(2),
+              Unit: unit
+            }));
+
+            const metricObj = {
+              Label: deatils.label,
+              Datapoints: dataPoints
+            };
+            metricsStats.push(metricObj);
+          }
+        });
+        const assetObj = utils.assetData(metricsStats, assetParam.userParam);
+        resolve(assetObj);
+      } else {
+        logger.error(body.message);
+        reject(body.message);
+      }
+    });
   });
 }
 
@@ -398,10 +514,10 @@ function azureMetricDefinitions(config, assetParam) {
 
         if (err) {
           logger.error("Error while obtaining azure credentials " + JSON.stringify(err));
-            reject({
-              "result": "inputError",
-              "message": err.message
-            });
+          reject({
+            "result": "inputError",
+            "message": err.message
+          });
         } else {
 
           // to create an azure client
@@ -430,7 +546,7 @@ function azureMetricDefinitions(config, assetParam) {
             resolve(data);
           });
         }
-    });
+      });
   });
 };
 
@@ -514,13 +630,13 @@ function azureMetricDetails(definitions, config, assetParam, eventBody) {
             data = {
               "type": assetParam.asset_type,
               "asset_name": {"provider_id": assetParam.provider_id, "asset_type": assetParam.asset_type},
-              "statistics": statistics, 
+              "statistics": statistics,
               "metrics": metrics
             };
             resolve(data);
           });
+        });
       });
-    });
   });
 };
 
@@ -532,10 +648,12 @@ const exportable = {
   getAssetsDetails,
   validateAssets,
   getActualParam,
+  getApigeeParam,
   getMetricsDetails,
   cloudWatchDetails,
   azureMetricDefinitions,
-  azureMetricDetails
+  azureMetricDetails,
+  apigeeMetricDetails
 }
 
 module.exports = exportable;

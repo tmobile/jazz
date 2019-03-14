@@ -7,5 +7,21 @@
     "{conf-apikey-dev}": "{conf_stack_prefix}-dev",
     "{conf-apikey-stg}": "{conf_stack_prefix}-stg",
     "{conf-apikey-prod}": "{conf_stack_prefix}-prod"
+  },
+  "APIGEE": {
+    "STATISTICS_MAP": {
+      "average": "avg",
+      "minimum": "min",
+      "maximum": "max",
+      "sum": "sum"
+    },
+    "INTERVAL_MAP": {
+      "1": "second",
+      "60": "minute",
+      "3600": "hour",
+      "86400": "day",
+      "604800": "week",
+      "2592000": "month"
+    }
   }
 }
