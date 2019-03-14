@@ -16,3 +16,4 @@ npm-debug.log
 /.idea
 package-lock.json
 
+core/jazz_ui/target/
