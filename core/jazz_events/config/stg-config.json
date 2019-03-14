@@ -1,9 +1,0 @@
-{
-  "events_table":"{conf_stack_prefix}_Events_Stg",
-  "event_handler_table": "{conf_stack_prefix}_Event_Handler_Stg",
-  "event_type_table": "{conf_stack_prefix}_Event_Type_Stg",
-  "event_name_table": "{conf_stack_prefix}_Event_Name_Stg",
-  "event_status_table": "{conf_stack_prefix}_Event_Status_Stg",
-  "event_hub":"{conf_stack_prefix}-events-hub-stg",
-  "ddb_region":"{conf-region}"
-}

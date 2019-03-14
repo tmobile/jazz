@@ -1,5 +1,0 @@
-{
-  "SPLUNK_ENDPOINT": "{splunk_endpoint}",
-  "SPLUNK_TOKEN": "{spunk_hec_token}",
-  "SPLUNK_INDEX": "{splunk_index}"
-}

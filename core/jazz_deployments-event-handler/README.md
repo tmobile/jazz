@@ -1,1 +1,0 @@
-Subscriber for handling deployment related events

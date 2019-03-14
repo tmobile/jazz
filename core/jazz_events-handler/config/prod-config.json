@@ -1,4 +1,0 @@
-{
-  "EVENT_NAME_TABLE":"{conf_stack_prefix}_Event_Name_Prod",
-  "EVENT_TABLE":"{conf_stack_prefix}_Events_Prod"
-}

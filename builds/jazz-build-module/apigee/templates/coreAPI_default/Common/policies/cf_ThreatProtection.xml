@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<FlowCallout async="false" continueOnError="false" enabled="true" name="cf_ThreatProtection">
-    <DisplayName>cf_ThreatProtection</DisplayName>
-    <FaultRules/>
-    <Properties/>
-    <SharedFlowBundle>ThreatProtectionJavaCallout</SharedFlowBundle>
-</FlowCallout>

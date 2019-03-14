@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<FlowCallout async="false" continueOnError="false" enabled="true" name="cf_SpikeArrestCallout">
-    <DisplayName>cf_SpikeArrestCallout</DisplayName>
-    <FaultRules/>
-    <Properties/>
-    <SharedFlowBundle>SpikeArrest</SharedFlowBundle>
-</FlowCallout>

@@ -1,6 +1,0 @@
-			<Step>
-            	<Name>cf_LoggerTargetFault</Name>
-        	</Step>
-			<Step>
-				<Name>cf_DefaultFaultCallout</Name>
-			</Step>

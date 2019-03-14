@@ -1,3 +1,0 @@
-			<!-- ${SOAPAction} request -->
-            <Request>
-            </Request>

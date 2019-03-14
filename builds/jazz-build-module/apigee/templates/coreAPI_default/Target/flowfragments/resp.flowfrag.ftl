@@ -1,3 +1,0 @@
-			<!-- ${SOAPAction} response -->
-            <Response>
-            </Response>

@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<FlowCallout async="false" continueOnError="false" enabled="true" name="cf_LoggerProxyFlowReq">
-    <DisplayName>cf_LoggerProxyFlowReq</DisplayName>
-    <FaultRules/>
-    <Properties/>
-    <SharedFlowBundle>LoggerProxyRequest</SharedFlowBundle>
-</FlowCallout>

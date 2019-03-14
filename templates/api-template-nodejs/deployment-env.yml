@@ -1,3 +1,0 @@
-providerRuntime : nodejs8.10
-providerMemorySize : 256
-providerTimeout : 160
