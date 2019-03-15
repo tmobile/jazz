@@ -1,16 +1,16 @@
-#!groovy.
+#!groovy?
 import groovy.json.JsonOutput
 import groovy.transform.Field
 import groovy.json.JsonSlurperClassic
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
-@Field def repo_credential_id
-@Field def aws_credential_id
-@Field def region
-@Field def instance_prefix
-@Field def repo_base
-@Field def repo_core
-@Field def scm_type
+@Field def repo_credential_id = "jazz_repocreds"
+@Field def aws_credential_id = "jazz_awscreds"
+@Field def region = "us-east-1"
+@Field def instance_prefix = "multi0312"
+@Field def repo_base = "multi0312-gitlab-alb-831427219.us-east-1.elb.amazonaws.com"
+@Field def repo_core = "slf"
+@Field def scm_type = "gitlab"
 
 /**
  * The Service delete workflow for service types: API, function & website
@@ -35,6 +35,7 @@ import groovy.json.JsonSlurperClassic
 @Field def context_map = [:]
 @Field def is_service_deletion = true;
 @Field def current_environment_id
+@Field def accountInfo;
 
 node {
 	echo "Starting delete service job with params : $params"
@@ -94,6 +95,8 @@ node {
 		if (!service_config) {
 			error "Failed to fetch service metadata from catalog"
 		}
+		// Get the Account Details from the ConfigLoader
+		accountInfo = utilModule.getAccountInfo(service_config)
 
     if(!service_config.region) {
       service_config.region = configLoader.AWS.DEFAULTS.REGION
@@ -108,9 +111,9 @@ node {
     }
 
 		if(!service_config.credentialId){
-			service_config.credentialId = getCredentialID(service_config.accountId, configLoader)
+			service_config.credentialId = accountInfo.CREDENTIALID
 		}
-		
+
     lambdaEvents.setServiceConfig(service_config)
 		environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 		def environmentList = environmentMetadataLoader.getEnvironmentLogicalIds()
@@ -377,12 +380,12 @@ def handleFailureEvent(errorMessage){
  */
 def unDeployService(stage) {
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: service_config.credentialId, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
 			def randomString = utilModule.generateRequestId();
 			def credsId = "jazz-${randomString}";
-			sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.${credsId}.region ${service_config.region}"
 			sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -393,7 +396,8 @@ def unDeployService(stage) {
 				env_key = "PROD"
 			}
 			def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
-			sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]} --profile ${credsId}"
+			def bucketObject = utilModule.getAccountBucketName(service_config);
+			sh "serverless remove --stage ${stage} --verbose  --bucket ${bucketObject[env_key]} --profile ${credsId}"
 
 			echo "Service undeployed"
 
@@ -497,9 +501,9 @@ def updateSwaggerConfig() {
 			sh "sed -i -- 's/{service_name}/${service_config['service']}/g' swagger/swagger.json"
 			sh "sed -i -- 's/{domain}/${service_config['domain']}/g' swagger/swagger.json"
 
-			def region = "${configLoader.AWS.REGION}"
-
-			def roleARN = configLoader.AWS.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
+			def region = "${service_config.region}"
+			def accountObject = utilModule.getAccountInfo(service_config)
+			def roleARN = accountObject.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
 
       // TODO: the below couple of statements will be replaced with regular expression in very near future;
 			def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
@@ -554,6 +558,8 @@ def cleanUpApiGatewayResources(stage, path) {
 			}
 			echo "Resource search key for ApiGateway : $resource_search_key"
 			def aws_api_id = getApiId(stage)
+
+			echo "API Gateway Id is : ${aws_api_id}"
 
 			try {
 				def outputStr = sh(
@@ -625,13 +631,13 @@ def getApiId(stage) {
 	if (envMetadata["AWS_API_ID"] != null) {
 		return envMetadata["AWS_API_ID"]
 	}
-
+	def accountAPIGateway = utilModule.getAccountAPIName(service_config)
 	if (stage.endsWith('-dev')) {
-		return utilModule.getAPIIdForCore(configLoader.AWS.API["DEV"])
+		return accountAPIGateway["DEV"]
 	} else if (stage == 'stg') {
-		return utilModule.getAPIIdForCore(configLoader.AWS.API["STG"])
+		return accountAPIGateway["STG"]
 	} else if (stage == 'prod') {
-		return utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
+		return accountAPIGateway["PROD"]
 	}
 }
 
@@ -1095,23 +1101,6 @@ def removeEventResources() {
    sh "sed -i -- '/#Start:events/,/#End:events/d' ./serverless.yml"
 }
 
-/**
-* Function to get the Credential Id
-* Takes AccountId where the service is deployed
-* and configLoader object as the Input
-**/
-
-def getCredentialID(deployedAccountId , configJson){
-	def credsId= "";
-	def allAccounts = configJson.AWS.ACCOUNTS;
-	for( account in allAccounts ){
-		def accountId = account['ACCOUNTID'];
-		if(accountId == deployedAccountId){
-			credsId = account["CREDENTIAL_ID"];
-		}
-	}
-	return credsId;
-}
 
 
 /**
