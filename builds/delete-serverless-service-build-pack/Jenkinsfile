@@ -140,7 +140,7 @@ node {
 		}
 	}
 
-  if (service_config['platform'] != null || service_config['platform'] == "azure") {
+  if (service_config['platform'] != null && service_config['platform'] == "azure") {
     stage('Undeploy Service') {
 
       for (_envId in environmentIds) {
@@ -1108,7 +1108,7 @@ def LoadConfiguration() {
 }
 
 def loadServerlessConfig() {
-  if (service_config['platform'] != null || service_config['platform'] == "azure") {
+  if (service_config['platform'] != null && service_config['platform'] == "azure") {
     return
   }
 
