@@ -218,7 +218,7 @@ node() {
       if (env_metadata["AWS_API_ID"] != null) {
         aws_api_id = env_metadata["AWS_API_ID"]
       }
-      
+
       def swaggerDocUrl = ""
 
       try {
@@ -244,11 +244,11 @@ node() {
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey);
           if(deployOutput != 'success'){
-						handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId)						
+						handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId)
 					}
 
           def lambdaARN = getLambdaARN(stackName, credsId);
-          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
+          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN.arn, "lambda", config), environment_logical_id);
 
           if (fileExists('swagger/swagger.json')) {
             echo "Generating swagger file for environment: ${env_key}"
@@ -601,7 +601,6 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
   sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
   sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
   sh "sed -i -- 's/{envmnt}/${current_environment}/g' swagger/swagger.json" // {environment}
-
 
   // TODO: the below couple of statements will be replaced with regular expression in very near future;
   def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
@@ -1115,7 +1114,7 @@ def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId) {
 		} else {
 			error "Unable to find existing log groups"
 		}
-	} 
+	}
 	else {
 			error "Exception occured while serverless deployment to ${env} environment"
 	}

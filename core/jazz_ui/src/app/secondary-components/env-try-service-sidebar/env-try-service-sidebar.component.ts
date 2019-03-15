@@ -3,6 +3,7 @@ import {SessionStorageService} from "../../core/helpers/session-storage.service"
 import {RelaxedJsonService} from "../../core/helpers/relaxed-json.service";
 import {HttpModule} from '@angular/http';
 import {RequestService} from "../../core/services";
+import { ActivatedRoute } from '@angular/router';
 
 
 declare var Promise;
@@ -35,6 +36,7 @@ export class EnvTryServiceSidebarComponent implements OnInit {
   error:boolean = false;
   FunctionInvocationError:boolean = false;
   reponse_code;
+  selectedServiceId: string = "";
 
 
   @Input() service;
@@ -44,12 +46,16 @@ export class EnvTryServiceSidebarComponent implements OnInit {
   constructor(private sessionStorage: SessionStorageService,
               private relaxedJson: RelaxedJsonService,
               private request: RequestService,
+              private route: ActivatedRoute
   ) {
     this.http = request;
 
   }
 
   ngOnInit() {
+    this.route.params.subscribe(params => {
+      this.selectedServiceId = params['id'];
+    });
     let saved = this.sessionStorage.getItem(this.sessionStorageKey);
     this.savingPayload = !!saved;
     if (saved) {
@@ -66,7 +72,7 @@ export class EnvTryServiceSidebarComponent implements OnInit {
         "functionARN": this.environment.endpoint,
         "inputJSON": JSON.parse(this.inputValue)
       };
-      this.subscription = this.http.post('/jazz/test-lambda', payload).subscribe((response) => {
+      this.subscription = this.http.post('/jazz/test-lambda', payload, this.selectedServiceId).subscribe((response) => {
         this.loading = false;
         this.outputHeader = {
           statusCode: response.data.payload.StatusCode|| '',

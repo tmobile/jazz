@@ -34,6 +34,7 @@ const crud = require("./components/crud")();
 var user_id;
 var serviceId;
 var serviceDataObject;
+var authToken;
 var handler = (event, context, cb) => {
 
     let deploymentTargets;
@@ -92,9 +93,9 @@ var handler = (event, context, cb) => {
         getToken(config)
             .then((authToken) => getServiceData(service_creation_data, authToken, config, deploymentTargets))
             .then((inputs) => createService(inputs))
-            .then((service_id) => startServiceOnboarding(service_creation_data, config, service_id))
+            .then(() => startServiceOnboarding(service_creation_data, config, serviceId))
             .then((result) => {
-                cb(null, responseObj(result, service_creation_data));
+                return cb(null, responseObj(result, service_creation_data));
             })
             .catch(function (err) {
                 logger.error(`Error while creating service : ${JSON.stringify(err)}`);
@@ -189,7 +190,7 @@ var getToken = (configData) => {
 
         request(svcPayload, (error, response, body) => {
             if (response.statusCode === 200 && body && body.data) {
-                var authToken = body.data.token;
+                authToken = body.data.token;
                 return resolve(authToken);
             } else {
                 return reject({
