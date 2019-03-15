@@ -90,12 +90,13 @@ describe('create-serverless-service', function () {
           "service_type": "function",
           "domain": "test-domain",
           "runtime": "nodejs",
+          "deployment_accounts" : [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
           "approvers": ['tw1light_$pArkle'],
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
           "create_cloudfront_url": false,
-          "deployment_targets": { "api": "gcp_apigee" }
+          "deployment_targets": { "function": "aws_lambda" }
         }
       };
 
@@ -168,6 +169,70 @@ describe('create-serverless-service', function () {
 
       let bothCases = checkCase("body", "deployment_targets", "invalid", errMessage, errType) &&
         checkCase("body", "deployment_targets", "invalid", errMessage, errType);
+      assert.isTrue(bothCases);
+      sinon.assert.callCount(configstub, 4);
+      configstub.restore();
+    });
+
+    it("should inform user of error if given an event with no body.deployment_accounts", function () {
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_ACCOUNTS": [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+      });
+
+      event.body.deployment_accounts = null;
+      let errMessage = "Deployment accounts is missing or is not in a valid format";
+      let errType = "BadRequest";
+      let bothCases = checkCase("body", "deployment_accounts", "invalid", errMessage, errType) &&
+        checkCase("body", "deployment_accounts", "invalid", errMessage, errType);
+      assert.isTrue(bothCases);
+      sinon.assert.callCount(configstub, 4);
+      configstub.restore();
+    });
+
+    it("should inform user of error if given an event with no primary account.deployment_accounts", function () {
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_ACCOUNTS": [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+      });
+
+      event.body.deployment_accounts = [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":false}];
+      let errMessage = "Invalid input! At least one primary deployment account is required";
+      let errType = "BadRequest";
+      let bothCases = checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType) &&
+        checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType);
+      assert.isTrue(bothCases);
+      sinon.assert.callCount(configstub, 4);
+      configstub.restore();
+    });
+
+    it("should inform user of error if given an event with two primary account.deployment_accounts", function () {
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_ACCOUNTS": [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+      });
+
+      event.body.deployment_accounts = [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":true}];
+      let errMessage = "Invalid input! Only one primary deployment account is allowed";
+      let errType = "BadRequest";
+      let bothCases = checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType) &&
+        checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType);
+      assert.isTrue(bothCases);
+      sinon.assert.callCount(configstub, 4);
+      configstub.restore();
+    });
+
+    it("should inform user of error if given an event with no account, region and provider for non-primary account.deployment_accounts", function () {
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_ACCOUNTS": [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+      });
+
+      event.body.deployment_accounts = [{"primary":false}];
+      let errMessage = "accountId, region and provider are required for a non-primary deployment account";
+      let errType = "BadRequest";
+      let bothCases = checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType) &&
+        checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType);
       assert.isTrue(bothCases);
       sinon.assert.callCount(configstub, 4);
       configstub.restore();
@@ -570,18 +635,19 @@ describe('create-serverless-service', function () {
         service_creation_data.events = [eachEvent];
 
         index.getServiceData(service_creation_data, authToken, config)
-          .then((input) => {
-            let action = 'event_action_' + each;
-            let source = 'event_source_' + each;
-            expect(input.METADATA).to.have.all.keys(action, source)
-          });
-      });
+        .then((input) => {
+          let action = 'event_action_' + each;
+          let source = 'event_source_' + each;
+          let provider = 'providerRuntime';
+          expect(input.METADATA).to.have.all.keys(action, source, provider)
+        });
+      })
     });
 
     it("should return input error for invalid input parameters for service type function (for different event sources)", () => {
       let authToken = "temp-auth-token";
-      let eventsList = ["", "invalidEvent"];
-      service_creation_data.rateExpression = "";
+      let eventsList = ["","invalidEvent"];
+      service_creation_data.rateExpression = ""
       let config = configModule.getConfig(event, context);
 
       eventsList.forEach(each => {
@@ -593,20 +659,16 @@ describe('create-serverless-service', function () {
         service_creation_data.events = [eachEvent]
 
         index.getServiceData(service_creation_data, authToken, config)
-          .catch(error => {
-            if (each) {
-              expect(error).to.include({
-                result: 'inputError',
-                message: `Event type \'${each}\' is invalid.`
-              });
-            } else {
-              expect(error).to.include({
-                result: 'inputError',
-                message: 'Event type and/or source name cannot be empty.'
-              });
-            }
-          });
-      });
+        .catch(error => {
+          let message;
+          if(each == ""){
+            message = 'Event type and/or source name cannot be empty.';
+          } else {
+            message = "Event type " + "\'" + each + "\'" + " is invalid.";
+          }
+          expect(error).to.include({ result: 'inputError', message: message });
+        });
+      })
     });
 
     it("should return input error for invalid input parameters for service type function (for invalid event source name)", () => {
@@ -689,6 +751,7 @@ describe('create-serverless-service', function () {
         SERVICE_NAME: 'test-service',
         DOMAIN: 'test-domain',
         DESCRIPTION: undefined,
+        DEPLOYMENT_ACCOUNTS: [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true}],
         TYPE: 'function',
         RUNTIME: 'nodejs',
         REGION: "east,UST",

@@ -37,7 +37,8 @@ var serviceDataObject;
 var authToken;
 var handler = (event, context, cb) => {
 
-  let deploymentTargets;
+  let deploymentTargets = {};
+  let deploymentAccounts = [];
   var errorHandler = errorHandlerModule();
   var config = configModule.getConfig(event, context);
   logger.init(event, context);
@@ -62,7 +63,6 @@ var handler = (event, context, cb) => {
     } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
     }
-
     // validate service types
     const allowedSvcTypes = Object.keys(config.DEPLOYMENT_TARGETS);
     if (allowedSvcTypes.indexOf(service_creation_data.service_type) !== -1) {
@@ -70,7 +70,6 @@ var handler = (event, context, cb) => {
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError(`Invalid service type provided - ${service_creation_data.service_type}`)));
     }
-
     // validate deployment targets
     if (service_creation_data.deployment_targets && typeof service_creation_data.deployment_targets === "object") {
       const allowedSubServiceType = config.DEPLOYMENT_TARGETS[service_creation_data.service_type];
@@ -80,6 +79,41 @@ var handler = (event, context, cb) => {
       }
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError(`Deployment targets is missing or is not in a valid format`)));
+    }
+    // Validate and set deployment accounts
+    let primaryAccountCount = 0;
+    
+    if (Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts) {
+      for (let eachDeploymentAccount of service_creation_data.deployment_accounts) {
+        if (eachDeploymentAccount.primary) {
+          primaryAccountCount++
+          let deploymentAccount = {
+            'accountId': eachDeploymentAccount.accountId || config.PRIMARY_DEPLOYMENT_ACCOUNT.accountId,
+            'region': eachDeploymentAccount.region || config.PRIMARY_DEPLOYMENT_ACCOUNT.region,
+            'provider': eachDeploymentAccount.provider || config.PRIMARY_DEPLOYMENT_ACCOUNT.provider,
+            'primary': eachDeploymentAccount.primary
+          }
+          deploymentAccounts.push(deploymentAccount);
+        } else {
+          if (eachDeploymentAccount.accountId && eachDeploymentAccount.region && eachDeploymentAccount.provider) {
+            deploymentAccounts.push(eachDeploymentAccount);
+          } else {
+            logger.error('accountId, region and provider are required for a non-primary deployment account');
+            return cb(JSON.stringify(errorHandler.throwInputValidationError('accountId, region and provider are required for a non-primary deployment account')));
+          }
+        }
+      }
+
+      if (primaryAccountCount == 0) {
+        logger.error('Invalid input! At least one primary deployment account is required')
+        return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid input! At least one primary deployment account is required')))
+      }
+      if (primaryAccountCount > 1) {
+        logger.error('Invalid input! Only one primary deployment account is allowed')
+        return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid input! Only one primary deployment account is allowed')))
+      }
+    } else {
+      return cb(JSON.stringify(errorHandler.throwInputValidationError(`Deployment accounts is missing or is not in a valid format`)));
     }
 
     user_id = event.principalId;
@@ -91,7 +125,7 @@ var handler = (event, context, cb) => {
     logger.info(`Request event: ${JSON.stringify(event)}`);
 
     getToken(config)
-      .then((authToken) => getServiceData(service_creation_data, authToken, config, deploymentTargets))
+      .then((authToken) => getServiceData(service_creation_data, authToken, config, deploymentTargets, deploymentAccounts))
       .then((inputs) => createService(inputs))
       .then(() => startServiceOnboarding(service_creation_data, config, serviceId))
       .then((result) => {
@@ -218,7 +252,7 @@ var createService = (service_data) => {
   });
 }
 
-var getServiceData = (service_creation_data, authToken, configData, deploymentTargets) => {
+var getServiceData = (service_creation_data, authToken, configData, deploymentTargets, deploymentAccounts) => {
   return new Promise((resolve, reject) => {
     var inputs = {
       "TOKEN": authToken,
@@ -252,42 +286,6 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
       serviceMetadataObj.require_internal_access = service_creation_data.require_internal_access;
     }
 
-    // Set deployment_accounts to the propertiesObject variable
-    let primaryAccountCount = 0;
-    let deployment_accounts = [];
-
-    if (service_creation_data.deployment_accounts) {
-      for (let eachDeploymentAccount of service_creation_data.deployment_accounts) {
-        if (eachDeploymentAccount.primary) {
-          primaryAccountCount++
-          let deploymentAccount = {
-            'accountId': eachDeploymentAccount.accountId || config.PRIMARY_DEPLOYMENT_ACCOUNT.accountId,
-            'region': eachDeploymentAccount.region || config.PRIMARY_DEPLOYMENT_ACCOUNT.region,
-            'provider': eachDeploymentAccount.provider || config.PRIMARY_DEPLOYMENT_ACCOUNT.provider,
-            'primary': eachDeploymentAccount.primary
-          }
-          deployment_accounts.push(deploymentAccount);
-        } else {
-          if (eachDeploymentAccount.accountId && eachDeploymentAccount.region && eachDeploymentAccount.provider) {
-            deployment_accounts.push(eachDeploymentAccount);
-          } else {
-            logger.error('accountId, region and provider are required for a non-primary deployment account');
-            return cb(JSON.stringify(errorHandler.throwInputValidationError('accountId, region and provider are required for a non-primary deployment account')));
-          }
-        }
-      }
-
-      if (primaryAccountCount == 0) {
-        logger.error('Invalid input! At least one primary deployment account is required')
-        return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid input! At least one primary deployment account is required')))
-      }
-      if (primaryAccountCount > 1) {
-        logger.error('Invalid input! Only one primary deployment account is allowed')
-        return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid input! Only one primary deployment account is allowed')))
-      }
-      inputs["DEPLOYMENT_ACCOUNTS"] = deployment_accounts
-    }
-
     //Adding providerRuntime key in service catalog
     if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
       serviceMetadataObj.providerRuntime = service_creation_data.runtime;
@@ -296,6 +294,7 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
     // Pass the flag to enable authentication on API
     if (service_creation_data.service_type === "api") {
       inputs.DEPLOYMENT_TARGETS = deploymentTargets;
+      inputs.DEPLOYMENT_ACCOUNTS = deploymentAccounts;
       serviceMetadataObj.enable_api_security = service_creation_data.enable_api_security || false;
       if (service_creation_data.authorizer_arn) {
         // Validate ARN format - arn:aws:lambda:region:account-id:function:function-name
@@ -315,6 +314,7 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
 
     if (service_creation_data.service_type === "website") {
       inputs.DEPLOYMENT_TARGETS = deploymentTargets;
+      inputs.DEPLOYMENT_ACCOUNTS = deploymentAccounts;
       var create_cloudfront_url = "true";
       serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
       inputs.RUNTIME = 'n/a';
@@ -322,6 +322,7 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
     // Add rate expression to the propertiesObject;
     if (service_creation_data.service_type === "function") {
       inputs.DEPLOYMENT_TARGETS = deploymentTargets;
+      inputs.DEPLOYMENT_ACCOUNTS = deploymentAccounts;
       if (service_creation_data.rateExpression) {
         var cronExpValidator = CronParser.validateCronExpression(service_creation_data.rateExpression);
         if (cronExpValidator.result === 'valid') {
@@ -376,6 +377,7 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
 }
 
 function validateDeploymentTargets(allowedSubServiceType, deployment_targets, svcType) {
+  console.log('deployment_targets here',deployment_targets, svcType)
   if (deployment_targets.hasOwnProperty(svcType)) {
     const type = deployment_targets[svcType];
     if (allowedSubServiceType.indexOf(type) !== -1) {
