@@ -73,6 +73,17 @@ def loadServiceConfigurationData() {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
           sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/global-config.json"
           sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/global-config.json"
+        if (service_name.trim() == "jazz_metrics") {
+            updateCoreAPI();
+            updateConfigValue("{conf-region}", region);
+            updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN);
+            updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD);
+ 
+            sh "sed -i -- 's/{cf-region}/us-east-1/g' ./config/global-config.json"  // CloudFront Metrics are in us-east-1
+            sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/global-config.json"
+            sh "sed -i -- 's/{conf-apikey-dev}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/global-config.json"
+            sh "sed -i -- 's/{conf-apikey-stg}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/global-config.json"
+            sh "sed -i -- 's/{conf-apikey-prod}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/global-config.json"
         }
       }
 
