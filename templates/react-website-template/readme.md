@@ -1,3 +1,3 @@
 ## ReactJS website template
 
-Upload your website content to 'app' folder within this template to get it deployed automatically.
+Upload your website content to the 'app' folder within this template to deploy it automatically.
