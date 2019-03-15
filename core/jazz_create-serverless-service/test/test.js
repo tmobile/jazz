@@ -183,14 +183,58 @@ describe('create-serverless-service', function () {
       event.body.deployment_accounts = null;
       let errMessage = "Deployment accounts is missing or is not in a valid format";
       let errType = "BadRequest";
-      index.handler(event, context, (err, res)=>{
-        console.log('err',err);
-        console.log('res',res);
-      })
-      // let bothCases = checkCase("body", "deployment_accounts", "invalid", errMessage, errType) &&
-      //   checkCase("body", "deployment_accounts", "invalid", errMessage, errType);
-      // assert.isTrue(bothCases);
-      // sinon.assert.callCount(configstub, 4);
+      let bothCases = checkCase("body", "deployment_accounts", "invalid", errMessage, errType) &&
+        checkCase("body", "deployment_accounts", "invalid", errMessage, errType);
+      assert.isTrue(bothCases);
+      sinon.assert.callCount(configstub, 4);
+      configstub.restore();
+    });
+
+    it("should inform user of error if given an event with no primary account.deployment_accounts", function () {
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_ACCOUNTS": [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+      });
+
+      event.body.deployment_accounts = [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":false}];
+      let errMessage = "Invalid input! At least one primary deployment account is required";
+      let errType = "BadRequest";
+      let bothCases = checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType) &&
+        checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType);
+      assert.isTrue(bothCases);
+      sinon.assert.callCount(configstub, 4);
+      configstub.restore();
+    });
+
+    it("should inform user of error if given an event with two primary account.deployment_accounts", function () {
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_ACCOUNTS": [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+      });
+
+      event.body.deployment_accounts = [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":true}];
+      let errMessage = "Invalid input! Only one primary deployment account is allowed";
+      let errType = "BadRequest";
+      let bothCases = checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType) &&
+        checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType);
+      assert.isTrue(bothCases);
+      sinon.assert.callCount(configstub, 4);
+      configstub.restore();
+    });
+
+    it("should inform user of error if given an event with no account, region and provider for non-primary account.deployment_accounts", function () {
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_ACCOUNTS": [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+      });
+
+      event.body.deployment_accounts = [{"primary":false}];
+      let errMessage = "accountId, region and provider are required for a non-primary deployment account";
+      let errType = "BadRequest";
+      let bothCases = checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType) &&
+        checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType);
+      assert.isTrue(bothCases);
+      sinon.assert.callCount(configstub, 4);
       configstub.restore();
     });
 
