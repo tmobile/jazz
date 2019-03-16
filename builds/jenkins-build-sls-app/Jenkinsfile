@@ -350,10 +350,6 @@ node() {
             createSubscriptionFilters(config, configLoader.AWS.REGION, roleId);
           }
 
-          if (domain && domain == "jazz") {
-            serviceConfigdata.setLogStreamPermission(config)
-            serviceConfigdata.setKinesisStream(config)
-          }
           def svc_response = echoServiceInfo(environment_logical_id)
           send_status_email(config, 'COMPLETED', svc_response)
 
