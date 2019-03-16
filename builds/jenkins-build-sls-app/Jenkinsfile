@@ -209,58 +209,71 @@ node() {
 
     stage('Package') {
       echo 'The packaging state'
+      // As per 'Every stage should send started, failed, success events in each stage'
+      events.sendStartedEvent('PACKAGE', 'Packaging starts', context_map, environment_logical_id)
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
-
-        def randomString = utilModule.generateRequestId();
-        def credsId = "jazz-${randomString}";
-        sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
-        sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-        sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-
         try {
+          def randomString = utilModule.generateRequestId();
+          def credsId = "jazz-${randomString}";
+          sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+          sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+          sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+
           sh "serverless package --stage ${environment_logical_id} -v > output.log"
-        } catch(ex) {
+          // Printing out the resulting stdout and the cloud-formation template
           def outputLog = readFile('output.log').trim()
           echo "serverless packaging log $outputLog"
-          throw ex
+          def cft = readFile('./.serverless/cloudformation-template-update-stack.json').trim()
+          echo "CFT: $cft"
+          // when we reached here then sending the success event out
+          events.sendCompletedEvent('PACKAGE', 'Packaging has been completed', context_map, environment_logical_id)
+        } catch(ex) {
+          // Shall anything go wrong then the failure event is sent
+          events.sendFailureEvent('PACKAGE', ex.getMessage(), context_map, environment_logical_id)
+          def outputLog = readFile('output.log').trim()
+          echo "serverless packaging log $outputLog"
+          error ex.getMessage()
         }
 
-        def outputLog = readFile('output.log').trim()
-        echo "serverless packaging log $outputLog"
-
-        def cft = readFile('./.serverless/cloudformation-template-update-stack.json').trim()
-        echo "CFT: $cft"
       }
-
     }
 
     stage('Template validation') {
       echo 'The template validation state'
+      // As per 'Every stage should send started, failed, success events in each stage'
+      events.sendStartedEvent('TEMPLATE_VALIDATION', 'Template validation starts', context_map, environment_logical_id)
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
-        def randomString = utilModule.generateRequestId();
-        def credsId = "jazz-${randomString}";
-        sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
-        sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-        sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-
         try {
+          def randomString = utilModule.generateRequestId();
+          def credsId = "jazz-${randomString}";
+          sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+          sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+          sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+          // Please refer to https://docs.aws.amazon.com/cli/latest/reference/cloudformation/validate-template.html
           sh "aws cloudformation validate-template --template-body file://.serverless/cloudformation-template-update-stack.json --region ${configLoader.AWS.REGION} > output.log"
-        } catch(ex) {
           def outputLog = readFile('output.log').trim()
           echo "template validation log $outputLog"
-          throw ex
-        }
-        def outputLog = readFile('output.log').trim()
-        echo "template validation log $outputLog"
 
-        def cft = readFile('./.serverless/cloudformation-template-update-stack.json').trim()
-        def cftJson = parseJson(cft)
-        def outstandingResources = whiteListModule.validate(cftJson)
-        if(!outstandingResources.isEmpty()) throw new Exception("Invalid CloudFormation template. The resource types not allowed: ${outstandingResources}")
+          def cft = readFile('./.serverless/cloudformation-template-update-stack.json').trim()
+          def cftJson = parseJson(cft)
+          def outstandingResources = whiteListModule.validate(cftJson)
+          if(outstandingResources.isEmpty()) {
+            events.sendCompletedEvent('TEMPLATE_VALIDATION', 'Template validation has been completed', context_map, environment_logical_id)
+          } else {
+            // Hopefully it'll raise an exception that is going to be immediately intercepted below
+            error "The resource types not allowed: ${outstandingResources}"
+          }
+        } catch(ex) {
+          // if anything went wrong then the failure event is sent
+          events.sendFailureEvent('TEMPLATE_VALIDATION', ex.getMessage(), context_map, environment_logical_id)
+          def outputLog = readFile('output.log').trim()
+          echo "template validation log $outputLog"
+          error ex.getMessage() // raising an exception thus propagating the message to the Jenkins
+        }
       }
     }
 
