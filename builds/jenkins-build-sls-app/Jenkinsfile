@@ -119,13 +119,6 @@ node() {
 
   def runtime = config['providerRuntime']
   def service = config['service']
-  def isScheduleEnabled = isEnabled(config, "eventScheduleRate")
-  def isStreamEnabled = isEnabled(config, "event_source_kinesis")
-  def isDynamoDbEnabled = isEnabled(config, "event_source_dynamodb")
-  def isS3EventEnabled = isEnabled(config, "event_source_s3")
-  def isSQSEventEnabled = isEnabled(config, "event_source_sqs")
-  def isEc2EventEnabled = isEnabled(config, "event_source_ec2")
-  def internalAccess = config['require_internal_access']
   domain = config['domain']
 
   def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
@@ -482,34 +475,6 @@ def servelessDeploy(env, envBucketKey){
     echo "serverless deployment log $outputLog"
     throw ex
   }
-}
-
-def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isSQSEventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
-  echo "addEvents to serverless.yml file"
-  def sedCommand = "s/eventsDisabled/events/g";
-  if (!isScheduleEnabled) {
-    sedCommand = sedCommand + "; /#Start:isScheduleEnabled/,/#End:isScheduleEnabled/d"
-  }
-  if (!isEc2EventEnabled) {
-    sedCommand = sedCommand + "; /#Start:isEc2EventEnabled/,/#End:isEc2EventEnabled/d"
-  }
-  if (!isS3EventEnabled) {
-    sedCommand = sedCommand + "; /#Start:isS3EventEnabled/,/#End:isS3EventEnabled/d"
-    sedCommand = sedCommand + "; /#Start:isS3EventRoleEnabled/,/#End:isS3EventRoleEnabled/d"
-  }
-  if (!isSQSEventEnabled) {
-    sedCommand = sedCommand + "; /#Start:isSQSEventEnabled/,/#End:isSQSEventEnabled/d"
-  }
-  if (!isStreamEnabled) {
-    sedCommand = sedCommand + "; /#Start:isStreamEnabled/,/#End:isStreamEnabled/d"
-  }
-  if (!isDynamoDbEnabled) {
-    sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
-  }
-
-  sh "sed -i -- '$sedCommand' ./serverless.yml"
-  echoServerlessFile()
-  echo "------------------------DONE--------------"
 }
 
 def removeEventResources(){
