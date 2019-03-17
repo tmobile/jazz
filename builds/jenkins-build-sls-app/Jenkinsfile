@@ -291,14 +291,6 @@ node() {
           // Generate serverless yml file with domain added in function name
           echo "Generate deployment env with domain"
 
-          if (isScheduleEnabled) {
-            def eventsArns = getEventsArn(config, environment_logical_id)
-            for (def i = 0; i < eventsArns.size(); i++) {
-              def arn = eventsArns[i]
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "cloudwatch_event", config), environment_logical_id);
-            }
-          }
-
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           echoServerlessFile()
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey)
