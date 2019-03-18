@@ -6,7 +6,7 @@ import 'rxjs/add/operator/map';
 import { ConfigService } from '../../app.config';
 import { Router } from '@angular/router';
 import { environment } from '../../../environments/environment';
-import {UtilsService} from './utils.service';
+import { UtilsService } from './utils.service';
 
 @Injectable()
 export class RequestService {
@@ -15,15 +15,15 @@ export class RequestService {
     private _config: any;
 
     constructor(private http: Http,
-                private authenticationService: AuthenticationService,
-                private config: ConfigService,
-                private utils: UtilsService,
-                private router: Router) {
+        private authenticationService: AuthenticationService,
+        private config: ConfigService,
+        private utils: UtilsService,
+        private router: Router) {
         // set token if saved in local storage
         let currentUser;
         currentUser = JSON.parse(localStorage.getItem("currentUser"));
         this.token = currentUser && currentUser.token;
-        this.baseurl = localStorage.getItem('overridehost')? localStorage.getItem('overridehost') :  environment.baseurl;
+        this.baseurl = localStorage.getItem('overridehost') ? localStorage.getItem('overridehost') : environment.baseurl;
     }
 
     constructUrl(url: string): string {
@@ -33,7 +33,7 @@ export class RequestService {
 
             // if url provided is an absolute url, use it as is
             return url;
-        } else{
+        } else {
 
             // if url is a relative url append basepath
             if (!url.startsWith("/")) {
@@ -44,25 +44,25 @@ export class RequestService {
     }
 
     get(url: string, params?, serviceId?): Observable<any> {
-      url = this.constructUrl(url);
-      this.token = this.authenticationService.getToken();
-        
+        url = this.constructUrl(url);
+        this.token = this.authenticationService.getToken();
+
         // Add Authentication token to headers
         let headerObj = {
             'Authorization': this.token,
             'Content-Type': 'application/json',
-            'accept':'application/json'
+            'accept': 'application/json'
         };
-    
-        if(serviceId){
-            headerObj['Jazz-Service-ID'] = serviceId
-        }
+
+        // if (serviceId) {
+        //     headerObj['Jazz-Service-ID'] = serviceId
+        // }
 
         let headers = new Headers(headerObj);
         let options = new RequestOptions({ headers: headers, search: null });
 
-      url = params ? (url + this.utils.queryString(params)) : url;
-        return this.http.get(url, options )
+        url = params ? (url + this.utils.queryString(params)) : url;
+        return this.http.get(url, options)
             .map((response: Response) => {
                 let responseBody;
                 responseBody = response.json();
@@ -71,20 +71,20 @@ export class RequestService {
 
                     return responseBody;
                 } else {
-                    let err = {result:'error', message: 'Unexpected error.'};
+                    let err = { result: 'error', message: 'Unexpected error.' };
 
                     // return error to indicate failed request
                     return (responseBody.error || err);
                 }
             })
-             .catch((error: any) => {
+            .catch((error: any) => {
                 return this.handleError(error, this.router);
             })
     }
 
     post(url: string, body: any, serviceId?): Observable<any> {
         // Make a POST request to url
-        
+
         // Construct url
         url = this.constructUrl(url);
 
@@ -95,10 +95,10 @@ export class RequestService {
         let headerObj = {
             'Authorization': this.token,
             'Content-Type': 'application/json',
-            'accept':'application/json'
+            'accept': 'application/json'
         };
 
-        if(serviceId){
+        if (serviceId) {
             headerObj['Jazz-Service-ID'] = serviceId
         }
 
@@ -139,7 +139,7 @@ export class RequestService {
             'accept': 'application/json'
         };
 
-        if(serviceId){
+        if (serviceId) {
             headerObj['Jazz-Service-ID'] = serviceId
         }
 
@@ -159,19 +159,19 @@ export class RequestService {
                     return responseBody;
                 }
             })
-             .catch((error: any) => {
+            .catch((error: any) => {
                 return this.handleError(error, router);
             })
 
     }
-    private handleError(error: any, router:any) {
+    private handleError(error: any, router: any) {
         console.log(error);
-       if(error.status === 401){
+        if (error.status === 401) {
             if (router) {
-               router.navigateByUrl('');//route to landing page
-               this.authenticationService.logout();
+                router.navigateByUrl('');//route to landing page
+                this.authenticationService.logout();
             }
-       }
+        }
 
         return Observable.throw(error);
     }
