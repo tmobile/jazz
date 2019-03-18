@@ -463,7 +463,7 @@ module.exports = class ResourceFactory {
 
   async deleteResourcesByServiceName(tagName, tagValue) {
     let client = await this.factory.getResource("ResourceManagementClient");
-    let resources = await getResourcesByServiceName(tagName, tagValue);
+    let resources = await this.getResourcesByServiceName(tagName, tagValue);
     let message ='total resources ' + resources.length + ' ';
 
     for (const resource of resources) {
