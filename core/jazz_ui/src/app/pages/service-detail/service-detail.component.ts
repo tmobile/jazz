@@ -101,7 +101,7 @@ export class ServiceDetailComponent implements OnInit {
     } else {
       service.metadata = this.addEventSource(service.metadata);
       let returnObject = {
-      	platform: service.platform,
+        platform: service.platform,
         id: service.id,
         name: service.service,
         serviceType: service.type,
@@ -125,7 +125,19 @@ export class ServiceDetailComponent implements OnInit {
         returnObject["eventScheduleEnable"] = service.metadata.eventScheduleEnable;
         if(service.metadata.event_source){
           if(service.platform === 'azure'){
-            service.metadata.event_source = 'documentdb';
+            if(service.metadata.event_source ==="dynamodb"){
+              service.metadata.event_source = 'documentdb';
+
+            }else if(service.metadata.event_source ==="kinesis"){
+              service.metadata.event_source = 'event hubs';
+
+            }else if(service.metadata.event_source ==="s3") {
+              service.metadata.event_source = 'storage';
+            }
+            else if(service.metadata.event_source ==="sqs"){
+              service.metadata.event_source ="Service Bus Queue";
+            }
+
           }
           returnObject["event_source"] = service.metadata.event_source;
         }
@@ -136,12 +148,18 @@ export class ServiceDetailComponent implements OnInit {
           returnObject["event_source_arn"] = service.metadata.event_source_dynamodb;
         }
         if(service.metadata.event_source_kinesis){
+          if(service.platform === 'azure'){
+            service.metadata.event_source_kinesis = service.metadata.event_source_kinesis.split('/')[1];
+          }
           returnObject["event_source_arn"] = service.metadata.event_source_kinesis;
         }
         if(service.metadata.event_source_s3){
           returnObject["event_source_arn"] = service.metadata.event_source_s3;
         }
         if(service.metadata.event_source_sqs){
+          if(service.platform === 'azure'){
+            service.metadata.event_source_sqs = service.metadata.event_source_sqs.split(':')[5];
+          }
           returnObject["event_source_arn"] = service.metadata.event_source_sqs;
         }
       }
@@ -170,7 +188,7 @@ export class ServiceDetailComponent implements OnInit {
       }
 
       this.service = this.processService(service);
-	  this.platfrom = this.service.platform;
+      this.platfrom = this.service.platform;
       // Update breadcrumbs
       this.breadcrumbs = [
         {
@@ -205,23 +223,23 @@ export class ServiceDetailComponent implements OnInit {
   fetchService(id) {
     this.isLoadingService = true;
     this.http.get('/jazz/services/' + id).subscribe(response => {
-      let service = response.data;
-      this.cache.set(id, service);
-      this.onDataFetched(service);
-      this.isGraphLoading = false;
-      this.selectedTabComponent.refresh_env();
-      this.setTabs();
-    }, (err) => {
-      if (err.status == "404") {
-        this.router.navigateByUrl('404');
+        let service = response.data;
+        this.cache.set(id, service);
+        this.onDataFetched(service);
+        this.isGraphLoading = false;
+        this.selectedTabComponent.refresh_env();
+        this.setTabs();
+      }, (err) => {
+        if (err.status == "404") {
+          this.router.navigateByUrl('404');
+        }
+        this.isLoadingService = false;
+        let errorMessage = 'OOPS! something went wrong while fetching data';
+        this.isGraphLoading = false;
+        errorMessage = this.toastmessage.errorMessage(err, "serviceDetail");
+        this.errMessage = errorMessage;
+        this.err_flag = true;
       }
-      this.isLoadingService = false;
-      let errorMessage = 'OOPS! something went wrong while fetching data';
-      this.isGraphLoading = false;
-      errorMessage = this.toastmessage.errorMessage(err, "serviceDetail");
-      this.errMessage = errorMessage;
-      this.err_flag = true;
-    }
     )
 
 
