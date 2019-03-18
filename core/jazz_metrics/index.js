@@ -34,6 +34,7 @@ const metricConfig = require("./components/metrics.json");
 function handler(event, context, cb) {
   var errorHandler = errorHandlerModule();
   var config = configObj.getConfig(event, context);
+  logger.debug("EVENT : " + JSON.stringify(event));
 
   try {
 		/*
@@ -160,7 +161,7 @@ function getAssetsDetails(config, eventBody, authToken, serviceId) {
     logger.info("asset_api_options :- " + JSON.stringify(asset_api_options));
     request(asset_api_options, (error, response, body) => {
       if (error) {
-        logger.error(error);
+        logger.error("error received in getting assets" + error);
         reject(error);
       } else {
         if (response.statusCode && response.statusCode === 200) {
@@ -174,6 +175,7 @@ function getAssetsDetails(config, eventBody, authToken, serviceId) {
           var userStatistics = eventBody.statistics.toLowerCase();
           // Massaging data from assets api , to get required list of assets which contains type, asset_name and statistics.
           var assetsArray = utils.getAssetsObj(apiAssetsArray, userStatistics);
+          logger.debug("Assets got:" + JSON.stringify(assetsArray));
           resolve(assetsArray);
         } else {
           logger.info("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
@@ -348,6 +350,7 @@ function getMetricsDetails(newAssetArray, eventBody, config) {
       if (assetParam.nameSpace === 'aws') {
         exportable.cloudWatchDetails(assetParam)
           .then(res => {
+            logger.debug("Metrics got: " + JSON.stringify(res));
             metricsStatsArray.push(res);
             if (metricsStatsArray.length === newAssetArray.length) {
               resolve(metricsStatsArray);
@@ -435,7 +438,7 @@ function apigeeMetricDetails(assetParam, eventBody, config) {
 }
 
 function cloudWatchDetails(assetParam) {
-  logger.debug("Inside cloudWatchDetails");
+  logger.debug("Inside cloudWatchDetails : " + JSON.stringify(assetParam));
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
@@ -456,6 +459,7 @@ function cloudWatchDetails(assetParam) {
             });
           }
         } else {
+          logger.debug("Stats got:" + JSON.stringify(data));
           metricsStats.push(data);
           if (metricsStats.length === assetParam.actualParam.length) {
             resolve(utils.assetData(metricsStats, assetParam.userParam));
