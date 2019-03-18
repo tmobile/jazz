@@ -140,7 +140,7 @@ node {
 		}
 	}
 
-  if (service_config['platform'] != null || service_config['platform'] == "azure") {
+  if (isAzure()) {
     stage('Undeploy Service') {
 
       for (_envId in environmentIds) {
@@ -501,7 +501,7 @@ def writeServerlessFile(){
  */
 def updateSwaggerConfig() {
 
-  if (service_config['platform'] != null || service_config['platform'] == "azure") {
+  if (isAzure()) {
     return
   }
 	try {
@@ -1108,7 +1108,7 @@ def LoadConfiguration() {
 }
 
 def loadServerlessConfig() {
-  if (service_config['platform'] != null || service_config['platform'] == "azure") {
+  if (isAzure()) {
     return
   }
 
@@ -1326,6 +1326,9 @@ def parseJsonMap(jsonString) {
 	return lazyMap
 }
 
+def isAzure() {
+  return  service_config['platform'] != null && service_config['platform'] == "azure"
+}
 
 def deleteResourceByTag(env) {
 
