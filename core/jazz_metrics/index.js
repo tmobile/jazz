@@ -186,6 +186,7 @@ function getConfigJson(config, token) {
       } else {
         if (response.statusCode && response.statusCode === 200) {
           var responseBody = JSON.parse(body);
+          logger.debug("Response body of Config Json is :", JSON.stringify(responseBody));
           resolve(responseBody.data)
         } else {
           logger.debug("Service not found for this service, domain, environment. ", JSON.stringify(config_json_api_options));
@@ -216,6 +217,7 @@ function getserviceMetaData(config, eventBody, authToken) {
       } else {
         if (response.statusCode && response.statusCode === 200) {
           var responseBody = JSON.parse(body);
+          logger.debug("Response Body of Service Metadata is :", JSON.stringify(responseBody));
           resolve(responseBody)
         } else {
           logger.debug("Service not found for this service, domain, environment. ", JSON.stringify(service_api_options));
@@ -522,7 +524,7 @@ function cloudWatchDetails(assetParam, tempCreds, region) {
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
-      let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch(tempCreds, region) : utils.getCloudWatch(tempCreds, region);
+      let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch(tempCreds) : utils.getCloudWatch(tempCreds, region);
 
       cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {
