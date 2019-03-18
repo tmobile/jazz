@@ -488,17 +488,17 @@ def createDynamodbStream(tableName) {
 }
 
 def deleteEventSourceMapping (lambda_arn, assets_api, auth_token, service_config, env, credsId) {
-  try {
-    withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: service_config.credentialId]
+  withCredentials([
+    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: service_config.credentialId]
     ]) {
+    try {
       def response = listEventFunctionMapping(lambda_arn)
       def mapping_details = parseJson(response)
 
       if(mapping_details.EventSourceMappings.size() > 0) {
         for (details in mapping_details.EventSourceMappings) {
           def delResponse = sh(
-            script: "aws lambda delete-event-source-mapping --uuid  ${details.UUID} --profile cloud-api --output json",
+            script: "aws lambda delete-event-source-mapping --uuid  ${details.UUID} --profile ${credsId} --output json",
             returnStdout: true
           ).trim()
           echo "delete event source mapping: $delResponse"
@@ -511,13 +511,13 @@ def deleteEventSourceMapping (lambda_arn, assets_api, auth_token, service_config
       //Deleting s3 event notification configuration, which is created by jazz using aws cli
       if(service_config['event_source_s3']) {
         def s3BucketName = getEventResourceNamePerEnvironment(service_config['event_source_s3'], env, "-")
-        if(checkS3BucketExists(s3BucketName)) {
-          deleteS3EventNotificationConfiguration(lambda_arn, s3BucketName, env)
+        if(checkS3BucketExists(s3BucketName, credsId)) {
+          deleteS3EventNotificationConfiguration(lambda_arn, s3BucketName, env, credsId)
         }
       }
+    } catch (ex){
+      echo "Exception occured while deleting event source mapping." + ex.getMessage()
     }
-  } catch (ex){
-    echo "Exception occured while deleting event source mapping." + ex.getMessage()
   }
 }
 
