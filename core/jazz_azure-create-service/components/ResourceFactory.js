@@ -237,6 +237,44 @@ module.exports = class ResourceFactory {
   }
 
 
+  async createOrUpdateApiContract(serviceName, apiId, resourceGroupName = this.resourceGroupName){
+    let client = await this.factory.getResource("ApiManagementClient");
+    let parameters = {
+      "contentFormat": "xml",
+      "policyContent": `<policies>
+                    <inbound>
+                    <cors>
+                    <allowed-origins>
+                    <origin>*</origin>
+                    </allowed-origins>
+                    <allowed-methods>
+                    <method>GET</method>
+                    <method>POST</method>
+                    </allowed-methods>
+                    <allowed-headers>
+                    <header>*</header>
+                    </allowed-headers>
+                    <expose-headers>
+                    <header>*</header>
+                    </expose-headers>
+                    </cors>
+                    </inbound>
+                    <backend>
+                    <forward-request />
+                    </backend>
+                    <outbound />
+                    <on-error>
+                    <base />
+                    </on-error>
+                    </policies>`
+    }
+
+
+    let result = await client.apiPolicy.createOrUpdate(resourceGroupName,serviceName,apiId,parameters);
+    return result;
+  }
+
+
   async deleteApi(apiId, serviceName = this.serviceName, resourceGroupName = this.resourceGroupName) {
     let client = await this.factory.getResource("ApiManagementClient");
     let result = await client.api.deleteMethod(resourceGroupName, serviceName, apiId, "*", null);

@@ -5,7 +5,7 @@
     "version": "1.0"
   },
   "host": "${domain}.azurewebsites.net" ,
-  "basePath": "/{domain}",
+  "basePath": "/api",
   "schemes": [
     "https"
   ],
@@ -30,7 +30,7 @@
     }
   ],
   "paths": {
-    "/{domain}": {
+    "/${functionName}": {
       "get": {
         "description": "A demonstration of a GET call on a sample resource.",
         "operationId": "retrieve-resource",
@@ -81,7 +81,7 @@
             "description": ""
           }
         }
-      },
+      }
     }
   },
   "definitions": {

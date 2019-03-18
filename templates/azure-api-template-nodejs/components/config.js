@@ -1,21 +1,21 @@
 /**
-	Nodejs Template Project
-  @module: config.js
-  @description: Defines variables/functions to retrieve environment related data
-	@author:
-	@version: 1.0
-**/
+ Nodejs Template Project
+ @module: config.js
+ @description: Defines variables/functions to retrieve environment related data
+ @author:
+ @version: 1.0
+ **/
 
 const fs = require('fs');
 const path = require('path');
 
 const getStageConfig = (event, context) => {
   let stage, configObj;
-
+  context.log(context.executionContext.functionName);
   if (event && event.stage) {
     stage = event.stage;
-  } else if (context && context.functionName && context.functionName.length > 0) {
-    let functionName = context.functionName;
+  } else if (context.executionContext && context.executionContext.functionName && context.executionContext.functionName.length > 0) {
+    let functionName = context.executionContext.functionName;
 
     let fnName = functionName.substr(functionName.lastIndexOf('-') + 1, functionName.length);
 
@@ -40,5 +40,5 @@ const getStageConfig = (event, context) => {
 };
 
 module.exports = {
-	getConfig: getStageConfig
+  getConfig: getStageConfig
 }

@@ -42,9 +42,9 @@ node()  {
   def domain = params.domain
   def service = params.service_name
   def repo_name = params.service_name
-	def requestId = params.request_id
-	def gitCommitOwner
-	def gitCommitHash
+  def requestId = params.request_id
+  def gitCommitOwner
+  def gitCommitHash
 
   if (domain && domain != "") {
     repo_name = params.domain + "_" + params.service_name
@@ -77,19 +77,20 @@ node()  {
 
   environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
-  environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
   if (params.scm_branch == 'master') {
     environment = 'prod'
     current_environment = 'PROD'
-    s3Bucket = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET;
+    s3Bucket = configLoader.JAZZ.S3.WEBSITE_PROD_BUCKET
+    environment_logical_id = 'prod'
   } else {
+    environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId()
     if (environment_logical_id) {
       environment = environment_logical_id
     } else {
       error "The environment has not been created yet and its missing the logical Id"
     }
     current_environment = "DEV"
-    s3Bucket = configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET;
+    s3Bucket = configLoader.JAZZ.S3.WEBSITE_DEV_BUCKET
   }
 
   if (!events) { error "Can't load events module"	} //Fail here
@@ -101,16 +102,16 @@ node()  {
   gitCommitHash = scmModule.getRepoCommitHash()
   gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
 
-   echo "requestId: $requestId"
-   if (requestId != null) {
+  echo "requestId: $requestId"
+  if (requestId != null) {
     events.setRequestId(requestId)
     environmentDeploymentMetadata.setRequestId(requestId)
   } else {
-		requestId = utilModule.generateRequestId()
-		events.setRequestId(requestId)
-		environmentDeploymentMetadata.setRequestId(requestId)
-		events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
-	}
+    requestId = utilModule.generateRequestId()
+    events.setRequestId(requestId)
+    environmentDeploymentMetadata.setRequestId(requestId)
+    events.sendStartedEvent('CREATE_DEPLOYMENT', 'Website deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
+  }
 
 
   dir(repo_name)
@@ -157,155 +158,157 @@ node()  {
       }
 
       if (servicePlatform == 'azure'){
+        withCredentials([
+          [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
+          [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
+          [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
+          [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
+        ]) {
+          stage("Deployment to ${servicePlatform} ${current_environment} Env"){
 
-        stage("Deployment to ${servicePlatform} ${current_environment} Env"){
 
 
-
-          def lastpart = sh(script:"echo $branch | rev | cut -d- -f1 | rev", returnStdout:true).trim()
+            def lastpart = sh(script:"echo $branch | rev | cut -d- -f1 | rev", returnStdout:true).trim()
 //          def surfix = ''
 
 //          if (lastpart != 'master') {
 //            surfix = lastpart
 //          }
 
-          def stackName = "${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
-          def appname = stackName
-          def resourcegroup
-          def storageaccount=appname
-          def logicalId
+            def stackName = "${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+            def appname = stackName
+            def resourcegroup
+            def storageaccount=appname
+            def logicalId
 
-          if (environment_logical_id == "prod") {
-            resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
-            logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
+            if (current_environment == "PROD") {
+              resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
+              logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
+            }
+            else {
+              resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
+              logicalId = environment_logical_id.split('-')[0] //13 + 10
+            }
+            def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
+            def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
+
+            asset_event = 'CREATE_ASSET'
+            asset_event_message = 'create'
+
+            events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
+            events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
+
+            createWebsite(appname, resourcegroup, storageName)
+
+            def origin_endpoint_url = "https://${storageName}.azureedge.net"
+            def cdn_endpoint_url = "https://${storageName}.z22.web.core.windows.net"
+            def store_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$resourcegroup/providers/Microsoft.Storage/storageAccounts/$storageaccount"
+            def cnd_profile = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$resourcegroup/providers/Microsoft.Cdn/profiles/$storageaccount"
+            def cdn_endpoint = cnd_profile + "/endpoints/" + storageaccount
+            def svc_status = "You can access your website using following link: ${cdn_endpoint_url}"
+            environmentDeploymentMetadata.setEnvironmentEndpoint(cdn_endpoint_url)
+            send_status_email('COMPLETED', svc_status)
+
+            events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", store_acct, "storage_account", service_config),environment)
+            events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", origin_endpoint_url, "origin_endpoint_url", service_config),environment)
+            events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cnd_profile, "cdn_profile", service_config),environment)
+            events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_endpoint_url, "cdn_endpoint_url", service_config),environment)
+            events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_endpoint, "cdn_endpoint", service_config),environment)
+            events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
+            events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment, null), environment)
+            events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
+
           }
-          else if(environment_logical_id.split('-')[1] == "stg"){
-            resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["STAGING"]
-            logicalId = environment_logical_id.split('-')[0] //13 + 10
-          }
-          else if(environment_logical_id.split('-')[1] == "dev"){
-            resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
-            logicalId = environment_logical_id.split('-')[0] //13 + 10
-          }
-          def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
-          def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
-
-          asset_event = 'CREATE_ASSET'
-          asset_event_message = 'create'
-
-          events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
-          events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
-
-          createWebsite(appname, resourcegroup, storageName)
-
-          def origin_endpoint_url = "https://${storageName}.azureedge.net"
-          def cdn_endpoint_url = "https://${storageName}.z22.web.core.windows.net"
-          def store_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$resourcegroup/providers/Microsoft.Storage/storageAccounts/$storageaccount"
-          def cnd_profile = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$resourcegroup/providers/Microsoft.Cdn/profiles/$storageaccount"
-          def cdn_endpoint = cnd_profile + "/endpoints/" + storageaccount
-          def svc_status = "You can access your website using following link: ${cdn_endpoint_url}"
-          environmentDeploymentMetadata.setEnvironmentEndpoint(cdn_endpoint_url)
-          send_status_email('COMPLETED', svc_status)
-
-          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", store_acct, "storage_account", service_config),environment)
-          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", origin_endpoint_url, "origin_endpoint_url", service_config),environment)
-          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cnd_profile, "cdn_profile", service_config),environment)
-          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_endpoint_url, "cdn_endpoint_url", service_config),environment)
-          events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("azure", cdn_endpoint, "cdn_endpoint", service_config),environment)
-          events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
-          events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment, null), environment)
-          events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
-
         }
       }
 
       if (servicePlatform == 'aws'){
 
-		stage("Deployment to ${current_environment} Env"){
-			def randomString = utilModule.generateRequestId();
-			def credsId = "jazz-${randomString}";
-			events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
-			events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
-			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-				sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
-				sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-				sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-				sh "aws configure set preview.cloudfront true"
+        stage("Deployment to ${current_environment} Env"){
+          def randomString = utilModule.generateRequestId();
+          def credsId = "jazz-${randomString}";
+          events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
+          events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
+          withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+            sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+            sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+            sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+            sh "aws configure set preview.cloudfront true"
 
             generateAssetInfo()
             def assetInfo = "S3 Folder - /${asset_info}"
 
             echo "Checking if the website already exists.."
-				if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
-					def isBucketExists = checkIfBucketExists(s3Bucket)
-					if (!isBucketExists) {
-						echo "creating a new website with name $s3Bucket"
-						sh "aws s3 mb s3://$s3Bucket --region ${configLoader.AWS.REGION}"
-					}
-				}
-				def isBucketwithEnvExists = checkIfBucketExists(asset_info)
-				def asset_event
-				def asset_event_message
-				if (isBucketwithEnvExists) {
-					asset_event = 'UPDATE_ASSET'
-					asset_event_message = 'update'
-				} else {
-					asset_event = 'CREATE_ASSET'
-					asset_event_message = 'create'
-				}
-				events.sendStartedEvent(asset_event, "${asset_event_message} assets starts", utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config))
-				try {
-					sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
-					sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
-					events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config), environment);
-					def url
-					if (create_cloudfront_url == true) {
-						updateOrCreateCF()
-						def cloudFrontDistribution = getCloudFrontARN()
-						cfArn = cloudFrontDistribution.ARN
-						events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", cfArn, "cloudfront", service_config), environment);
+            if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
+              def isBucketExists = checkIfBucketExists(s3Bucket)
+              if (!isBucketExists) {
+                echo "creating a new website with name $s3Bucket"
+                sh "aws s3 mb s3://$s3Bucket --region ${configLoader.AWS.REGION}"
+              }
+            }
+            def isBucketwithEnvExists = checkIfBucketExists(asset_info)
+            def asset_event
+            def asset_event_message
+            if (isBucketwithEnvExists) {
+              asset_event = 'UPDATE_ASSET'
+              asset_event_message = 'update'
+            } else {
+              asset_event = 'CREATE_ASSET'
+              asset_event_message = 'create'
+            }
+            events.sendStartedEvent(asset_event, "${asset_event_message} assets starts", utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config))
+            try {
+              sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
+              sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+              events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config), environment);
+              def url
+              if (create_cloudfront_url == true) {
+                updateOrCreateCF()
+                def cloudFrontDistribution = getCloudFrontARN()
+                cfArn = cloudFrontDistribution.ARN
+                events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", cfArn, "cloudfront", service_config), environment);
 
-						def cloudFrontDistributionDetails = getCloudFrontDetails()
-						url = 'https://' + cloudFrontDistributionDetails['Distribution']
+                def cloudFrontDistributionDetails = getCloudFrontDetails()
+                url = 'https://' + cloudFrontDistributionDetails['Distribution']
 
-						invalidateCloudFrontCache()
-						generateBucketPolicy(true)
-						echo "CLOUDFRONT UPDATED"
-						echo "You can access the website at $url"
-					} else {
-						def distributionID = getDistributionId()
-						if (distributionID != null && distributionID != "") {
-							cleanupCloudFrontDistribution()
-						}
-						generateBucketPolicy(false)
-						sh "aws s3 website s3://$s3Bucket --index-document index.html --error-document error.html"
-						url = generateAssetUrl()
-						echo "You can access the website at $url"
-					}
-					def svc_status = "You can access your website using following link: ${url}"
-					echo svc_status
-					environmentDeploymentMetadata.setEnvironmentEndpoint(url)
-					send_status_email('COMPLETED', svc_status)
+                invalidateCloudFrontCache()
+                generateBucketPolicy(true)
+                echo "CLOUDFRONT UPDATED"
+                echo "You can access the website at $url"
+              } else {
+                def distributionID = getDistributionId()
+                if (distributionID != null && distributionID != "") {
+                  cleanupCloudFrontDistribution()
+                }
+                generateBucketPolicy(false)
+                sh "aws s3 website s3://$s3Bucket --index-document index.html --error-document error.html"
+                url = generateAssetUrl()
+                echo "You can access the website at $url"
+              }
+              def svc_status = "You can access your website using following link: ${url}"
+              echo svc_status
+              environmentDeploymentMetadata.setEnvironmentEndpoint(url)
+              send_status_email('COMPLETED', svc_status)
 
-					events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("aws", url, "endpoint_url", service_config),environment)
-					events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
-					events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment, null), environment)
-					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
-				} catch (ex) {
-					send_status_email('FAILED', '')
-					events.sendFailureEvent(asset_event, ex.getMessage(), context_map)
-					events.sendFailureEvent('UPDATE_DEPLOYMENT',  ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
-					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment, null), environment)
-					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
-					error "Deployment Failed. "+ ex.getMessage()
-				}
+              events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap("aws", url, "endpoint_url", service_config),environment)
+              events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
+              events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment, null), environment)
+              events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
+            } catch (ex) {
+              send_status_email('FAILED', '')
+              events.sendFailureEvent(asset_event, ex.getMessage(), context_map)
+              events.sendFailureEvent('UPDATE_DEPLOYMENT',  ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
+              events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment, null), environment)
+              events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
+              error "Deployment Failed. "+ ex.getMessage()
+            }
 
-			}
-			// reset Credentials
-          resetCredentials()
+          }
+          // reset Credentials
+          resetCredentials(credsId)
         }
-		}
-	}
+      }
+    }
 }
 
 def generateAssetUrl(){
@@ -941,50 +944,45 @@ def createWebsite(stackName, resourceGroup, storageName){
   sh "cd ./app && zip -qr ../content.zip *  && cd .."
   def zip = sh(script: 'readlink -f ./content.zip', returnStdout: true).trim()
 
-  withCredentials([
-    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
-    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
-    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
-    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
-  ]) {
-    def payloadString = [
-      className : "WebApp",
-      command   : "create",
-      data      : [
-        resourceGroupName : resourceGroup,
-        storageName       : storageName,
-        appName           : stackName,
-        tags: [
-          "application"   : configLoader.INSTANCE_PREFIX,
-          "owner"         : service_config['created_by'],
-          "domain"        : service_config['domain'],
-          "STAGE"         : environment_logical_id,
-          "environment"   : environment_logical_id,
-          "service"       : stackName
-        ],
-        "tenantId"          : AZURE_TENANT_ID,
-        "subscriptionId"    : AZURE_SUBSCRIPTION_ID,
-        "clientId"          : AZURE_CLIENT_ID,
-        "clientSecret"      : AZURE_CLIENT_SECRET,
-        "zip"               : zip
-      ]
+
+  def payloadString = [
+    className : "WebApp",
+    command   : "create",
+    data      : [
+      resourceGroupName : resourceGroup,
+      storageName       : storageName,
+      appName           : stackName,
+      tags: [
+        "application"   : configLoader.INSTANCE_PREFIX,
+        "owner"         : service_config['created_by'],
+        "domain"        : service_config['domain'],
+        "STAGE"         : environment_logical_id,
+        "environment"   : environment_logical_id,
+        "service"       : stackName
+      ],
+      "tenantId"          : AZURE_TENANT_ID,
+      "subscriptionId"    : AZURE_SUBSCRIPTION_ID,
+      "clientId"          : AZURE_CLIENT_ID,
+      "clientSecret"      : AZURE_CLIENT_SECRET,
+      "zip"               : zip
     ]
+  ]
 
-    def repo_name = "jazz_azure-create-service"
-    sh 'rm -rf ' + repo_name
-    sh 'mkdir ' + repo_name
+  def repo_name = "jazz_azure-create-service"
+  sh 'rm -rf ' + repo_name
+  sh 'mkdir ' + repo_name
 
-    def repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
+  def repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
 
-    dir(repo_name)
-      {
-        checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
-        sh "npm install -s"
-        def json = JsonOutput.toJson(payloadString)
-        writeFile(file:'payload.json', text: json)
-        sh "./bin/jazz-azure-cli ./payload.json"
-      }
-  }
+  dir(repo_name)
+    {
+      checkout([$class: 'GitSCM', branches: [[name: '*/' + "master"]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
+      sh "npm install -s"
+      def json = JsonOutput.toJson(payloadString)
+      writeFile(file:'payload.json', text: json)
+      sh "./bin/jazz-azure-cli ./payload.json"
+    }
+//   }
 }
 
 /**
