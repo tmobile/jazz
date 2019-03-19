@@ -52,7 +52,8 @@
     "storage_blob_container",
     "servicebus_queue",
     "eventhubs_eventhub",
-    "apigee_proxy"
+    "apigee_proxy",
+    "app_service_plan"
 	],
 	"ASSET_STATUS": [
 		"active",

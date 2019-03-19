@@ -1,21 +1,36 @@
 #r "Newtonsoft.Json"
-
+#load "./components/Logger.csx"
+#load "./components/ConfigHandler.csx"
+#load "./components/model/Response.csx"
 using System.Net;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Primitives;
 using Newtonsoft.Json;
 
-public static async Task<IActionResult> Run(HttpRequest req, ILogger log)
-{
-    log.LogInformation("C# HTTP trigger function processed a request.");
 
-    string name = req.Query["name"];
 
-    string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
-    dynamic data = JsonConvert.DeserializeObject(requestBody);
-    name = name ?? data?.name;
 
-    return name != null
-        ? (ActionResult)new OkObjectResult($"Hello, {name}")
-        : new BadRequestObjectResult("Please pass a name on the query string or in the request body");
-}
+
+    public static String Run(HttpRequest req, ILogger log, ExecutionContext context)
+    {
+        Logger.init(log, context);
+        Logger.debug($"C# trigger function executed : {context.FunctionName}");
+        Logger.debug($"my event: {req}");
+
+
+      //Following code snippet describes how to log messages within your code:
+      /*
+        Logger.trace("Finer-grained informational events than the DEBUG ");
+        Logger.info("Interesting runtime events (Eg. connection established, data fetched etc.)");
+        Logger.warn("Runtime situations that are undesirable or unexpected, but not necessarily \"wrong\".");
+        Logger.error("Runtime errors or unexpected conditions.");
+        Logger.debug("Detailed information on the flow through the system.');
+      */
+
+        ConfigHandler configHandler = new ConfigHandler(context);
+        string configValue = configHandler.getConfig();
+
+        Response res = new Response{ Data = configValue, Input = req.ToString()};
+        var jsonResponse = JsonConvert.SerializeObject(res, Formatting.Indented);
+        return jsonResponse;
+    }
