@@ -53,8 +53,8 @@ def FindUserDefinedIntegrationSpec(filePath) {
       }
     }
   } catch (ex) {
-    echo " RemoveUserDefinedIntegrationSpec :::: Error occurred" + ex.getMessage()
-    error " RemoveUserDefinedIntegrationSpec :::: Error occurred" + ex.getMessage()
+    echo " FindUserDefinedIntegrationSpec :::: Error occurred " + ex.getMessage()
+    error " FindUserDefinedIntegrationSpec :::: Error occurred " + ex.getMessage()
   }
 }
 
