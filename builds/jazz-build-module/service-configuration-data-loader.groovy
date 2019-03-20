@@ -45,7 +45,7 @@ def loadServiceConfigurationData() {
       //Swagger SEDs
       echo "Updating the Swagger SEDs"
       sh "sed -i -- 's/{conf-region}/${region}/g' ./swagger/swagger.json"
-      sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./swagger/swagger.json"
+      sh "sed -i -- 's/{conf-accId}/${accountId}/g' ./swagger/swagger.json"
     }
 
     if ((config_loader.SLACK.ENABLE_SLACK == "true") && (service_name.trim() == "jazz_is-slack-channel-available")) {
@@ -68,7 +68,7 @@ def loadServiceConfigurationData() {
 
       sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/global-config.json"
       sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/global-config.json"
-
+    }
       if (config_loader.SCM.TYPE == "bitbucket") {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
           sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/global-config.json"
