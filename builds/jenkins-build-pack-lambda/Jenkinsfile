@@ -788,9 +788,8 @@ def createSubscriptionFilters(stackName, env_key, credsId, accountDetails, envir
           def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
           def functionName = 'arn:aws:lambda:' + service_config.region + ':' + service_config.accountId + ':' + lambdaFnNameValue
           
-          /* Adding permission to access the particular created function from primary account only if the deployment account is non-primary*/
-          sh "aws lambda add-permission --function-name ${functionName} --region ${service_config.region} --statement-id Id-123 --action 'lambda:InvokeFunction' --principal ${primaryAccountValue}"
-          
+          addPermission(functionName, primaryAccountValue);
+
           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${service_config.region} --profile ${credsId}"
         } else {
           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
@@ -800,6 +799,11 @@ def createSubscriptionFilters(stackName, env_key, credsId, accountDetails, envir
   } catch (Exception ex) {
     echo "error occured: " + ex.getMessage()
   }
+}
+
+def addPermission(functionName, primaryAccountValue){
+  /* Adding permission to access the particular created function from primary account only if the deployment account is non-primary*/
+  sh "aws lambda add-permission --function-name ${functionName} --region ${service_config.region} --statement-id Id-123 --action 'lambda:InvokeFunction' --principal ${primaryAccountValue}"
 }
 
 def updatePolicy(env, destARN){
