@@ -488,11 +488,8 @@ def createDynamodbStream(tableName) {
 }
 
 def deleteEventSourceMapping (lambda_arn, assets_api, auth_token, service_config, env, credsId) {
-  withCredentials([
-    [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: service_config.credentialId]
-    ]) {
     try {
-      def response = listEventFunctionMapping(lambda_arn)
+      def response = listEventFunctionMapping(lambda_arn, credsId)
       def mapping_details = parseJson(response)
 
       if(mapping_details.EventSourceMappings.size() > 0) {
@@ -518,7 +515,6 @@ def deleteEventSourceMapping (lambda_arn, assets_api, auth_token, service_config
     } catch (ex){
       echo "Exception occured while deleting event source mapping." + ex.getMessage()
     }
-  }
 }
 
 def deleteS3EventNotificationConfiguration(lambdaARN, s3BucketName, env, credsId) {
