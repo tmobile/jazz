@@ -15,6 +15,7 @@ import { RequestService, DataCacheService, MessageService, AuthenticationService
 import { ServiceMetricsComponent } from '../service-metrics/service-metrics.component';
 import { environment } from './../../../environments/environment';
 
+
 @Component({
   selector: 'service-detail',
   templateUrl: './service-detail.component.html',
@@ -70,6 +71,9 @@ export class ServiceDetailComponent implements OnInit {
   test: any = "delete testing";
   disabled_tab: boolean = false;
   refreshTabClicked: boolean = false;
+  isAdminAccess: boolean = false;
+  currentUser: any = {}
+  isError403: boolean = false;
 
 
   private sub: any;
@@ -77,7 +81,7 @@ export class ServiceDetailComponent implements OnInit {
   private toastmessage: any;
 
   statusData = ['All', 'Active', 'Pending', 'Stopped'];
-  tabData = ['overview', 'access control', 'metrics', 'logs', 'cost'];
+  tabData = ['overview', 'access control', 'metrics', 'cost', 'logs'];
 
   breadcrumbs = []
 
@@ -196,16 +200,26 @@ export class ServiceDetailComponent implements OnInit {
 
   fetchService(id) {
     this.isLoadingService = true;
-    this.http.get('/jazz/services/' + id).subscribe(response => {
+    this.http.get('/jazz/services/' + id, null, id).subscribe(response => {
       let service = response.data;
       this.cache.set(id, service);
       this.onDataFetched(service);
       this.isGraphLoading = false;
       this.selectedTabComponent.refresh_env();
       this.setTabs();
+      if(service && service.policies && service.policies.length) {
+        service.policies.forEach(policy => {
+          if (policy.category === "manage" && policy.permission === "admin") {
+            this.setAdminAccess(true);
+          }
+        });
+      }
     }, (err) => {
-      if (err.status == "404") {
+      console.log("error here: ", err);
+      if (err.status === 404) {
         this.router.navigateByUrl('404');
+      } else if (err.status === 403) {
+        this.isError403 = true;
       }
       this.isLoadingService = false;
       let errorMessage = 'OOPS! something went wrong while fetching data';
@@ -311,7 +325,7 @@ export class ServiceDetailComponent implements OnInit {
       "id": this.service.id
     };
     this.deleteServiceStatus.emit(this.deleteServiceVal);
-    this.subscription = this.http.post('/jazz/delete-serverless-service', payload)
+    this.subscription = this.http.post('/jazz/delete-serverless-service', payload, this.service.id)
       .subscribe(
         (Response) => {
           var update = {
@@ -373,7 +387,7 @@ export class ServiceDetailComponent implements OnInit {
 
 
   onServiceNameChange() {
-    
+
     if (this.ServiceName.toLowerCase() == this.service['name']) {
       this.disblebtn = false;
     }
@@ -401,8 +415,12 @@ export class ServiceDetailComponent implements OnInit {
     }, 3000);
   }
 
-  ngOnInit() {
+  setAdminAccess(access) {
+    this.isAdminAccess = access;
+  }
 
+  ngOnInit() {
+    this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
     this.breadcrumbs = [
       {
         'name': this.service['name'],
@@ -416,6 +434,5 @@ export class ServiceDetailComponent implements OnInit {
   }
 
   ngOnChanges(x: any) {
-
   }
 }

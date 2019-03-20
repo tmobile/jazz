@@ -13,7 +13,6 @@ const reporter = new JasmineConsoleReporter({
     emoji: true,
     beep: true
 });
-
 exports.config = {
   allScriptsTimeout: 11000000,
   specs: [

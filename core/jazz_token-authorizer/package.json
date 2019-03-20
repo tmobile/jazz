@@ -1,0 +1,16 @@
+{
+    "name": "jazz_token-authorizer",
+    "version": "1.0.0",
+    "description": "Cognito custom authorizer for token validation",
+    "main": "index.js",
+    "private": true,
+    "author": [],
+    "dependencies": {
+        "request": "^2.75.0",
+        "jwk-to-pem": "^1.2.5",
+        "jsonwebtoken": "^7.0.0"
+    },
+    "devDependencies": {
+        "lambda-local": "^1.4.2"
+    }
+}

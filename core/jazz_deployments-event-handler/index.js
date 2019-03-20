@@ -157,7 +157,7 @@ function processCreateEvent(eventPayload, configData, authToken) {
 		deploymentPayload.service_id = eventPayload.SERVICE_ID.S
 		deploymentPayload.service = eventPayload.SERVICE_NAME.S
 		var apiEndpoint = configData.BASE_API_URL + configData.DEPLOYMENT_API_RESOURCE;
-		var svcPayload = utils.getSvcPayload("POST", deploymentPayload, apiEndpoint, authToken);
+		var svcPayload = utils.getSvcPayload("POST", deploymentPayload, apiEndpoint, authToken, eventPayload.SERVICE_ID.S);
 
 		exportable.processRequest(svcPayload)
 			.then(result => { return resolve(result); })
@@ -194,7 +194,7 @@ function getDeployments(deploymentPayload, configData, authToken) {
 			var service_name = deploymentPayload.service;
 			var domain = deploymentPayload.domain;
 			var apiEndpoint = configData.BASE_API_URL + configData.DEPLOYMENT_API_RESOURCE + "?service=" + service_name + "&domain=" + domain + "&environment=" + env_id;;
-			var svcPayload = utils.getSvcPayload("GET", null, apiEndpoint, authToken);
+			var svcPayload = utils.getSvcPayload("GET", null, apiEndpoint, authToken, deploymentPayload.service_id);
 			exportable.processRequest(svcPayload)
 				.then(result => { return resolve(result); })
 				.catch(err => {
@@ -229,7 +229,7 @@ function updateDeployments(res, deploymentPayload, configData, authToken) {
 				});
 				logger.info("Update deployment request payload: " + JSON.stringify(deploymentPayload));
 				var apiEndpoint = configData.BASE_API_URL + configData.DEPLOYMENT_API_RESOURCE + "/" + deploymentData.deployment_id;
-				var svcPayload = utils.getSvcPayload("PUT", deploymentPayload, apiEndpoint, authToken);
+				var svcPayload = utils.getSvcPayload("PUT", deploymentPayload, apiEndpoint, authToken, deploymentPayload.service_id);
 				exportable.processRequest(svcPayload)
 					.then(result => { return resolve(result); })
 					.catch(err => {

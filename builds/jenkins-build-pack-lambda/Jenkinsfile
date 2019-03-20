@@ -261,8 +261,7 @@ node() {
             } else if (config['event_source_dynamodb']) {
               handleDynamoDbStreamError(deployOutput, config, environment_logical_id, envBucketKey)
             } else {
-              echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $deployOutput"
-              error "Exception occured while serverless deployment to ${environment_logical_id} environment"
+              handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId)
             }
           } else {
             if (config['event_source_s3']) {
@@ -1052,3 +1051,46 @@ def getBuildModuleUrl() {
     return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
   }
 }
+
+def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId) {
+  def rollbackErrorMessage = "ROLLBACK_COMPLETE state and can not be updated"
+  def logGroupErrorMessage = "CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"
+	if(deployOutput.contains(rollbackErrorMessage)){
+		deleteAndRedeployService(env, envBucketKey)
+	}
+	else if (deployOutput.contains(logGroupErrorMessage))
+	{
+		def lambda = "/aws/lambda/${envBucketKey}-${env}"
+		if (isExistingLogGroup(lambda, credsId)){
+			removeLogGroup(lambda, credsId)
+			deleteAndRedeployService(env, envBucketKey);
+		} else {
+			error "Unable to find existing log groups"
+		}
+	} 
+	else {
+			error "Exception occured while serverless deployment to ${env} environment"
+	}
+}
+
+def isExistingLogGroup (groupName, credsId){
+	def isExistingLogGrp = false
+	def filterLogs = sh (
+		script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile ${credsId}",
+		returnStdout: true
+	).trim()
+	def toJSON = new groovy.json.JsonSlurper()
+	def filterLogsJSON = toJSON.parseText(filterLogs)
+	def logGroups = filterLogsJSON.logGroups
+	if(logGroups.size() > 0  && logGroups[0].logGroupName == groupName){
+		isExistingLogGrp = true
+	}
+	return isExistingLogGrp
+}
+
+def removeLogGroup(groupName, credsId) {
+	echo "Removing log group $groupName"
+	sh "aws logs delete-log-group --log-group-name $groupName --profile ${credsId}"
+	echo "successfully removed log group $groupName"
+}
+
