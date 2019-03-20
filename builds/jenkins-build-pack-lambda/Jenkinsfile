@@ -323,18 +323,15 @@ node() {
             createSubscriptionFilters(stackName, env_key, credsId, accountDetails);
           }
 
-          for (item in configLoader.AWS.ACCOUNTS) {
-            if(item.ACCOUNTID == service_config.accountId){
-              if(!item.PRIMARY){
-                def primaryAccountData = utilModule.getAccountInfoPrimary();
-                def primaryAccountValue = primaryAccountData.ACCOUNTID;
-                def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-                def functionName = "arn:aws:lambda:${service_config.region}:${service_config.accountId}:${lambdaFnNameValue}"
-                
-                addPermission(functionName, primaryAccountValue);
-              } 
-            }
-          }
+          if(!accountDetails.PRIMARY){
+            def primaryAccountData = utilModule.getAccountInfoPrimary();
+            def primaryAccountValue = primaryAccountData.ACCOUNTID;
+            def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+            def functionName = "arn:aws:lambda:${service_config.region}:${service_config.accountId}:${lambdaFnNameValue}"
+            
+            addPermission(functionName, primaryAccountValue);
+          } 
+
 
           if (domain && domain == "jazz") {
             serviceConfigdata.setLogStreamPermission(config)
