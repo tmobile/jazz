@@ -233,7 +233,7 @@ node() {
       if (env_metadata["AWS_API_ID"] != null) {
         aws_api_id = env_metadata["AWS_API_ID"]
       }
-      
+
       def swaggerDocUrl = ""
 
       try {
@@ -263,7 +263,7 @@ node() {
           }
 
           def lambdaARN = getLambdaARN(stackName, credsId);
-          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
+          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN.arn, "lambda", config), environment_logical_id);
 
           if (fileExists('swagger/swagger.json')) {
             echo "Generating swagger file for environment: ${env_key}"
@@ -302,7 +302,7 @@ node() {
                   endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
                 }
 
-                def apiArns = getSwaggerResourceARNs(aws_api_id, environment_logical_id, "aws")
+                def apiArns = getSwaggerResourceARNs(aws_api_id, current_environment, "aws")
                 if (apiArns) {
                   for (arn in apiArns) {
                     events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
@@ -1128,7 +1128,7 @@ def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId) {
 		} else {
 			error "Unable to find existing log groups"
 		}
-	} 
+	}
 	else {
 			error "Exception occured while serverless deployment to ${env} environment"
 	}
