@@ -108,7 +108,6 @@
        <div class="column primary-txt-color pointer" ><a (click)="openBuildUrl(buildurl[i])">{{buildNo[i]}}</a></div>
        <div class="column"><a (click)="idClicked(commitDetails[i])">{{commitDetails[i]}}</a></div>
        <!-- <div  class="column id">{{id[i]}}</div> -->
-       <div class="column">{{time[i]}}</div>
        <div class="column status-col">
           <div [class.red]='status[i] == "failed"' [class.green]='status[i] == "successful"'>{{status[i]}}
        </div>
@@ -162,3 +161,4 @@
        </div>
     </div>
  </div>
+               <div class="column">{{time[i] | date: 'yyyy-MM-dd HH:mm:ss'}}</div>
