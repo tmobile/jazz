@@ -259,8 +259,8 @@ node() {
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey);
           if(deployOutput != 'success'){
-						handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId)
-					}
+            handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId)
+          }
 
           def lambdaARN = getLambdaARN(stackName, credsId);
           events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN.arn, "lambda", config), environment_logical_id);
@@ -1041,9 +1041,8 @@ def loadBuildModules(buildModuleUrl){
         [credentialsId: repo_credential_id, url: buildModuleUrl]
       ]])
 
-    def resultJsonString = readFile("jazz-installer-vars.json")
     configModule = load "config-loader.groovy"
-    configLoader = configModule.initialize(resultJsonString)
+    configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
     echo "config loader loaded successfully."
 
     awsAPIGatewayModule = load "aws-apigateway-module.groovy"
