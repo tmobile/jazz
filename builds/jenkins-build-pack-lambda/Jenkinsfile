@@ -320,7 +320,7 @@ node() {
           // reset Credentials
           resetCredentials(credsId)
           if (domain != "jazz") {
-            createSubscriptionFilters(stackName, env_key, credsId, accountDetails);
+            createSubscriptionFilters(stackName, env_key, credsId, accountDetails, environment_logical_id);
           }
 
           if (domain && domain == "jazz") {
@@ -750,7 +750,7 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(stackName, env_key, credsId, accountDetails) {
+def createSubscriptionFilters(stackName, env_key, credsId, accountDetails, environment_logical_id) {
   def lambda = "/aws/lambda/${stackName}"
   def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
 
@@ -783,6 +783,14 @@ def createSubscriptionFilters(stackName, env_key, credsId, accountDetails) {
             }
           }
           updatePolicy(env_key, destARN);
+          def primaryAccountData = utilModule.getAccountInfoPrimary();
+          def primaryAccountValue = primaryAccountData.ACCOUNTID;
+          def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+          def functionName = 'arn:aws:lambda:' + service_config.region + ':' + service_config.accountId + ':' + lambdaFnNameValue
+          
+          /* Adding permission to access the particular created function from primary account only if the deployment account is non-primary*/
+          sh "aws lambda add-permission --function-name ${functionName} --region ${service_config.region} --statement-id Id-123 --action 'lambda:InvokeFunction' --principal ${primaryAccountValue}"
+          
           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${service_config.region} --profile ${credsId}"
         } else {
           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
