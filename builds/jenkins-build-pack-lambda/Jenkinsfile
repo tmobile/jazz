@@ -320,7 +320,20 @@ node() {
           // reset Credentials
           resetCredentials(credsId)
           if (domain != "jazz") {
-            createSubscriptionFilters(stackName, env_key, credsId, accountDetails, environment_logical_id);
+            createSubscriptionFilters(stackName, env_key, credsId, accountDetails);
+          }
+
+          for (item in configLoader.AWS.ACCOUNTS) {
+            if(item.ACCOUNTID == service_config.accountId){
+              if(!item.PRIMARY){
+                def primaryAccountData = utilModule.getAccountInfoPrimary();
+                def primaryAccountValue = primaryAccountData.ACCOUNTID;
+                def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+                def functionName = "arn:aws:lambda:${service_config.region}:${service_config.accountId}:${lambdaFnNameValue}"
+                
+                addPermission(functionName, primaryAccountValue);
+              } 
+            }
           }
 
           if (domain && domain == "jazz") {
@@ -349,6 +362,10 @@ node() {
   }
 }
 
+def addPermission(functionName, primaryAccountValue){
+  /* Adding permission to invoke the function created in secondary account*/
+  sh "aws lambda add-permission --function-name ${functionName} --region ${service_config.region} --statement-id Id-123 --action 'lambda:InvokeFunction' --principal ${primaryAccountValue}"
+}
 
 def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld, credsId) {
   def s3BucketErrString = "CloudFormation - CREATE_FAILED - AWS::S3::Bucket - "
@@ -750,7 +767,7 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(stackName, env_key, credsId, accountDetails, environment_logical_id) {
+def createSubscriptionFilters(stackName, env_key, credsId, accountDetails) {
   def lambda = "/aws/lambda/${stackName}"
   def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
 
@@ -783,13 +800,6 @@ def createSubscriptionFilters(stackName, env_key, credsId, accountDetails, envir
             }
           }
           updatePolicy(env_key, destARN);
-          def primaryAccountData = utilModule.getAccountInfoPrimary();
-          def primaryAccountValue = primaryAccountData.ACCOUNTID;
-          def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-          def functionName = 'arn:aws:lambda:' + service_config.region + ':' + service_config.accountId + ':' + lambdaFnNameValue
-          
-          addPermission(functionName, primaryAccountValue);
-
           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${service_config.region} --profile ${credsId}"
         } else {
           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
@@ -799,11 +809,6 @@ def createSubscriptionFilters(stackName, env_key, credsId, accountDetails, envir
   } catch (Exception ex) {
     echo "error occured: " + ex.getMessage()
   }
-}
-
-def addPermission(functionName, primaryAccountValue){
-  /* Adding permission to access the particular created function from primary account only if the deployment account is non-primary*/
-  sh "aws lambda add-permission --function-name ${functionName} --region ${service_config.region} --statement-id Id-123 --action 'lambda:InvokeFunction' --principal ${primaryAccountValue}"
 }
 
 def updatePolicy(env, destARN){
