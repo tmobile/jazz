@@ -265,7 +265,7 @@ node() {
                   AzureApim =  configLoader.AZURE.APIM["DEVELOPMENT"]
                   logicalId = environment_logical_id.split('-')[0] //13 + 10
                 }
-                endpointUrl="https://${stackName}.azure-api.net/api/${repo_name}"
+                endpointUrl="https://${AzureApim}.azure-api.net/${stackName}/${stackName}"
                 swaggerDocUrl = "https://${AzureApim}.portal.azure-api.net/docs/services/${stackName}/export?DocumentFormat%3DSwagger"
                 apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.ApiManagement/service/$AzureApim"
                 def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
