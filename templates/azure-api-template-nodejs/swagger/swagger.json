@@ -40,7 +40,7 @@
             "name": "name",
             "in": "query",
             "description": "A sample parameter that is required and has a default value of \"sample\".",
-            "required": true,
+            "required": false,
             "type": "string",
             "default": "sample",
             "enum": [
@@ -86,7 +86,7 @@
   },
   "definitions": {
     "Body": {
-      "example": "{\r\n\t\"vehicleType\": \"train\",\r\n\t\"maxSpeed\": 125,\r\n\t\"avgSpeed\": 90,\r\n\t\"speedUnit\": \"mph\"\r\n}"
+      "example": "{\r\n\t\"param\": \"test\"\r\n}"
     }
   },
   "tags": []
