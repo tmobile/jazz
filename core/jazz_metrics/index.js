@@ -52,7 +52,7 @@ function handler(event, context, cb) {
     var eventBody = event.body;
     var metricsResponse = [];
     let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
-    var genValidation = exportable.genericValidation(event);
+    var genValidation = exportable.genericValidation(event, header_key);
     var token = exportable.getToken(config);
     var valGenFields = validateUtils.validateGeneralFields(eventBody);
     Promise.all([genValidation, token, valGenFields])
