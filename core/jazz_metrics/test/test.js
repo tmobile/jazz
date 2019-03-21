@@ -35,6 +35,9 @@ describe('jazz_metrics', function () {
     event = {
       "stage": "test",
       "method": "POST",
+      "headers": {
+        "jazz-service-id": "test-id"
+      },
       "body": {
         "service": "test-service",
         "domain": "jazztest",
@@ -67,7 +70,8 @@ describe('jazz_metrics', function () {
   describe('generic validation', () => {
     it("should indicate input error payload is missing", () => {
       event.body = {};
-      index.genericValidation(event)
+      let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
+      index.genericValidation(event, header_key)
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
@@ -80,7 +84,8 @@ describe('jazz_metrics', function () {
       var invalidArray = ["", "GET", "PUT"];
       for (var i in invalidArray) {
         event.method = invalidArray[i];
-        index.genericValidation(event)
+        let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
+        index.genericValidation(event, header_key)
           .catch(error => {
             expect(error).to.include({
               result: 'inputError',
@@ -92,11 +97,24 @@ describe('jazz_metrics', function () {
 
     it("should indicate unauthorized if principalId is null", () => {
       event.principalId = "";
-      index.genericValidation(event)
+      let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
+      index.genericValidation(event, header_key)
         .catch(error => {
           expect(error).to.include({
             result: 'unauthorized',
             message: 'Unauthorized'
+          });
+        });
+    });
+
+    it("should indicate inputError if service id is not provided", () => {
+      event.headers = {};
+      let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
+      index.genericValidation(event, header_key)
+        .catch(error => {
+          expect(error).to.include({
+            result: 'inputError',
+            message: 'No service id provided'
           });
         });
     });
@@ -298,7 +316,7 @@ describe('jazz_metrics', function () {
         "provider": "aws"
       }
       const getAssetsObj = sinon.stub(utils, "getAssetsObj").returns(getAssetRes);
-      index.getAssetsDetails(config, event.body, authToken)
+      index.getAssetsDetails(config, event.body, authToken, "test-id")
         .then(res => {
           expect(res).to.have.all.keys('type', 'asset_name', 'statistics', 'provider');
           sinon.assert.calledOnce(getAssetsObj);
@@ -319,7 +337,7 @@ describe('jazz_metrics', function () {
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, responseObj, JSON.stringify(responseObj.body))
       });
-      index.getAssetsDetails(config, event.body, authToken)
+      index.getAssetsDetails(config, event.body, authToken, "test-id")
         .then(res => {
           expect(res).to.be.empty;
         });
@@ -332,7 +350,7 @@ describe('jazz_metrics', function () {
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(err, null, null)
       });
-      index.getAssetsDetails(config, event.body, authToken)
+      index.getAssetsDetails(config, event.body, authToken, "test-id")
         .catch(error => {
           expect(error).to.include(err);
         });

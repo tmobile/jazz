@@ -525,7 +525,7 @@ function buildNowRequest(serviceDetails, config, refDeployment, request_id) {
 			buildQuery = "/buildWithParameters?token=" + config.JOB_TOKEN + "&service_name=" + service_name + "&domain=" + domain + "&scm_branch=" + scm_branch + "&request_id=" + request_id,
 			base_auth_token = "Basic " + new Buffer(util.format("%s:%s", config.SVC_USER, config.API_TOKEN)).toString("base64"),
 			rebuild_url = "";
-	
+
 		rebuild_url = build_url + config.BUILDPACKMAP[data.type.toLowerCase()] + buildQuery;
 
 		if (build_url) {

@@ -78,6 +78,7 @@ describe('platform_services', function() {
         "email" : "gonnaGetALittle@Wild.com",
 		    "metadata":{"service":"test-service2","securityGroupIds":"sg-cdb65db9"}
       },
+      "services": "[{\"serviceId\": \"k!ngd0m_0f_Mewni\",\"policies\": [{\"category\": \"manage\",\"permission\": \"admin\"},{\"category\": \"code\",\"permission\": \"write\"},{\"category\": \"deploy\",\"permission\": \"write\"}]}]",
       "principalId": "g10$saryck"
     };
     context = awsContext();
@@ -163,6 +164,14 @@ describe('platform_services', function() {
     event.method = "GET";
     var attemptBool = dynamoCheck("get", spy);
     assert.isTrue(attemptBool);
+  });
+
+  it("should indicate unauthorized error while accessing data from dynamoDB by id if 'GET' method and id are defined, but user does not have access permission", function(){
+    event.method = "GET";
+    event.services = "[]"
+    index.handler(event, context, (err, res) => {
+      expect(err).to.include('{"errorType":"Unauthorized","message":"You aren\'t authorized to access this service."}')
+    });
   });
 
   /*
@@ -267,8 +276,42 @@ describe('platform_services', function() {
   it("should attempt to get all/filtered items from dynamoDB if 'GET' method and no id are defined", function(){
     event.method = "GET";
     event.path.id = undefined;
-    var attemptBool = dynamoCheck("scan", spy);
-    assert.isTrue(attemptBool);
+    let dataObj = {
+      Items: [
+        {
+          SERVICE_ID: {S: "k!ngd0m_0f_Mewni"},
+          TIMESTAMP: {S: "qwerty"},
+          SERVICE_NAME: {S: event.query.service},
+          SERVICE_NAMESPACE: {S: event.query.domain}
+        }
+      ]
+    }
+    AWS.mock("DynamoDB", "scan", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    index.handler(event, context, (err, res) => {
+      expect(res).to.include.all.keys("data", "input");
+      expect(res.data).to.include.all.keys("count", "services");
+      let serviceList = res.data.services;
+      for (i in serviceList) {
+        expect(serviceList[i].service).to.eq(dataObj.Items[i].SERVICE_NAME.S);
+        expect(serviceList[i].namespace).to.eq(dataObj.Items[i].SERVICE_NAMESPACE.S);
+        expect(serviceList[i].id).to.eq(dataObj.Items[i].SERVICE_ID.S);
+      };
+      AWS.restore("DynamoDB");
+    });
+  });
+
+  it("should expect empty list to get from dynamoDB for 'GET' method if id is defined and user don't have access to any services", function(){
+    event.method = "GET";
+    event.path.id = undefined;
+    event.services = "[]"
+    index.handler(event, context, (err, res) => {
+      expect(res).to.include.all.keys("data", "input");
+      expect(res.data).to.include.all.keys("count", "services");
+      expect(res.data.count).to.eq(0);
+      expect(res.data.services).to.be.empty;
+    });
   });
 
   /*
@@ -297,36 +340,6 @@ describe('platform_services', function() {
     var allCases = filterExp.includes(filterString) &&
                     expAttrVals[scanParamBefore][dataType] == before &&
                     expAttrVals[scanParamAfter][dataType] == after;
-    AWS.restore("DynamoDB");
-    assert.isTrue(allCases);
-  });
-
-  /*
-  * Given a userID that IS-NOT not listed among admin_users, dynamoDB only scans for specific user's services
-  * @param {object} event->event.method="GET", event.path.id is undefined
-  * @params {object, function} default aws context, and callback function as defined in beforeEach
-  */
-  it("should return only the user's relevant service data if user is not an admin", function(){
-    event.method = "GET";
-    event.path.id = undefined;
-    event.query.created_by = undefined;
-
-    //user that is not listed among admin_users
-    var userId = "Mete0ra";
-
-    event.principalId = userId;
-    var dataType = "S";
-    var filterString = "SERVICE_CREATED_BY" + " = :" + "SERVICE_CREATED_BY";
-    var scanParam = ":SERVICE_CREATED_BY";
-    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-    AWS.mock("DynamoDB", "scan", spy);
-    //trigger spy by calling index.handler()
-    var callFunction = index.handler(event, context, callback);
-    //assigning the item filter values passed to DynamoDB.scan as values to check against
-    var filterExp = spy.args[0][0].FilterExpression;
-    var expAttrVals = spy.args[0][0].ExpressionAttributeValues;
-    var allCases = filterExp.includes(filterString) &&
-                    expAttrVals[scanParam][dataType] == userId;
     AWS.restore("DynamoDB");
     assert.isTrue(allCases);
   });
@@ -652,7 +665,7 @@ describe('platform_services', function() {
     assert.isTrue(logCheck);
 });
 
-  /* 
+  /*
   * Given a successful attempt at a dynamo service update, handler() should indicate metadata updated successfully
   * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
@@ -691,7 +704,7 @@ describe('platform_services', function() {
   assert.isTrue(logCheck);
   });
 
-  /* 
+  /*
   * Given a successful attempt at a dynamo service update, handler() should indicate array updated successfully
   * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach

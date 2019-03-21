@@ -216,7 +216,10 @@ function processCreateAsset(eventPayload, configData, authToken) {
     var svcPayload = {
       uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE,
       method: "POST",
-      headers: { Authorization: authToken },
+      headers: {
+        "Authorization": authToken,
+        "Jazz-Service-ID": eventPayload.SERVICE_ID.S
+      },
       json: assetApiPayload,
       rejectUnauthorized: false
     };
@@ -259,7 +262,10 @@ function processUpdateAsset(record, eventPayload, configData, authToken) {
     var svcPayload = {
       uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE + "/" + record.id,
       method: "PUT",
-      headers: { Authorization: authToken },
+      headers: {
+        "Authorization": authToken,
+        "Jazz-Service-ID": eventPayload.SERVICE_ID.S
+      },
       json: assetApiPayload,
       rejectUnauthorized: false
     };
@@ -293,7 +299,10 @@ function checkIfAssetExists(eventPayload, configData, authToken) {
     var svcPostSearchPayload = {
       uri: configData.BASE_API_URL + configData.ASSETS_API_RESOURCE + "?domain=" + searchAssetPayload.domain + "&service=" + searchAssetPayload.service + "&provider_id=" + searchAssetPayload.provider_id + "&asset_type=" + searchAssetPayload.asset_type,
       method: "GET",
-      headers: { Authorization: authToken },
+      headers: {
+        "Authorization": authToken,
+        "Jazz-Service-ID": eventPayload.SERVICE_ID.S
+      },
       rejectUnauthorized: false
     };
 

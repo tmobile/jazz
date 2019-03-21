@@ -197,7 +197,11 @@ export class ServiceLogsComponent implements OnInit {
 
 	refresh(){
 		this.callLogsFunc();
-	}
+  }
+
+  refresh_env() {
+    this.refresh();
+  }
 
    onaccSelected(event){
     this.FilterTags.notify('filter-Account',event);
@@ -491,7 +495,7 @@ export class ServiceLogsComponent implements OnInit {
 		 if ( this.subscription ) {
 			this.subscription.unsubscribe();
 		}
-		this.subscription = this.http.post('/jazz/logs', this.payload).subscribe(
+		this.subscription = this.http.post('/jazz/logs', this.payload, this.service.id).subscribe(
       response => {
 		
 	   this.logs  = response.data.logs || response.data.data.logs ;

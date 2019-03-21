@@ -411,7 +411,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		if (this.subscription) {
 			this.subscription.unsubscribe();
 		}
-		this.subscription = this.http.post('/jazz/logs', this.payload).subscribe(
+		this.subscription = this.http.post('/jazz/logs', this.payload, this.service.id).subscribe(
 			response => {
 				this.logs = response.data.logs  || response.data.data.logs;
 				if(this.logs != undefined)
