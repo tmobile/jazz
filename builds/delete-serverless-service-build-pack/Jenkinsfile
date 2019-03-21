@@ -24,7 +24,6 @@ import groovy.json.JsonSlurperClassic
 @Field def apigeeModule
 @Field def lambdaEvents
 @Field def azureDeployer
-@Field def azureUtil
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -140,7 +139,7 @@ node {
 		}
 	}
 
-  if (isAzure()) {
+  if (azureDeployer.isAzure(service_config)) {
     stage('Undeploy Service') {
 
       for (_envId in environmentIds) {
@@ -155,7 +154,7 @@ node {
           events.setEnvironment(_envId)
           events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
           echo 'undeploying service for environment: ' + _envId
-          deleteResourceByTag(_envId)
+          azureDeployer.deleteResources(_envId, repo_credential_id, service_config)
 
           if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
             cleanupCodeQualityReports()
@@ -501,7 +500,7 @@ def writeServerlessFile(){
  */
 def updateSwaggerConfig() {
 
-  if (isAzure()) {
+  if (azureDeployer.isAzure(service_config)) {
     return
   }
 	try {
@@ -1108,7 +1107,7 @@ def LoadConfiguration() {
 }
 
 def loadServerlessConfig() {
-  if (isAzure()) {
+  if (azureDeployer.isAzure(service_config)) {
     return
   }
 
@@ -1282,7 +1281,7 @@ def loadBuildModules(buildModuleUrl){
     resourceUtility.initialize(configLoader)
     echo "resource util init successfully."
 
-    azureUtil = load "azure-utility.groovy"
+    def azureUtil = load "azure-utility.groovy"
     azureUtil.initialize(configLoader, resourceUtility)
     echo "Azure util init successfully."
     azureDeployer = load "azure-function-deploy-module.groovy"
@@ -1326,44 +1325,3 @@ def parseJsonMap(jsonString) {
 	return lazyMap
 }
 
-def isAzure() {
-  return  service_config['platform'] != null && service_config['platform'] == "azure"
-}
-
-def deleteResourceByTag(env) {
-
-  def stackName = "${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env}"
-
-  def serviceInfo = [
-    'stackName'         : stackName,
-    "repoCredentialId"  : repo_credential_id,
-    'envId'             : env,
-    'serviceCatalog'    : service_config,
-    'storageAccountName': 'NA'
-  ]
-
-  azureUtil.setAzureVar(serviceInfo)
-	withCredentials([
-			[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
-			[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
-			[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
-			[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
-	]) {
-    def repo_name = "jazz_azure-create-service"
-    sh "rm -rf $repo_name"
-    sh "mkdir $repo_name"
-
-    def repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
-
-
-    dir(repo_name)
-      {
-        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
-        sh "npm install -s"
-        azureDeployer.deleteResourceByTag(serviceInfo)
-      }
-
-
-  }
-
-}
