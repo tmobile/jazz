@@ -1,7 +1,7 @@
 #!groovy?
 import groovy.transform.Field
 /*
-* azure deployment module
+* azure deployment module which handle all the azure resource CRUD
 */
 
 @Field def configLoader
@@ -21,7 +21,11 @@ def initialize(configLoader, utilModule, scmModule, events, azureUtil){
 
 }
 
-
+/**
+ * Create azure function by service catalog data. Azure use function.json to configure trigger event and this function invoke a create azure service nodejs project to create function app and its trigger event resources.
+ * @param serviceInfo  service catalog data from services table and also deployment info like env_id
+ * @return endpoint of function
+ */
 def createFunction(serviceInfo){
   azureUtil.setAzureVar(serviceInfo)
   loadAzureConfig(serviceInfo)
@@ -33,7 +37,11 @@ def createFunction(serviceInfo){
 
 }
 
-
+/**
+ * Call create azure service to get a list of resources/assets created by this service via tag and call sendCompletedEvent to populate the event table
+ * @param serviceInfo   service catalog data from services table and also deployment info like env_id
+ * @param assetList a list of trigger event resources which is not an azure resources such as database and table name
+ */
 def sendAssetCompletedEvent(serviceInfo, assetList) {
 
   def data = azureUtil.getAzureRequestPayload(serviceInfo)
@@ -73,6 +81,11 @@ def sendAssetCompletedEvent(serviceInfo, assetList) {
   }
 }
 
+/**
+ * Use azure principle from jenkins credentials to create azure resources via azure nodejs SDK
+ * @param serviceInfo   service catalog data from services table and also deployment info like env_id
+ * @return master key for the endpoint
+ */
 def invokeAzureCreation(serviceInfo){
 
   sh "rm -rf _azureconfig"
@@ -137,6 +150,11 @@ def invokeAzureCreation(serviceInfo){
   }
 }
 
+/**
+ * Delete resources deletes all the created resources in this service
+ * @param serviceInfo   service catalog data from services table and also deployment info like env_id
+ * @return none
+ */
 def deleteResourceByTag(serviceInfo) {
   def data = azureUtil.getAzureRequestPayload(serviceInfo)
   data.tagName = 'service'
@@ -145,10 +163,23 @@ def deleteResourceByTag(serviceInfo) {
 
 }
 
+/**
+ * Invoke create azure service of create function command
+ * @param data request payload which contains azure principle and resource name and type
+ * @return none
+ */
 def createFunctionApp(data) {
   azureUtil.invokeAzureService(data, "createfunction")
 
 }
+
+/**
+ * Invoke create azure service of deploy function command
+ * @param data request payload which contains azure principle
+ * @param zip a zip file of the function project from azure function template
+ * @param type event source type
+ * @return
+ */
 def deployFunction(data, zip, type) {
 
   data.zip = zip
@@ -161,12 +192,25 @@ def deployFunction(data, zip, type) {
 
 }
 
+/**
+ * Invoke create azure service of create storage account.  Storage account is required for all azure functionapp aka azure function
+ * @param data request payload which contains azure principle
+ * @param serviceInfo   service catalog data from services table and also deployment info like env_id
+ * @return
+ */
 def createStorageAccount(data, serviceInfo) {
   data.appName = azureUtil.getStorageAccount(serviceInfo.serviceCatalog, serviceInfo.envId, serviceInfo.storageAccountName)
   azureUtil.invokeAzureService(data, "createStorage")
 
 }
 
+/**
+ * Invoke create azure service to create trigger events if not exists
+ * @param data
+ * @param type
+ * @param serviceInfo   service catalog data from services table and also deployment info like env_id
+ * @return assets list
+ */
 def createEventResource(data, type, serviceInfo) {
 
   data.eventSourceType = type
@@ -198,6 +242,11 @@ def createEventResource(data, type, serviceInfo) {
 
 }
 
+/**
+ * Azure function is defined by a function.json and this file is populated based on service catalog
+ * @param serviceInfo  service catalog data from services table and also deployment info like env_id
+ * @return none
+ */
 def loadAzureConfig(serviceInfo) {
   checkoutConfigRepo(serviceInfo.repoCredentialId)
   selectConfig(serviceInfo)
@@ -217,6 +266,11 @@ def checkoutConfigRepo(repoCredentialId) {
 
 }
 
+/**
+ * Populate function.json based on service catalog info
+ * @param serviceInfo  service catalog data from services table and also deployment info like env_id
+ * @return none
+ */
 def selectConfig(serviceInfo) {
   echo "load azure config...."
   def functionName = serviceInfo.stackName
@@ -266,6 +320,14 @@ def selectConfig(serviceInfo) {
 
 }
 
+/**
+ * Update the template of function.json based on service catalog
+ * @param functionName function name
+ * @param type resource type
+ * @param resourceName name of a resource
+ * @param serviceInfo   service catalog data from services table and also deployment info like env_id
+ * @param version azure library version for each trigger events
+ */
 private void writeConfig(functionName, type, resourceName, serviceInfo, version) {
   def extName = azureUtil.getExtensionName(serviceInfo)
 
@@ -303,6 +365,59 @@ def getAssetDetails(id, assetType) {
 
 }
 
+/**
+ *
+ * @param service_config  service catalog data from services table
+ * @return true if platform is provided and it is azure
+ */
+def isAzure(service_config) {
+  return  service_config['platform'] != null && service_config['platform'] == "azure"
+}
+
+/**
+ * Delete resources calls create azure service nodejs project to delete resources by matching tag
+ * @param env env id for prod or dev
+ * @param repo_credential_id
+ * @param service_config  service catalog data from services table
+ * @return none
+ */
+def deleteResources(env, repo_credential_id, service_config) {
+
+  def stackName = "${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env}"
+
+  def serviceInfo = [
+    'stackName'         : stackName,
+    "repoCredentialId"  : repo_credential_id,
+    'envId'             : env,
+    'serviceCatalog'    : service_config,
+    'storageAccountName': 'NA'
+  ]
+
+  azureUtil.setAzureVar(serviceInfo)
+  withCredentials([
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
+    [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
+  ]) {
+    def repo_name = "jazz_azure-create-service"
+    sh "rm -rf $repo_name"
+    sh "mkdir $repo_name"
+
+    def repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
+
+
+    dir(repo_name)
+      {
+        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
+        sh "npm install -s"
+        deleteResourceByTag(serviceInfo)
+      }
+
+
+  }
+
+}
 
 
 return this
