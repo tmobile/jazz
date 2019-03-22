@@ -111,7 +111,7 @@ node {
     }
 
 		if(!service_config.credentialId){
-			service_config.credentialId = accountInfo.CREDENTIALID
+			service_config.credentialId = accountInfo.CREDENTIAL_ID
 		}
 
     lambdaEvents.setServiceConfig(service_config)
