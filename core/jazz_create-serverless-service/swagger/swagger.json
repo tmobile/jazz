@@ -338,6 +338,14 @@
                             ]
                         }
                     }
+                },
+                "platform": {
+                    "type": "string",
+                    "description": "platform for cloud provider",
+                    "enum": [
+                        "aws",
+                        "azure"
+                    ]
                 }
             }
         }

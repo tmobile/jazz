@@ -88,6 +88,7 @@ describe('create-serverless-service', function () {
         "body": {
           "service_name": "test-service",
           "service_type": "function",
+          "platform": "aws",
           "domain": "test-domain",
           "runtime": "nodejs",
           "approvers": ['tw1light_$pArkle'],
