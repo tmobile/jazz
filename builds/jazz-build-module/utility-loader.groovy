@@ -220,7 +220,7 @@ def getAccountBucketName(service_config) {
 *  Get Account Specific API Gateway
 */
 
-def getAccountAPIName(service_config) {
+def getApiId(service_config) {
 	def apiGateway = {}
 	def accountObject = getAccountInfo(service_config);
 	if( accountObject.size() > 0){

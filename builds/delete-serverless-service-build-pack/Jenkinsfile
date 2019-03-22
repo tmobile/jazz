@@ -647,7 +647,7 @@ def getApiId(stage) {
 	if (envMetadata["AWS_API_ID"] != null) {
 		return envMetadata["AWS_API_ID"]
 	}
-	def accountAPIGateway = utilModule.getAccountAPIName(service_config)
+	def accountAPIGateway = utilModule.getApiId(service_config)
 	if (stage.endsWith('-dev')) {
 		return accountAPIGateway["DEV"]
 	} else if (stage == 'stg') {
