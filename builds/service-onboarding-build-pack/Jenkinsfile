@@ -71,12 +71,12 @@ node  {
 				switch (service_config['type']) {
 					case "api":
 						if (service_config['runtime'].startsWith("nodejs")) {
-              if(service_config['platform'] == "azure"){
-                service_template = "azure-api-template-nodejs"
-              }
-              else {
-                service_template = "api-template-nodejs"
-              }
+							if(service_config['platform'] == "azure"){
+							service_template = "azure-api-template-nodejs"
+							}
+							else {
+							service_template = "api-template-nodejs"
+							}
 						}
 						else if (service_config['runtime'].startsWith("python")){
 							service_template = 'api-template-python'	
@@ -87,22 +87,22 @@ node  {
 						else if (service_config['runtime'].startsWith("go")) {
 							service_template = 'api-template-go'
 						}
-            else if(service_config['runtime'].startsWith("c#")){
-              if(service_config['platform'] == "azure"){
-                service_template = 'azure-api-template-csharp'
-              }
-            }
+						else if(service_config['runtime'].startsWith("c#")){
+							if(service_config['platform'] == "azure"){
+								service_template = 'azure-api-template-csharp'
+							}
+						}
 						break
 
 					case "function":
-            if (service_config['platform'] == "azure") {
-              if (service_config['runtime'].startsWith("nodejs")) {
-                service_template = "azure-function-template-nodejs"
-              }
-              else if (service_config['runtime'].startsWith("c#")) {
-                service_template = 'azure-function-template-csharp'
-              }
-            }
+						if (service_config['platform'] == "azure") {
+							if (service_config['runtime'].startsWith("nodejs")) {
+								service_template = "azure-function-template-nodejs"
+							}
+							else if (service_config['runtime'].startsWith("c#")) {
+								service_template = 'azure-function-template-csharp'
+							}
+						}
 						else if (service_config['runtime'].startsWith("nodejs")) {
 							service_template = "lambda-template-nodejs"
 						}
@@ -115,7 +115,6 @@ node  {
 						else if (service_config['runtime'].startsWith("go")) {
 							service_template = 'lambda-template-go'
 						}
-
 						break
 
 					case "website":
