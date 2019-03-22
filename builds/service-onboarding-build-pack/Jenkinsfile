@@ -97,10 +97,10 @@ node  {
 					case "function":
 						if (service_config['platform'] == "azure") {
 							if (service_config['runtime'].startsWith("nodejs")) {
-								service_template = "function-template-nodejs"
+								service_template = "azure-function-template-nodejs"
 							}
 							else if (service_config['runtime'].startsWith("c#")) {
-								service_template = 'function-template-csharp'
+								service_template = 'azure-function-template-csharp'
 							}
 						}
 						else if (service_config['runtime'].startsWith("nodejs")) {
