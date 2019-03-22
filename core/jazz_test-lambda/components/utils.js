@@ -35,11 +35,11 @@ var validateARN = (arn) => {
 
 };
 
-var validateEndpoint = (arn) => {
-  if (arn && arn.startsWith("http")) {
+var validateEndpoint = (endpoint) => {
+  if (endpoint && endpoint.startsWith("http")) {
     return true;
   } else {
-    return validateARN(arn);
+    return validateARN(endpoint);
   }
 
 };
