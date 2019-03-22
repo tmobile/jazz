@@ -61,6 +61,8 @@ var handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'Service Name' can have up to 20 characters")));
         } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
+        } else if (!service_creation_data.platform) {
+          return cb(JSON.stringify(errorHandler.throwInputValidationError("'platform' is not defined")));
         }
 
         // validate service types
