@@ -22,8 +22,8 @@ exports.config = {
     'browserName': 'chrome',
     'chromeOptions': {
       // Get rid of --ignore-certificate yellow warning
-      args: ['--headless', '--disable-gpu', '--no-sandbox', '--test-type=browser'],
-      // Set download path and avoid prompting for download even though
+      args: [ '--headless','--disable-gpu', '--no-sandbox', '--test-type=browser'],
+      // Set download path and avoid prompting for download even though 
       // this is already the default on Chrome but for completeness
       prefs: {
           'download': {
