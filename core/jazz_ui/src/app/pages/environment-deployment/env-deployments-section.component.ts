@@ -302,8 +302,9 @@ export class EnvDeploymentsSectionComponent implements OnInit {
           this.deployedList =  this.deployments;
           this.length =  this.deployments.length;
           var countStarted = 0;
-          for(var i=0 ; i<this.length ; i++){
-            this.time[i] = this.deployments[i].created_time.slice(0,-4).replace("T"," ");
+          for (var i = 0; i < this.length; i++) {
+            let dateStr = `${this.deployments[i].created_time.replace("T", " ")}z`;
+            this.time[i] = new Date(dateStr).toString();
             this.status[i] = this.deployments[i].status;
             this.commitDetails[i] = this.deployments[i].scm_commit_hash;
             this.id[i] = this.deployments[i].deployment_id;
