@@ -1,17 +1,23 @@
 {
-    "name": "cognito_authorizer",
-    "version": "1.0.0",
-    "description": "Cognito custom authorizer",
-    "main": "index.js",
-    "private": true,
-    "author": [],
-    "dependencies": {
-        "request": "^2.75.0",
-        "jwk-to-pem": "^1.2.5",
-        "jsonwebtoken": "^7.0.0"
-    },
-    "devDependencies": {
-        "lambda-local": "^1.4.2",
-        "aws-sdk": "^2.245.1"
-    }
+  "name": "cognito_authorizer",
+  "version": "1.0.0",
+  "description": "Cognito custom authorizer",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "request": "^2.75.0",
+    "jwk-to-pem": "^1.2.5",
+    "jsonwebtoken": "^7.0.0"
+  },
+  "devDependencies": {
+    "aws-sdk": "*",
+    "chai": "^3.5.0",
+    "chai-as-promised": "^7.1.1",
+    "mocha": "^v3.0.0",
+    "sinon": "^7.2.2"
+  }
 }

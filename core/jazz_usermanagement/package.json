@@ -8,10 +8,10 @@
     "name": "Jazz"
   },
   "scripts": {
-    "test": "nyc --reporter=html --reporter=text mocha",
+    "test": "mocha",
     "jshint": "jshint --exclude ./node_modules ."
   },
-  "dependencies": {    
+  "dependencies": {
     "lodash": "*",
     "request": "*",
     "request-promise-native": "^1.0.5"

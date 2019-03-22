@@ -23,6 +23,7 @@ import groovy.json.JsonSlurperClassic
 @Field def sonarModule
 @Field def apigeeModule
 @Field def lambdaEvents
+@Field def aclModule
 @Field def azureDeployer
 
 @Field def g_base_url = ''
@@ -293,7 +294,24 @@ node {
 		}
 	}
 
-  cleanupScm(repo_name)
+	if (is_service_deletion) {
+		stage('Cleanup SCM') {
+			events.sendStartedEvent('REMOVE_POLICIES_AND_REPO_PERMISSIONS', "Remove policies and repo write permission of service_id: " + service_config['service_id'] + " started", null, "prod")
+			deletePolicies(service_config['service_id'], auth_token, "${g_base_url}/jazz/acl/policies")
+			events.sendCompletedEvent('REMOVE_POLICIES_AND_REPO_PERMISSIONS', "Remove policies and repo write permission of service_id: " + service_config['service_id'] + " completed", null, "prod")
+			cleanup(repo_name)
+			events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
+		}
+	}
+}
+
+def deletePolicies(serviceId, authToken, aclUrl) {
+	try {
+		aclModule.deletePolicies(serviceId, authToken, aclUrl)
+	} catch(ex) {
+		echo "ex: $ex"
+		events.sendFailureEvent('REMOVE_POLICIES_AND_REPO_PERMISSIONS', ex.getMessage(), context_map)
+	}
 }
 
 def cleanupScm(repo_name) {
@@ -305,6 +323,7 @@ def cleanupScm(repo_name) {
     }
   }
 }
+
 def cleanupEventSourceMapping(env) {
   def lambda_arn = "arn:aws:lambda:${configLoader.AWS.REGION}:${configLoader.AWS.ACCOUNTID}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env}"
   def assets_api = g_base_url + "/jazz/assets"
@@ -531,9 +550,8 @@ def updateSwaggerConfig() {
  * @return
  */
 def cleanup(repoName) {
-
 	try {
-		scmModule.deleteProject(repoName)
+    	scmModule.deleteProject(repoName)
 		send_status_email("COMPLETED")
 	} catch (ex) {
 		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
@@ -1273,20 +1291,22 @@ def loadBuildModules(buildModuleUrl){
 			echo "Apigee module loaded successfully."
 		}
 
-    lambdaEvents = load "aws-lambda-events-module.groovy"
-    lambdaEvents.initialize(configLoader, utilModule)
-    echo "Lambda event module loaded successfully."
+        lambdaEvents = load "aws-lambda-events-module.groovy"
+        lambdaEvents.initialize(configLoader, utilModule)
+        echo "Lambda event module loaded successfully."
 
-    def resourceUtility = load "resource-utility.groovy"
-    resourceUtility.initialize(configLoader)
-    echo "resource util init successfully."
+		aclModule = load "acl-module.groovy"
+		echo "ACL module loaded successfully."
+        def resourceUtility = load "resource-utility.groovy"
+        resourceUtility.initialize(configLoader)
+        echo "resource util init successfully."
 
-    def azureUtil = load "azure-utility.groovy"
-    azureUtil.initialize(configLoader, resourceUtility)
-    echo "Azure util init successfully."
-    azureDeployer = load "azure-function-deploy-module.groovy"
-    azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtil)
-    echo "Azure deploy module init successfully."
+        def azureUtil = load "azure-utility.groovy"
+        azureUtil.initialize(configLoader, resourceUtility)
+        echo "Azure util init successfully."
+        azureDeployer = load "azure-function-deploy-module.groovy"
+        azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtil)
+        echo "Azure deploy module init successfully."
 	}
 }
 
@@ -1324,4 +1344,3 @@ def parseJsonMap(jsonString) {
 	lazyMap.putAll(jsonObj)
 	return lazyMap
 }
-
