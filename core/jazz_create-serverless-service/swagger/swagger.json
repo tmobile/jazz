@@ -138,10 +138,10 @@
                         }
                     }
                 },
-                "security": [
-                    {
-                        "{envPrefix}-{domain}-cognito-authorizer": []
-                    }
+               "security": [
+                  {
+                    "{envPrefix}-{domain}-cognito-authorizer": []
+                  }
                 ],
                 "x-amazon-apigateway-integration": {
                     "type": "aws",
@@ -188,20 +188,20 @@
             }
         }
     },
-    "securityDefinitions": {
-        "{envPrefix}-{domain}-cognito-authorizer": {
-            "type": "apiKey",
-            "name": "Authorization",
-            "in": "header",
-            "x-amazon-apigateway-authtype": "custom",
-            "x-amazon-apigateway-authorizer": {
-                "authorizerCredentials": "{conf-role}",
-                "authorizerResultTtlInSeconds": 300,
-                "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
-                "type": "token"
-            }
-        }
-    },
+  	"securityDefinitions": {
+		"{envPrefix}-{domain}-cognito-authorizer": {
+		  "type": "apiKey",
+		  "name": "Authorization",
+		  "in": "header",
+		  "x-amazon-apigateway-authtype": "custom",
+		  "x-amazon-apigateway-authorizer": {
+			"authorizerCredentials": "{conf-role}",
+			"authorizerResultTtlInSeconds": 300,
+			"authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
+			"type": "token"
+		  }
+		}
+	},
     "definitions": {
         "400ErrorResponse": {
             "type": "object",
@@ -266,7 +266,8 @@
                     "enum": [
                         "api",
                         "lambda",
-                        "website"
+                        "website",
+                        "sls-app"
                     ]
                 },
                 "service_name": {
@@ -311,7 +312,11 @@
                 },
                 "require_internal_access": {
                     "type": "boolean",
-                    "description": "Does service require access to internal SLF network and resources"
+                    "description":"Does service require access to internal SLF network and resources"
+                },
+                "deployment-descriptor": {
+                   "type": "string",
+                   "description":"Deployment descriptor using serverless.yml format (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)"
                 },
                 "deployment_targets": {
                     "type": "object",
