@@ -54,9 +54,9 @@ export class RequestService {
             'accept': 'application/json'
         };
 
-        // if (serviceId) {
-        //     headerObj['Jazz-Service-ID'] = serviceId
-        // }
+        if(serviceId){
+            headerObj['Jazz-Service-ID'] = serviceId
+        }
 
         let headers = new Headers(headerObj);
         let options = new RequestOptions({ headers: headers, search: null });

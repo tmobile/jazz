@@ -260,8 +260,10 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   onEditGeneral(){
+    if (this.isAdminAccess) {
       this.onCancelClick();
       this.showGeneralField = true;
+    }
   }
 
   private isCronObjValid(cronObj) {
@@ -1215,9 +1217,11 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   onEditEvents(){
-    this.onCancelClick();
-    this.editEvents = true;
-    this.disp_show2 = false;
+    if (this.isAdminAccess) {
+      this.onCancelClick();
+      this.editEvents = true;
+      this.disp_show2 = false;
+    }
   }
 
 

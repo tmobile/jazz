@@ -198,4 +198,40 @@ def getAccountInfoPrimary(){
 	return dataObjPrimary;
 }
 
+/**
+*  Get Account Specific S3
+*/
+
+def getAccountBucketName(service_config) {
+	def s3Object = {}
+	def accountObject = getAccountInfo(service_config);
+	if( accountObject.size() > 0){
+		def regions = accountObject['REGIONS'];
+		for (region in regions ){
+			if( region['REGION'] == service_config.region) { 
+				s3Object = region['S3'];
+			}
+		}
+	}
+	return s3Object;
+}
+
+/**
+*  Get Account Specific API Gateway
+*/
+
+def getApiId(service_config) {
+	def apiGateway = {}
+	def accountObject = getAccountInfo(service_config);
+	if( accountObject.size() > 0){
+		def regions = accountObject['REGIONS'];
+		for (region in regions ){
+			if( region['REGION'] == service_config.region) { 
+				apiGateway = region['API_GATEWAY'];
+			}
+		}
+	}
+	return apiGateway;
+}
+
 return this
