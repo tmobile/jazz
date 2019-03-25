@@ -7,7 +7,7 @@ import groovy.json.JsonOutput
 @Field def awsAccounts
 @Field def finalAccounts = []
 @Field def credentialId
-@Field def isPrimary = false
+@Field def isPrimaryAccount = false
 
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
@@ -17,7 +17,7 @@ import groovy.json.JsonOutput
 @Field def instance_prefix 
 @Field def repo_base 
 @Field def repo_core
-@Field def scm_type 
+@Field def scm_type
 
 @Field def configModule
 @Field def configLoader
@@ -57,14 +57,11 @@ node {
    def accountID = account['ACCOUNTID'];
    def iamRoles = account["IAM"]
   def cloudFront = account["CLOUDFRONT"]
-   isPrimary = account['PRIMARY']
+   isPrimaryAccount = account['PRIMARY']
     withCredentials([
       [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialId}"]
     ]) {
-        if ( !isPrimaryAccount ) {
-          processIamRoles(iamRoles);
-          processCloudFront(cloudFront);
-        }
+       
         // Get all Regions
         def allregions = account["REGIONS"]
         for (awsregion in allregions) {
@@ -81,8 +78,13 @@ node {
           processApiGateway(apiGateway, regionAws)
           processS3Buckets(s3Buckets)
           deletePrimaryAccountPolicy(accountID, finalAccounts);
-          deleteUserServices();
-          deleteStackCloudFrontDists()
+          deleteUserServices(regionAws);
+          deleteStackCloudFrontDists(regionAws)
+        }
+        
+         if ( !isPrimaryAccount ) {
+          processIamRoles(iamRoles);
+          processCloudFront(cloudFront);
         }
       }
     }
@@ -266,10 +268,10 @@ def deletecloudFront(distributionId) {
  }
 }
 
-def getEtag(originAccessId, regionAws) {
+def getEtag(originAccessId) {
  def eTag = ""
  //get all policies attached to a role
- def originAccessIdentity = sh(script: "aws cloudfront get-cloud-front-origin-access-identity --id ${originAccessId} --region ${regionAws}", returnStdout: true).trim()
+ def originAccessIdentity = sh(script: "aws cloudfront get-cloud-front-origin-access-identity --id ${originAccessId} ", returnStdout: true).trim()
  def identity = parseJson(originAccessIdentity)
  eTag = identity["ETag"]
  return eTag
@@ -363,15 +365,16 @@ def getPrimaryCredentialId( allAccounts ) {
 /**
 * Tear down user created service
 **/
-def deleteUserServices() {
+def deleteUserServices(regionAws) {
+    echo "Region is ${regionAws}"
   try {
-    def output = sh(script:'aws cloudformation list-stacks --stack-status-filter "CREATE_IN_PROGRESS" "CREATE_FAILED" "CREATE_COMPLETE" "UPDATE_IN_PROGRESS" "UPDATE_COMPLETE"', returnStdout: true)
+    def output = sh(script:"aws cloudformation list-stacks --region ${regionAws} --stack-status-filter 'CREATE_IN_PROGRESS' 'CREATE_FAILED' 'CREATE_COMPLETE' 'UPDATE_IN_PROGRESS' 'UPDATE_COMPLETE'", returnStdout: true)
     def stacks = parseJson(output)
     if ( stacks['StackSummaries'].size() > 0) {
       for( stack in stacks['StackSummaries']  ) {
         def stackName = stack.StackName
         if( stackName.contains(instance_prefix)){
-          deleteStack(stackName)
+          deleteStack(stackName, regionAws)
         }
       }
     } else {
@@ -385,11 +388,11 @@ def deleteUserServices() {
 /**
 * Delete cloudformation Stack
 **/
-def deleteStack(stackName) { 
+def deleteStack(stackName, regionAws) { 
   try {
     def status = true;
     try {
-      sh "aws cloudformation list-stack-resources --stack-name ${stackName}"
+      sh "aws cloudformation list-stack-resources --stack-name ${stackName} --region ${regionAws}"
     } catch (ex) {
       echo "Stack ${stackName} not exists"
       status = false
@@ -397,7 +400,7 @@ def deleteStack(stackName) {
     // If stack exists delete it
     if (status) {
       echo "Status is : ${status}"
-      sh "aws cloudformation delete-stack --stack-name ${stackName}"
+      sh "aws cloudformation delete-stack --stack-name ${stackName} --region ${regionAws}"
       sleep(time: 60, unit: "SECONDS")
     } else {
       echo "Stack ${stackName} not exists"
@@ -411,16 +414,16 @@ def deleteStack(stackName) {
 /**
 * Process CloudFront Deletion
 **/
-def deleteStackCloudFrontDists() {
+def deleteStackCloudFrontDists(regionAws) {
   try {
-    def output = sh(script:'aws cloudfront list-distributions', returnStdout: true)
+    def output = sh(script:"aws cloudfront list-distributions", returnStdout: true)
     def stacks = parseJson(output)
     if(stacks.size() > 0 ){
       for(distribution in stacks['DistributionList']['Items']){
         def id = distribution['Origins']['Items'][0]['Id']
-        if(id.startsWith('multi0312')){
-            echo "Id is ${id}"
-            getdistributionConfig(distribution['Id'])
+        if(id.startsWith(instance_prefix)){
+            echo "Processing Deletion of CloudFront Distribution Id ${id}"
+            checkAndDeleteCloudFront(distribution['Id'])
         }
       }
     }
@@ -430,17 +433,15 @@ def deleteStackCloudFrontDists() {
 }
 
 def checkAndDeleteCloudFront(id) {
-    echo "Id is ${id}"
-    try{
-        def distributionConfig = sh(script:"aws cloudfront get-distribution-config --id ${id}", returnStdout: true)
-        def config = parseJson(distributionConfig)
-        echo "Enabled is : ${config['DistributionConfig']['Enabled']}"
-        if( config['DistributionConfig']['Enabled'] ) {
-          // Disable the CloudFront Distribution
-          echo "Distribution is enabled"
-          disableCloudFront(id,config)
-        } 
-        deleteCloudFront(id,config)
+    try {
+      def config = getDistributionConfig(id)
+      echo "Enabled is : ${config['DistributionConfig']['Enabled']}"
+      if( config['DistributionConfig']['Enabled'] ) {
+        // Disable the CloudFront Distribution
+        echo "Distribution is enabled"
+        disableCloudFront(id, config)
+      } 
+      deleteCloudFront(id)
     } catch (ex) {
         echo "{ex.message}"
     }
@@ -449,33 +450,75 @@ def checkAndDeleteCloudFront(id) {
 /**
 * Disable CloudFront Distribution
 **/
-
 def disableCloudFront(id, config){
+  echo "Inside Disable Cloud front distribution"
   try {
-    def etag = config['ETag']
-    //disable the distribution
     config['DistributionConfig']['Enabled'] = false
-    def filename="${id}-distribution-config.json"
-    File file = new File(filename)
-    file.append(config)
+    def etag = config['ETag']
+    def filename = "${id}-distribution-config.json"
+    def configJson = JsonOutput.toJson(config['DistributionConfig'])
+    writeFile file: "${filename}", text: "${configJson}"
+    echo "Started disabling CloudFront Distribution Id ${id}"
     def disableDistribution = sh(script:"aws cloudfront update-distribution --id ${id} --distribution-config file://${filename} --if-match ${etag}", returnStdout: true)
     sleep(time:60,unit:"SECONDS")
+    sh "rm -rf ${filename}"
+  } catch( ex ) {
+    echo "${ex.message}"
+  }
+}
+/**
+* Delete CloudFront Distribution
+**/
+def deleteCloudFront(id) {
+  try {
+    def readyToDelete = false
+    while(readyToDelete == false) {
+      def status = getCloudFrontStatus(id)
+      if (status['Distribution']['Status']=="InProgress") {
+        readyToDelete = false;
+        echo "Sleeping for 30 secs "
+        sleep(time:30,unit:"SECONDS")
+      } else {
+        readyToDelete = true
+      }
+    }
+    if(readyToDelete == true){
+      def config = getDistributionConfig(id)
+      def etag = config['ETag']
+      def deleteDistribution = sh(script:"aws cloudfront delete-distribution --id ${id} --if-match ${etag}", returnStdout: true)
+      sleep(time:60,unit:"SECONDS")
+    }
   } catch( ex ) {
     echo "{ex.message}"
   }
 }
 
 /**
-* Delete CloudFront Distribution
+* Get Distribution Config
 **/
-def deleteCloudFront(id, config) {
+def getDistributionConfig(id) {
+  def config = ""
   try {
-    def etag = config['ETag']
-    def deleteDistribution = sh(script:"aws cloudfront delete-distribution --id ${id} --if-match ${etag}", returnStdout: true)
-    sleep(time:60,unit:"SECONDS")
-  } catch( ex ) {
-    echo "{ex.message}"
+    def distributionConfig = sh(script:"aws cloudfront get-distribution-config --id ${id}", returnStdout: true)
+    config = parseJson(distributionConfig)
+    } catch (ex) {
+        echo "${ex.message}"
+    }
+    return config  
+}
+
+/**
+* Check CloudFront status
+**/
+def getCloudFrontStatus(id) {
+  def getDistribution = ""
+  try {
+    def distributionbyId = sh(script:"aws cloudfront get-distribution --id ${id}", returnStdout: true)
+    getDistribution = parseJson(distributionbyId)
+  } catch (ex) {
+    echo "${ex.message}"
   }
+  return getDistribution
 }
 
 def getBuildModuleUrl() {
