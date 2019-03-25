@@ -137,10 +137,14 @@ node() {
   events.sendStartedEvent('CREATE_DEPLOYMENT', 'Serverless application deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
   dir(repo_name) {
-  /* Writing the file from config */
-    def dd = prepareServerlessYml(config, environment_logical_id) // Generating the deployment descriptor
-    echo "prepareServerlessYml = ${dd}"
-    writeYaml(file: './serverless.yml', data: dd)
+    try {
+      def dd = prepareServerlessYml(config, environment_logical_id) // Generating the deployment descriptor
+      echo "prepareServerlessYml = ${dd}"
+      writeYaml(file: './serverless.yml', data: dd)
+    } catch(FileAlreadyExistsException faee) {
+      echo 'The serverless.yml exists inside the source code thus disregarding the deployment descriptor content from the service catalog'
+      echoServerlessFile()
+    }
 
     if (domain && domain == "jazz") {
       stage('Update Service Template') {
@@ -255,7 +259,13 @@ node() {
           def cftJson = parseJson(cft)
           def outstandingResources = whiteListModule.validate(cftJson)
           if(outstandingResources.isEmpty()) {
-            events.sendCompletedEvent('TEMPLATE_VALIDATION', 'Template validation has been completed', context_map, environment_logical_id)
+            def serverlessyml = readFile('./serverless.yml').trim()
+            def outstandingActions = whiteListModule.validateActions(serverlessyml)
+            if(outstandingActions.isEmpty()) {
+              events.sendCompletedEvent('TEMPLATE_VALIDATION', 'Template validation has been completed', context_map, environment_logical_id)
+            } else {
+              error "The action types are not allowed: ${outstandingActions}"
+            }
           } else {
             // Hopefully it'll raise an exception that is going to be immediately intercepted below
             error "The resource types not allowed: ${outstandingResources}"
