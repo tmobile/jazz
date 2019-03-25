@@ -47,7 +47,6 @@ export class RequestService {
         url = this.constructUrl(url);
         this.token = this.authenticationService.getToken();
 
-
         // Add Authentication token to headers
         let headerObj = {
             'Authorization': this.token,
