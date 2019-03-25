@@ -367,10 +367,16 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         return moment(pointA.Timestamp).diff(moment(pointB.Timestamp));
       })
       .map((dataPoint) => {
-        return {
+
+        let obj = {
           x: moment(dataPoint.Timestamp).valueOf(),
           y: parseInt(dataPoint[valueProperty])
         };
+
+        if(!obj['y']){
+          obj['y'] = parseInt(dataPoint[valueProperty.toLowerCase()])
+        }
+        return obj;
       });
 
     let timeRange = this.filters.getFieldValueOfLabel('TIME RANGE');

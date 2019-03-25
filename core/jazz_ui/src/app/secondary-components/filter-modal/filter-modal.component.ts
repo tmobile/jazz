@@ -155,8 +155,7 @@ export class FilterModalComponent implements OnInit {
       options: options,
       type: type,
       values: values || options,
-      selected: selected,
-
+      selected: selected
     };
     this.form.columns[columnIndex].fields.push(field);
   }
