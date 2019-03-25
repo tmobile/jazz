@@ -15,6 +15,7 @@ import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component";
 import { environment as env_oss } from './../../../../environments/environment.oss';
+import {environment} from "../../../../environments/environment";
 
 @Component({
   selector: 'create-service',
@@ -37,6 +38,7 @@ export class CreateServiceComponent implements OnInit {
   disablePlatform = true;
   selected:string = "Minutes";
   runtime:string = Object.keys(env_oss.envLists)[0];
+  webtime:string = Object.keys(env_oss.webLists)[0];
   eventSchedule:string = 'fixedRate';
   private slackSelected: boolean = false;
   private ttlSelected: boolean = false;
@@ -93,7 +95,13 @@ export class CreateServiceComponent implements OnInit {
   invalidEventName:boolean = false;
   runtimeKeys : any;
   runtimeObject : any;
+  webObject : any;
+  webKeys : any;
 
+  public buildEnvironment:any = environment;
+  public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
+  public apigeeFeature = this.buildEnvironment.INSTALLER_VARS.feature.apigee && this.buildEnvironment.INSTALLER_VARS.feature.apigee.toString() === "true" ? true : false;
+  public selectedDeploymentTarget = "";
 
   constructor (
     private toasterService: ToasterService,
@@ -107,6 +115,8 @@ export class CreateServiceComponent implements OnInit {
     this.toastmessage = messageservice;
     this.runtimeObject = env_oss.envLists;
     this.runtimeKeys = Object.keys(this.runtimeObject);
+    this.webObject = env_oss.webLists;
+    this.webKeys = Object.keys(this.webObject);
   }
 
   public focusDynamo = new EventEmitter<boolean>();
@@ -167,6 +177,10 @@ export class CreateServiceComponent implements OnInit {
   // function called on runtime change(radio)
   onSelectionChange(val){
     this.runtime = val;
+  }
+
+  onWebSelectionChange(val){
+    this.webtime = val;
   }
 
   // function called on event schedule change(radio)
@@ -319,16 +333,23 @@ export class CreateServiceComponent implements OnInit {
                 "service_name": this.model.serviceName,
                 "approvers": approversPayload,
                 "domain": this.model.domainName,
-                "description":this.model.serviceDescription
+                "description":this.model.serviceDescription,
+                "deployment_targets": {}
             };
 
     if (this.typeOfService == 'api') {
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
+      payload["deployment_targets"] = {
+        "api": this.selectedDeploymentTarget || "aws_apigateway"
+      }
     }
     else if(this.typeOfService == 'function'){
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
+      payload["deployment_targets"] = {
+        "function": "aws_lambda"
+      }
       if(this.rateExpression.type != 'none'){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
         if (this.rateExpression.cronStr == 'invalid') {
@@ -358,7 +379,11 @@ export class CreateServiceComponent implements OnInit {
       }
 
     } else if(this.typeOfService == 'website'){
+      payload["framework"] = this.webtime;
       payload["create_cloudfront_url"] = this.cdnConfigSelected;
+      payload["deployment_targets"] = {
+        "website": "aws_cloudfront"
+      }
     }
 
     if(this.slackSelected){
@@ -430,7 +455,7 @@ export class CreateServiceComponent implements OnInit {
     this.getData();
     this.createService();
     this.typeOfService = 'api';
-    this.selectedApprovers=[];
+    this.selectedApprovers = [];
   }
 
 

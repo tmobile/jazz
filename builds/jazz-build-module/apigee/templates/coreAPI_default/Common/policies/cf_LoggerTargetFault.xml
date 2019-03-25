@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<FlowCallout async="false" continueOnError="false" enabled="true" name="cf_LoggerTargetFault">
+    <DisplayName>cf_LoggerTargetFault</DisplayName>
+    <FaultRules/>
+    <Properties/>
+    <SharedFlowBundle>LoggerTargetFaultHandling</SharedFlowBundle>
+</FlowCallout>

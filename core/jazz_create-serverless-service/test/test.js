@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ const logger = require("../components/logger.js");
 const CronParser = require("../components/cron-parser.js");
 const configModule = require("../components/config.js");
 
-let event, context, callback, spy, stub, checkCase, authStub,service_creation_data;
+let event, context, callback, spy, stub, checkCase, authStub, service_creation_data;
 
 //setup a spy to wrap around async logic/logic that need extraneous sources
 spy = sinon.spy();
@@ -37,6 +37,7 @@ checkCase = (eventProp, eventProp2, propValue, errMessage, errType) => {
   } else if (eventProp) {
     event[eventProp] = propValue;
   }
+
   //check if handler returns error notification with expected error type and message
   let bool = index.handler(event, context, callback).includes(errMessage) &&
     index.handler(event, context, callback).includes(errType);
@@ -93,7 +94,8 @@ describe('create-serverless-service', function () {
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
-          "create_cloudfront_url": false
+          "create_cloudfront_url": false,
+          "deployment_targets": { "api": "gcp_apigee" }
         }
       };
 
@@ -114,7 +116,7 @@ describe('create-serverless-service', function () {
       if (stub) {
         stub.restore();
       }
-    })
+    });
 
 
     /*
@@ -147,6 +149,59 @@ describe('create-serverless-service', function () {
       assert.isTrue(bothCases);
     });
 
+    it("should inform user of error if given an event with wrong body.service_type", function () {
+      let errMessage = "Invalid service type provided - invalid";
+      let errType = "BadRequest";
+      let bothCases = checkCase("body", "service_type", "invalid", errMessage, errType) &&
+        checkCase("body", "service_type", "invalid", errMessage, errType);
+      assert.isTrue(bothCases);
+    });
+
+    it("should inform user of error if given an event with no body.deployment_targets", function () {
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+      });
+
+      event.body.deployment_targets = null;
+      let errMessage = "Deployment targets is missing or is not in a valid format";
+      let errType = "BadRequest";
+
+      let bothCases = checkCase("body", "deployment_targets", "invalid", errMessage, errType) &&
+        checkCase("body", "deployment_targets", "invalid", errMessage, errType);
+      assert.isTrue(bothCases);
+      sinon.assert.callCount(configstub, 4);
+      configstub.restore();
+    });
+
+    it("should inform user of error if given an event with wrong body.deployment_target", function () {
+      event.body.deployment_targets = { "function": "invalid" };
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+      });
+
+      let errMessage = "Invalid deployment_target: invalid for service type: function, valid deployment_targets: aws_lambda";
+      let errType = "BadRequest";
+      let bothCases = checkCase("body", "deployment_target", "invalid", errMessage, errType) &&
+        checkCase("body", "deployment_target", "invalid", errMessage, errType);
+      assert.isTrue(bothCases);
+      sinon.assert.callCount(configstub, 4);
+      configstub.restore();
+    });
+
+    it("should inform user of error if given an event with wrong body.deployment_target defined", function () {
+      event.body.deployment_targets = {};
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+      });
+      let errMessage = "No deployment_targets are defined for this service type";
+      let errType = "BadRequest";
+      let bothCases = checkCase("body", "deployment_target", "invalid", errMessage, errType) &&
+        checkCase("body", "deployment_target", "invalid", errMessage, errType);
+      assert.isTrue(bothCases);
+      sinon.assert.callCount(configstub, 4);
+      configstub.restore();
+    });
+
     /*
      * Given an event with an invalid body.service_name, handler() should indicate service name has specified issues
      * @param {object} event, contains either a missing or invalid body.service_name property
@@ -176,7 +231,7 @@ describe('create-serverless-service', function () {
       let invalidName = "service-name-with-more-than-20-characters"
       let errMessage = "'Service Name' can have up to 20 characters";
       let errType = "BadRequest";
-      let allCases =  checkCase("body", "service_name", invalidName, errMessage, errType)
+      let allCases = checkCase("body", "service_name", invalidName, errMessage, errType)
       assert.isTrue(allCases);
     });
 
@@ -229,11 +284,18 @@ describe('create-serverless-service', function () {
      */
 
     it("should state the user isn't authorized if no principalId is given", function () {
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+      });
+
+      event.body.deployment_targets = { "function": "aws_lambda" };
       let errMessage = "User is not authorized to access this service";
       let errType = "Forbidden";
       let bothCases = checkCase("principalId", null, null, errMessage, errType) &&
         checkCase("principalId", null, undefined, errMessage, errType);
       assert.isTrue(bothCases);
+      sinon.assert.callCount(configstub, 4);
+      configstub.restore();
     });
     /*
      * Given successful parameters and setup, handler() should send a POST http request
@@ -241,7 +303,13 @@ describe('create-serverless-service', function () {
      * @returns index.handler() should attempt an http POST if given valid paramters
      */
 
-    it("should give success message if service onboarding in Jenkins setup attempt is succesfull", () => {
+    it("should give success message if service onboarding in Jenkins setup attempt is succesful", () => {
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" },
+        "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/",
+        "TOKEN_URL": "dev/jazz/services"
+      });
+      event.body.deployment_targets = { "function": "aws_lambda" };
       let responseObject_getToken = {
         statusCode: 200,
         body: {
@@ -269,6 +337,7 @@ describe('create-serverless-service', function () {
       // wrapping requests
       reqStub = sinon.stub(request, "Request", (obj) => {
         // Matching response Object to the corresponding Request call
+
         if (obj.uri === (config.SERVICE_API_URL + config.TOKEN_URL)) {
           return obj.callback(null, responseObject_getToken, responseObject_getToken.body);
         } else if (obj.uri === "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/services") {
@@ -278,17 +347,27 @@ describe('create-serverless-service', function () {
         } else if (obj.url === '{conf-jenkins-host}/job/create-service/buildWithParameters') {
 
           return obj.callback(null, responseObject_serviceOnboarding, responseObject_serviceOnboarding.body);
+        } else {
+          return obj.callback(null, responseObject_createService, responseObject_createService.body);
         }
       });
 
       //trigger the spy wrapping the logger by calling handler() with valid params
-      let callFunction = index.handler(event, context, (err, res) => {
+      index.handler(event, context, (err, res) => {
+        sinon.assert.calledTwice(configstub);
+        configstub.restore();
         reqStub.restore()
-          expect(res.data).to.be.equal("Successfully created your service.");
-      })
+        expect(res.data).to.be.equal("Successfully created your service.");
+
+      });
     });
 
     it("should Return the Error message if jenkinks job failed ", () => {
+      let configstub = sinon.stub(configModule, "getConfig").returns({
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" },
+        "JOB_BUILD_URL": "{conf-jenkins-host}/job/create-service/buildWithParameters"
+      });
+      event.body.deployment_targets = { "function": "aws_lambda" };
       let bool = false;
       let responseObject_getToken = {
         statusCode: 200,
@@ -318,6 +397,7 @@ describe('create-serverless-service', function () {
           data: "Service catalog updated"
         }
       };
+
       event.stage = "dev";
       let config = configModule.getConfig(event, context);
       // wrapping requests
@@ -333,19 +413,22 @@ describe('create-serverless-service', function () {
             jenkins_api_failure: true
           }
           return obj.callback(errObject, responseObject_serviceOnboarding, responseObject_serviceOnboarding.body);
-        } else if (obj.uri = 'https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/services/ghd93-3240-2343') {
+        } else if (obj.uri === 'https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/services/ghd93-3240-2343') {
           obj.callback(null, responseObject_update, responseObject_update.body);
         }
       });
-      let callFunction = index.handler(event, context, (err, res) => {
+      index.handler(event, context, (err, res) => {
         err = JSON.parse(err);
         if (err.message == "Service onboarding jenkings build Failed") {
           bool = true;
         }
+        sinon.assert.callCount(configstub, 2);
+        configstub.restore();
         assert.isTrue(bool);
-      })
-    })
-  })
+      });
+    });
+  });
+
   describe("getToken", () => {
     let config, event;
     beforeEach(() => {
@@ -364,11 +447,12 @@ describe('create-serverless-service', function () {
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
-          "create_cloudfront_url": false
+          "create_cloudfront_url": false,
+          "deployment_targets": { "api": "apigee" }
         }
       };
       config = configModule.getConfig(event, context);
-    })
+    });
 
     it("Should Return authToken when called with valid paramenters", () => {
       let bool = false;
@@ -388,10 +472,10 @@ describe('create-serverless-service', function () {
           bool = true;
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
-    })
+    });
 
     it("Should Return error message  when called with invalid paramenters", () => {
       let bool = false;
@@ -415,12 +499,12 @@ describe('create-serverless-service', function () {
           bool = true
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
-    })
+    });
+  });
 
-  })
   describe("getServiceData", () => {
     beforeEach(function () {
       event = {
@@ -438,7 +522,8 @@ describe('create-serverless-service', function () {
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
-          "create_cloudfront_url": false
+          "create_cloudfront_url": false,
+          "deployment_targets": { "api": "apigee" }
         }
       };
       service_creation_data = event.body;
@@ -465,15 +550,14 @@ describe('create-serverless-service', function () {
             bool = true;
           }
           assert.isTrue(bool);
-        })
+        });
       }
-
     });
 
     it("should return input object with METADATA values for valid input parameters for service type function (for different event sources)", () => {
       let authToken = "temp-auth-token";
       let eventsList = ["s3", "dynamodb", "sqs", "kinesis"];
-      service_creation_data.rateExpression = ""
+      service_creation_data.rateExpression = "";
       let config = configModule.getConfig(event, context);
 
       eventsList.forEach(each => {
@@ -482,22 +566,22 @@ describe('create-serverless-service', function () {
           source: "temp-" + each + "-source",
           action: "temp-" + each + "-action"
         }
-        
-        service_creation_data.events = [eachEvent]
-        
+
+        service_creation_data.events = [eachEvent];
+
         index.getServiceData(service_creation_data, authToken, config)
-        .then((input) => {
-          let action = 'event_action_' + each;
-          let source = 'event_source_' + each;
-          expect(input.METADATA).to.have.all.keys(action, source)
-        });
-      })
+          .then((input) => {
+            let action = 'event_action_' + each;
+            let source = 'event_source_' + each;
+            expect(input.METADATA).to.have.all.keys(action, source)
+          });
+      });
     });
 
     it("should return input error for invalid input parameters for service type function (for different event sources)", () => {
       let authToken = "temp-auth-token";
       let eventsList = ["", "invalidEvent"];
-      service_creation_data.rateExpression = ""
+      service_creation_data.rateExpression = "";
       let config = configModule.getConfig(event, context);
 
       eventsList.forEach(each => {
@@ -506,14 +590,23 @@ describe('create-serverless-service', function () {
           source: each,
           action: "temp-" + each + "-action"
         }
-
         service_creation_data.events = [eachEvent]
 
         index.getServiceData(service_creation_data, authToken, config)
-        .catch(error => {
-          expect(error).to.include({ result: 'inputError', message: each + ' name is invalid.' });
-        });
-      })
+          .catch(error => {
+            if (each) {
+              expect(error).to.include({
+                result: 'inputError',
+                message: `Event type \'${each}\' is invalid.`
+              });
+            } else {
+              expect(error).to.include({
+                result: 'inputError',
+                message: 'Event type and/or source name cannot be empty.'
+              });
+            }
+          });
+      });
     });
 
     it("should return input error for invalid input parameters for service type function (for invalid event source name)", () => {
@@ -528,17 +621,64 @@ describe('create-serverless-service', function () {
           source: each,
           action: "temp-" + each + "-action"
         }
-
-        service_creation_data.events = [eachEvent]
+        service_creation_data.events = [eachEvent];
 
         index.getServiceData(service_creation_data, authToken, config)
-        .catch(error => {
-          expect(error).to.include({ result: 'inputError', message: 'S3 name is invalid.' });
-        });
-      })
-    })
+          .catch(error => {
+            expect(error).to.include({
+              result: 'inputError',
+              message: `${each} cannot begin or end with special character`
+            });
+          });
+      });
+    });
 
-  })
+    it("should return input object with deployment target when input paramter is provided with valid values for api service type ", () => {
+      const authToken = "temp-auth-token";
+      let bool = false;
+      service_creation_data["service_type"] = "api";
+      service_creation_data["deployment_targets"] = { "api": "gcp_apigee" };
+      const config = configModule.getConfig(event, context);
+      index.getServiceData(service_creation_data, authToken, config, { "api": "gcp_apigee" })
+        .then(input => {
+          if (input.DEPLOYMENT_TARGETS["api"] === "gcp_apigee") {
+            bool = true;
+          }
+          assert.isTrue(bool);
+        });
+    });
+
+    it("should return input object with deployment target when input paramter is provided with valid values for function service type ", () => {
+      const authToken = "temp-auth-token";
+      let bool = false;
+      service_creation_data["service_type"] = "function";
+      service_creation_data["deployment_targets"] = { "function": "aws_lambda" };
+      const config = configModule.getConfig(event, context);
+      index.getServiceData(service_creation_data, authToken, config, { "function": "aws_lambda" })
+        .then(input => {
+          if (input.DEPLOYMENT_TARGETS["function"] === "aws_lambda") {
+            bool = true;
+          }
+          assert.isTrue(bool);
+        });
+    });
+
+    it("should return input object with deployment target when input paramter is provided with valid values for website service type ", () => {
+      const authToken = "temp-auth-token";
+      let bool = false;
+      service_creation_data["service_type"] = "website";
+      service_creation_data["deployment_targets"] = { "website": "aws_cloudfront" };
+      const config = configModule.getConfig(event, context);
+      index.getServiceData(service_creation_data, authToken, config, { "website": "aws_cloudfront" })
+        .then(input => {
+          if (input.DEPLOYMENT_TARGETS["website"] === "aws_cloudfront") {
+            bool = true;
+          }
+          assert.isTrue(bool);
+        });
+    });
+  });
+
   describe("createService", () => {
     let input;
     beforeEach(() => {
@@ -559,9 +699,10 @@ describe('create-serverless-service', function () {
           require_internal_access: false,
           eventScheduleRate: 'cron(1 * * * ? *)',
           eventScheduleEnable: true
-        }
+        },
+        DEPLOYMENT_TARGETS: { "api": "apigee" }
       }
-    })
+    });
 
     it("should send an http POST given valid input parameters ", () => {
       stub = sinon.stub(request, "Request", spy);
@@ -590,10 +731,10 @@ describe('create-serverless-service', function () {
           bool = true;
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
-    })
+    });
 
     it("Should Return error when service creation failed", () => {
       let bool = false;
@@ -614,12 +755,12 @@ describe('create-serverless-service', function () {
           bool = true;
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
     });
+  });
 
-  })
   describe("startServiceOnboarding", () => {
     let config, service_id, event;
     beforeEach(() => {
@@ -638,11 +779,11 @@ describe('create-serverless-service', function () {
           "rateExpression": "1 * * * ? *",
           "slack_channel": "mlp_fim",
           "require_internal_access": false,
-          "create_cloudfront_url": false
-
+          "create_cloudfront_url": false,
+          "deployment_targets": { "api": "apigee" }
         }
       };
-      service_creation_data =  event.body;
+      service_creation_data = event.body;
       config = configModule.getConfig(event, context);
       service_id = "ghd93-3240-2343";
     })
@@ -669,14 +810,14 @@ describe('create-serverless-service', function () {
           bool = true;
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
-    })
+    });
 
     it("should return error message when jenkins job has failed", () => {
       let bool = false;
-      let errMessage = "Failed to kick off service onboarding job."
+      let errMessage = "Failed to kick off service onboarding job.";
       let responseObject = {
         statusCode: 401,
         body: {
@@ -693,10 +834,10 @@ describe('create-serverless-service', function () {
           bool = true;
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
       reqStub.restore();
-    })
+    });
 
     it("should return success message when jenkins job has executed succesfully", () => {
       let bool = false;
@@ -711,15 +852,13 @@ describe('create-serverless-service', function () {
         return obj.callback(null, responseObject, responseObject.body);
       });
       index.startServiceOnboarding(service_creation_data, config, service_id).then((res) => {
-
         if (res && res === Message) {
           bool = true;
         }
         assert.isTrue(bool);
-      })
+      });
       sinon.assert.calledOnce(reqStub);
-      reqStub.restore()
-    })
-
-  })
-})
+      reqStub.restore();
+    });
+  });
+});
