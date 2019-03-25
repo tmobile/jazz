@@ -47,6 +47,7 @@ export class RequestService {
         url = this.constructUrl(url);
         this.token = this.authenticationService.getToken();
 
+
         // Add Authentication token to headers
         let headerObj = {
             'Authorization': this.token,
@@ -54,9 +55,9 @@ export class RequestService {
             'accept': 'application/json'
         };
 
-        // if (serviceId) {
-        //     headerObj['Jazz-Service-ID'] = serviceId
-        // }
+        if(serviceId){
+            headerObj['Jazz-Service-ID'] = serviceId
+        }
 
         let headers = new Headers(headerObj);
         let options = new RequestOptions({ headers: headers, search: null });

@@ -112,7 +112,7 @@
         <div class="metadata-heading-wrap">
          <div class="metadata-heading" [ngClass]="showGeneralField ? 'update-color' : ''">
             General
-            <div class="edit-div" *ngIf="!showGeneralField" (click)="onEditGeneral()">
+            <div class="edit-div" *ngIf="!showGeneralField" [class.disable-icon]="!isAdminAccess" (click)="onEditGeneral()">
               <img class="pre-image" src="/assets/erser/icon-edit.svg" />
             </div>
             <div *ngIf="showGeneralField" class="down-btn-wrap">
@@ -195,11 +195,11 @@
         </ul>
       </div>
       <div class='metadata-column'  *ngIf="service.serviceType == 'function' ">
-      
+
       <div class="metadata-heading-wrap">
          <div class="metadata-heading" [ngClass]="!disp_show2 ? 'update-color' : ''">
             Events
-            <div class="edit-div" *ngIf="!editEvents &&
+            <div class="edit-div" [class.disable-icon]="!isAdminAccess" *ngIf="!editEvents &&
             service.eventScheduleEnablePresent" (click)="onEditEvents()">
               <img class="pre-image" src="/assets/erser/icon-edit.svg" />
             </div>
