@@ -157,10 +157,10 @@ export class Jazz {
     return element(by.xpath('//button[text()="TEST API"]'));
   }
   getAPIGET() {
-    return element(by.xpath('//span[contains(text(),"GET")]'));
+    return element(by.xpath('//span[@class="opblock-summary-method"][contains(text(),"GET")]'));
   }
   getAPIPOST() {
-    return element(by.xpath('//span[contains(text(),"POST")]'));
+    return element(by.xpath('//span[@class="opblock-summary-method"][contains(text(),"POST")]'));
   }
   getTryOut() {
     return element(by.xpath('//button[@class="btn try-out__btn"]'));
@@ -257,6 +257,12 @@ export class Jazz {
     return element(by.xpath('//div[contains(@class,"det-value repository-link link PlaceHolder")]'));
   }
   // bitbucket locators
+  getEnvironmentBit() {
+    return element(by.xpath('//span[contains(text(), "Bitbucket")]'));
+  }
+  getEnvironmentGit() {
+    return element(by.xpath('//div/div[2]/div[1]/h1[contains(text(),"GitLab Community Edition")]'));
+  }
   bitbucketLogo() {
     return element(by.xpath('//span[@class="aui-header-logo-device"]'));
   }
@@ -286,6 +292,9 @@ export class Jazz {
   }
   testBranch() {
     return element(by.xpath('//div[@class="eachBranch col-md-2 col-sm-5"]//div//div[@class="overview-value"]'));
+  }
+  activeTestBranch() {
+    return element(by.xpath('//div[2]/span[@title="deployment completed"]'));
   }
   getTestBranch() {
     return element(by.xpath('//div[@class="eachBranch col-md-2 col-sm-5"]//div//div[@class="overview-value"]'));
@@ -321,6 +330,17 @@ export class Jazz {
     return element(by.xpath('//button[@class=aui-button aui-button-primary commit-button"]'));
   }
   //gitlab locators
+  gitUsername() {
+    return element(by.xpath('//*[@id="user_login"]'));
+  }
+  gitPassword() {
+    return element(by.xpath('//*[@id="user_password"]'));
+  }
+  gitLogin() {
+    return element(by.xpath('//input[@value="Sign in"]'));
+  }
+
+
   drpGitBranchType() {
     return element(by.xpath('//a[@class="btn dropdown-toggle has-tooltip"]//i[@class="fa fa-caret-down"]'));
   }
@@ -333,10 +353,36 @@ export class Jazz {
   btnGitCreateBranch() {
     return element(by.xpath('//button[contains(text(),"Create branch")]'));
   }
+  gitIndexFile() {
+    return element(by.xpath('//span[contains(text(),"index.js")]'));
+  }
+  gitEditIndexFile() {
+    return element(by.xpath('//a[contains(text(),"Edit")]'));
+  }
+  removeLineFirst() {
+    return element(by.xpath('//*[@id="editor"]/div[2]/div'));
+  }
+  gitComitChanges() {
+    return element(by.xpath('//button[contains(text(),"Commit changes:)]'));
+  }
+  getRepo() {
+    return element(by.xpath('//div[contains(text(),"Repository")]'));
+  }
+  getTestBranchName() {
+    return element(by.xpath('//div[@class="stage-title2 stageDisp"]'));
+  }
+
   getSpinner() {
     return element(by.css('div.loading-circle'));
   }
   getMetricsSpinner() {
     return element(by.css('div.jz-spinner'));
   }
+  getBitLogoutIcon() {
+    return element(by.xpath('//span[@id="current-user"]//span[@class="aui-avatar-inner"]'));
+  }
+  getBitLogout() {
+    return element(by.xpath('//a[@class="logout-link"]'));
+  }
+
 }
