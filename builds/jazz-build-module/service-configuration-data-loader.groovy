@@ -68,7 +68,7 @@ def loadServiceConfigurationData() {
 
       sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/global-config.json"
       sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/global-config.json"
-    }
+
       if (config_loader.SCM.TYPE == "bitbucket") {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
           sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/global-config.json"
