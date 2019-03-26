@@ -147,15 +147,7 @@
             <textarea *ngIf='showGeneralField' [(ngModel)]="desc_temp" (ngModelChange)='descriptionChange()' class="det-value-input-txtarea"
               placeholder="Give the details for your service"></textarea>
           </li>
-          <li>
-            <div class="det-label">Account</div>
-            <div class="det-value">{{service.accountID}}</div>
-          </li>
-        </ul>
-      </div>
-      <div class='metadata-column'>
-        <ul>
-          <li>
+            <li>
             <div class='det-label'>Creator</div>
             <div class='det-value'>{{service.created_by}}</div>
           </li>
@@ -163,7 +155,15 @@
             <div class="det-label">Status</div>
             <div class="det-value">{{service.status}}</div>
           </li>
-           <li>
+          <li>
+            <div class="det-label">Account</div>
+            <div class="det-value">{{service.accountID}}</div>
+          </li>
+          <li>
+            <div class="det-label">Region</div>
+            <div class="det-value">{{service.region}}</div>
+          </li>
+          <li>
             <div class='det-label'>Slack</div>
             <div *ngIf='!showGeneralField' class='det-value' [class.PlaceHolder]="slackChannel_empty">{{service.slackChannel || 'Feeling collaborative? Add it to slack'}}</div>
             <div *ngIf='showGeneralField' class='det-value slack-relative'>
@@ -172,23 +172,9 @@
               <img *ngIf="show_loader" class="input-loader" src="../assets/images/icons/loading.png">
 
             </div>
-
           </li>
           <p class='email-err-msg' [class.hide]='hide_slack_error'>Slack channel is not available. Please provide a valid slack channel.</p>
-          <li>
-            <div class="det-label">Region</div>
-            <div class="det-value">{{service.region}}</div>
-          </li>
-        </ul>
-      </div>
-      <div class='metadata-column'>
-        <ul>
-          <li>
-            <div class="det-label">Status</div>
-            <div class="det-value">{{service.status}}</div>
-          </li>
-          <li>
-            <li class="padding-wrapper">
+          <li class="padding-wrapper">
             <div class="det-label">Repository</div>
             <div class="det-value repository-link" [ngClass]="{'link':islink, 'PlaceHolder':repository_empty}" (click)="openLink(repositorylink)">{{bitbucketRepo || 'Stay organized with a repository'}}</div>
           </li>
