@@ -68,7 +68,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public selectedAsset;
   public selectedMetric;
   public queryDataRaw;
-  public sectionStatus;
+  public sectionStatus= "empty";
   public errorData = {};
   public graphData;
   private http;
@@ -265,7 +265,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       .toPromise()
       .then((response) => {
         this.sectionStatus = 'empty';
-        if (response && response.data && response.data.length) {
+        if (response && response.data && response.data.length  ) {
           this.queryDataRaw = response.data;
           this.getAllData(response.data);
         }
@@ -278,8 +278,14 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   getAllData(data) {
     this.allData = data;
     this.queryDataRaw.assets = this.filterAssetType(this.allData[0]);
+    if(this.queryDataRaw.assets.length !== 0)
+    {
     this.setAssetsFilter();
     this.setAsset();
+    }
+    else{
+      this.sectionStatus='empty';
+    }
   }
   filterAssetType(data) {
     return data.assets.filter((asset) => {
@@ -290,7 +296,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           return asset.type === 'apigateway';
         }
       } else if (this.serviceType === 'function') {
-        return asset.type === 'lambda'
+        return asset.type === 'lambda';
       } else if (this.serviceType === 'website') {
         return (asset.type === 's3') || (asset.type === 'cloudfront');
       }
