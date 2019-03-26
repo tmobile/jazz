@@ -155,7 +155,15 @@
             <div class="det-label">Status</div>
             <div class="det-value">{{service.status}}</div>
           </li>
-           <li>
+          <li>
+            <div class="det-label">Account</div>
+            <div class="det-value">{{service.accountID}}</div>
+          </li>
+          <li>
+            <div class="det-label">Region</div>
+            <div class="det-value">{{service.region}}</div>
+          </li>
+          <li>
             <div class='det-label'>Slack</div>
             <div *ngIf='!showGeneralField' class='det-value' [class.PlaceHolder]="slackChannel_empty">{{service.slackChannel || 'Feeling collaborative? Add it to slack'}}</div>
             <div *ngIf='showGeneralField' class='det-value slack-relative'>
@@ -164,10 +172,9 @@
               <img *ngIf="show_loader" class="input-loader" src="../assets/images/icons/loading.png">
 
             </div>
-
           </li>
           <p class='email-err-msg' [class.hide]='hide_slack_error'>Slack channel is not available. Please provide a valid slack channel.</p>
-            <li class="padding-wrapper">
+          <li class="padding-wrapper">
             <div class="det-label">Repository</div>
             <div class="det-value repository-link" [ngClass]="{'link':islink, 'PlaceHolder':repository_empty}" (click)="openLink(repositorylink)">{{bitbucketRepo || 'Stay organized with a repository'}}</div>
           </li>
