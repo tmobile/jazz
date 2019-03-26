@@ -353,7 +353,7 @@ def deletePrimaryAccountPolicy(accountId, accountsArray){
 def getPrimaryCredentialId( allAccounts ) {
   def credsId = " ";
   if(allAccounts.size() > 0 ){
-    for (accounts in allAccounts ) {
+    for (account in allAccounts ) {
         if(account['PRIMARY']){
           credsId = account['CREDENTIAL_ID'];
         }
