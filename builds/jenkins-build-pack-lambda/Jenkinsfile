@@ -323,6 +323,16 @@ node() {
             createSubscriptionFilters(stackName, env_key, credsId, accountDetails);
           }
 
+          if(!accountDetails.PRIMARY){
+            def primaryAccountData = utilModule.getAccountInfoPrimary();
+            def primaryAccountValue = primaryAccountData.ACCOUNTID;
+            def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+            def functionName = "arn:aws:lambda:${service_config.region}:${service_config.accountId}:${lambdaFnNameValue}"
+            
+            addPermission(functionName, primaryAccountValue);
+          } 
+
+
           if (domain && domain == "jazz") {
             serviceConfigdata.setLogStreamPermission(config)
             serviceConfigdata.setKinesisStream(config)
@@ -349,6 +359,10 @@ node() {
   }
 }
 
+def addPermission(functionName, primaryAccountValue){
+  /* Adding permission to invoke the function created in secondary account*/
+  sh "aws lambda add-permission --function-name ${functionName} --region ${service_config.region} --statement-id Id-123 --action 'lambda:InvokeFunction' --principal ${primaryAccountValue}"
+}
 
 def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld, credsId) {
   def s3BucketErrString = "CloudFormation - CREATE_FAILED - AWS::S3::Bucket - "

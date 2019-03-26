@@ -49,6 +49,7 @@ node() {
   def gitCommitOwner
   def gitCommitHash
   def context_map
+  def accountDetails
 
   if (domain && domain != "") {
     repo_name = params.domain + "_" + params.service_name
@@ -85,6 +86,8 @@ node() {
       error "Service Id is not available."
     }
   }
+
+  accountDetails = utilModule.getAccountInfo(config);
 
   if (!config) {
     error "Failed to fetch service metadata from catalog"
@@ -230,10 +233,6 @@ node() {
       def api_deployment_target
       def aws_api_id = null
 
-      if (env_metadata["AWS_API_ID"] != null) {
-        aws_api_id = env_metadata["AWS_API_ID"]
-      }
-      
       def swaggerDocUrl = ""
 
       try {
@@ -241,29 +240,43 @@ node() {
         // resetting env endpoint url
         environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
         events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
           def randomString = utilModule.generateRequestId();
           def credsId = "jazz-${randomString}";
-          sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+          sh "aws configure set profile.${credsId}.region ${config.region}"
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
           // Generate serverless yml file with domain added in function name
           echo "Generate deployment env with domain for ${env_key}"
 
-          writeServerlessFile(config, environment_logical_id)
+          writeServerlessFile(config, environment_logical_id, accountDetails)
 
-          setLambdaExecutionRole(config['iamRoleARN']);
+          def iamRoleValue;
+          if(config['domain'] == 'jazz'){
+            iamRoleValue = config['iamRoleARN']
+          } else {
+            iamRoleValue = accountDetails.IAM.USERSERVICES_ROLEID;
+          }
+          setLambdaExecutionRole(iamRoleValue);
+
+          def s3BucketNameValue;
+          for (item in accountDetails.REGIONS) {
+              if(item.REGION == config.region){
+                s3BucketNameValue = item.S3[env_key]
+                aws_api_id = item.API_GATEWAY[env_key]
+              }
+          }
 
           echo "serverless deploy......."
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
-          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey);
+          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, s3BucketNameValue, credsId);
           if(deployOutput != 'success'){
             handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId)
           }
 
           def lambdaARN = getLambdaARN(stackName, credsId);
-          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN, "lambda", config), environment_logical_id);
+          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN.arn, "lambda", config), environment_logical_id);
 
           if (fileExists('swagger/swagger.json')) {
             echo "Generating swagger file for environment: ${env_key}"
@@ -285,15 +298,22 @@ node() {
                 apiHostName = "${aws_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com"
                 echo "API Host Name: $apiHostName"
                 awsAPIGatewayModule.addApigatewayLambdaIntegration('swagger/swagger.json');
-                updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
+                updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config, accountDetails)
 
-                sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile ${credsId}"
-                sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile ${credsId}"
-                sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${configLoader.AWS.REGION}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile ${credsId}"
-                if ("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
-                  sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${configLoader.AWS.REGION}"
+                def awsRegion;
+                if(config['domain'] == 'jazz'){
+                    awsRegion = configLoader.AWS.REGION;
                 } else {
-                  sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=false --region ${configLoader.AWS.REGION}"
+                    awsRegion = config.region
+                }
+
+                sh "aws apigateway put-rest-api --rest-api-id ${aws_api_id} --mode merge --parameters basepath=prepend --body 'file://swagger/swagger.json'" + " --profile ${credsId} --region ${config['region']}"
+                sh "aws apigateway create-deployment --rest-api-id ${aws_api_id} --stage-name ${current_environment} --profile ${credsId} --region ${config['region']}"
+                sh "aws apigateway tag-resource --resource-arn arn:aws:apigateway:${awsRegion}::/restapis/${aws_api_id}/stages/${current_environment} --tags Application=Jazz,JazzInstance=${configLoader.INSTANCE_PREFIX}  --profile ${credsId} --region ${config['region']}"
+                if ("${configLoader.JAZZ.API_DETAILED_MONITORING}" == "true") {
+                  sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=true --region ${config['region']}"
+                } else {
+                  sh "aws apigateway update-stage --rest-api-id ${aws_api_id} --stage-name ${current_environment} --patch-operations op=replace,path=/*/*/metrics/enabled,value=false --region ${config['region']}"
                 }
 
                 if (current_environment == 'prod' || config['domain'] == 'jazz') {
@@ -302,7 +322,7 @@ node() {
                   endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
                 }
 
-                def apiArns = getSwaggerResourceARNs(aws_api_id, environment_logical_id, "aws")
+                def apiArns = getSwaggerResourceARNs(aws_api_id, current_environment, "aws")
                 if (apiArns) {
                   for (arn in apiArns) {
                     events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", arn, "apigateway", config), environment_logical_id);
@@ -315,7 +335,7 @@ node() {
               case 'gcp_apigee':
                 events.sendStartedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment started for APIGEE', context_map, environment_logical_id)
                 apiHostName = "${configLoader.APIGEE.API_ENDPOINTS[env_key].SERVICE_HOSTNAME}"
-                updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config)
+                updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config, accountDetails)
                 endpointUrl = apigeeModule.deploy("swagger/swagger.json", lambdaARN, env_key, environment_logical_id, config, context_map)
                 echo "API Proxy created at: ${endpointUrl}"
                 events.sendCompletedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment complete for APIGEE', context_map, environment_logical_id)
@@ -335,8 +355,7 @@ node() {
               createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId);
             }
 
-            sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --recursive "
-            echo "completed deployment........."
+            updateSwagger();
 
             swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
 
@@ -380,11 +399,48 @@ node() {
   }//dir ends here
 }
 
+def updateSwagger(){
+    def primaryData = utilModule.getAccountInfoPrimary();
+    def primaryRegion
+    for (item in primaryData.REGIONS) {
+        if(item.PRIMARY){
+            primaryRegion = item.REGION
+        }
+    }
+
+    withCredentials([
+            [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'PRIMARY_AWS_ACCESS_KEY_ID', credentialsId: primaryData.CREDENTIAL_ID, secretKeyVariable: 'PRIMARY_AWS_SECRET_ACCESS_KEY']
+        ])  {
+                try {
+                // initialize aws credentials
+                def randomStringPrimary = utilModule.generateRequestId();
+                def primaryCredsId = "jazzprimary-${randomStringPrimary}";
+                                
+                sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
+                sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
+                sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
+
+                sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --profile ${primaryCredsId} --region us-west-2 --recursive "
+				        echo "completed deployment........."                
+                
+                // reset Credentials
+                resetCredentials(primaryCredsId)
+
+                } catch(ex){
+                send_status_email(config, 'FAILED', '')
+                events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
+                events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+                events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
+                error ex.getMessage()
+                }
+            }
+}
+
 def getLambdaARN(stackName, credsId) {
   def ARN = "";
   try {
     def cloudformation_resources = "";
-    cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId}")
+    cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId} --region ${config.region}")
 
     def parsedObject = parseJson(cloudformation_resources);
     def outputs = parsedObject.Stacks[0].Outputs;
@@ -487,9 +543,17 @@ def createPathMethodList() { //Creates a list consisting of all path-method comb
  * create apigateway arns pattern
  */
 def createSwaggerResourceArn(apiId, deployStg, method, path, basePath, deploymentTarget) {
+  def _region;
+  def _account;
+  if(config['domain'] == 'jazz'){
+      _region = configLoader.AWS.REGION;
+      _account = configLoader.AWS.ACCOUNTID;
+  } else {
+      _region = config.region
+      _account = config.accountId
+  }
+
   def apiResourceArn = ""
-  def _region = configLoader.AWS.REGION
-  def _account = configLoader.AWS.ACCOUNTID
   def _apiId = apiId
   def _stgName = deployStg
   def _method = method
@@ -504,9 +568,9 @@ def createSwaggerResourceArn(apiId, deployStg, method, path, basePath, deploymen
   return apiResourceArn;
 }
 
-def updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config) {
+def updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config, accountDetails) {
   echo "API Host Name: $apiHostName"
-  generateSwaggerEnv(environment_logical_id, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName, config)
+  generateSwaggerEnv(environment_logical_id, "${configLoader.INSTANCE_PREFIX}-${current_environment}", apiHostName, config, accountDetails)
   if (env_key.equals("DEV") && config['domain'] != 'jazz') {
     updateStageForDev(environment_logical_id)
   }
@@ -608,7 +672,21 @@ def buildLambda(String runtime, String repo_name) {
 /**
 	Generate the swagger file specific to each environment
 */
-def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
+def generateSwaggerEnv(env, deploymentNode, apiHostName, config, accountDetails) {
+
+  def iamRoleArnData;
+  def platformRoleValue;
+  def regionValue;
+  if(config['domain'] == 'jazz'){
+        iamRoleArnData = config['iamRoleARN'];
+        platformRoleValue = configLoader.AWS.PLATFORMSERVICES_ROLEID;
+        regionValue = configLoader.AWS.REGION;
+  } else {
+        iamRoleArnData = accountDetails.IAM.USERSERVICES_ROLEID;
+        platformRoleValue = accountDetails.IAM.PLATFORMSERVICES_ROLEID;
+        regionValue = config.region
+  }
+
   sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}/g' swagger/swagger.json"
   sh "sed -i -- 's/{api_deployment_node_title}/${deploymentNode}/g' swagger/swagger.json" // {api_deployment_node_title}
   sh "sed -i -- 's/{service_name}/${config['service']}/g' swagger/swagger.json" // {service_name}
@@ -618,10 +696,10 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
   sh "sed -i -- 's/{envmnt}/${current_environment}/g' swagger/swagger.json" // {environment}
 
   // TODO: the below couple of statements will be replaced with regular expression in very near future;
-  def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
+  def roleId = iamRoleArnData.substring(iamRoleArnData.indexOf("::") + 2, iamRoleArnData.lastIndexOf(":"))
 
-  sh "sed -i -- 's|{conf-role}|${configLoader.AWS.PLATFORMSERVICES_ROLEID}|g' ./swagger/swagger.json"
-  sh "sed -i -- 's/{conf-region}/${configLoader.AWS.REGION}/g' ./swagger/swagger.json"
+  sh "sed -i -- 's|{conf-role}|${platformRoleValue}|g' ./swagger/swagger.json"
+  sh "sed -i -- 's/{conf-region}/${regionValue}/g' ./swagger/swagger.json"
   sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
 }
 
@@ -670,14 +748,22 @@ def updateOperationId(swaggerFileContent) {
   return swaggerJson
 }
 
-def writeServerlessFile(config, environment_logical_id){
+def writeServerlessFile(config, environment_logical_id, accountDetails){
+
+  def iamRoleArnValue;
+  if(config['domain'] == 'jazz'){
+    iamRoleArnValue = config['iamRoleARN']
+  } else {
+    iamRoleArnValue = accountDetails.IAM.USERSERVICES_ROLEID;
+  }
+
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
   sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
   sh "sed -i -- 's/{env-stage}/${environment_logical_id}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${config['domain']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${config['created_by']}/g' serverless.yml"
-  sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
+  sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${iamRoleArnValue}|g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
@@ -879,13 +965,68 @@ def createSubscriptionFilters(stackName, region, roleId) {
   } catch (Exception ex) { }// ignore error if not created yet
 
   try {
-    sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID}"
+    for (item in configLoader.AWS.ACCOUNTS) {
+        if(item.ACCOUNTID == config.accountId){
+            if(!item.PRIMARY){
+                def destARN
+                for (data in accountDetails.REGIONS) {
+                    if(data.REGION == config.region){
+                    destARN = data.LOGS[env_key]
+                    }
+                }
+                updatePolicy(env_key, destARN);
+                sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${config.region} --profile ${credsId}"
+            } else {
+                sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
+            }
+        }
+    }
   } catch (Exception ex) {
     echo "error occured: " + ex.getMessage()
   }
 }
 
+def updatePolicy(env, destARN){
 
+  def primaryDataValue = utilModule.getAccountInfoPrimary();
+  def primaryRegionValue
+  for (item in primaryDataValue.REGIONS) {
+		if(item.PRIMARY){
+			primaryRegionValue = item.REGION
+		}
+	}
+
+  withCredentials([
+        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'PRIMARY_AWS_ACCESS_KEY_ID', credentialsId: primaryDataValue.CREDENTIAL_ID, secretKeyVariable: 'PRIMARY_AWS_SECRET_ACCESS_KEY']
+      ])  {
+            try {
+              // initialize aws credentials
+              def randomStringPrimary = utilModule.generateRequestId();
+              def primaryCredsId = "jazzprimary-${randomStringPrimary}";
+                            
+              sh "aws configure set profile.${primaryCredsId}.region ${primaryRegionValue}"
+              sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
+              sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
+
+              def destinationName = destARN;
+              def destArnArray = [];
+              destArnArray = destinationName.tokenize(":").last();
+
+              def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${service_config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
+              sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
+              
+              // reset Credentials
+              resetCredentials(primaryCredsId)
+
+            } catch(ex){
+              send_status_email(config, 'FAILED', '')
+              events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
+              events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+              events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
+              error ex.getMessage()
+            }
+          }
+}
 
 /**
  * For getting token to access catalog APIs.
@@ -1080,9 +1221,9 @@ def loadBuildModules(buildModuleUrl){
   }
 }
 
-def servelessDeploy(env, envBucketKey){
+def servelessDeploy(env, envBucketKey, s3BucketNameValue, credsId){
   try {
-    sh "serverless deploy --stage ${env} -v --bucket ${configLoader.AWS.S3[envBucketKey]} --force > output.log"
+    sh "serverless deploy --stage ${env} -v --bucket ${s3BucketNameValue} --profile ${credsId} --force > output.log"
     return "success"
   } catch (ex) {
     echo "Serverless deployment failed due to $ex"
@@ -1128,7 +1269,7 @@ def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId) {
 		} else {
 			error "Unable to find existing log groups"
 		}
-	} 
+	}
 	else {
 			error "Exception occured while serverless deployment to ${env} environment"
 	}
