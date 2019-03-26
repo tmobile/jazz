@@ -98,6 +98,7 @@ describe('Overview', () => {
     browser.driver.sleep(15000);
     //Assert-Verifying the created service,Type and Status of the API
     expect(jazzServices_po.getAwsServiceName().getText()).toEqual(servicename);
+    fluentwaittry(jazzServices_po.getAPIType(), 15000);
     expect(jazzServices_po.getAPIType().getText()).toEqual('api');
     expect(jazzServices_po.getAPIStatus().getText()).toEqual('creation started');
     fluentwaittry(jazzServices_po.serviceStatus(), 60000);
