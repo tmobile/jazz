@@ -663,8 +663,9 @@ def getApiId(stage) {
  * @return  api Id
  */
 def cleanUpApiDocs(stage) {
+	def primaryAccount = utilModule.getAccountInfoPrimary()
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding',  credentialsId: service_config.credentialId]
+		[$class: 'AmazonWebServicesCredentialsBinding',  credentialsId: primaryAccount.CREDENTIAL_ID]
 	]) {
 		try {
 			def apiRootFolder = getApiDocsFolder(stage)
