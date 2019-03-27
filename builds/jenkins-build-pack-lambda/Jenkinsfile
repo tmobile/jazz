@@ -756,6 +756,10 @@ def createSubscriptionFilters(stackName, region, roleId) {
   }
 }
 
+def addVpcDetails() {
+	echo "addVpcdetails to serverless.yml file"
+	sh "sed -i -- 's/vpcDisabled/vpc/g' ./serverless.yml"
+}
 
 def writeServerlessFile(config, env) {
   sh "pwd"
@@ -772,6 +776,10 @@ def writeServerlessFile(config, env) {
   sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
+
+  if ((config['service'] == 'cloud-logs-streamer' || config['service'] == 'deployments-event-handler' || config['service'] == 'environment-event-handler') && config['domain'] == 'jazz') {
+  	addVpcDetails()
+  }
 
   if (config['artifact']) {
     sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
@@ -1067,7 +1075,7 @@ def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId) {
 		} else {
 			error "Unable to find existing log groups"
 		}
-	} 
+	}
 	else {
 			error "Exception occured while serverless deployment to ${env} environment"
 	}
@@ -1093,4 +1101,3 @@ def removeLogGroup(groupName, credsId) {
 	sh "aws logs delete-log-group --log-group-name $groupName --profile ${credsId}"
 	echo "successfully removed log group $groupName"
 }
-
