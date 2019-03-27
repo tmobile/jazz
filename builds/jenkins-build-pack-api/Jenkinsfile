@@ -295,7 +295,7 @@ node() {
                   aws_api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], config)
                 }
 
-                apiHostName = "${aws_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com"
+                apiHostName = "${aws_api_id}.execute-api.${config.region}.amazonaws.com"
                 echo "API Host Name: $apiHostName"
                 awsAPIGatewayModule.addApigatewayLambdaIntegration('swagger/swagger.json');
                 updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config, accountDetails)
