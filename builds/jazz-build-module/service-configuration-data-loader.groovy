@@ -263,7 +263,7 @@ def loadServiceConfigurationData() {
       updateConfigValue("{region}", region)
     }
 
-    if ((service_name.trim() == "jazz_usermanagement") || (service_name.trim() == "jazz_admin")) {
+    if ((service_name.trim() == "jazz_usermanagement") ) {
       updateConfigValue("{scm_type}", config_loader.SCM.TYPE)
 
       sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
@@ -284,6 +284,10 @@ def loadServiceConfigurationData() {
 
     if (service_name.trim() == "jazz_admin") {
       updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
+      updateConfigValue("{conf-region}", region)
+      sh "sed -i -- 's/{config_table}/${config_loader.INSTANCE_PREFIX}_JazzConfig/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{config_table}/${config_loader.INSTANCE_PREFIX}_JazzConfig/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{config_table}/${config_loader.INSTANCE_PREFIX}_JazzConfig/g' ./config/prod-config.json"
     }
 
     if (service_name.trim() == "jazz_email") {
@@ -323,7 +327,7 @@ def loadServiceConfigurationData() {
 
       updateConfigValue("{api_token}", utilModule.getApiToken())
       updateConfigValue("{api_token}", utilModule.getApiToken())
-      updateConfigValue("{api_token}", utilModule.getApiToken())  
+      updateConfigValue("{api_token}", utilModule.getApiToken())
 
       sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/dev-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/stg-config.json"

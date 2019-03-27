@@ -53,7 +53,7 @@ const formatData = (data) => {
     if (type === 'NULL') {
       return null;
     } else if (type === 'N') {
-      return Number(value);
+      return Number(parsed_value);
     } else if (type === 'NS') {
       return parsed_value.map(Number);
     } else if (type === 'S') {

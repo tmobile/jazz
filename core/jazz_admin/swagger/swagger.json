@@ -203,7 +203,7 @@
         },
         "security": [
           {
-            "{envPrefix}-{domain}-cognito-authorizer": []
+            "{envPrefix}-{domain}-cognito-admin-authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -401,7 +401,7 @@
         },
         "security": [
           {
-            "{envPrefix}-{domain}-cognito-authorizer": []
+            "{envPrefix}-{domain}-cognito-admin-authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {
@@ -599,7 +599,7 @@
         },
         "security": [
           {
-            "{envPrefix}-{domain}-cognito-authorizer": []
+            "{envPrefix}-{domain}-cognito-admin-authorizer": []
           }
         ],
         "x-amazon-apigateway-integration": {

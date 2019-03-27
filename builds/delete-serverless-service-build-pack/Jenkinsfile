@@ -35,6 +35,7 @@ import groovy.json.JsonSlurperClassic
 @Field def context_map = [:]
 @Field def is_service_deletion = true;
 @Field def current_environment_id
+@Field def accountInfo;
 
 node {
 	echo "Starting delete service job with params : $params"
@@ -94,6 +95,8 @@ node {
 		if (!service_config) {
 			error "Failed to fetch service metadata from catalog"
 		}
+		// Get the Account Details from the ConfigLoader
+		accountInfo = utilModule.getAccountInfo(service_config)
 
     if(!service_config.region) {
       service_config.region = configLoader.AWS.DEFAULTS.REGION
@@ -106,6 +109,10 @@ node {
     if(!service_config.provider) {
       service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
     }
+
+		if(!service_config.credentialId){
+			service_config.credentialId = accountInfo.CREDENTIAL_ID
+		}
 
     lambdaEvents.setServiceConfig(service_config)
 		environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
@@ -299,9 +306,25 @@ def deletePolicies(serviceId, authToken, aclUrl) {
 }
 
 def cleanupEventSourceMapping(env) {
-  def lambda_arn = "arn:aws:lambda:${service_config['region']}:${service_config.accountId}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env}"
-  def assets_api = g_base_url + "/jazz/assets"
-  lambdaEvents.deleteEventSourceMapping(lambda_arn, assets_api, auth_token,service_config, env)
+		withCredentials([
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: service_config.credentialId, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+	]) {
+		try {
+			def randomString = utilModule.generateRequestId();
+			def credsId = "jazz-${randomString}";
+			sh "aws configure set profile.${credsId}.region ${service_config.region}"
+			sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+			sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+
+  		def lambda_arn = "arn:aws:lambda:${service_config['region']}:${service_config.accountId}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env}"
+  		def assets_api = g_base_url + "/jazz/assets"
+  		lambdaEvents.deleteEventSourceMapping(lambda_arn, assets_api, auth_token,service_config, env,credsId)
+
+			resetCredentials(credsId)
+		} catch(ex) {
+			handleFailureEvent(ex.getMessage())
+		}
+	}
 }
 
 def archiveAssetDetails(env) {
@@ -320,13 +343,9 @@ def archiveAssetDetails(env) {
  */
 def checkBucket(stage) {
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: service_config.credentialId]
 	]) {
 		try {
-			sh "aws configure set profile.cloud-api.region ${service_config['region']}"
-			sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-
 			// Empty bucket
 			def targetBucket = service_config['event_source_s3'];
 			if(stage != "prod"){
@@ -377,12 +396,12 @@ def handleFailureEvent(errorMessage){
  */
 def unDeployService(stage) {
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: service_config.credentialId, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
 	]) {
 		try {
 			def randomString = utilModule.generateRequestId();
 			def credsId = "jazz-${randomString}";
-			sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
+			sh "aws configure set profile.${credsId}.region ${service_config.region}"
 			sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
@@ -393,7 +412,8 @@ def unDeployService(stage) {
 				env_key = "PROD"
 			}
 			def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
-			sh "serverless remove --stage ${stage} --verbose  --bucket ${configLoader.AWS.S3[envBucketKey]}"
+			def bucketObject = utilModule.getAccountBucketName(service_config);
+			sh "serverless remove --stage ${stage} --verbose  --bucket ${bucketObject[env_key]} --profile ${credsId}"
 
 			echo "Service undeployed"
 
@@ -497,9 +517,9 @@ def updateSwaggerConfig() {
 			sh "sed -i -- 's/{service_name}/${service_config['service']}/g' swagger/swagger.json"
 			sh "sed -i -- 's/{domain}/${service_config['domain']}/g' swagger/swagger.json"
 
-			def region = "${configLoader.AWS.REGION}"
-
-			def roleARN = configLoader.AWS.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
+			def region = "${service_config.region}"
+			def accountObject = utilModule.getAccountInfo(service_config)
+			def roleARN = accountObject.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
 
       // TODO: the below couple of statements will be replaced with regular expression in very near future;
 			def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
@@ -538,15 +558,9 @@ def cleanup(repoName) {
  */
 def cleanUpApiGatewayResources(stage, path) {
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding',  credentialsId: service_config.credentialId]
 	]) {
 		try {
-			def randomString = utilModule.generateRequestId();
-			def credsId = "jazz-${randomString}";
-			sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
-			sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-
 			def resource_id = null
 			def resource_search_key
 			def current_environment
@@ -560,6 +574,8 @@ def cleanUpApiGatewayResources(stage, path) {
 			}
 			echo "Resource search key for ApiGateway : $resource_search_key"
 			def aws_api_id = getApiId(stage)
+
+			echo "API Gateway Id is : ${aws_api_id}"
 
 			try {
 				def outputStr = sh(
@@ -591,7 +607,6 @@ def cleanUpApiGatewayResources(stage, path) {
 			} else {
 				echo "Resource Id does not exist in API gateway."
 			}
-			resetCredentials(credsId)
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
 		}
@@ -632,13 +647,13 @@ def getApiId(stage) {
 	if (envMetadata["AWS_API_ID"] != null) {
 		return envMetadata["AWS_API_ID"]
 	}
-
+	def accountAPIGateway = utilModule.getApiId(service_config)
 	if (stage.endsWith('-dev')) {
-		return utilModule.getAPIIdForCore(configLoader.AWS.API["DEV"])
+		return accountAPIGateway["DEV"]
 	} else if (stage == 'stg') {
-		return utilModule.getAPIIdForCore(configLoader.AWS.API["STG"])
+		return accountAPIGateway["STG"]
 	} else if (stage == 'prod') {
-		return utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
+		return accountAPIGateway["PROD"]
 	}
 }
 
@@ -649,17 +664,11 @@ def getApiId(stage) {
  */
 def cleanUpApiDocs(stage) {
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding',  credentialsId: service_config.credentialId]
 	]) {
 		try {
-			def randomString = utilModule.generateRequestId();
-			def credsId = "jazz-${randomString}";
-			sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
-			sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 			def apiRootFolder = getApiDocsFolder(stage)
 			sh "aws s3 rm s3://${apiRootFolder}/${service_config['domain']}/${service_config['service']}/${stage} --recursive"
-			resetCredentials(credsId)
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
 		}
@@ -756,16 +765,9 @@ def unDeployWebsite(stage) {
 	echo "unDeployWebsite::${service_config['service']}::${service_config['domain']} ${stage}"
 
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding',  credentialsId: service_config.credentialId]
 	]) {
 		try {
-			def randomString = utilModule.generateRequestId();
-			def credsId = "jazz-${randomString}";
-			sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
-			sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-			sh "aws configure set preview.cloudfront true"
-
 			def assetInfo = generateAssetInfo(stage)
 			echo "BucketName :: ${assetInfo['s3Bucket']} and BucketURL :: ${assetInfo['asset_info']}"
 			def _exists = checkIfWebsiteExists(assetInfo['asset_info'])
@@ -789,7 +791,6 @@ def unDeployWebsite(stage) {
 					sh "aws s3 rm s3://${assetInfo['folder_name']} --recursive"
 				}
 			}
-			resetCredentials(credsId)
 		} catch (ex) {
 			handleFailureEvent(ex.getMessage())
 		}
@@ -845,15 +846,9 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 	echo "cleanupS3BucketPolicy called"
 
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding',  credentialsId: service_config.credentialId]
 	]) {
 		try {
-			def randomString = utilModule.generateRequestId();
-			def credsId = "jazz-${randomString}";
-			sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
-			sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-			sh "aws configure set preview.cloudfront true"
 			def bucketPolicy = sh(
 				script: "aws s3api get-bucket-policy --bucket ${assetInfo['s3Bucket']} --output json",
 				returnStdout: true
@@ -877,7 +872,6 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 				def policy_json = JsonOutput.toJson(policyObjectUpdated)
 				updateBucketPolicy(policy_json, assetInfo['s3Bucket'])
 			}
-			resetCredentials(credsId)
 		} catch (ex) {
 			resetCredentials()
 			if (ex.getMessage().indexOf("groovy.json.internal.LazyMap") < 0) {
@@ -916,16 +910,9 @@ def updateBucketPolicy(policy_json, bucketName){
  */
 def cleanupCloudFrontDistribution(stage) {
 	withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+		[$class: 'AmazonWebServicesCredentialsBinding',  credentialsId: service_config.credentialId]
 	]) {
 		try {
-			def randomString = utilModule.generateRequestId();
-			def credsId = "jazz-${randomString}";
-			sh "aws configure set profile.${credsId}.region ${configLoader.AWS.REGION}"
-			sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-			sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-			sh "aws configure set preview.cloudfront true"
-
 			def distributionID
 			def _Etag
 
@@ -936,7 +923,6 @@ def cleanupCloudFrontDistribution(stage) {
 				_Etag = generateDistributionConfigForDisable(distributionConfig)
 				_Etag = disableCloudFrontDistribution(distributionID, _Etag, "disable-cf-distribution-config.json", stage)
 			}
-			resetCredentials(credsId)
 		} catch (ex) {
 			if ((ex.getMessage()).indexOf("getDistributionId Failed") > -1) {
 				echo "Could not find a CloudFront distribution Id for service: ${service_config['service']} and environment $stage"
@@ -1130,6 +1116,7 @@ def removeEventResources() {
    sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
    sh "sed -i -- '/#Start:events/,/#End:events/d' ./serverless.yml"
 }
+
 
 
 /**
