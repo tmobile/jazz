@@ -95,7 +95,6 @@ describe('Overview', () => {
   }
 
 
-
   it('Create API Service', function () {
     browser.driver.sleep(fivek);
     browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), timeOutHigh);
@@ -111,20 +110,20 @@ describe('Overview', () => {
     serviceapprover();
     browser.driver.sleep(fifteenk);
     //Assert-Verifying the created service,Type and Status of the API
-    expect(jazzServices_po.getAwsServiceName().getText()).toEqual(servicename);
-    fluentwaittry(jazzServices_po.getAPIType(), tenk);
-    expect(jazzServices_po.getAPIType().getText()).toEqual('api');
-    expect(jazzServices_po.getAPIStatus().getText()).toEqual('creation started');
-    fluentwaittry(jazzServices_po.serviceStatus(), sixtyk);
-    expect(jazzServices_po.getAPIStatus().getText()).toEqual('active');
+    expect(jazzServices_po.getService(servicename).getText()).toEqual(servicename);
+    fluentwaittry(jazzServices_po.getAPIType(servicename), tenk);
+    expect(jazzServices_po.getAPIType(servicename).getText()).toEqual('api');
+    expect(jazzServices_po.getAPIStatus(servicename).getText()).toEqual('creation started');
+    fluentwaittry(jazzServices_po.serviceStatus(servicename), sixtyk);
+    expect(jazzServices_po.getAPIStatus(servicename).getText()).toEqual('active');
   });
 
   it('Verify API Service and Navigation', () => {
     browser.driver.sleep(twok);
-    fluentwaittry(jazzServices_po.getAwsServiceName(), fivek);
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+    fluentwaittry(jazzServices_po.getService(servicename), fivek);
+    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), timeOutHigh);
     //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getAwsServiceName().click();
+    jazzServices_po.getService(servicename).click();
     fluentwaittry(jazzServices_po.getOverviewStatus(), fivek);
     expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
     fluentwaittry(jazzServices_po.getServiceNameHeader(), fivek);
@@ -146,11 +145,11 @@ describe('Overview', () => {
     jazzServices_po.getServiceFromAsset().click();
     browser.driver.sleep(twok);
     browser.driver.switchTo().activeElement();
-    fluentwaittry(jazzServices_po.getAwsServiceName(), fivek);
+    fluentwaittry(jazzServices_po.getService(servicename), fivek);
     // // Navigation to services
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), timeOutHigh);
     // //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getAwsServiceName().click();
+    jazzServices_po.getService(servicename).click();
     fluentwaittry(jazzServices_po.getServiceNameHeader(), fivek);
     refreshbutton(jazzServices_po.getProdName(), fivek);
     jazzServices_po.getProdName().click();
@@ -234,6 +233,7 @@ describe('Overview', () => {
     refreshbutton(jazzServices_po.getAssetStatusVerify(), fivek);
     //Verifying the Assets are ACTIVE
     expect(jazzServices_po.getAssetStatusVerify().getText()).toEqual('ACTIVE');
+    //refreshbutton(jazzServices_po.getAssetHeader(), fivek);
   });
 
   it('Verify API Logs', () => {
@@ -264,10 +264,10 @@ describe('Overview', () => {
 
   it('Verify METRICS COUNT for API', () => {
     browser.driver.sleep(twok);
-    fluentwaittry(jazzServices_po.getAwsServiceName(), fivek);
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+    fluentwaittry(jazzServices_po.getService(servicename), fivek);
+    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), timeOutHigh);
     //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getAwsServiceName().click();
+    jazzServices_po.getService(servicename).click();
     fluentwaittry(jazzServices_po.getServiceNameHeader(), fivek);
     fluentwaittry(jazzServices_po.getProdName(), fivek);
     jazzServices_po.getProdName().click();
@@ -285,10 +285,10 @@ describe('Overview', () => {
 
   it('Identifying Environment and Navigation for API', () => {
     browser.driver.sleep(twok);
-    fluentwaittry(jazzServices_po.getAwsServiceName(), fivek);
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+    fluentwaittry(jazzServices_po.getService(servicename), fivek);
+    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), timeOutHigh);
     //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getAwsServiceName().click();
+    jazzServices_po.getService(servicename).click();
     expect(jazzServices_po.getRepo().getText()).toEqual('Repository');
     browser.wait(EC.visibilityOf(jazzServices_po.getRepository()), timeOutHigh);
     jazzServices_po.getRepository().click();
@@ -318,8 +318,15 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.btnGitCreateBranch()), timeOutHigh);
             jazzServices_po.btnGitCreateBranch().click();
             browser.sleep(tenk);
+            //Below code is to write the text into index.js file in SCM for generating logs
+            // jazzServices_po.gitIndexFile().click();
+            // jazzServices_po.gitEditIndexFile().click();
+            // jazzServices_po.removeLineFirst().sendKeys('Vijay');
+            // jazzServices_po.gitComitChanges().click();
             browser.navigate().refresh();
             browser.sleep(twok);
+            jazzServices_po.getGitLogoutIcon().click();
+            jazzServices_po.getGitLogout().click();
             browser.close();
           }
           else {
@@ -489,18 +496,18 @@ describe('Overview', () => {
     serviceapprover();
     browser.driver.sleep(fifteenk);
     //Verifying the Lambda is correct
-    expect(jazzServices_po.getAwsServiceName().getText()).toEqual(servicename);
-    expect(jazzServices_po.getFunctionType().getText()).toEqual('function');
-    expect(jazzServices_po.getFunctionStatus().getText()).toEqual('creation started');
-    fluentwaittry(jazzServices_po.serviceStatus(), sixtyk);
-    expect(jazzServices_po.getFunctionStatus().getText()).toEqual('active');
+    expect(jazzServices_po.getService(servicename).getText()).toEqual(servicename);
+    expect(jazzServices_po.getFunctionType(servicename).getText()).toEqual('function');
+    expect(jazzServices_po.getFunctionStatus(servicename).getText()).toEqual('creation started');
+    fluentwaittry(jazzServices_po.serviceStatus(servicename), sixtyk);
+    expect(jazzServices_po.getFunctionStatus(servicename).getText()).toEqual('active');
   });
 
   it('Verify Function', () => {
-    fluentwaittry(jazzServices_po.getAwsServiceName(), fivek);
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+    fluentwaittry(jazzServices_po.getService(servicename), fivek);
+    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), timeOutHigh);
     //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getAwsServiceName().click();
+    jazzServices_po.getService(servicename).click();
     fluentwaittry(jazzServices_po.getOverviewStatus(), fivek);
     expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
     fluentwaittry(jazzServices_po.getServiceNameHeader(), fivek);
@@ -521,11 +528,11 @@ describe('Overview', () => {
     jazzServices_po.getServiceFromAsset().click();
     browser.sleep(twok);
     browser.driver.switchTo().activeElement();
-    fluentwaittry(jazzServices_po.getAwsServiceName(), fivek);
+    fluentwaittry(jazzServices_po.getService(servicename), fivek);
     // // Navigation to services
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), timeOutHigh);
     // //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getAwsServiceName().click();
+    jazzServices_po.getService(servicename).click();
     fluentwaittry(jazzServices_po.getServiceNameHeader(), fivek);
     refreshbutton(jazzServices_po.getProdName(), fivek);
     jazzServices_po.getProdName().click();
@@ -606,10 +613,10 @@ describe('Overview', () => {
 
   it('Verify METRICS COUNT for Lambda', () => {
     browser.sleep(twok);
-    fluentwaittry(jazzServices_po.getAwsServiceName(), fivek);
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+    fluentwaittry(jazzServices_po.getService(servicename), fivek);
+    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), timeOutHigh);
     //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getAwsServiceName().click();
+    jazzServices_po.getService(servicename).click();
     fluentwaittry(jazzServices_po.getServiceNameHeader(), fivek);
     fluentwaittry(jazzServices_po.getProdName(), fivek);
     jazzServices_po.getProdName().click();
@@ -626,10 +633,10 @@ describe('Overview', () => {
 
   it('Identifying Environment and Navigation for Lambda', () => {
     browser.driver.sleep(twok);
-    fluentwaittry(jazzServices_po.getAwsServiceName(), fivek);
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+    fluentwaittry(jazzServices_po.getService(servicename), fivek);
+    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), timeOutHigh);
     //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getAwsServiceName().click();
+    jazzServices_po.getService(servicename).click();
     browser.wait(EC.visibilityOf(jazzServices_po.getRepository()), timeOutHigh);
     jazzServices_po.getRepository().click();
     browser.sleep(fivek);
@@ -656,9 +663,16 @@ describe('Overview', () => {
             jazzServices_po.gitBranchName().sendKeys(test);
             browser.wait(EC.elementToBeClickable(jazzServices_po.btnGitCreateBranch()), timeOutHigh);
             jazzServices_po.btnGitCreateBranch().click();
+            //Below code is to write the text into index.js file in SCM for generating logs
+            // jazzServices_po.gitIndexFile().click();
+            // jazzServices_po.gitEditIndexFile().click();
+            // jazzServices_po.removeLineFirst().sendKeys('Vijay');
+            // jazzServices_po.gitComitChanges().click();
             browser.sleep(twok);
             browser.navigate().refresh();
             browser.sleep(twok);
+            jazzServices_po.getGitLogoutIcon().click();
+            jazzServices_po.getGitLogout().click();
             browser.close();
           }
           else {
@@ -794,18 +808,18 @@ describe('Overview', () => {
     serviceapprover();
     browser.driver.sleep(fifteenk);
     //Verifying the service
-    expect(jazzServices_po.getAwsServiceName().getText()).toEqual(servicename);
-    expect(jazzServices_po.getWebsiteType().getText()).toEqual('website');
-    expect(jazzServices_po.getWebsiteStatus().getText()).toEqual('creation started');
-    fluentwaittry(jazzServices_po.serviceStatus(), sixtyk);
-    expect(jazzServices_po.getWebsiteStatus().getText()).toEqual('active');
+    expect(jazzServices_po.getService(servicename).getText()).toEqual(servicename);
+    expect(jazzServices_po.getWebsiteType(servicename).getText()).toEqual('website');
+    expect(jazzServices_po.getWebsiteStatus(servicename).getText()).toEqual('creation started');
+    fluentwaittry(jazzServices_po.serviceStatus(servicename), sixtyk);
+    expect(jazzServices_po.getWebsiteStatus(servicename).getText()).toEqual('active');
   });
 
   it('Verify Webpage Title', () => {
-    fluentwaittry(jazzServices_po.getAwsServiceName(), fivek);
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+    fluentwaittry(jazzServices_po.getService(servicename), fivek);
+    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), timeOutHigh);
     //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getAwsServiceName().click();
+    jazzServices_po.getService(servicename).click();
     fluentwaittry(jazzServices_po.getOverviewStatus(), fivek);
     expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
     fluentwaittry(jazzServices_po.getServiceNameHeader(), fivek);
@@ -826,11 +840,11 @@ describe('Overview', () => {
     jazzServices_po.getServiceFromAsset().click();
     browser.sleep(twok);
     browser.driver.switchTo().activeElement();
-    fluentwaittry(jazzServices_po.getAwsServiceName(), fivek);
+    fluentwaittry(jazzServices_po.getService(servicename), fivek);
     // // Navigation to services
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), timeOutHigh);
     // //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getAwsServiceName().click();
+    jazzServices_po.getService(servicename).click();
     fluentwaittry(jazzServices_po.getServiceNameHeader(), fivek);
     refreshbutton(jazzServices_po.getProdName(), fivek);
     jazzServices_po.getProdName().click();
@@ -887,10 +901,10 @@ describe('Overview', () => {
 
   it('Verify METRICS COUNT for Website', () => {
     browser.sleep(twok);
-    fluentwaittry(jazzServices_po.getAwsServiceName(), fivek);
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+    fluentwaittry(jazzServices_po.getService(servicename), fivek);
+    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), timeOutHigh);
     //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getAwsServiceName().click();
+    jazzServices_po.getService(servicename).click();
     fluentwaittry(jazzServices_po.getServiceNameHeader(), fivek);
     fluentwaittry(jazzServices_po.getProdName(), fivek);
     jazzServices_po.getProdName().click();
@@ -907,10 +921,10 @@ describe('Overview', () => {
   });
   it('Identifying Environment and Navigation for Website', () => {
     browser.driver.sleep(twok);
-    fluentwaittry(jazzServices_po.getAwsServiceName(), fivek);
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getAwsServiceName()), timeOutHigh);
+    fluentwaittry(jazzServices_po.getService(servicename), fivek);
+    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), timeOutHigh);
     //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getAwsServiceName().click();
+    jazzServices_po.getService(servicename).click();
     browser.wait(EC.visibilityOf(jazzServices_po.getRepository()), timeOutHigh);
     jazzServices_po.getRepository().click();
     browser.sleep(fivek);
@@ -925,7 +939,6 @@ describe('Overview', () => {
       test = 'test' + randomNum;
       browser.switchTo().window(handles[1]).then(function () {
         browser.sleep(twok);
-
         var some_name = browser.getTitle().then(function (webpagetitle) {
           if (webpagetitle === 'Sign in · GitLab') {
             expect(webpagetitle).toEqual('Sign in · GitLab');
@@ -940,8 +953,15 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.btnGitCreateBranch()), timeOutHigh);
             jazzServices_po.btnGitCreateBranch().click();
             browser.sleep(tenk);
+            //Below code is to write the text into index.js file in SCM for generating logs
+            // jazzServices_po.gitIndexFile().click();
+            // jazzServices_po.gitEditIndexFile().click();
+            // jazzServices_po.removeLineFirst().sendKeys('Vijay');
+            // jazzServices_po.gitComitChanges().click();
             browser.navigate().refresh();
             browser.sleep(twok);
+            jazzServices_po.getGitLogoutIcon().click();
+            jazzServices_po.getGitLogout().click();
             browser.close();
           }
           else {
@@ -975,7 +995,6 @@ describe('Overview', () => {
         browser.sleep(fivek);
       });
     });
-
   });
 
   it('Verify METRICS Navigation for Website for Test Branch', () => {
@@ -1005,7 +1024,6 @@ describe('Overview', () => {
     });
   });
 
-
   it('Verify Website Deployments for Test Branch', () => {
     refreshbutton(jazzServices_po.getDeploymentStatus(), fivek);
     jazzServices_po.getDeploymentStatus().click();
@@ -1025,7 +1043,6 @@ describe('Overview', () => {
     expect(jazzServices_po.getAssetStatusVerify().getText().then(function (text) { return text.toLowerCase() })).toEqual('active');
     refreshbutton(jazzServices_po.getAssetHeader(), fivek);
   });
-
 
   it('Verify METRICS COUNT for Website in Test Branch', () => {
     browser.sleep(twok);

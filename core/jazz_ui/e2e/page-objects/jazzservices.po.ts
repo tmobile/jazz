@@ -48,23 +48,23 @@ export class Jazz {
   getAwsServiceName() {
     return element(by.xpath('(//table-template//div[@class="table-row pointer"]/div)[1]'));
   }
-  getAPIType() {
-    return element(by.xpath('//div/div[2][@class="table-row pointer"]//div[text()="api"]'));
+  getAPIType(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[2]'));
   }
-  getFunctionType() {
-    return element(by.xpath('//div/div[2][@class="table-row pointer"]//div[text()="function"]'));
+  getFunctionType(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[2]'));
   }
-  getWebsiteType() {
-    return element(by.xpath('//div/div[2][@class="table-row pointer"]//div[text()="website"]'));
+  getWebsiteType(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[2]'));
   }
-  getAPIStatus() {
-    return element(by.xpath('//div/div[2][@class="table-row pointer"]/div[text()="api"]/parent::div/div[5]'));
+  getAPIStatus(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[5]'));
   }
-  getFunctionStatus() {
-    return element(by.xpath('//div/div[2][@class="table-row pointer"]/div[text()="function"]/parent::div/div[5]'));
+  getFunctionStatus(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[5]'));
   }
-  getWebsiteStatus() {
-    return element(by.xpath('//div/div[2][@class="table-row pointer"]/div[text()="website"]/parent::div/div[5]'));
+  getWebsiteStatus(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[5]'));
   }
   getDummy() {
     return element(by.xpath('//*[@id="exampleName"]'));
@@ -147,8 +147,8 @@ export class Jazz {
   homePageRefresh() {
     return element(by.xpath('//span[@title="Refresh"]'));
   }
-  serviceStatus() {
-    return element(by.xpath('//div[@class="table-body"]//div[2]//div[contains(text(),"active")]'));
+  serviceStatus(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[contains(text(), "active")]'));
   }
   getMetrices() {
     return element(by.xpath('//li[contains(text(),"metrics")]'));
@@ -383,6 +383,15 @@ export class Jazz {
   }
   getBitLogout() {
     return element(by.xpath('//a[@class="logout-link"]'));
+  }
+  getGitLogoutIcon() {
+    return element(by.xpath('//a[@class="header-user-dropdown-toggle"]//*[contains(@class,"caret-down")]'));
+  }
+  getGitLogout() {
+    return element(by.xpath('//a[@class="sign-out-link"]'));
+  }
+  getService(servicename) {
+    return element(by.xpath('(//table-template//div[@class="table-row pointer"]/div)[contains(text(),"' + servicename + '")]'));
   }
 
 }
