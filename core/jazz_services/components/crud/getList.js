@@ -23,150 +23,137 @@
 **/
 
 const utils = require("../utils.js")();
-const _ = require("lodash");
 
 module.exports = (query, servicesList, onComplete) => {
-    // initialize dynamodb
-    var dynamodb = utils.initDynamodb();
+  // initialize dynamodb
+  var dynamodb = utils.initDynamodb();
 
-    var filter = "";
-    var attributeValues = {};
-    let attributeNames = {};
-    var insertAnd = " AND ";
+  var filter = "";
+  var attributeValues = {};
+  let attributeNames = {};
+  var insertAnd = " AND ";
 
-    var scanparams = {
-        "TableName": global.services_table,
-        "ReturnConsumedCapacity": "TOTAL",
-        "Limit": "500"
-    };
+  var scanparams = {
+    "TableName": global.services_table,
+    "ReturnConsumedCapacity": "TOTAL",
+    "Limit": "500"
+  };
 
+  if (query !== undefined && query !== null) {
 
-    if (servicesList && servicesList.length) {
-        let servicesIdList = servicesList.map(item => (item.serviceId))
+    var keys_list = global.config.service_filter_params;
 
-        let svcIdStr = "#serviceId IN ("
-        for (let i in servicesIdList) {
-            let attrValKey = `:id_${i}`
-            svcIdStr += `${attrValKey}, `
-            attributeValues[attrValKey] = {
-                'S': servicesIdList[i]
-            }
-        }
-        filter = `${svcIdStr.substring(0, svcIdStr.length - 2)}) AND `
-        attributeNames = {
-            "#serviceId": "SERVICE_ID"
-        }
-    }
+    keys_list.forEach(function (key) {
 
-    if (query !== undefined && query !== null) {
+      var key_name = utils.getDatabaseKeyName(key);
 
-        var keys_list = global.config.service_filter_params;
+      if (key_name == "SERVICE_TIMESTAMP" && (query.last_updated_after !== undefined || query.last_updated_before !== undefined)) {
+        filter = filter + key_name + " BETWEEN :BEFORE" + " AND :AFTER " + insertAnd;
+        attributeValues[(":BEFORE")] = {
+          'S': query.last_updated_before
+        };
+        attributeValues[(":AFTER")] = {
+          'S': query.last_updated_after
+        };
+      } else if (key_name == "SERVICE_STATUS" && query.status !== undefined) {
+        var status = query.status;
+        var array = status.split(',');
+        var obj = {};
 
-        keys_list.forEach(function (key) {
-
-            var key_name = utils.getDatabaseKeyName(key);
-
-            if (key_name == "SERVICE_TIMESTAMP" && (query.last_updated_after !== undefined || query.last_updated_before !== undefined)) {
-                filter = filter + key_name + " BETWEEN :BEFORE" + " AND :AFTER " + insertAnd;
-                attributeValues[(":BEFORE")] = {
-                    'S': query.last_updated_before
-                };
-                attributeValues[(":AFTER")] = {
-                    'S': query.last_updated_after
-                };
-            } else if (key_name == "SERVICE_STATUS" && query.status !== undefined) {
-                var status = query.status;
-                var array = status.split(',');
-                var obj = {};
-
-                var filterString = "( ";
-                array.forEach(function (value) {
-                    filterString += " :" + value + " , ";
-                });
-                filterString = filterString.substring(0, filterString.length - 3);
-                filterString += " )";
-
-                filter = filter + key_name + " IN " + filterString + " AND ";
-                array.forEach(function (value) {
-                    attributeValues[(":" + value)] = {
-                        'S': value
-                    };
-                });
-            } else if (query[key]) {
-                filter = filter + key_name + " = :" + key_name + insertAnd;
-                attributeValues[(":" + key_name)] = {
-                    'S': query[key]
-                };
-            }
+        var filterString = "( ";
+        array.forEach(function (value) {
+          filterString += " :" + value + " , ";
         });
-    }
+        filterString = filterString.substring(0, filterString.length - 3);
+        filterString += " )";
 
-    if (filter !== "") {
-        filter = filter.substring(0, filter.length - insertAnd.length); // remove insertAnd at the end
-
-        scanparams.FilterExpression = filter;
-        scanparams.ExpressionAttributeValues = attributeValues;
-        if (Object.keys(attributeNames).length) {
-            scanparams.ExpressionAttributeNames = attributeNames;
-        }
-    }
-
-    query.limit = query.limit || 10;
-    query.offset = query.offset || 0;
-    query.filter = query.filter || "";
-    var scanExecute = function (onComplete) {
-        dynamodb.scan(scanparams, function (err, items) {
-            var count;
-            if (err) {
-                onComplete(err);
-            } else {
-                var items_formatted = [], finalList = [];
-                items.Items.forEach(function (item) {
-                    items_formatted.push(utils.formatService(item, true));
-                });
-                if (items.LastEvaluatedKey) {
-                    scanparams.ExclusiveStartKey = items.LastEvaluatedKey;
-                    scanExecute(onComplete);
-                } else {
-                    if (items_formatted.length > 0) {
-
-                        items_formatted = utils.sortUtil(items_formatted, query.sort_by, query.sort_direction);
-
-                        if (query.filter) {
-                            items_formatted = utils.filterUtil(items_formatted, query.filter);
-                        }
-
-                        count = items_formatted.length;
-                        if (query.limit && query.offset) {
-                            items_formatted = utils.paginateUtil(items_formatted, parseInt(query.limit), parseInt(query.offset));
-                        }
-
-                        finalList = appendPolicies(items_formatted, servicesList);
-
-                    }
-                    var obj = {
-                        count: count,
-                        services: finalList
-                    };
-
-                    onComplete(null, obj);
-                }
-            }
+        filter = filter + key_name + " IN " + filterString + " AND ";
+        array.forEach(function (value) {
+          attributeValues[(":" + value)] = {
+            'S': value
+          };
         });
-    };
-    scanExecute(onComplete);
+      } else if (query[key]) {
+        filter = filter + key_name + " = :" + key_name + insertAnd;
+        attributeValues[(":" + key_name)] = {
+          'S': query[key]
+        };
+      }
+    });
+  }
 
-    function appendPolicies(filteredList, servicesList) {
+  if (filter !== "") {
+    filter = filter.substring(0, filter.length - insertAnd.length); // remove insertAnd at the end
+
+    scanparams.FilterExpression = filter;
+    scanparams.ExpressionAttributeValues = attributeValues;
+    if (Object.keys(attributeNames).length) {
+      scanparams.ExpressionAttributeNames = attributeNames;
+    }
+  }
+
+  query.limit = query.limit || 10;
+  query.offset = query.offset || 0;
+  query.filter = query.filter || "";
+  var scanExecute = function (onComplete) {
+    dynamodb.scan(scanparams, function (err, items) {
+      var count;
+      if (err) {
+        onComplete(err);
+      } else {
+        var items_formatted = [], finalList = [];
+
         if (servicesList && servicesList.length) {
-            for (filteredItem of filteredList) {
-                for (serviceItem of servicesList) {
-                    if (serviceItem.serviceId === filteredItem.id) {
-                        filteredItem["policies"] = serviceItem.policies
-                    }
-                }
-            }
+          let servicesIdList = servicesList.map(item => (item.serviceId));
+          items.Items = items.Items.filter(service => servicesIdList.indexOf(service.SERVICE_ID.S) !== -1);
         }
 
-        return filteredList
-    };
+        items.Items.forEach(function (item) {
+          items_formatted.push(utils.formatService(item, true));
+        });
+        if (items.LastEvaluatedKey) {
+          scanparams.ExclusiveStartKey = items.LastEvaluatedKey;
+          scanExecute(onComplete);
+        } else {
+          if (items_formatted.length > 0) {
+
+            items_formatted = utils.sortUtil(items_formatted, query.sort_by, query.sort_direction);
+
+            if (query.filter) {
+              items_formatted = utils.filterUtil(items_formatted, query.filter);
+            }
+
+            count = items_formatted.length;
+            if (query.limit && query.offset) {
+              items_formatted = utils.paginateUtil(items_formatted, parseInt(query.limit), parseInt(query.offset));
+            }
+
+            finalList = appendPolicies(items_formatted, servicesList);
+
+          }
+          var obj = {
+            count: count,
+            services: finalList
+          };
+
+          onComplete(null, obj);
+        }
+      }
+    });
+  };
+  scanExecute(onComplete);
+
+  function appendPolicies(filteredList, servicesList) {
+    if (servicesList && servicesList.length) {
+      for (filteredItem of filteredList) {
+        for (serviceItem of servicesList) {
+          if (serviceItem.serviceId === filteredItem.id) {
+            filteredItem["policies"] = serviceItem.policies
+          }
+        }
+      }
+    }
+
+    return filteredList
+  };
 };
