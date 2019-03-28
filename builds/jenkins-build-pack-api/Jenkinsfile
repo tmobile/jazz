@@ -971,7 +971,7 @@ def createSubscriptionFilters(stackName, region, roleId, accountDetails, env_key
                 def destARN
                 for (data in accountDetails.REGIONS) {
                     if(data.REGION == config.region){
-                    destARN = data.LOGS[env_key]
+                    destARN = data.LOGS.PROD
                     }
                 }
                 updatePolicy(env_key, destARN);
