@@ -164,6 +164,9 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     ngOnInit(){
         this.advanced_filter_input = this.data.advanced_filter_input;
         this.service = this.data.service;
+        if(this.service.logsData){
+            this.envList.push(this.service.logsData);
+        }
 
         if(this.service.ismetrics){
             this.statisticSelected=this.statisticList[1];

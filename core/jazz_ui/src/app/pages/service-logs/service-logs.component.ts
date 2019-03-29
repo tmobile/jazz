@@ -102,7 +102,8 @@ export class ServiceLogsComponent implements OnInit {
 	 json:any={};
 	 model:any={
 		userFeedback : ''
-  };
+	};
+	logsData: any;
 
 
 	tableHeader = [
@@ -178,6 +179,7 @@ export class ServiceLogsComponent implements OnInit {
 		this.service['islogs']=false;
 		this.service['isServicelogs']=true;
 		this.service['ismetrics']=false;
+		this.service['logsData'] = this.logsData
 
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
@@ -621,6 +623,25 @@ export class ServiceLogsComponent implements OnInit {
 
 	}
 
+	getenvData() {
+    if (this.service == undefined) {
+      return
+    }
+    this.http.get('/jazz/environments?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
+      response => {
+        console.log('response',response);
+        response.data.environment.map((item)=>{
+          if(item.physical_id !== "master" && item.status === "deployment_completed"){
+						this.logsData = item.logical_id;
+						this.getFilter(this.advancedFilters)
+          }
+        })
+      },
+      err => {
+        console.log("error here: ", err);
+      })
+  };
+
 	fetchEnvlist(){
 		var env_list=this.cache.get('envList');
 		if(env_list != undefined){
@@ -629,10 +650,12 @@ export class ServiceLogsComponent implements OnInit {
 	
 	  }
 	  ngOnChanges(x:any){
+			if(x.service.currentValue.domain){
+				this.getenvData();
+			}
 		  this.fetchEnvlist();
 	  }
 	ngOnInit() {
-		
 		var todayDate = new Date();
 		this.payload= {
 			"service" :  this.service.name ,//"logs", //
