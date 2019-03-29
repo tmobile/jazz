@@ -52,7 +52,7 @@ describe('Overview', () => {
   function serviceapprover() {
     browser.driver.sleep(fivek);
     jazzServices_po.getSubmit().click();
-    fluentwaittry(jazzServices_po.getDone(), tenk);
+    fluentwaittry(jazzServices_po.getDone(), fifteenk);
     jazzServices_po.getDone().click();
   }
   function waitForSpinnerDisappear() {
@@ -318,11 +318,6 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.btnGitCreateBranch()), timeOutHigh);
             jazzServices_po.btnGitCreateBranch().click();
             browser.sleep(tenk);
-            //Below code is to write the text into index.js file in SCM for generating logs
-            // jazzServices_po.gitIndexFile().click();
-            // jazzServices_po.gitEditIndexFile().click();
-            // jazzServices_po.removeLineFirst().sendKeys('Vijay');
-            // jazzServices_po.gitComitChanges().click();
             browser.navigate().refresh();
             browser.sleep(twok);
             jazzServices_po.getGitLogoutIcon().click();
@@ -663,11 +658,6 @@ describe('Overview', () => {
             jazzServices_po.gitBranchName().sendKeys(test);
             browser.wait(EC.elementToBeClickable(jazzServices_po.btnGitCreateBranch()), timeOutHigh);
             jazzServices_po.btnGitCreateBranch().click();
-            //Below code is to write the text into index.js file in SCM for generating logs
-            // jazzServices_po.gitIndexFile().click();
-            // jazzServices_po.gitEditIndexFile().click();
-            // jazzServices_po.removeLineFirst().sendKeys('Vijay');
-            // jazzServices_po.gitComitChanges().click();
             browser.sleep(twok);
             browser.navigate().refresh();
             browser.sleep(twok);
@@ -953,11 +943,6 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.btnGitCreateBranch()), timeOutHigh);
             jazzServices_po.btnGitCreateBranch().click();
             browser.sleep(tenk);
-            //Below code is to write the text into index.js file in SCM for generating logs
-            // jazzServices_po.gitIndexFile().click();
-            // jazzServices_po.gitEditIndexFile().click();
-            // jazzServices_po.removeLineFirst().sendKeys('Vijay');
-            // jazzServices_po.gitComitChanges().click();
             browser.navigate().refresh();
             browser.sleep(twok);
             jazzServices_po.getGitLogoutIcon().click();
