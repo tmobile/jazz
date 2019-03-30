@@ -1,11 +1,11 @@
 <div class="filter-wrp" [class.hide]='assets'> 
     <div class="filter-section-right">
         <div class="filter-icon relative">
-            <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected;"></span>
+            <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterClick()"></span>
             <div [class.show]='filterSelected' class="filter-wrap">
-                <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>                    
+                <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterClick()"></span>                    
                 <div class='filter-inner'>
-                    <div class="filter-inner-wrap first-child" [class.hide]='service.islogs'>
+                    <div class="filter-inner-wrap first-child" *ngIf='showEnvironment' [class.hide]='service.islogs'>
                         <div class='view-label'>Filter by:</div>
                         <div class="eachFilter" *ngIf='advanced_filter_input.path.show'>
                             <div><div class='hori-line'></div>PATH</div>

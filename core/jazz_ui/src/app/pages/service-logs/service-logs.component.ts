@@ -141,7 +141,7 @@ export class ServiceLogsComponent implements OnInit {
 
 	logs = [];
 	backupLogs=[];
-
+	filterSelectedValue: any;
 
 
 	filtersList = [ 'ERROR', 'WARN', 'INFO', 'DEBUG', 'VERBOSE'];
@@ -175,12 +175,11 @@ export class ServiceLogsComponent implements OnInit {
   
     instance_yes;
 	getFilter(filterServ){
-		
 		this.service['islogs']=false;
 		this.service['isServicelogs']=true;
 		this.service['ismetrics']=false;
 		this.service['logsData'] = this.logsData
-
+		
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
 		var comp = this;
@@ -193,8 +192,10 @@ export class ServiceLogsComponent implements OnInit {
 		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
 		
 			comp.onFilterSelect(event);
-		});
-
+		});		
+		this.instance_yes.onFilterClick.subscribe(event => {
+			this.filterSelectedValue = event
+		})
 	}
 
 	refresh(){
@@ -624,16 +625,20 @@ export class ServiceLogsComponent implements OnInit {
 	}
 
 	getenvData() {
+		let self=this;
     if (this.service == undefined) {
       return
     }
     this.http.get('/jazz/environments?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
       response => {
-        console.log('response',response);
         response.data.environment.map((item)=>{
           if(item.physical_id !== "master" && item.status === "deployment_completed"){
-						this.logsData = item.logical_id;
-						this.getFilter(this.advancedFilters)
+						self.logsData = item.logical_id;
+						self.getFilter(self.advancedFilters)
+						if(this.filterSelectedValue){
+							self.instance_yes.filterSelected = true;
+						}
+						self.instance_yes.showEnvironment = true;
           }
         })
       },

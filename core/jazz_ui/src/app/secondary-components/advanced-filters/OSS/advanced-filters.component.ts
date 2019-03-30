@@ -20,7 +20,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
 
     
     @Output() onFilterSelect:EventEmitter<any> = new EventEmitter<any>();
-
+    @Output() onFilterClick:EventEmitter<any> = new EventEmitter<any>();
 
     slider:any;
     sliderFrom = 1;
@@ -28,7 +28,8 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     sliderMax:number = 7;
 
 
-    filterSelected:boolean;
+    filterSelected:boolean = false;
+    showEnvironment:boolean = false;
 
     selectFilter:any={}
     periodList: Array<string> = ['15 Minutes','1 Hour','6 Hours','1 Day','7 Days','30 Days'];
@@ -64,6 +65,11 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         this.onFilterSelect.emit(this.selectFilter);
         this.sliderFrom =e.from;
         this.sliderPercentFrom=e.from_percent;
+    }
+
+    filterClick(){
+        this.filterSelected = !this.filterSelected
+        this.onFilterClick.emit(this.filterSelected);
     }
 
     resetslider(e){
