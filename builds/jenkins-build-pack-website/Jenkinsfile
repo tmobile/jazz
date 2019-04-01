@@ -229,14 +229,14 @@ node()  {
 				events.sendStartedEvent(asset_event, "${asset_event_message} assets starts", utilModule.generateAssetMap(service_config['provider'], "arn:aws:s3:::${asset_info}/*", "s3", service_config))
 				try {
 					if(service_config['framework'] == 'angular') {
-						sh "aws s3 sync ./app/dist s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
-						sh "aws s3 sync ./app/dist s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+						sh "aws s3 sync ./app/dist s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\" --profile ${credsId}"
+						sh "aws s3 sync ./app/dist s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml --profile ${credsId}"
 					} else if (service_config['framework'] == 'react') {
-						sh "aws s3 sync ./app/build s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
-						sh "aws s3 sync ./app/build s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+						sh "aws s3 sync ./app/build s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\" --profile ${credsId}"
+						sh "aws s3 sync ./app/build s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml --profile ${credsId}"
 					} else {
-						sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
-						sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+						sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\" --profile ${credsId}"
+						sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml --profile ${credsId}"
 					}
 					events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config), environment);
 					def url
@@ -373,7 +373,7 @@ def updateEnableCompressConfig(distributionId, credsId) {
 					--id $distributionId \
 					--if-match $_eTag \
 					--output json \
-                    --profile ${credsId}"
+          --profile ${credsId}"
 		}
 	} catch (ex) {
 		if ((ex.getMessage().indexOf("groovy.json.JsonSlurper") > -1) ||
@@ -414,7 +414,7 @@ def listDistribution(credsId){
 		outputStr = sh(
 			script: "aws cloudfront list-distributions \
 				--output json \
-                --profile ${credsId} \
+        --profile ${credsId} \
 				--query \"DistributionList.Items[?Origins.Items[?Id=='${configLoader.INSTANCE_PREFIX}-${environment}-static-website-origin-$service']].{Distribution:DomainName, Id:Id}\"",
 			returnStdout: true
 		)
@@ -594,7 +594,7 @@ def disableCloudFrontDistribution(distributionID, _Etag, configFile, credsId) {
 						--id $distributionID \
 						--distribution-config file://"+ configFile + " \
 						--if-match $_Etag \
-                        --profile ${credsId}",
+            --profile ${credsId}",
 			returnStdout: true
 		)
 		echo "disableOutput... $disableOutput"
@@ -626,7 +626,6 @@ def getDistributionConfig(distributionId, credsId) {
 	} catch (ex) {
 		error "getDistributionConfig Failed."+ ex.getMessage()
 	}
-
 }
 
 /**
@@ -770,7 +769,7 @@ def invalidateCloudFrontCache(credsId) {
 								--distribution-id $distributionId \
 								--invalidation-batch '$config' \
 								--output json \
-                                --profile ${credsId}",
+                --profile ${credsId}",
 				returnStdout: true)
 
 			echo "Invalidated Cloud Front Cache for service $service..:$invalidateStatus"
