@@ -52,6 +52,8 @@ export const toastMessage = {
     },
     "createService":{
         "success":"Your service will be available shortly. You can track the progress on service page ",
+        "successPending":"Your service will be ready momentarily and will appear on the Services page soon.",
+        "successReady":"Your new service has been created and can now be viewed on the Services page.",
         "error400":"Looks like we couldn't create your service. Please try again.",
         "error401":"Token expired",
         "error404":"Looks like we couldn't create your service. Please try again.",

@@ -82,7 +82,7 @@ var handler = (event, context, cb) => {
     }
     // Validate and set deployment accounts
     let primaryAccountCount = 0;
-    
+
     if (Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts) {
       for (let eachDeploymentAccount of service_creation_data.deployment_accounts) {
         if (eachDeploymentAccount.primary) {
@@ -318,6 +318,9 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
       var create_cloudfront_url = "true";
       serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
       inputs.RUNTIME = 'n/a';
+      if (service_creation_data.framework == 'angular' || service_creation_data.framework == 'react') {
+        serviceMetadataObj.framework = service_creation_data.framework;
+      }
     }
     // Add rate expression to the propertiesObject;
     if (service_creation_data.service_type === "function") {
@@ -333,14 +336,12 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
           } else {
             enable_eventschedule = true;
           }
-
           if (rate_expression && rate_expression.trim() !== "") {
             serviceMetadataObj["eventScheduleRate"] = "cron(" + rate_expression + ")";
           }
           if (enable_eventschedule && enable_eventschedule !== "") {
             serviceMetadataObj["eventScheduleEnable"] = enable_eventschedule;
           }
-
         } else {
           logger.error('cronExpValidator : ', cronExpValidator);
           reject(cronExpValidator);
@@ -365,7 +366,6 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
             }
             reject({ result: 'inputError', message: isEventNameValid.message });
           }
-
         }
       }
     }
@@ -377,7 +377,6 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
 }
 
 function validateDeploymentTargets(allowedSubServiceType, deployment_targets, svcType) {
-  console.log('deployment_targets here',deployment_targets, svcType)
   if (deployment_targets.hasOwnProperty(svcType)) {
     const type = deployment_targets[svcType];
     if (allowedSubServiceType.indexOf(type) !== -1) {

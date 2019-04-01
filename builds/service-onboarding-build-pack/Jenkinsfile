@@ -70,7 +70,7 @@ node  {
 
 		events.sendStartedEvent("VALIDATE_INPUT", 'input validation starts', context_map)
 		if (service_config['type'] == "api" || service_config['type'] == "function" || service_config['type'] == "website") {
-			if (service_config['runtime'].startsWith("nodejs") || service_config['runtime'].startsWith("python") ||  service_config['runtime'].startsWith("java") ||  service_config['runtime'].startsWith("go") || service_config['runtime'] == "n/a") {
+			if (service_config['runtime'].startsWith("nodejs") || service_config['runtime'].startsWith("python") ||  service_config['runtime'].startsWith("java") ||  service_config['runtime'].startsWith("go") || service_config['runtime'] == "n/a" || service_config['framework'] == 'angular' || service_config['framework'] == 'react') {
 				switch (service_config['type']) {
 					case "api":
 						if (service_config['runtime'].startsWith("nodejs")) {
@@ -103,7 +103,13 @@ node  {
 						break
 
 					case "website":
-						service_template = 'static-website-template'
+						if(service_config['framework'] == 'angular') {
+							service_template = 'angular-website-template'
+						} else if(service_config['framework'] == 'react') {
+							service_template = 'react-website-template'
+						} else {
+							service_template = 'static-website-template'
+						}
 						break
 				}
 			} else {
