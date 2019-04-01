@@ -317,8 +317,6 @@ node() {
             events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], role_arn, "iam_role", config), environment_logical_id);
           }
 
-          // reset Credentials
-          resetCredentials(credsId)
           if (domain != "jazz") {
             createSubscriptionFilters(stackName, env_key, credsId, accountDetails);
           }
@@ -332,6 +330,8 @@ node() {
             addPermission(functionName, primaryAccountValue);
           } 
 
+          // reset Credentials
+          resetCredentials(credsId)
 
           if (domain && domain == "jazz") {
             serviceConfigdata.setLogStreamPermission(config)
@@ -793,7 +793,7 @@ def createSubscriptionFilters(stackName, env_key, credsId, accountDetails) {
           def destARN
           for (data in accountDetails.REGIONS) {
             if(data.REGION == service_config.region){
-              destARN = data.LOGS[env_key]
+              destARN = data.LOGS.PROD
             }
           }
           updatePolicy(env_key, destARN);

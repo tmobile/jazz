@@ -102,7 +102,8 @@ export class ServiceLogsComponent implements OnInit {
 	 json:any={};
 	 model:any={
 		userFeedback : ''
-  };
+	};
+	logsData: any;
 
 
 	tableHeader = [
@@ -140,7 +141,7 @@ export class ServiceLogsComponent implements OnInit {
 
 	logs = [];
 	backupLogs=[];
-
+	filterSelectedValue: any;
 
 
 	filtersList = [ 'ERROR', 'WARN', 'INFO', 'DEBUG', 'VERBOSE'];
@@ -174,11 +175,11 @@ export class ServiceLogsComponent implements OnInit {
   
     instance_yes;
 	getFilter(filterServ){
-		
 		this.service['islogs']=false;
 		this.service['isServicelogs']=true;
 		this.service['ismetrics']=false;
-
+		this.service['logsData'] = this.logsData
+		
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
 		var comp = this;
@@ -191,8 +192,10 @@ export class ServiceLogsComponent implements OnInit {
 		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
 		
 			comp.onFilterSelect(event);
-		});
-
+		});		
+		this.instance_yes.onFilterClick.subscribe(event => {
+			this.filterSelectedValue = event
+		})
 	}
 
 	refresh(){
@@ -621,6 +624,29 @@ export class ServiceLogsComponent implements OnInit {
 
 	}
 
+	getenvData() {
+		let self=this;
+    if (this.service == undefined) {
+      return
+    }
+    this.http.get('/jazz/environments?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
+      response => {
+        response.data.environment.map((item)=>{
+          if(item.physical_id !== "master" && item.status === "deployment_completed"){
+						self.logsData = item.logical_id;
+						self.getFilter(self.advancedFilters)
+						if(this.filterSelectedValue){
+							self.instance_yes.filterSelected = true;
+						}
+						self.instance_yes.showEnvironment = true;
+          }
+        })
+      },
+      err => {
+        console.log("error here: ", err);
+      })
+  };
+
 	fetchEnvlist(){
 		var env_list=this.cache.get('envList');
 		if(env_list != undefined){
@@ -629,10 +655,12 @@ export class ServiceLogsComponent implements OnInit {
 	
 	  }
 	  ngOnChanges(x:any){
+			if(x.service.currentValue.domain){
+				this.getenvData();
+			}
 		  this.fetchEnvlist();
 	  }
 	ngOnInit() {
-		
 		var todayDate = new Date();
 		this.payload= {
 			"service" :  this.service.name ,//"logs", //
