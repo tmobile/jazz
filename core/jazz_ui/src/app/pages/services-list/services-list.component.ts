@@ -673,7 +673,7 @@ onFilterCancel(event) {
           this.totalPagesTable = 0;
         }
           if (services !== undefined && services !== "" && services.length !== undefined) {
-            if (pageCount > this.serviceList.length) {
+            if (this.serviceList.length && pageCount > this.serviceList.length) {
               this.showToastSuccess(
                 'Your service is ready',
                 this.toastMessage.customMessage('successReady', 'createService'),
