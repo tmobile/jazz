@@ -97,17 +97,15 @@
       },
       "post": {
         "description": "Post method swagger for Node template",
-        "parameters": [
-          {
-            "name": "param",
-            "in": "body",
-            "description": "post body parameter.",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/InputObj"
-            }
+        "parameters": [{
+          "name": "param",
+          "in": "body",
+          "description": "post body parameter.",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/InputObj"
           }
-        ],
+        }],
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -409,7 +407,7 @@
         "service",
         "domain",
         "environment",
-		"category"
+        "category"
       ],
       "properties": {
         "service": {
@@ -429,22 +427,30 @@
           "type": "string",
           "description": "Environment in which the service is deployed"
         },
-		"category": {
-		  "enum": [
+        "category": {
+          "enum": [
             "api",
             "function"
           ],
           "type": "string",
           "description": "Service type"
         },
-		"start_time": {
+        "asset_type": {
+          "enum": [
+            "apilogs",
+            "applicationlogs"
+          ],
           "type": "string",
-		  "format": "date-time",
+          "description": "Asset type for which the logs should be fetched."
+        },
+        "start_time": {
+          "type": "string",
+          "format": "date-time",
           "description": "start time"
         },
         "end_time": {
           "type": "string",
-		  "format": "date-time",
+          "format": "date-time",
           "description": "end time"
         },
         "size": {
@@ -455,16 +461,16 @@
           "type": "number",
           "description": "Starting record number"
         },
-		"type": {
-		  "enum": [
-		    "warn",
-			"error",
-		    "info",
-		    "debug"		    
-		  ],
-		  "type": "string",
-		  "description": "log type"
-	    }
+        "type": {
+          "enum": [
+            "warn",
+            "error",
+            "info",
+            "debug"
+          ],
+          "type": "string",
+          "description": "log type"
+        }
       }
     },
     "OutputObj": {
@@ -480,7 +486,7 @@
                 "type": "string",
                 "description": "request id of the log message"
               },
-			  "timestamp": {
+              "timestamp": {
                 "type": "string",
                 "description": "time of the log message"
               },
@@ -489,12 +495,12 @@
                 "description": "log message"
               },
               "type": {
-			    "enum": [
-				 "debug",
-				 "info",
-				 "warn",
-				 "error"
-				],
+                "enum": [
+                  "debug",
+                  "info",
+                  "warn",
+                  "error"
+                ],
                 "type": "string",
                 "description": "log type"
               }

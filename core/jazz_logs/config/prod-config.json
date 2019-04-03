@@ -2,8 +2,9 @@
 	"BASE_URL" :"https://{inst_elastic_search_hostname}/",
 	"DEFAULT_SIZE" : 1000,
 	"DEFAULT_TIME_IN_DAYS" : 7,
-	"VALID_ENVIRONMENTS" : ["prod", "stg", "dev"],
-	"VALID_CATEGORIES" : ["api", "function"],
+    "VALID_ENVIRONMENTS" : ["prod", "stg", "dev"],
+    "VALID_CATEGORIES" : ["api", "function"],
+    "VALID_ASSET_TYPES" : ["apilogs", "applicationlogs"],
 	"VALID_LOGTYPES" : ["warn", "error", "info", "verbose", "debug", "fatal", "trace", "off", "all"],
 	"ENV_PREFIX" : "{env-prefix}",
 	"LOG_LEVELS": [

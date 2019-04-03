@@ -67,10 +67,15 @@ module.exports.handler = (event, context, cb) => {
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for category - " + config.VALID_CATEGORIES.join(", "))));
 			}
 
+			if (event.body.asset_type && config.VALID_ASSET_TYPES.indexOf(event.body.asset_type) === -1) {
+				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for asset type - " + config.VALID_ASSET_TYPES.join(", "))));
+			}
+
 			var service = event.body.service,
 				domain = event.body.domain,
 				env = event.body.environment.toLowerCase(),
 				categoryType = event.body.category.toLowerCase(),
+				assetType = event.body.asset_type ? event.body.asset_type.toLowerCase() : "",
 				logType = event.body.type.toUpperCase(),
 				page = event.body.offset ? event.body.offset : 0,
 				startTime = event.body.start_time ? event.body.start_time : utils.setStartDate(config.DEFAULT_TIME_IN_DAYS),
@@ -106,14 +111,7 @@ module.exports.handler = (event, context, cb) => {
 
 			logger.info("QueryObj: " + JSON.stringify(querys));
 
-			var servCategory = [];
-
-			if (categoryType.toLowerCase() == 'api') {
-				servCategory = ["apilogs", "applicationlogs"];
-			} else if (categoryType.toLowerCase() == 'function') {
-				servCategory = ["applicationlogs"];
-			}
-
+			var servCategory = assetType ? [`${assetType}`] : [];
 			var req = utils.requestLoad;
 			req.url = config.BASE_URL + "/_plugin/kibana/elasticsearch/_msearch";
 			req.body = setRequestBody(servCategory, env, querys, startTime, endTime, size, page);
