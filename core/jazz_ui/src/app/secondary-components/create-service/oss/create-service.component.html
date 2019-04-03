@@ -65,6 +65,18 @@
                 </div>
             </div>
         </section>
+        <section *ngIf="deploymentTargets[typeOfService.toUpperCase()].active && apigeeFeature" class="form-row deployment-targets">
+          <div class="row">
+            <div class="col-lg-4 col-md-4">
+              <p class="step-title">Choose your API deployment target<span>*</span></p>
+            </div>
+            <radio-checkbox
+              [options]="deploymentTargets[typeOfService.toUpperCase()].options"
+            [(selected)]="selectedDeploymentTarget"></radio-checkbox>
+          </div>
+        </section>
+
+
         <section class="each-step-wrap run-time" *ngIf="typeOfService != 'website'">
             <div class="row">
                 <div class="col-lg-4 col-md-4">
@@ -102,6 +114,36 @@
                                 <label for="runtimeKeys[4]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[4]]}}</label>
                             </div>
                         </section>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <section class="each-step-wrap run-time" *ngIf="typeOfService == 'website'">
+            <div class="row">
+                <div class="col-lg-4 col-md-4">
+                    <p class="step-title">Choose website framework<span>*</span></p>
+                </div>
+                <div class="col-lg-8 col-md-8">
+                    <div class="col-lg-12  pad-left0 input-field-container runtime-aln">
+                        <section class="runtime-option">
+                            <div class="radio-container">
+                                <input type="radio" class='test-focus' name="webtime" id="webKeys[0]" [value]="webKeys[0]" [checked]="webtime == webKeys[0]" (click)="onWebSelectionChange(webKeys[0])">
+                                <label for="webKeys[0]"><span class='outer'></span><span class="background"></span>{{webObject[webKeys[0]]}}</label>
+                            </div>
+                        </section>
+                        <section class="runtime-option">
+                            <div class="radio-container">
+                                <input type="radio" name="webtime" id="webKeys[1]" [value]="webKeys[1]" [checked]="webtime == webKeys[1]" (change)="onWebSelectionChange(webKeys[1])">
+                                <label for="webKeys[1]"><span class='outer'></span><span class="background"></span>{{webObject[webKeys[1]]}}</label>
+                            </div>
+                        </section>
+                        <section class="runtime-option">
+                            <div class="radio-container">
+                                <input type="radio" name="webtime" id="webKeys[2]" [value]="webKeys[2]" [checked]="webtime == webKeys[2]" (change)="onWebSelectionChange(webKeys[2])">
+                                <label for="webKeys[2]"><span class='outer'></span><span class="background"></span>{{webObject[webKeys[2]]}}</label>
+                            </div>
+                        </section>
+                        
                     </div>
                 </div>
             </div>

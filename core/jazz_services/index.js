@@ -80,18 +80,16 @@ module.exports.handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("service id is required")));
         }
 
-        global.userId = event.principalId;
-        var getAllRecords;
-        if (event.query && event.query.isAdmin) {
-            getAllRecords = true;
-        }
-        else {
-            getAllRecords = false;
-        }
-
         // 1: GET service by id (/services/{service_id})
         if (event.method === 'GET' && service_id) {
             logger.info('GET service by ID : ' + service_id);
+            let services = JSON.parse(event.services);
+            let servicePermission =[];
+            if (services && services.length) {
+                servicePermission = services[0].policies;
+            } else {
+                return cb(JSON.stringify(errorHandler.throwUnauthorizedError("You aren't authorized to access this service.")))
+            }
 
             async.series({
                 // Get service by SERVICE_ID
@@ -107,8 +105,9 @@ module.exports.handler = (event, context, cb) => {
                 }
                 if (data.getServiceByServiceId) {
                     var service_obj = data.getServiceByServiceId;
+                    service_obj.data["policies"] = servicePermission;
                     logger.verbose('Get Success. ' + JSON.stringify(service_obj, null, 2));
-                    return handleResponse(error, data.getServiceByServiceId.data, event.path);
+                    return handleResponse(error, service_obj.data, event.path);
                 } else {
                     return handleResponse(error, data, event.path);
                 }
@@ -119,23 +118,33 @@ module.exports.handler = (event, context, cb) => {
         // 2: GET all services (/services)
         // 3: GET Filtered services (/services?field1=value&field2=value2&...)
         if (event.method === 'GET' && !service_id) {
-            // logger.info('GET services');
-            async.series({
-                // fetch services list from dynamodb, filter if required
-                fetchServices: function (onComplete) {
-                    var query = event.query;
-                    crud.getList(query, getAllRecords, onComplete);
+            let servicesList = JSON.parse(event.services);
+
+            if (servicesList && servicesList.length) {
+                async.series({
+                    // fetch services list from dynamodb, filter if required
+                    fetchServices: function (onComplete) {
+                        var query = event.query;
+                        crud.getList(query, servicesList,onComplete);
+                    }
+                }, function (error, result) {
+                    // Handle error
+                    if (error) {
+                        logger.error('Error occured. ' + JSON.stringify(error, null, 2));
+                        return handleResponse(error, result.fetchServices, event.query);
+                    } else {
+                        var data = result.fetchServices;
+                        return handleResponse(error, data, event.query);
+                    }
+                });
+            } else {
+                // return empty list if user has no access to any of the services. That means empty event.services
+                let data = {
+                    count: 0,
+                    services: []
                 }
-            }, function (error, result) {
-                // Handle error
-                if (error) {
-                    logger.error('Error occured. ' + JSON.stringify(error, null, 2));
-                    return handleResponse(error, result.fetchServices, event.query);
-                } else {
-                    var data = result.fetchServices;
-                    return handleResponse(error, data, event.query);
-                }
-            });
+                return handleResponse(null, data, event.query);
+            }
         }
 
 

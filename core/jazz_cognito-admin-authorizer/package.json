@@ -1,0 +1,25 @@
+{
+  "name": "jazz_cognito-admin-authorizer",
+  "version": "0.0.1",
+  "description": "Root authorizer for admin access.",
+  "main": "index.js",
+  "private": true,
+  "author": {
+    "name": "Jazz"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {
+    "request": "^2.75.0",
+    "jwk-to-pem": "^1.2.5",
+    "jsonwebtoken": "^7.0.0",
+    "lodash": "*"
+  },
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^v3.0.0",
+    "lambda-local": "^1.4.2",
+    "aws-sdk": "^2.245.1"
+  }
+}

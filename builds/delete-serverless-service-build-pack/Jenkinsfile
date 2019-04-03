@@ -21,7 +21,9 @@ import groovy.json.JsonSlurperClassic
 @Field def serviceMetadataLoader
 @Field def environmentMetadataLoader
 @Field def sonarModule
+@Field def apigeeModule
 @Field def lambdaEvents
+@Field def aclModule
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -144,6 +146,7 @@ node {
 				stage('Undeploy Service') {
 					updateServiceNameConfig()
 					def path = getResourcePath()
+					def apiPlatform = service_config.deployment_targets.api;
 					for (_envId in environmentIds) {
 						current_environment_id = _envId
 						try {
@@ -158,7 +161,18 @@ node {
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
 							echo 'undeploying service for environment: ' + _envId
 
-							cleanUpApiGatewayResources(_envId, path)
+							switch(apiPlatform) {
+								case 'aws_apigateway':
+									cleanUpApiGatewayResources(_envId, path)
+									break
+								case 'gcp_apigee':
+									def env_key = _envId.endsWith("-dev") ? "DEV" : "PROD"
+									apigeeModule.delete("swagger/swagger.json", env_key, _envId, service_config)
+									break
+								default:
+									error "Deployment platform not recognized."
+							}
+
 							cleanUpApiDocs(_envId)
 							unDeployService(_envId)
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
@@ -248,9 +262,21 @@ node {
 
 	if (is_service_deletion) {
 		stage('Cleanup SCM') {
+			events.sendStartedEvent('REMOVE_POLICIES_AND_REPO_PERMISSIONS', "Remove policies and repo write permission of service_id: " + service_config['service_id'] + " started", null, "prod")
+			deletePolicies(service_config['service_id'], auth_token, "${g_base_url}/jazz/acl/policies")
+			events.sendCompletedEvent('REMOVE_POLICIES_AND_REPO_PERMISSIONS', "Remove policies and repo write permission of service_id: " + service_config['service_id'] + " completed", null, "prod")
 			cleanup(repo_name)
 			events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
 		}
+	}
+}
+
+def deletePolicies(serviceId, authToken, aclUrl) {
+	try {
+		aclModule.deletePolicies(serviceId, authToken, aclUrl)
+	} catch(ex) {
+		echo "ex: $ex"
+		events.sendFailureEvent('REMOVE_POLICIES_AND_REPO_PERMISSIONS', ex.getMessage(), context_map)
 	}
 }
 
@@ -476,9 +502,8 @@ def updateSwaggerConfig() {
  * @return
  */
 def cleanup(repoName) {
-
 	try {
-		scmModule.deleteProject(repoName)
+    	scmModule.deleteProject(repoName)
 		send_status_email("COMPLETED")
 	} catch (ex) {
 		events.sendFailureEvent('DELETE_PROJECT', ex.getMessage(), context_map)
@@ -848,8 +873,10 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
  */
 def resetCredentials(credsId) {
 	echo "resetting AWS credentials"
-	sh "aws configure set profile.${credsId}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-	sh "aws configure set profile.${credsId}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+  def credPath = System.getenv().HOME + "/.aws/credentials"
+  def confPath = System.getenv().HOME + "/.aws/config"
+  sh "sed -i '/${credsId}/,+2d' ${credPath}"
+  sh "sed -i '/${credsId}/,+1d' ${confPath}"
 }
 @NonCPS
 def updateBucketPolicy(policy_json, bucketName){
@@ -1207,10 +1234,18 @@ def loadBuildModules(buildModuleUrl){
 		sonarModule = load "sonar-module.groovy"
 		echo "Sonar module loaded successfully."
 
+		if (configLoader.APIGEE && configLoader.APIGEE.ENABLE_APIGEE instanceof Boolean && configLoader.APIGEE.ENABLE_APIGEE) {
+			apigeeModule = load "apigee-module.groovy"
+			apigeeModule.initialize(configLoader.APIGEE, events)
+			echo "Apigee module loaded successfully."
+		}
+
     lambdaEvents = load "aws-lambda-events-module.groovy"
     lambdaEvents.initialize(configLoader, utilModule)
     echo "Lambda event module loaded successfully."
 
+		aclModule = load "acl-module.groovy"
+		echo "ACL module loaded successfully."
 	}
 }
 
