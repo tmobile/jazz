@@ -9,8 +9,9 @@ import { AdvancedFilterService } from './../../advanced-filter.service';
 import { AdvFilters } from './../../adv-filter.directive';
 import { environment } from './../../../environments/environment.internal';
 import { environment as env_internal } from './../../../environments/environment.internal';
-
-
+import * as moment from 'moment';
+import * as _ from 'lodash';
+declare let Promise;
 
 
 @Component({
@@ -27,18 +28,24 @@ export class EnvAssetsSectionComponent implements OnInit {
 	 totalPageNum: number = 12;
 	 offset:number = 0;
 	 offsetval:number = 0;
-
+	 public assetList:any = [];
+   assetSelected:string=this.assetList[0];
+	// public assetVar:string;
+	// public assetTypeVar:string;
 	private env:any;
 	private http:any;
 	private subscription:any;
+	public serviceType;
+	public assetFilter;
+  public environmentFilter;
 	@ViewChild('filtertags') FilterTags: FilterTagsComponent;
-
+  @ViewChild('filters') filters;
 	@ViewChild(AdvFilters) advFilters: AdvFilters;
-	componentFactoryResolver:ComponentFactoryResolver;
-
+	public assetType:any;
+		componentFactoryResolver:ComponentFactoryResolver;
+	filterSelected: boolean = false;
 	fromassets:boolean = true;
-
-
+  
 	advanced_filter_input:any = {
 		time_range:{
 			show:false,
@@ -66,10 +73,14 @@ export class EnvAssetsSectionComponent implements OnInit {
 		},
 		region:{
 			show:true,
+		},
+		asset:{
+			show:true,
 		}
 	}
 
 	assetsList: any = [];
+	public formFields: any = [];
 
 	accList=env_internal.urls.accounts;
 		regList=env_internal.urls.regions;
@@ -111,9 +122,9 @@ export class EnvAssetsSectionComponent implements OnInit {
 	islink:boolean = false;
 	count: any = [];
 	relativeUrl:string = '/jazz/assets';
-
-
-  @Input() service: any = {};
+	
+	@Input() service: any = {};
+  // assetType:string='Dynamo DB';
 
   constructor(
 		private request:RequestService,
@@ -136,10 +147,14 @@ export class EnvAssetsSectionComponent implements OnInit {
     this.envResponseEmpty = false;
     this.envResponseError = false;
     this.envResponseTrue = false;
-    this.callServiceEnvAssets();
-  }
+		this.callServiceEnvAssets();
+	}
 
-
+ngOnInit()
+{
+	this.serviceType = this.service.type || this.service.serviceType;
+	this.getAssetType();
+}
 	 getFilter(filterServ){
 
 	}
@@ -152,8 +167,39 @@ export class EnvAssetsSectionComponent implements OnInit {
 	onregSelected(event){
     this.FilterTags.notify('filter-Region',event);
     this.regSelected=event;
-   }
-
+	 }
+	applyFilter(value){
+		this.assetType=value.selected
+	  this.getAssetType();
+		 this.callServiceEnvAssets();
+	 }
+	getAssetType(){
+    return this.http.get('/jazz/assets',{
+      domain: this.service.domain,
+			service: this.service.name,
+			environment:this.env
+    }).toPromise().then((response:any)=>{
+      if(response&&response.data&&response.data.assets){
+				this.assetType=response.data.assets[0].asset_type;
+				let assets=_(response.data.assets).map('asset_type').uniq().value();
+        this.assetFilter={
+          column: 'Filter By:',
+            label: 'ASSET TYPE',
+            options: assets,
+            values: assets,
+        };
+				this.assetList=assets;
+       let assetField = this.filters.getFieldValueOfLabel('ASSET TYPE');
+        if (!assetField) {
+					this.formFields.splice(0, 0, this.assetFilter);
+					this.filters.setFields(this.formFields);
+      }
+    }
+    })
+    .catch((error) => {
+      return Promise.reject(error);
+    })
+  }
    onFilterSelect(event){
 	switch(event.key){
 
@@ -183,28 +229,26 @@ export class EnvAssetsSectionComponent implements OnInit {
     if ( this.subscription ) {
       this.subscription.unsubscribe();
 		}
-
-
     var payload = {
       service: this.service.name,
       domain: this.service.domain,
       environment: this.env,
       limit: this.limitValue,
-      offset: this.offsetval
+			offset: this.offsetval,
+			asset_type:this.assetType
     };
 
     this.subscription = this.http.get(this.relativeUrl, payload).subscribe(
       (response) => {
 
-        if((response.data == undefined) || (response.data.length == 0)){
+        if((response.data == undefined) || (response.data.length == 0||response.data.count===0)){
           this.envResponseEmpty = true;
           this.isLoading = false;
         }
         else
         {
           var pageCount = response.data.count;
-
-
+					
         if(pageCount){
           this.totalPageNum = Math.ceil(pageCount/this.limitValue);
         }
@@ -216,9 +260,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 
         this.envResponseTrue = true;
         this.length = response.data.assets.length;
-
-        this.assetsList = response.data.assets;
-
+				this.assetsList = response.data.assets;
         for(var i=0; i < this.length ; i++){
           this.type[i] = response.data.assets[i].asset_type;
           this.slNumber[i] = this.offsetval + (i+1);
@@ -407,11 +449,10 @@ export class EnvAssetsSectionComponent implements OnInit {
 		 window.open(url , '_blank');
 	 }
 
-	 ngOnInit() {
-
-	}
+	 
 	limitValue : number = 10;
-  prevActivePage: number = 0;
+	prevActivePage: number = 0;
+	
 
 	paginatePage(currentlyActivePage){
     if(this.prevActivePage != currentlyActivePage){
@@ -479,6 +520,5 @@ public goToAbout(hash){
       default:
         return 'Provider ID';
     }
-  }
-
+	}
 }

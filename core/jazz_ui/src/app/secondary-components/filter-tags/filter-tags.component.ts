@@ -44,6 +44,10 @@ export class FilterTagsComponent implements OnInit {
         {
             key:'Method',
             value:'POST'
+        },
+        {
+            key:'Asset',
+            value:'Dynamo DB'
         }
     ];
         filter_TimeRange:any;
@@ -54,6 +58,7 @@ export class FilterTagsComponent implements OnInit {
         filter_Region:any;
         filter_Env:any;
         filter_Method:any;
+        filter_Asset:any;
         
 
         filter_TimeRange_default:any = 'Day';
@@ -64,6 +69,7 @@ export class FilterTagsComponent implements OnInit {
         filter_Region_default:any='reg 1';
         filter_Env_default:any='prod';
         filter_Method_default:any='POST';
+        filter_Asset_default:any = 'Dynamo DB';
 
 
     constructor(private cache: DataCacheService){
@@ -124,6 +130,10 @@ export class FilterTagsComponent implements OnInit {
                 this.filterTags[7].value=this.filter_Method=value;                
                 break;
             }
+            case 'filter-Asset':{
+                this.filterTags[8].value = this.filter_Asset=value;
+                break;
+             }
         }
 
     }

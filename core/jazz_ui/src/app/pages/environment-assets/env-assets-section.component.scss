@@ -1,9 +1,16 @@
 @import './../../../main-styles';
+@import '../environment-deployment/env-deployments-section.component.scss';
+@import './../service-detail/service-detail.component.scss';
+
 .full-page {
   border-radius: 3px;
   background-color: #ffffff;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
 }
+.filter-modal-position{
+  z-index: 2;
+}
+
 
 .page-section-assets {
   padding: 1rem 1.6rem 0.35rem 1.6rem;
@@ -119,15 +126,15 @@
   .loading-row {
     display: none;
     width: 100%;
+    position: absolute;
     height: 100%;
-    z-index: 2;
+    z-index: 1;
     background: #fff;
     top: 50% !important;
     left: 0;
-    padding: 3rem;
+    padding:0 3rem;
     .loading-circle {
       top: calc(50% - 2.5rem);
-      position: absolute;
       width: 100%;
       left: 0;
     }

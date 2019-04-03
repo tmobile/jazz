@@ -54,6 +54,9 @@ export class EnvLogsSectionComponent implements OnInit {
 		},
 		region:{
 			show:true,
+		},
+		asset:{
+			show:true,
 		}
 	}
 	fromlogs:boolean = true;
@@ -498,13 +501,17 @@ export class EnvLogsSectionComponent implements OnInit {
 		  
 			break;
 		  }
+		  case 'asset':{
+			this.instance_yes.onAssetListSelected('Dynamo Db');
+
+		  }
 		  case 'all':{ this.instance_yes.onRangeListSelected('Day');    
 				this.instance_yes.onPeriodSelected('15 Minutes');
 				this.instance_yes.onStatisticSelected('Average');
 				this.instance_yes.onaccSelected('Acc 1');
 				this.instance_yes.onregSelected('reg 1');
 				this.instance_yes.onEnvSelected('prod');
-				this.instance_yes.onMethodListSelected('POST');
+				this.instance_yes.onAssetListSelected('Dynamo Db');
 				break;
 		  	}
 		}

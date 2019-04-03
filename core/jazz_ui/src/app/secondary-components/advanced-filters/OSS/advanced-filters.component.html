@@ -27,6 +27,10 @@
                             <div><div class='hori-line'></div>REGION</div>
                             <dropdown class="dropdown-3 method" title="Select method" [dropdwnContent]="regList" [selected]="regSelected" (onSelected)="onregSelected($event)"></dropdown>
                         </div>
+                        <div class="eachFilter slider-wrap" *ngIf='advanced_filter_input.asset.show'>
+                        <div><div class='hori-line'></div>ASSET TYPE</div>
+                        <radio-group   [radioContent]="assetList" title="Select asset" [selected]="assetSelected" (onSelected)="onAssetListSelected($event)"></radio-group>
+                    </div>
                     </div>
                     <div class="filter-inner-wrap">
                         <div class='view-label'>View by:</div>
@@ -36,14 +40,14 @@
 
                             <div><div class='hori-line'></div>PERIOD</div>
                                 <dropdown class="dropdown-3" title="Select period" [dropdwnContent]="timePeriodList" [selected]="selectedTimePeriod" (onSelected)="onTimePeriodSelected($event)"></dropdown>
-                        </div>
+                            </div>
                         <div class="eachFilter" *ngIf='advanced_filter_input.period.show'>
                             <div><div class='hori-line'></div>PERIOD</div>
                             <dropdown class="dropdown-3" title="Select period" [dropdwnContent]="periodList" [selected]="periodSelected" (onSelected)="onPeriodSelected($event)"></dropdown>
                         </div>
                         <div class="eachFilter" *ngIf='advanced_filter_input.statistics.show'>
                             <div><div class='hori-line'></div>STATISTICS</div>
-                            <dropdown class="dropdown-2" title="Select statistics" [dropdwnContent]="statisticList" [selected]="statisticSelected" (onSelected)="onStatisticSelected($event)"></dropdown>
+                            <dropdown class="dropdown-2" title="Select statistics" []="statisticList" [selected]="statisticSelected" (onSelected)="onStatisticSelected($event)"></dropdown>
                         </div>
                     </div>
                 </div>

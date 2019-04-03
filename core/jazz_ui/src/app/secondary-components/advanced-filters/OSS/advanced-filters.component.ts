@@ -15,13 +15,10 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     @Input() advanced_filter_input:any = {};
     @Input() logs:boolean = false;
     @Input() assets:boolean = false;
-
     @Input() service: any = {};
-
-    
     @Output() onFilterSelect:EventEmitter<any> = new EventEmitter<any>();
-
-
+    //@Input() assetSelected;
+   // @Input() assetList;
     slider:any;
     sliderFrom = 1;
     sliderPercentFrom=0;
@@ -46,15 +43,18 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     methodList:Array<string>  = ['POST','GET','DELETE','PUT'];
     methodSelected:string = this.methodList[0];
 
+    assetList:Array<string>=['API Logs','Application Logs'];
+    assetSelected:string=this.assetList[0];
+
     pathList:Array<string>=[];
     pathSelected:string = '';
 
 
     accList=env_internal.urls.accounts;
 	regList=env_internal.urls.regions;
-	  accSelected:string = this.accList[0];
-	regSelected:string=this.regList[0];
-
+	accSelected:string = this.accList[0];
+    regSelected:string=this.regList[0];
+    
     envList:any=['prod','stg'];
     envSelected:string=this.envList[0];
   
@@ -137,7 +137,14 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         this.selectFilter["value"]=method;
         this.onFilterSelect.emit(this.selectFilter);
     }
+    onAssetListSelected(asset){
+        this.assetSelected=asset;
+        this.selectFilter["key"]='asset';
+        this.selectFilter["value"]=asset;
+        this.onFilterSelect.emit(this.selectFilter);
+    }
 
+    
     onPathListicSelected(path){
         this.pathSelected=path;
         this.selectFilter["key"]='path';

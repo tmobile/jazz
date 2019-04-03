@@ -1,4 +1,4 @@
-import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output,OnChanges, SimpleChanges, SimpleChange} from '@angular/core';
 import * as _ from "lodash";
 
 @Component({
@@ -6,11 +6,11 @@ import * as _ from "lodash";
   templateUrl: './filter-modal.component.html',
   styleUrls: ['./filter-modal.component.scss']
 })
-export class FilterModalComponent implements OnInit {
+export class FilterModalComponent implements  OnInit {
   @Output() formChange = new EventEmitter();
-  @Input() fields;
+  @Input() fields ;
   @Input() options;
-
+  @Input() assetList;
   public form = {
     columns: []
   };
@@ -18,8 +18,30 @@ export class FilterModalComponent implements OnInit {
 
   constructor() {
   }
-
   ngOnInit() {
+    // console.log("fields",this.fields)
+    // let columns = _(this.fields)
+    //   .groupBy('column')
+    //   .map((column, key, array) => {
+    //     return {
+    //       label: key,
+    //       fields: column
+    //     }
+    //   })
+    //   .value();
+    // this.form.columns = columns
+  }
+
+  reset() {
+    this.ngOnInit();
+  }
+
+  setFields(value){
+    console.log('val',value)
+    for(var i=0;i<=value.length;i++){
+    if(value.column !=='undefined')
+    {
+    this.fields = value;
     let columns = _(this.fields)
       .groupBy('column')
       .map((column, key, array) => {
@@ -29,14 +51,10 @@ export class FilterModalComponent implements OnInit {
         }
       })
       .value();
-    this.form.columns = columns
-  }
-
-  reset() {
-    this.ngOnInit();
-  }
-
+    this.form.columns = columns;
+  }}}
   changeFilter(filterSelected, filterField) {
+    console.log("filterSelected, filterField",filterSelected, filterField)
     filterField.selected = filterSelected;
     this.formChange.emit(filterField);
   }
@@ -44,6 +62,7 @@ export class FilterModalComponent implements OnInit {
   getFieldValueOfLabel(fieldLabel) {
     try {
       let foundField = this.getAllFields().find((field) => {
+       
         return field.label === fieldLabel
       });
       let value = foundField.values[foundField.options.findIndex((option) => {

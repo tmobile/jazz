@@ -18,7 +18,10 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   @ViewChild('filters') filters;
 
   public serviceType;
+  public assetFilter;
   public environmentFilter;
+  public assetList:any = [];
+  assetSelected:string=this.assetList[0];
   public formFields: any = [
     {
       column: 'View By:',
@@ -61,8 +64,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       options: ['Sum', 'Average'],
       values: ['Sum', 'average'],
       selected: 'Sum'
-    }
+    },
   ];
+  
   public form;
   public selectedAsset;
   public selectedMetric;
@@ -71,7 +75,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public errorData = {};
   public graphData;
   private http;
-
+  public assetType=[];
 
   constructor(private request: RequestService,
               private utils: UtilsService,
@@ -84,7 +88,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       this.sectionStatus = 'loading';
 
     if (!this.activatedRoute.snapshot.params['env']) {
-      return this.getEnvironments()
+      return (this.getEnvironments() &&this.getAssetType())
         .then(() => {
           return this.applyFilter();
         });
@@ -100,7 +104,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     this.setPeriodFilters();
   }
 
-  setPeriodFilters() {
+  setPeriodFilters() {  
     if (this.service.deployment_targets === 'gcp_apigee'){
       const periodFilterIndex = this.formFields.findIndex(formField => formField.label === 'PERIOD');
       this.formFields[periodFilterIndex].options =  ['1 Minutes', '1 Hour', '1 Day'];
@@ -114,6 +118,31 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   refresh() {
     this.ngAfterViewInit();
+  }
+  getAssetType(){
+    return this.http.get('/jazz/assets',{
+      domain: this.service.domain,
+      service: this.service.name
+    }).toPromise().then((response:any)=>{
+      if(response&&response.data&&response.data.assets){
+        this.assetType=response.data.assets[0].asset_type;
+        let assets=_(response.data.assets).map('asset_type').uniq().value();
+        this.assetFilter={
+          column: 'Filter By:',
+            label: 'ASSET TYPE',
+            options: assets,
+            values: assets,
+        };
+        this.assetList=assets;
+        let assetField = this.filters.getFieldValueOfLabel('ASSET TYPE');
+        if (!assetField) {
+          this.formFields.splice(0, 0, this.assetFilter);
+      }
+    }
+    })
+    .catch((error) => {
+      return Promise.reject(error);
+    })
   }
 
   getEnvironments() {
@@ -136,7 +165,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
             this.formFields.splice(0, 0, this.environmentFilter);
           }
         }
+       
       })
+      
       .catch((error) => {
         return Promise.reject(error);
       })
@@ -151,7 +182,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   applyFilter(changedFilter?) {
-
     if(changedFilter){
       let index = this.findIndexOfObjectWithKey(this.formFields,'label','PERIOD');
       if(this.service.deployment_targets === 'gcp_apigee'){
@@ -249,6 +279,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   queryMetricsData() {
+    debugger
     this.sectionStatus = 'loading';
     let request = {
       url: '/jazz/metrics',
@@ -257,6 +288,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         service: this.service.name,
         environment: this.filters.getFieldValueOfLabel('ENVIRONMENT') || this.activatedRoute.snapshot.params['env'] || 'prod',
         start_time: this.filters.getFieldValueOfLabel('TIME RANGE').range,
+        asset_type:this.filters.getFieldValueOfLabel('ASSET TYPE'),
         end_time: moment().toISOString(),
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
         statistics: this.filters.getFieldValueOfLabel('AGGREGATION')
@@ -305,7 +337,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           .uniq().value();
         let paths = _(this.queryDataRaw.assets)
           .map('asset_name.Resource')
-          .uniq().value();
+          .uniq().value();       
         this.filters.addField('Filter By:', 'METHOD', methods, null);
         this.filters.addField('Filter By:', 'PATH', paths);
         break;
@@ -315,6 +347,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         break;
     }
   }
+  
 
   setAsset() {
     switch (this.serviceType) {

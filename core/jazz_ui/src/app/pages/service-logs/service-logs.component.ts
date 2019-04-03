@@ -74,8 +74,13 @@ export class ServiceLogsComponent implements OnInit {
 		},
 		region:{
 			show:false,
+		},
+		asset:{
+			show:true,
 		}
 	}
+	public assetVar:string;
+	public assetTypeVar:string;
 	fromlogs:boolean = true;
 	payload:any={};
 	private http:any;
@@ -88,6 +93,7 @@ export class ServiceLogsComponent implements OnInit {
 	 private subscription:any;
 	 filterloglevel:string = 'ERROR';
 	 environment:string = 'prod';
+	 asset_type:string='Dynamo DB'
 	 pageSelected:number =1;
 	 expandText:string='Expand all';
 	 ReqId=[];
@@ -150,6 +156,7 @@ export class ServiceLogsComponent implements OnInit {
 	sliderFrom = 1;
 	sliderPercentFrom;
 	sliderMax:number = 7;
+	assetList:Array<string> = ['Dynamo DB','API Gateway','Function','Stream'];
 	rangeList: Array<string> = ['Day', 'Week', 'Month', 'Year'];
 	selectedTimeRange:string= this.rangeList[0];
 	
@@ -166,11 +173,13 @@ export class ServiceLogsComponent implements OnInit {
 	offsetValue:number = 0;
 
 	envList = ['prod','stg'];
+
 	
 	accList=env_internal.urls.accounts;
 	regList=env_internal.urls.regions;
 	  accSelected:string = this.accList[0];
 	regSelected:string=this.regList[0];
+	assetSelected:string=this.assetList[0];
   
     instance_yes;
 	getFilter(filterServ){
@@ -207,11 +216,21 @@ export class ServiceLogsComponent implements OnInit {
 	onregSelected(event){
     this.FilterTags.notify('filter-Region',event);
     this.regSelected=event;
-   }
+	 }
+	 onAssetListSelected(event){
+		var asset_type_list=this.cache.get('assetList');
+		var fName = asset_type_list.friendly_name;
+		var index = fName.indexOf(event);
+		var asset = asset_type_list.env[index];
+		this.asset_type = event;
+		this.payload.asset_type=asset;
+		this.resetPayload();
+	 }
  
 	// onEnvSelected(env){
 
 	onEnvSelected(envt){
+		debugger
 		this.FilterTags.notify('filter-Env',envt);
 
 		// this.logsSearch.environment = env;
@@ -228,6 +247,7 @@ export class ServiceLogsComponent implements OnInit {
 	}
 
 	onFilterSelect(event){
+		console.log("event",event)
 		switch(event.key){
 		  case 'slider':{
 			this.getRange(event.value);
@@ -257,7 +277,6 @@ export class ServiceLogsComponent implements OnInit {
 			this.FilterTags.notify('filter-Region',event.value);
 			this.regSelected=event.value;
 			break;
-				
 		  }
 		  case "environment":{
 			this.FilterTags.notifyLogs('filter-Environment',event.value);
@@ -265,7 +284,13 @@ export class ServiceLogsComponent implements OnInit {
 			this.payload.environment = event.value;
 			this.resetPayload();
 			break;
-		  }
+			}
+			case "asset":{
+				this.FilterTags.notifyLogs('filter-Asset',event.value);
+				this.asset_type=event.value;
+				this.payload.asset_type = event.value;
+				this.resetPayload();
+			}
 	
 	   
 		}
@@ -273,7 +298,6 @@ export class ServiceLogsComponent implements OnInit {
 	  }
 	getRange(e){
 		this.FilterTags.notifyLogs('filter-TimeRangeSlider',e.from);
-		
 		this.sliderFrom =e.from;
 		this.sliderPercentFrom=e.from_percent;
 		var resetdate = this.getStartDate(this.selectedTimeRange, this.sliderFrom);
@@ -331,7 +355,10 @@ export class ServiceLogsComponent implements OnInit {
 				this.instance_yes.onMethodListSelected('POST');
 		  
 			break;
-		  }
+			}
+			case 'asset':{
+				this.instance_yes.onAssetListSelected('Dynamo DB');
+			}
 		  case 'all':{ this.instance_yes.onRangeListSelected('Day');    
 				this.instance_yes.onPeriodSelected('15 Minutes');
 				this.instance_yes.onStatisticSelected('Average');
@@ -339,6 +366,7 @@ export class ServiceLogsComponent implements OnInit {
 				this.instance_yes.onregSelected('reg 1');
 				this.instance_yes.onEnvSelected('prod');
 				this.instance_yes.onMethodListSelected('POST');
+				this.instance_yes.onAssetListSelected('Dynamo DB')
 				break;
 		  	}
 		}
@@ -635,9 +663,10 @@ export class ServiceLogsComponent implements OnInit {
 		   "domain" :   this.service.domain ,//"jazz", //
 		   "environment" :  this.environment, //"dev"
 		   "category" :   this.service.serviceType ,//"api",//
-		   "size" : this.limitValue,
+			 "size" : this.limitValue,
 		   "offset" : this.offsetValue,
-		   "type":this.filterloglevel ||"ERROR",
+			 "type":this.filterloglevel ||"ERROR",
+			 "asset_type":this.assetTypeVar,
 		   "end_time": (new Date().toISOString()).toString(),
 		   "start_time":new Date(todayDate.setDate(todayDate.getDate()-this.sliderFrom)).toISOString()
 	   }				
