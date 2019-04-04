@@ -4,7 +4,21 @@
   "DEFAULT_TIME_IN_DAYS": 7,
   "VALID_ENVIRONMENTS": ["prod", "stg", "dev"],
   "VALID_CATEGORIES": ["api", "function"],
-  "VALID_ASSET_TYPES": ["lambda", "apigateway"],
+  "VALID_ASSET_TYPES": [
+    "lambda",
+    "apigateway",
+    "cloudfront",
+    "s3",
+    "dynamodb",
+    "cloudwatch_event",
+    "swagger_url",
+    "endpoint_url",
+    "dynamodb_stream",
+    "iam_role",
+    "sqs",
+    "kinesis_stream",
+    "apigee_proxy"
+  ],
   "ASSET_INDEX_MAP":[{
     "asset_type": "lambda",
     "es_index": ["applicationlogs"]

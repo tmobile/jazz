@@ -112,8 +112,16 @@ module.exports.handler = (event, context, cb) => {
 			logger.info("QueryObj: " + JSON.stringify(querys));
 			var servCategory = [];
 			if (assetType) {
-				let indexMap = config.ASSET_INDEX_MAP.filter(assetObj => (assetObj.asset_type === assetType))
+				let indexMap = config.ASSET_INDEX_MAP.filter(assetObj => (assetObj.asset_type === assetType));
+				if (indexMap.length) {
 					servCategory = indexMap[0].es_index;
+				} else {
+					let response = {
+						count: 0,
+						logs: []
+					};
+					return cb(null, responseObj(response, event.body));
+				}
 			}
 
 			var req = utils.requestLoad;
@@ -146,11 +154,8 @@ module.exports.handler = (event, context, cb) => {
 						utils.responseModel.count = count;
 						utils.responseModel.logs = logs;
 
-						// TODO: Remove as this is hack for UI fix
-						var ret = { "data": utils.responseModel };
-
 						logger.info('Output :' + JSON.stringify(utils.responseModel));
-						return cb(null, responseObj(ret, event.body));
+						return cb(null, responseObj(utils.responseModel, event.body));
 
 					} else {
 						var error_message = 'Unknown error occured';
