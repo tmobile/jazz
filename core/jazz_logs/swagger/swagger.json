@@ -437,8 +437,8 @@
         },
         "asset_type": {
           "enum": [
-            "apilogs",
-            "applicationlogs"
+            "lambda",
+            "apigateway"
           ],
           "type": "string",
           "description": "Asset type for which the logs should be fetched."

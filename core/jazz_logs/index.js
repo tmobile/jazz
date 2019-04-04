@@ -110,8 +110,12 @@ module.exports.handler = (event, context, cb) => {
 			}
 
 			logger.info("QueryObj: " + JSON.stringify(querys));
+			var servCategory = [];
+			if (assetType) {
+				let indexMap = config.ASSET_INDEX_MAP.filter(assetObj => (assetObj.asset_type === assetType))
+					servCategory = indexMap[0].es_index;
+			}
 
-			var servCategory = assetType ? [`${assetType}`] : [];
 			var req = utils.requestLoad;
 			req.url = config.BASE_URL + "/_plugin/kibana/elasticsearch/_msearch";
 			req.body = setRequestBody(servCategory, env, querys, startTime, endTime, size, page);

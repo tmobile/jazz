@@ -65,7 +65,7 @@ describe('platform_logs', function() {
         "category": "api",
         "offset": "44",
         "type" : "debug",
-        "asset_type": "apilogs"
+        "asset_type": "lambda"
       },
       "method":"POST",
       "path" : {},
@@ -244,7 +244,7 @@ describe('platform_logs', function() {
  it("should allow only apilogs and applicationlogs to be listed as the asset type", () => {
   errorMessage = "Only following values are allowed for asset type - ";
   errorType = "BadRequest";
-  var invalidArray = ["apilogs", "applicationlogs", "invalidlogs"];
+  var invalidArray = ["lambda", "apigateway", "invalidasset"];
   var acceptCount = 3;
   //only have 2 of the values listed be acceptable
   for(i in invalidArray){

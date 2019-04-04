@@ -4,7 +4,14 @@
   "DEFAULT_TIME_IN_DAYS": 7,
   "VALID_ENVIRONMENTS": ["prod", "stg", "dev"],
   "VALID_CATEGORIES": ["api", "function"],
-  "VALID_ASSET_TYPES": ["apilogs", "applicationlogs"],
+  "VALID_ASSET_TYPES": ["lambda", "apigateway"],
+  "ASSET_INDEX_MAP":[{
+    "asset_type": "lambda",
+    "es_index": ["applicationlogs"]
+  }, {
+    "asset_type": "apigateway",
+    "es_index": ["apilogs"]
+  }],
   "VALID_LOGTYPES": ["warn", "error", "info", "verbose", "debug", "fatal", "trace", "off", "all"],
   "ENV_PREFIX": "{env-prefix}",
   "LOG_LEVELS": [{
