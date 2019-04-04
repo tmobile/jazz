@@ -11,11 +11,11 @@ import groovy.json.JsonOutput
 
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
-@Field def repo_credential_id 
-@Field def aws_credential_id 
-@Field def region 
-@Field def instance_prefix 
-@Field def repo_base 
+@Field def repo_credential_id
+@Field def aws_credential_id
+@Field def region
+@Field def instance_prefix
+@Field def repo_base
 @Field def repo_core
 @Field def scm_type
 
@@ -81,11 +81,10 @@ node {
           deleteUserServices(regionAws);
           deleteStackCloudFrontDists(regionAws)
         }
-        
-         if ( !isPrimaryAccount ) {
+      }
+      if ( !isPrimaryAccount ) {
           processIamRoles(iamRoles);
           processCloudFront(cloudFront);
-        }
       }
     }
   }
@@ -176,7 +175,7 @@ def deleteIam(roleName) {
 def deleteIamRole(roleName) {
  echo "Deleting role ${roleName}"
  sh "aws iam delete-role --role-name ${roleName}"
- sleep(time: 60, unit: "SECONDS")
+ sleep(time: 20, unit: "SECONDS")
 }
 
 def deleteInlinePolicies(roleName) {
@@ -188,7 +187,7 @@ def deleteInlinePolicies(roleName) {
  if (policesNames.size() > 0) {
   for (policyName in policesNames) {
    sh "aws iam delete-role-policy --role-name ${roleName} --policy-name ${policyName}"
-   sleep(time: 30, unit: "SECONDS")
+   sleep(time: 10, unit: "SECONDS")
   }
  } else {
   echo "No Inline Policies attached with role ${roleName}"
@@ -207,7 +206,7 @@ def detachIamPolicies(roleName) {
    def policyArn = policy["PolicyArn"]
    echo "Policy Arn is ${policyArn}"
    sh "aws iam detach-role-policy --role-name ${roleName} --policy-arn ${policyArn} &"
-   sleep(time: 30, unit: "SECONDS")
+   sleep(time: 10, unit: "SECONDS")
   }
  } else {
   echo "No Custom Policies attached with role ${roleName}"
@@ -231,7 +230,7 @@ def deleteAPIGateway(restApiId, regionAws) {
   // If Iam exists delete it
   if (status) {
    sh "aws apigateway delete-rest-api --rest-api-id ${restApiId} --region ${regionAws}"
-   sleep(time: 60, unit: "SECONDS")
+   sleep(time: 30, unit: "SECONDS")
   } else {
    echo "API id ${restApiId} not exists"
   }
@@ -258,7 +257,7 @@ def deletecloudFront(distributionId) {
   if (status) {
    def ifMatchId = getEtag(distributionId)
    sh "aws cloudfront delete-cloud-front-origin-access-identity --id  ${distributionId} --if-match ${ifMatchId}"
-   sleep(time: 60, unit: "SECONDS")
+   sleep(time: 30, unit: "SECONDS")
   } else {
    echo "Cloud front origin Access ${distributionId} not exists"
   }
@@ -306,11 +305,9 @@ def deletes3Bucket(bucketName) {
    echo "Removing items from bucket"
    sh "aws s3api delete-bucket --bucket ${bucketName}"
    echo "Deleting the bucket"
-   sleep(time: 60, unit: "SECONDS")
   } else if (s3Exists && (isBucketEmpty(bucketName))) {
    sh "aws s3api delete-bucket --bucket ${bucketName}"
    echo "Deleting the bucket"
-   sleep(time: 60, unit: "SECONDS")
   } else {
    echo "No s3bucket found with Bucket Name  ${bucketName}"
   }
@@ -340,7 +337,7 @@ def deletePrimaryAccountPolicy(accountId, accountsArray){
           
           if (status) {
             sh "aws iam delete-role-policy --role-name ${instance_prefix}_platform_services --policy-name ${instance_prefix}_${accountId}_NonPrimaryAssumePolicy"
-            sleep(time: 30, unit: "SECONDS")
+            sleep(time: 10, unit: "SECONDS")
           } else {
             echo "${instance_prefix}_NonPrimaryAssumePolicy not exists"
           }
@@ -401,7 +398,7 @@ def deleteStack(stackName, regionAws) {
     if (status) {
       echo "Status is : ${status}"
       sh "aws cloudformation delete-stack --stack-name ${stackName} --region ${regionAws}"
-      sleep(time: 60, unit: "SECONDS")
+      sleep(time: 30, unit: "SECONDS")
     } else {
       echo "Stack ${stackName} not exists"
     }
@@ -416,7 +413,7 @@ def deleteStack(stackName, regionAws) {
 **/
 def deleteStackCloudFrontDists(regionAws) {
   try {
-    def output = sh(script:"aws cloudfront list-distributions", returnStdout: true)
+    def output = sh(script:"aws cloudfront list-distributions --region ${regionAws}", returnStdout: true)
     def stacks = parseJson(output)
     if(stacks.size() > 0 ){
       for(distribution in stacks['DistributionList']['Items']){
@@ -460,7 +457,6 @@ def disableCloudFront(id, config){
     writeFile file: "${filename}", text: "${configJson}"
     echo "Started disabling CloudFront Distribution Id ${id}"
     def disableDistribution = sh(script:"aws cloudfront update-distribution --id ${id} --distribution-config file://${filename} --if-match ${etag}", returnStdout: true)
-    sleep(time:60,unit:"SECONDS")
     sh "rm -rf ${filename}"
   } catch( ex ) {
     echo "${ex.message}"
@@ -486,7 +482,6 @@ def deleteCloudFront(id) {
       def config = getDistributionConfig(id)
       def etag = config['ETag']
       def deleteDistribution = sh(script:"aws cloudfront delete-distribution --id ${id} --if-match ${etag}", returnStdout: true)
-      sleep(time:60,unit:"SECONDS")
     }
   } catch( ex ) {
     echo "{ex.message}"
