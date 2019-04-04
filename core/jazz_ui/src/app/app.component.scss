@@ -181,7 +181,7 @@
     overflow: hidden;
     margin: 0 0 6px;
     padding: 15px 15px 15px 60px;
-    width: 400px;
+    width: 500px;
     -moz-border-radius: 3px 3px 3px 3px;
     -webkit-border-radius: 3px 3px 3px 3px;
     border-radius: .5em;
@@ -230,7 +230,7 @@
     display: inline-block;
     background-repeat: no-repeat;
     background-position: 58% 50%;
-    background-image: url("/assets/images/icons/success-glyph-white.png") !important;
+    background-image: url("/assets/images/icons/success-glyph-green.png") !important;
     background-size: 55%;
   }
   .icon-warning {
@@ -281,7 +281,7 @@
     color: white;
     box-shadow: none;
     display: flex;
-    padding: .6em 0 !important;
+    padding: 1.4em 0 !important;
     top: 8px;
     .toast-title {
       display: block;
@@ -292,7 +292,7 @@
     .toast-content {
       flex: 1;
       font-size: .95em;
-      margin: 0 0 5px 70px;
+      margin: 0 10px 5px 70px;
       text-shadow: 0 0.05em black;
     }
     .toast-message {

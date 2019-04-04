@@ -93,7 +93,7 @@ export const toastMessage = {
         "error0":"Your login failed, seems like we can't reach our servers."
     },
     "register":{
-        "success":"A verification email is sent to ",
+        "success":"A verification email has been sent to ",
         "error400":"Your registration failed. Seems like something went wrong.",
         "error401":"Token expired",
         "error404":"Your registration failed. Seems like something went wrong.",
