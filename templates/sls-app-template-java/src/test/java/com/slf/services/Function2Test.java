@@ -14,7 +14,7 @@ public class Function2Test {
 
 	private Function2 f2 = new Function2();
 
-	public  Context context = new ContextStub("Function2-prod");
+	public  Context context = new ContextStub("mydomain80t-myname80t-Function2-prod");
 
 	@Test
 	public void shouldExecuteRequest() {

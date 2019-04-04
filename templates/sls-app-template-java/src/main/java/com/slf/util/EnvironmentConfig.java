@@ -33,18 +33,25 @@ public class EnvironmentConfig {
 	public EnvironmentConfig (Context context) throws Exception {
 		String fnName = context.getFunctionName();
 		String fnNameNoEnv = null;
+		String fnNoPrefix = null;
 
 		if(null != fnName) {
 			int lastIndx = fnName.lastIndexOf("-");
 			stage = fnName.substring(lastIndx+1);
 			fnNameNoEnv = fnName.substring(0, lastIndx);
+			int preIndx = fnNameNoEnv.lastIndexOf("-");
+			if(preIndx < 0) { fnNoPrefix = fnNameNoEnv; }
+			else {
+				fnNoPrefix = fnNameNoEnv.substring(preIndx+1);
+			}
+
 		}
 
 		if(stage.isEmpty()) {
 			throw new BadRequestException("Invalid Stage. Can't load ENV configurations");
 		}
 
-		String configFile = "/"+fnNameNoEnv+"/"+stage+".properties";
+		String configFile = "/"+fnNoPrefix+"/"+stage+".properties";
 		logger.info("Loading configuration file for env..:"+configFile);
 		props.load(this.getClass().getResourceAsStream(configFile));
 	}
