@@ -13,7 +13,7 @@
       "api": ["{conf_deployment_targets_api}"],
       "function": ["{conf_deployment_targets_function}"],
       "website": ["{conf_deployment_targets_website}"],
-      "sls-app": ["aws_sls-app"]
+      "sls-app": ["{conf_deployment_targets_sls-app}"]
     },
     "EVENT_SOURCE_NAME": {
         "s3": {
