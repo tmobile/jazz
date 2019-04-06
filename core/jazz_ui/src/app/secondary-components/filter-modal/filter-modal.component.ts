@@ -1,5 +1,6 @@
-import {Component, EventEmitter, Input, OnInit, Output,OnChanges, SimpleChanges, SimpleChange} from '@angular/core';
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import * as _ from "lodash";
+
 
 @Component({
   selector: 'filter-modal',
@@ -15,33 +16,30 @@ export class FilterModalComponent implements  OnInit {
     columns: []
   };
   public opened = false;
+  public data:any;
 
   constructor() {
   }
   ngOnInit() {
-    // console.log("fields",this.fields)
-    // let columns = _(this.fields)
-    //   .groupBy('column')
-    //   .map((column, key, array) => {
-    //     return {
-    //       label: key,
-    //       fields: column
-    //     }
-    //   })
-    //   .value();
-    // this.form.columns = columns
+    let columns = _(this.fields)
+      .groupBy('column')
+      .map((column, key, array) => {
+        return {
+          label: key,
+          fields: column
+        }
+      })
+      .value();
+    this.form.columns = columns
   }
 
   reset() {
     this.ngOnInit();
   }
 
-  setFields(value){
-    console.log('val',value)
-    for(var i=0;i<=value.length;i++){
-    if(value.column !=='undefined')
+  setFields(value)
     {
-    this.fields = value;
+    this.fields = value; 
     let columns = _(this.fields)
       .groupBy('column')
       .map((column, key, array) => {
@@ -52,9 +50,9 @@ export class FilterModalComponent implements  OnInit {
       })
       .value();
     this.form.columns = columns;
-  }}}
+  }
+ 
   changeFilter(filterSelected, filterField) {
-    console.log("filterSelected, filterField",filterSelected, filterField)
     filterField.selected = filterSelected;
     this.formChange.emit(filterField);
   }

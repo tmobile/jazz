@@ -6,6 +6,8 @@ import {UtilsService} from '../../core/services/utils.service';
 import {ActivatedRoute} from '@angular/router';
 import {RequestService} from '../../core/services';
 import {Observable} from 'rxjs/Observable';
+import {environment} from '../../../environments/environment.oss'
+import { environment as env_oss} from './../../../environments/environment.oss';
 import * as _ from 'lodash';
 declare let Promise;
 @Component({
@@ -15,13 +17,14 @@ declare let Promise;
 })
 export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   @Input() service;
+  @Input()  assetTypeList;
   @ViewChild('filters') filters;
-
+  public assetWithDefaultValue:any=[];
+  payload:any={};
   public serviceType;
   public assetFilter;
   public environmentFilter;
   public assetList:any = [];
-  assetSelected:string=this.assetList[0];
   public formFields: any = [
     {
       column: 'View By:',
@@ -76,7 +79,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public graphData;
   private http;
   public assetType=[];
-
+  public assetSelected:any;
   constructor(private request: RequestService,
               private utils: UtilsService,
               private activatedRoute: ActivatedRoute) {
@@ -86,17 +89,21 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     setTimeout(() => {
       this.sectionStatus = 'loading';
-
     if (!this.activatedRoute.snapshot.params['env']) {
-      return (this.getEnvironments() &&this.getAssetType())
+      return this.getEnvironments() 
         .then(() => {
-          return this.applyFilter();
+          return (this.applyFilter());
         });
     } else {
       return this.applyFilter();
     }
 
     })
+  }
+  ngOnChanges(x:any){
+    if(x.service.currentValue.domain){
+      this.getAssetType()
+    }
   }
 
   ngOnInit() {
@@ -119,25 +126,36 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   refresh() {
     this.ngAfterViewInit();
   }
-  getAssetType(){
-    return this.http.get('/jazz/assets',{
-      domain: this.service.domain,
-      service: this.service.name
+  getAssetType(data?){
+		let self=this;
+    return self.http.get('/jazz/assets',{
+      domain: self.service.domain,
+			service:self.service.name,
     }).toPromise().then((response:any)=>{
       if(response&&response.data&&response.data.assets){
-        this.assetType=response.data.assets[0].asset_type;
-        let assets=_(response.data.assets).map('asset_type').uniq().value();
-        this.assetFilter={
-          column: 'Filter By:',
+				let assets=_(response.data.assets).map('asset_type').uniq().value();
+				self.assetWithDefaultValue=assets;
+        let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
+		    self.assetWithDefaultValue = validAssetList;
+        for(var i=0;i<self.assetWithDefaultValue.length;i++){
+        self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
+        }
+        self.assetFilter={
+            column: 'Filter By:',
             label: 'ASSET TYPE',
-            options: assets,
-            values: assets,
-        };
-        this.assetList=assets;
-        let assetField = this.filters.getFieldValueOfLabel('ASSET TYPE');
+            options:  this.assetList,
+            values: validAssetList,
+            selected:validAssetList[0].replace(/_/g, " ")
+				};
+				if(!data){
+          self.assetSelected=validAssetList[0];
+        }
+        this.payload.asset_type = this.assetSelected.replace(/ /g ,"_");
+       let assetField = self.filters.getFieldValueOfLabel('ASSET TYPE');
         if (!assetField) {
-          this.formFields.splice(0, 0, this.assetFilter);
-      }
+					self.formFields.splice(0, 0, self.assetFilter);
+					self.filters.setFields(self.formFields);
+				}
     }
     })
     .catch((error) => {
@@ -165,7 +183,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
             this.formFields.splice(0, 0, this.environmentFilter);
           }
         }
-       
       })
       
       .catch((error) => {
@@ -265,11 +282,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           }
         }
       }
-
-
     }
 
-    if (changedFilter && (changedFilter.label === 'ASSET' ||
+    if (changedFilter && (changedFilter.label === 'ASSET' || 
       changedFilter.label === 'METHOD' ||
       changedFilter.label === 'PATH')) {
       this.setAsset();
@@ -279,8 +294,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   queryMetricsData() {
-    debugger
     this.sectionStatus = 'loading';
+    this.getAssetType();
     let request = {
       url: '/jazz/metrics',
       body: {
@@ -288,7 +303,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         service: this.service.name,
         environment: this.filters.getFieldValueOfLabel('ENVIRONMENT') || this.activatedRoute.snapshot.params['env'] || 'prod',
         start_time: this.filters.getFieldValueOfLabel('TIME RANGE').range,
-        asset_type:this.filters.getFieldValueOfLabel('ASSET TYPE'),
+        asset_type:this.assetSelected,
         end_time: moment().toISOString(),
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
         statistics: this.filters.getFieldValueOfLabel('AGGREGATION')

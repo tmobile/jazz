@@ -1,5 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { DataCacheService } from '../../core/services/index';
+import { selectOrCreateRenderHostElement } from '@angular/core/src/linker/view_utils';
 
 
 @Component({
@@ -9,6 +10,7 @@ import { DataCacheService } from '../../core/services/index';
 })
 export class FilterTagsComponent implements OnInit {
     @Input() filtersApplied: any = {};
+    @Input() selected ;
     @Output() OnCancel:EventEmitter<any> = new EventEmitter<any>();
     areTagsDefault:boolean;
    
@@ -46,9 +48,10 @@ export class FilterTagsComponent implements OnInit {
             value:'POST'
         },
         {
-            key:'Asset',
-            value:'Dynamo DB'
+            key:'Asset Type',
+            value:'lambda'
         }
+            
     ];
         filter_TimeRange:any;
         filter_TimeRangeSlider:any;
@@ -69,7 +72,7 @@ export class FilterTagsComponent implements OnInit {
         filter_Region_default:any='reg 1';
         filter_Env_default:any='prod';
         filter_Method_default:any='POST';
-        filter_Asset_default:any = 'Dynamo DB';
+        filter_Asset_default:any = 'lambda';
 
 
     constructor(private cache: DataCacheService){
@@ -77,6 +80,7 @@ export class FilterTagsComponent implements OnInit {
     }
 
     setDefaults(){
+        console.log("this.selected",this.selected)
         switch(this.filterTags[0].value){
             case 'Day':{   this.filter_Period_default = '15 Minutes'; 
                 break;

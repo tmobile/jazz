@@ -1,7 +1,7 @@
 <div class="radio-group pad-left0 events-radio " >
     <div >
     <div *ngFor="let item of radioContent" class="radio-container" >
-      <input type="radio" name="assetType" class="test-focus" value="{{item}}" id="{{item}}" (click)="onRadioClick(item)"  [checked]="item===selected">
+      <input type="radio" name="assetType" class="test-focus" value="{{item}}" id="{{item}}" (click)="onRadioClick(item)"  [checked]="item === selected">
       <label for="{{item}}"class="item"><span></span><span class="background"></span>
       {{item}}
       </label>

@@ -12,7 +12,9 @@ import { AdvancedFilterService } from './../../advanced-filter.service';
 import { AdvFilters } from './../../adv-filter.directive';
 import { environment } from './../../../environments/environment';
 import { environment as env_internal } from './../../../environments/environment.internal';
-
+import { environment as env_oss} from './../../../environments/environment.oss';
+import * as _ from 'lodash';
+declare let Promise;
 
 
 
@@ -43,6 +45,7 @@ export class ServiceLogsComponent implements OnInit {
 	}
 	filter_loaded:boolean = false;
 	@Input() service: any = {};
+	@Output() onAssetSelected:EventEmitter<any> = new EventEmitter<any>();
 	@ViewChild('filtertags') FilterTags: FilterTagsComponent;
 	@ViewChild(AdvFilters) advFilters: AdvFilters;
 	componentFactoryResolver:ComponentFactoryResolver;
@@ -79,8 +82,9 @@ export class ServiceLogsComponent implements OnInit {
 			show:true,
 		}
 	}
-	public assetVar:string;
-	public assetTypeVar:string;
+	selectFilter:any={};
+	public assetWithDefaultValue:any=[];
+	public assetType:any;
 	fromlogs:boolean = true;
 	payload:any={};
 	private http:any;
@@ -88,12 +92,13 @@ export class ServiceLogsComponent implements OnInit {
 	errBody: any;
 	parsedErrBody: any;
 	errMessage: any;
+	public assetList:any = [];
+	public assetSelected:any;
 	private toastmessage:any;
 	loadingState:string='default';
 	 private subscription:any;
 	 filterloglevel:string = 'ERROR';
 	 environment:string = 'prod';
-	 asset_type:string='Dynamo DB'
 	 pageSelected:number =1;
 	 expandText:string='Expand all';
 	 ReqId=[];
@@ -156,11 +161,9 @@ export class ServiceLogsComponent implements OnInit {
 	sliderFrom = 1;
 	sliderPercentFrom;
 	sliderMax:number = 7;
-	assetList:Array<string> = ['Dynamo DB','API Gateway','Function','Stream'];
 	rangeList: Array<string> = ['Day', 'Week', 'Month', 'Year'];
 	selectedTimeRange:string= this.rangeList[0];
-	
-
+	assetEvent:string;
 	filterSelected: Boolean = false;
 	searchActive: Boolean = false;
 	searchbar: string = '';
@@ -177,17 +180,18 @@ export class ServiceLogsComponent implements OnInit {
 	
 	accList=env_internal.urls.accounts;
 	regList=env_internal.urls.regions;
-	  accSelected:string = this.accList[0];
+	accSelected:string = this.accList[0];
 	regSelected:string=this.regList[0];
-	assetSelected:string=this.assetList[0];
   
     instance_yes;
 	getFilter(filterServ){
 		
-		this.service['islogs']=false;
+		this.service['islogs']=true;
 		this.service['isServicelogs']=true;
 		this.service['ismetrics']=false;
-
+		if(this.assetList){
+			this.service['assetList']=this.assetList;
+		}
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
 		var comp = this;
@@ -201,7 +205,17 @@ export class ServiceLogsComponent implements OnInit {
 		
 			comp.onFilterSelect(event);
 		});
+		this.instance_yes.onAssetSelect.subscribe(event => {
+		
+			comp.onAssetSelect(event);
+		});
 
+	}
+
+	onAssetSelect(event){
+		this.assetEvent=event
+		this.FilterTags.notify('filter-Asset',event);
+		this.assetSelected=event;
 	}
 
 	refresh(){
@@ -217,22 +231,40 @@ export class ServiceLogsComponent implements OnInit {
     this.FilterTags.notify('filter-Region',event);
     this.regSelected=event;
 	 }
-	 onAssetListSelected(event){
-		var asset_type_list=this.cache.get('assetList');
-		var fName = asset_type_list.friendly_name;
-		var index = fName.indexOf(event);
-		var asset = asset_type_list.env[index];
-		this.asset_type = event;
-		this.payload.asset_type=asset;
-		this.resetPayload();
-	 }
- 
-	// onEnvSelected(env){
+	 getAssetType(data?){
+		 let self=this;
+		return this.http.get('/jazz/assets',{
+			      domain: self.service.domain,
+						service: self.service.name,              
+		}).toPromise().then((response:any)=>{
+			if(response&&response.data&&response.data.assets){
+								let assets=_(response.data.assets).map('asset_type').uniq().value();
+								let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
+		            self.assetWithDefaultValue = validAssetList;
+								for(var i=0;i<self.assetWithDefaultValue.length;i++)
+								{
+                self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
+                }
+							
+								if(!data){
+									self.assetSelected=validAssetList[0].replace(/_/g," ");
+								}
+								this.payload.asset_type = this.assetSelected.replace(/_/g ," ");
+								self.assetSelected=validAssetList[0].replace(/_/g," ");
+								self.callLogsFunc();
+								self.getFilter(self.advancedFilters);
+								self.instance_yes.showAsset = true;
+								self.instance_yes.assetSelected = validAssetList[0].replace(/_/g," ");
+		}
+		})
+		.catch((error) => {
+			return Promise.reject(error);
+		})
+	}
+
 
 	onEnvSelected(envt){
-		debugger
 		this.FilterTags.notify('filter-Env',envt);
-
 		// this.logsSearch.environment = env;
 		if(env === 'prod'){
 			env='prod'
@@ -247,7 +279,6 @@ export class ServiceLogsComponent implements OnInit {
 	}
 
 	onFilterSelect(event){
-		console.log("event",event)
 		switch(event.key){
 		  case 'slider':{
 			this.getRange(event.value);
@@ -259,17 +290,15 @@ export class ServiceLogsComponent implements OnInit {
 			this.FilterTags.notifyLogs('filter-TimeRange',event.value);		
 			this.sliderFrom =1;
 			this.FilterTags.notifyLogs('filter-TimeRangeSlider',this.sliderFrom);
-			
 			var resetdate = this.getStartDate(event.value, this.sliderFrom);
 			this.selectedTimeRange = event.value;
 			this.payload.start_time = resetdate;
 			this.resetPayload();
-			
 			break;
 		  }
 		  
 		  case 'account':{
-			  this.FilterTags.notify('filter-Account',event.value);
+			this.FilterTags.notify('filter-Account',event.value);
 			this.accSelected=event.value;
 			break;
 		  }
@@ -286,15 +315,12 @@ export class ServiceLogsComponent implements OnInit {
 			break;
 			}
 			case "asset":{
-				this.FilterTags.notifyLogs('filter-Asset',event.value);
-				this.asset_type=event.value;
-				this.payload.asset_type = event.value;
-				this.resetPayload();
+			this.FilterTags.notifyLogs('filter-Asset',event.value);
+			this.assetSelected=event.value;
+			this.payload.asset_type = this.assetSelected.replace(/ /g ,"_");
+			this.resetPayload();
 			}
-	
-	   
 		}
-		
 	  }
 	getRange(e){
 		this.FilterTags.notifyLogs('filter-TimeRangeSlider',e.from);
@@ -357,7 +383,10 @@ export class ServiceLogsComponent implements OnInit {
 			break;
 			}
 			case 'asset':{
-				this.instance_yes.onAssetListSelected('Dynamo DB');
+
+				this.instance_yes.getAssetType('lambda');
+
+				break;
 			}
 		  case 'all':{ this.instance_yes.onRangeListSelected('Day');    
 				this.instance_yes.onPeriodSelected('15 Minutes');
@@ -366,7 +395,7 @@ export class ServiceLogsComponent implements OnInit {
 				this.instance_yes.onregSelected('reg 1');
 				this.instance_yes.onEnvSelected('prod');
 				this.instance_yes.onMethodListSelected('POST');
-				this.instance_yes.onAssetListSelected('Dynamo DB')
+				this.instance_yes.getAssetType('lambda');
 				break;
 		  	}
 		}
@@ -653,6 +682,10 @@ export class ServiceLogsComponent implements OnInit {
 	
 	  }
 	  ngOnChanges(x:any){
+			if(x.service.currentValue.domain)
+			{
+				this.getAssetType()
+			}
 		  this.fetchEnvlist();
 	  }
 	ngOnInit() {
@@ -666,14 +699,9 @@ export class ServiceLogsComponent implements OnInit {
 			 "size" : this.limitValue,
 		   "offset" : this.offsetValue,
 			 "type":this.filterloglevel ||"ERROR",
-			 "asset_type":this.assetTypeVar,
 		   "end_time": (new Date().toISOString()).toString(),
 		   "start_time":new Date(todayDate.setDate(todayDate.getDate()-this.sliderFrom)).toISOString()
 	   }				
-		this.callLogsFunc();
+		
 	}
-
-	
-	
-
 }

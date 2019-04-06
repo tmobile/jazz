@@ -130,6 +130,7 @@ export class ServicesListComponent implements OnInit {
 
   //'Name','Type','Namespace','Last modified','health','status'
   statusData = ['Status (All)','Status (Active)','Status (Pending)','Status (Stopped)'];
+  
   tabData = ['all','api','function','website','sls app'];
 
   filterSelected: Boolean = false;

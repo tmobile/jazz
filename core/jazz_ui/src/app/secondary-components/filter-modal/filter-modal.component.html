@@ -16,7 +16,7 @@
             </div>
             <div *ngIf="field.label==='ASSET TYPE'">
           <radio-group  [radioContent]="field.options"
-          [selected]="field.selected"
+          [selected]="field.selected || checkData"
           (onSelected)="changeFilter($event, field)"></radio-group>
             </div>
 

@@ -10,10 +10,9 @@ export class RadioGroupComponent implements OnInit {
   @Input() selected;
   @Output() onSelected:EventEmitter<boolean> = new EventEmitter<boolean>();
   constructor() { }
-  
-
   ngOnInit() {
   }
+  
   onRadioClick(selected){
     this.onSelected.emit(selected)
     this.selected = selected;
