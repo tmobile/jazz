@@ -1,8 +1,8 @@
 export const environment = {
   production: true,
-  INSTALLER_VARS:{INSTALLER_VARS},
+  INSTALLER_VARS: {INSTALLER_VARS},
   configFile: 'config/config.oss.json',
-  baseurl:  "https://{API_GATEWAY_KEY_PROD}.execute-api.{inst_region}.amazonaws.com/prod",
+  baseurl: "https://{API_GATEWAY_KEY_PROD}.execute-api.{inst_region}.amazonaws.com/prod",
   api_doc_name: "https://{api_doc_name}.s3.amazonaws.com",
   envName: "oss",
   multi_env: {multi_env},
@@ -44,7 +44,7 @@ export const environment = {
   },
   urls: {
     docs_link: "https://github.com/tmobile/jazz/wiki",
-    swagger_editor: "http://editor.swagger.io/?url=",
+    swagger_editor: "{swagger_editor}",
     content_base: "https://github.com/tmobile/jazz-content/blob/master"
   },
   userJourney: {

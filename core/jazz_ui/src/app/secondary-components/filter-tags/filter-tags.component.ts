@@ -80,7 +80,6 @@ export class FilterTagsComponent implements OnInit {
     }
 
     setDefaults(){
-        console.log("this.selected",this.selected)
         switch(this.filterTags[0].value){
             case 'Day':{   this.filter_Period_default = '15 Minutes'; 
                 break;

@@ -37,7 +37,7 @@ else{
     LandingComponent,
     Error404Component,
     TestApiComponent,
-    UserJourneyComponent,
+    UserJourneyComponent
   ],
   imports: [
     
