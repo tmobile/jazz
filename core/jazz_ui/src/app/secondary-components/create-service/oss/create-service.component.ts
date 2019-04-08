@@ -4,7 +4,7 @@
   * @author
 */
 import { Http, Headers, Response } from '@angular/http';
-import { Component, Input, OnInit, Output, EventEmitter, NgModule } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter, NgModule, AfterViewInit,ElementRef } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ServiceFormData, RateExpression, CronObject, EventExpression } from '../service-form-data';
 import { FocusDirective } from '../focus.directive';
@@ -15,7 +15,10 @@ import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component";
 import { environment as env_oss } from './../../../../environments/environment.oss';
-import {environment} from "../../../../environments/environment";
+import { environment } from "../../../../environments/environment";
+
+// const YamlValidator = require('yaml-validator');
+
 
 @Component({
   selector: 'create-service',
@@ -25,9 +28,45 @@ import {environment} from "../../../../environments/environment";
 })
 
 
-export class CreateServiceComponent implements OnInit {
+export class CreateServiceComponent implements OnInit , AfterViewInit{
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
+  slsFile;
+  deploymentDescriptorText = env_oss.deploymentDescriptorText;
+  typeofservice:boolean=true;
+  typeofplatform:boolean=false;
+  typeofserviceSelected:boolean = false;
+  typeofplatformSelected:boolean = false;
+  typeofruntimeSelected:boolean = false;
+  deploymenttargetSelected:boolean = false;
+  typeOfRuntime:string = "nodejs";
+  serviceTypes = ["api","function","website","custom"];
+  serviceTypesLabels = ["API","Function","Website","Build Custom"]
+  platformTypes = ["aws","azure","gcloud"];
+  platformTypesLabels = ["AWS","Azure","Google Cloud"];
+  deploymentTargetsList=["aws_apigateway","gcp_apigee"];
+  deploymentTargetsLabels=["AWS API Gateway","GCP APIGEE"];
+  ids=[
+    "service-type",
+    "platform-type",
+    "deployment-type",
+    "runtime-type",
+    "additional",
+    "typeevents"
+  ]
+  // "service-name",
+  // "service-namespace",
+  // "service-description",
+  // "deployment-descriptor",
+  // "slack-channel",
+  // "cache-ttl",
+  // "cdn-config",
+  // "event-schedule",
+  // "aws-events"
+  typeform:boolean=false;
+  typeevents:boolean=false;
+  deploymentDescriptorData = ["API Template","Function Template", "Website Template", "Start New"]
+  selectedList:string='API Template';
   sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
   kinesisStreamString:string = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/";
   dynamoStreamString:string = "arn:aws:dynamo:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/";
@@ -67,6 +106,7 @@ export class CreateServiceComponent implements OnInit {
   vpcSelected: boolean = false;
   resMessage:string='';
   cdnConfigSelected:boolean = false;
+  descriptorSelected:boolean = false;
   focusindex:any = -1;
   scrollList:any = '';
   toast : any;
@@ -98,7 +138,7 @@ export class CreateServiceComponent implements OnInit {
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
   public apigeeFeature = this.buildEnvironment.INSTALLER_VARS.feature.apigee && this.buildEnvironment.INSTALLER_VARS.feature.apigee.toString() === "true" ? true : false;
-  public selectedDeploymentTarget = "";
+  public selectedDeploymentTarget = "aws_apigateway";
 
   constructor (
     private toasterService: ToasterService,
@@ -107,7 +147,8 @@ export class CreateServiceComponent implements OnInit {
     private cache: DataCacheService,
     private messageservice: MessageService,
     private servicelist: ServicesListComponent,
-    private authenticationservice: AuthenticationService
+    private authenticationservice: AuthenticationService,
+    private elementRef:ElementRef
   ) {
     this.toastmessage = messageservice;
     this.runtimeObject = env_oss.envLists;
@@ -118,6 +159,12 @@ export class CreateServiceComponent implements OnInit {
   public focusKinesis = new EventEmitter<boolean>();
   public focusS3 = new EventEmitter<boolean>();
   public focusSQS = new EventEmitter<boolean>();
+
+  scrollTo(id) {
+debugger
+    const ele = document.getElementById(id);
+    ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
+  }
 
   chkDynamodb() {
     this.focusDynamo.emit(true);
@@ -141,6 +188,10 @@ export class CreateServiceComponent implements OnInit {
 
  // function for opening and closing create service popup
   closeCreateService(serviceRequest){
+    // this.typeofserviceSelected = false;
+    // this.typeofruntimeSelected = false;
+    // this.deploymenttargetSelected = false;
+    // this.typeofplatformSelected = false;
     if(serviceRequest){
       this.servicelist.serviceCall();
     }
@@ -151,7 +202,27 @@ export class CreateServiceComponent implements OnInit {
     this.onClose.emit(false);
   }
 
+  getFiles(event){
+    this.slsFile;
+    console.log('event', event)
+    this.readThis(event.target);
 
+    
+  }
+  onFilterSelected(event){
+  }
+  readThis(inputValue: any) : void {
+    var file:File = inputValue.files[0]; 
+    var myReader:FileReader = new FileReader();
+
+    myReader.onloadend = function(e){
+      // you can perform an action with readed data here
+      console.log('done')
+      console.log(myReader);
+    }
+
+    myReader.readAsText(file);
+  }
 
   selectedApprovers = [];
 
@@ -160,6 +231,42 @@ export class CreateServiceComponent implements OnInit {
   // function for changing service type
   changeServiceType(serviceType){
     this.typeOfService = serviceType;
+    // let id = 'typeofplatform'
+
+    // var top = document.getElementById(id).offsetTop;  
+    // this.scrollTo(top, 10);
+    // this.typeofserviceSelected = true;
+    // this.typeofplatform = true;
+    var top = document.getElementById("platform-type").offsetTop ; 
+    console.log('top',top)               
+this.scrollTo('platform-type');
+  }
+
+  deploymentOpen(){
+    // this.typeofplatform = !this.typeofplatform;
+    // this.typeofserviceSelected = true;
+
+  }
+
+  additionalOpen(){
+    // this.typeform = !this.typeform;
+    // this.typeofruntimeSelected = true;
+    // this.deploymenttargetSelected = true;
+    // this.typeofplatformSelected = true;
+
+
+  }
+
+  changeDeploymentTarget(deploymentTarget){
+    this.selectedDeploymentTarget =  deploymentTarget;
+    this.scrollTo('runtime-type');
+
+
+  }
+
+  changeRuntimeType(runtimeType){
+    this.typeOfRuntime=runtimeType;
+   
   }
 
   // function for changing platform type
@@ -167,11 +274,21 @@ export class CreateServiceComponent implements OnInit {
     if(!this.disablePlatform){
       this.typeOfPlatform = platformType;
     }
+    if(document.getElementById('deployment-type')){
+      this.scrollTo('deployment-type');
+    }     
+    else{
+      this.scrollTo('runtime-type');
+    }
+
   }
 
   // function called on runtime change(radio)
   onSelectionChange(val){
     this.runtime = val;
+    this.typeform = true;
+    this.scrollTo('additional');
+
   }
 
   // function called on event schedule change(radio)
@@ -494,7 +611,7 @@ export class CreateServiceComponent implements OnInit {
     this.validateChannelName();
   }
 
-  validateName(event) {
+  validateName(event,id) {
     if(this.model.serviceName != null &&(this.model.serviceName[0] === '-' || this.model.serviceName[this.model.serviceName.length - 1] === '-')){
       this.invalidServiceName = true;
     }
@@ -504,6 +621,8 @@ export class CreateServiceComponent implements OnInit {
     if(this.invalidServiceName == false && this.invalidDomainName==false){
       this.serviceNameAvailability();
     }
+
+    this.scrollTo(id);
 }
   // function for service name avalability //
   serviceNameAvailability(){
@@ -630,13 +749,55 @@ export class CreateServiceComponent implements OnInit {
     this.servicePatterns = env_oss.servicePatterns;
   }
 
+  validateYAML(){
+    const yamlLint = require('yaml-lint'); 
+    yamlLint.lint(this.deploymentDescriptorText).then(() => {
+      console.log('Valid YAML file.');
+    }).catch((error) => {
+      console.error('Invalid YAML file.', error);
+    });
+  }
+
+ 
+  onScroll(event){
+    let el = document.getElementById('crs');
+    for(let i=0;i<this.ids.length;i++){
+      let ele = document.getElementById(this.ids[i]);
+      if(el.offsetHeight + el.scrollTop == el.scrollHeight)
+      {
+        debugger
+        ele.classList.remove('in-active');
+        continue;
+      }
+      let windowHeight = window.innerHeight;
+      if(ele){
+        var rect = ele.getBoundingClientRect();       
+        let diff = windowHeight - ele.offsetHeight;
+        
+        if(i!=0){
+          if(rect.top < ((diff/2)-75) || rect.bottom > windowHeight-((diff/2)-75)){
+            ele.classList.add('in-active');    
+          }
+          
+          else{
+            ele.classList.remove('in-active');    
+          }
+        }
+        
+      }
+    }
+    
+    
+  }
   ngOnInit() {
     this.getData();
     this.loadMaxLength();
     if(env_oss.slack_support) this.SlackEnabled=true;
   };
     // cron validation related functions //
+  ngAfterViewInit(){
 
+  }
   inputChanged(val){
     this.Currentinterval = val;
   }
@@ -649,6 +810,47 @@ export class CreateServiceComponent implements OnInit {
     }
     return false;
   };
+
+  hasClass(el, cls) {
+    if (el.className.match('(?:^|\\s)'+cls+'(?!\\S)')) { return true; } 
+    }
+  addClass(el, cls) {
+    if (!el.className.match('(?:^|\\s)'+cls+'(?!\\S)')){ el.className += ' '+cls; } 
+    }
+  delClass(el, cls) {
+    el.className = el.className.replace(new RegExp('(?:^|\\s)'+cls+'(?!\\S)'),'');
+    }
+
+  elementFromTop(elem, classToAdd, distanceFromTop, unit) {
+    var winY = window.innerHeight || document.documentElement.clientHeight,
+        distTop = elem.getBoundingClientRect().top,
+        distPercent = Math.round((distTop / winY) * 100),
+        distPixels = Math.round(distTop),
+        distUnit;
+    distUnit = unit == 'percent' ? distPercent : distPixels;
+    if (distUnit <= distanceFromTop) {
+      if (!this.hasClass(elem, classToAdd)) { this.addClass(elem, classToAdd); }
+      } else {
+      this.delClass(elem, classToAdd);
+      }
+    }
+
+  // newFunc(){
+    
+  //   // params: element id, class to add, distance from top, unit ('percent' or 'pixels')
+  //   this.elementRef.nativeElement.querySelector('my-element')
+  //   window.addEventListener('scroll', function() {
+  //     this.elementFromTop(document.getElementById('service-type'), 'element-from-top', 200, 'pixels');
+  //     }, false);
+  //   window.addEventListener('scroll', function() {
+  //     this.elementFromTop(document.getElementById('service-name'), 'element-from-top', 350, 'pixels');
+  //     }, false);
+  //   window.addEventListener('scroll', function() {
+  //     this.elementFromTop(document.getElementById('event-schedule'), 'element-from-top', 500, 'pixels');
+  //     }, false);
+  // })();
+  
+  // }
 
 
   generateExpression(rateExpression){
@@ -699,5 +901,6 @@ export class CreateServiceComponent implements OnInit {
       return this.rateExpression.cronStr;
     }
   };
+  
 
 }

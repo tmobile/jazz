@@ -1,248 +1,571 @@
 <jazz-mob-header (backClick)='closeCreateService(serviceRequestSuccess)' class='show-for-mobile' [icon]="'notification'" [headText]="'Create a Service'" [status]="'none'"></jazz-mob-header>
-<div class="create-service-wrap" (click)="closeDropdowns()" [ngClass]="isLoading ? 'body-fix':'body-auto'">
-    <section class="each-step-wrap create-service-header hide-for-mobile">
-        <h4 class="bold-title">
-            Create a Service
+<div (scroll)="onScroll($event)" id="crs" class="create-service-wrap" (click)="closeDropdowns()" [ngClass]="isLoading ? 'body-fix':'body-auto'">
+    <section  *ngIf='!serviceRequested' class="each-step-wrap create-service-header hide-for-mobile">
+        <h4 class="bold-title" >
+            Build a Service
         </h4>
         <!-- <img (click)="closeCreateService(serviceRequestSuccess)" src="../assets/images/icons/icon-close@3x.png"> -->
-        <div (click)="closeCreateService(serviceRequestSuccess)" class="icon-icon-close"></div>
+        <div (click)="closeCreateService(serviceRequestSuccess)" class="icon-icon-close close-create-service"></div>
 
     </section>
-    <div *ngIf='!serviceRequested' class="pad-for-mobile">
-        <section class="each-step-wrap type-of-service">
-            <div class="row">
-                <div class="col-lg-4 col-md-4">
-                    <p class="step-title">Choose the type of service you want to create<span>*</span></p>
-                </div>
-                <div class="col-lg-8 col-md-8">
-                    <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')" (click)="changeServiceType('api')">
-                            <div class="icon-icon-api" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                            <p>API</p>
-                        </div>
-                    </section>
-                    <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
-                            <div class="icon-icon-function" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                            <p>LAMBDA</p>
-                        </div>
-                    </section>
-                    <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'website'}" (keyup.enter)="changeServiceType('website')" (click)="changeServiceType('website')">
-                            <div class="icon-icon-web" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                            <p>WEBSITE</p>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        </section>
-        <section class="each-step-wrap type-of-platform">
-            <div class="row">
-                <div class="col-lg-4 col-md-4">
-                    <p class="step-title">Choose what platform you would like to use<span>*</span></p>
-                </div>
-                <div class="col-lg-8 col-md-8">
-                    <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}" (click)="changePlatformType('aws')">
-                                <div class="icon-icon-AWS">
-                                        <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span>
-                                </div>
-                            <p>AWS</p>
-                        </div>
-                    </section>
-                    <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
-                            <div class="icon-icon-azure"></div>
-                            <p>Azure</p>
-                        </div>
-                    </section>
-                    <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}" (click)="changePlatformType('gcloud')">
-                            <div class="icon-icon-googlecloud"></div>
-                            <p>Google Cloud</p>
-                        </div>
-                    </section>
-                </div>
-            </div>
-        </section>
-        <section *ngIf="deploymentTargets[typeOfService.toUpperCase()].active && apigeeFeature" class="form-row deployment-targets">
-          <div class="row">
-            <div class="col-lg-4 col-md-4">
-              <p class="step-title">Choose your API deployment target<span>*</span></p>
-            </div>
-            <radio-checkbox
-              [options]="deploymentTargets[typeOfService.toUpperCase()].options"
-            [(selected)]="selectedDeploymentTarget"></radio-checkbox>
-          </div>
-        </section>
 
-
-        <section class="each-step-wrap run-time" *ngIf="typeOfService != 'website'">
-            <div class="row">
-                <div class="col-lg-4 col-md-4">
-                    <p class="step-title">Choose your runtime<span>*</span></p>
-                </div>
-                <div class="col-lg-8 col-md-8">
-                    <div class="col-lg-12  pad-left0 input-field-container runtime-aln">
-                        <section class="runtime-option">
-                            <div class="radio-container">
-                                <input type="radio" class='test-focus' name="runtime" id="runtimeKeys[0]" [value]="runtimeKeys[0]" [checked]="runtime == runtimeKeys[0]" (click)="onSelectionChange(runtimeKeys[0])">
-                                <label for="runtimeKeys[0]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[0]]}}</label>
-                            </div>
-                        </section>
-                        <section class="runtime-option">
-                            <div class="radio-container">
-                                <input type="radio" name="runtime" id="runtimeKeys[1]" [value]="runtimeKeys[1]" [checked]="runtime == runtimeKeys[1]" (change)="onSelectionChange(runtimeKeys[1])">
-                                <label for="runtimeKeys[1]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[1]]}}</label>
-                            </div>
-                        </section>
-                        <section class="runtime-option">
-                            <div class="radio-container">
-                                <input type="radio" name="runtime" id="runtimeKeys[2]" [value]="runtimeKeys[2]" [checked]="runtime == runtimeKeys[2]" (change)="onSelectionChange(runtimeKeys[2])">
-                                <label for="runtimeKeys[2]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[2]]}}</label>
-                            </div>
-                        </section>
-                        <section class="runtime-option">
-                            <div class="radio-container">
-                                <input type="radio" name="runtime" id="runtimeKeys[3]" [value]="runtimeKeys[3]" [checked]="runtime == runtimeKeys[3]" (click)="onSelectionChange(runtimeKeys[3])">
-                                <label for="runtimeKeys[3]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[3]]}}</label>
-                            </div>
-                        </section>
-                        <section class="runtime-option">
-                            <div class="radio-container">
-                                <input type="radio" name="runtime" id="runtimeKeys[4]" [value]="runtimeKeys[4]" [checked]="runtime == runtimeKeys[4]" (click)="onSelectionChange(runtimeKeys[4])">
-                                <label for="runtimeKeys[4]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[4]]}}</label>
-                            </div>
-                        </section>
-                    </div>
-                </div>
+    <section  *ngIf='!serviceRequested' id="service-type" class="type-section" [class.disable-color]="typeofserviceSelected" >
+        <div class="sec-heading flex" (click)="typeofservice = !typeofservice">
+            <div class='icon-icon-right align-center' [class.rotate-icon-right]="typeofservice" >
+                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="1.2rem" height="1.2rem" viewBox="0 0 357 357" style="enable-background:new 0 0 357 357;" xml:space="preserve" class=""><g><g>
+                        <g id="play-arrow">
+                            <polygon points="38.25,0 38.25,357 318.75,178.5   " data-original="#000000" class="active-path" data-old_color="#ed008c" fill="#ed008c"/>
+                        </g>
+                        </g></g> 
+                    </svg>
+                    <!-- <img *ngIf="!typeofserviceSelected" class="icon-right" src="./../../../../assets/images/icons/icon-traingle.svg">
+                    <img *ngIf="typeofserviceSelected" class="icon-right" src="./../../../../assets/images/icons/icon-traingle-ddd.svg"> -->
+                
             </div>
-        </section>
-        <div class="loader-wrp" [class.show]="isLoading">
-            <div class="loader">
-                <div class="inner one"></div>
-                <div class="inner two"></div>
-                <div class="inner three"></div>
+            <div class="sec-heading-text">
+                Type of service
             </div>
         </div>
-        <form (ngSubmit)="onSubmit(); serviceForm.reset()" #serviceForm="ngForm" class='mob-form-pad'>
-            <section class="each-step-wrap service-name">
+        <div id="typeofservice" class="sec-content" [class.open-sec-content]="typeofservice">
+            <section class="each-step-wrap type-of-service">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Service Name<span>*</span></p>
-                        <p class="step-details">Name of your API, Microservice or Website that you want to create.</p>
+                        <p class="step-title">Choose the type of service you want to create<span>*</span></p>
                     </div>
-                    <div class="col-lg-8 col-md-8">
-                        <section class="col-lg-12  pad-left0">
-                            <div class="input-field-container">
-                                <div class="input-wrapper" [ngClass]="{'available': serviceAvailable && !invalidServiceName && !invalidDomainName, 'unavailable': serviceNotAvailable || !serviceName.valid && (serviceName.dirty || serviceName.touched) || (serviceName.valid && invalidServiceName)}">
-                                    <input name="serviceName" pattern="{{servicePatterns.serviceName}}" type="text" maxlength="{{serviceLimit}}" class="textForm" id="serviceName" required [(ngModel)]="model.serviceName" placeholder="Enter service name" (ngModelChange)="invalidServiceName = false;serviceAvailable=false" #serviceName='ngModel' (blur)="validateName($event)" >
-                                    <img class="input-loader ng-hide">
-                                    <p class="termsConditions" *ngIf="!serviceName.valid && (serviceName.dirty || serviceName.touched)">Service name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
-                                    <p class="termsConditions" *ngIf="serviceName.valid && serviceAvailable && !isDomainDefined">Service name is available !</p>
-                                    <p class="termsConditions" *ngIf="serviceName.valid && serviceAvailable && isDomainDefined && !invalidServiceName && !invalidDomainName">Service name in the specified namespace is available!</p>
-                                    <p class="termsConditions" *ngIf="serviceName.valid && serviceNotAvailable && !isDomainDefined">Service name is not available. Please try another service name</p>
-                                    <p class="termsConditions" *ngIf="serviceName.valid && serviceNotAvailable && isDomainDefined">Service name in the specified namespace is not available. Please try another combination of namespace & service name.</p>
-                                    <p class="termsConditions" *ngIf="serviceName.valid && invalidServiceName">Service name should not start or end with hyphens</p>
-                                    <img *ngIf="serviceName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">
+                    <div  *ngIf="!typeofserviceSelected" class="col-lg-8 col-md-8">
+                        <div class="justify-center">
+                            <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')"  (click)="changeServiceType('api')">
+                                    <div class="icon-icon-api" [ngClass]="{'selected': typeOfService == 'api'}"></div>
+                                    <p>API</p>
                                 </div>
+                            </section>
+                            <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
+                                    <div class="icon-icon-function" [ngClass]="{'selected': typeOfService == 'function'}"></div>
+                                    <p>LAMBDA</p>
+                                </div>
+                            </section>
+                            <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0 service-box-section">
+                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'website'}" (keyup.enter)="changeServiceType('website')" (click)="changeServiceType('website')">
+                                    <div class="icon-icon-web" [ngClass]="{'selected': typeOfService == 'website'}"></div>
+                                    <p>WEBSITE</p>
+                                </div>
+                            </section>
+                        </div>
+                        <div class="justify-center">
+                            OR
+                        </div>
+                        <div class="justify-center custom-sec">
+                            
+                            <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'custom'}" (keyup.enter)="changeServiceType('custom')" (click)="changeServiceType('custom')">
+                                    <div class="icon-icon-custom" [ngClass]="{'selected': typeOfService == 'custom'}">
+                                        <img *ngIf="typeOfService == 'custom'" src="./../../../assets/images/icons/Build-custom.svg"/>
+                                        <img *ngIf="typeOfService != 'custom'" src="./../../../assets/images/icons/Build-custom-gray.svg"/>
+                                    </div>
+                                    <p>Build Custom</p>
+                                </div>
+                            </section>
+                                                       
+                        </div>
+                        
+                    </div>
+                    
+                    <section *ngIf="typeofserviceSelected" class="typeofservice-blur">
+                        
+                        <div class="col-lg-8 col-md-8">
+                            <div class="col-lg-12  pad-left0 input-field-container runtime-aln undisable-color">
+                                <section class="runtime-option disable-color">
+                                    <div class="radio-container">
+                                        <input type="radio" class='test-focus' name="serviceType" id="serviceTypes[0]" [value]="serviceTypes[0]" [checked]="typeOfService == serviceTypes[0]" (click)="changeServiceType('api')">
+                                        <label for="serviceTypes[0]"><span class='outer'></span><span class="background"></span>{{serviceTypesLabels[0]}}</label>
+                                    </div>
+                                </section>
+                                <section class="runtime-option disable-color">
+                                    <div class="radio-container">
+                                        <input type="radio" class='test-focus' name="serviceType" id="serviceTypes[1]" [value]="serviceTypes[1]" [checked]="typeOfService == serviceTypes[1]" (click)="changeServiceType('function')">
+                                        <label for="serviceTypes[1]"><span class='outer'></span><span class="background"></span>{{serviceTypesLabels[1]}}</label>
+                                    </div>
+                                </section>
+                                <section class="runtime-option disable-color">
+                                    <div class="radio-container">
+                                        <input type="radio" class='test-focus' name="serviceType" id="serviceTypes[2]" [value]="serviceTypes[2]" [checked]="typeOfService == serviceTypes[2]" (click)="changeServiceType('website')">
+                                        <label for="serviceTypes[2]"><span class='outer'></span><span class="background"></span>{{serviceTypesLabels[2]}}</label>
+                                    </div>
+                                </section>
+                                <section>Or</section>
+                                <section class="runtime-option disable-color buildcustom-radio">
+                                        <div class="radio-container">
+                                            <input type="radio" class='test-focus' name="serviceType" id="serviceTypes[3]" [value]="serviceTypes[3]" [checked]="typeOfService == serviceTypes[3]" (click)="changeServiceType('custom')"> 
+                                            <label for="serviceTypes[3]"><span class='outer'></span><span class="background"></span>{{serviceTypesLabels[3]}}</label>
+                                        </div>
+                                </section>
+                                
+                                
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </section>
+
+            
+        </div>
+    </section>
+
+    <section  *ngIf='!serviceRequested' class="type-section" [class.disable-color]="typeofruntimeSelected">
+        <div class="sec-heading flex" (click)="deploymentOpen()">
+            <div class='icon-icon-right align-center' [class.rotate-icon-right]="typeofplatform">
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="1.2rem" height="1.2rem" viewBox="0 0 357 357" style="enable-background:new 0 0 357 357;" xml:space="preserve" class=""><g><g>
+                    <g id="play-arrow">
+                        <polygon points="38.25,0 38.25,357 318.75,178.5   " data-original="#000000" class="active-path" data-old_color="#ed008c" fill="#ed008c"/>
+                    </g>
+                    </g></g> 
+                </svg>
+                <!-- <img class="icon-right" src="./../../../../assets/images/icons/icon-traingle.svg"> -->
+            </div>
+            <div class="sec-heading-text" >
+                Deployment details
+            </div>
+        </div>
+        <div id="typeofplatform" class="sec-content each-step-wrap" [class.open-sec-content-deplyoments]="typeofplatform">
+            <section class="type-of-platform" [class.disable-color]="typeofplatformSelected">
+                <div class="row">
+                    <div class="col-lg-4 col-md-4">
+                        <p class="step-title">Choose what platform you would like to use<span>*</span></p>
+                    </div>
+                    <div  id="platform-type" *ngIf="!typeofplatformSelected" class="col-lg-8 col-md-8">
+                        <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                            <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}" (click)="changePlatformType('aws')">
+                                    <div class="icon-icon-AWS">
+                                            <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span>
+                                    </div>
+                                <p>AWS</p>
+                            </div>
+                        </section>
+                        <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                            <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
+                                <div class="icon-icon-azure"></div>
+                                <p>Azure</p>
+                            </div>
+                        </section>
+                        <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                            <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}" (click)="changePlatformType('gcloud')">
+                                <div class="icon-icon-googlecloud"></div>
+                                <p>Google Cloud</p>
                             </div>
                         </section>
                     </div>
+
+                    <section  id="platform-type-radio" *ngIf="typeofplatformSelected" class="typeofservice-blur">                
+                        <div class="col-lg-8 col-md-8">
+                            <div class="col-lg-12  pad-left0 input-field-container runtime-aln">
+                                <section class="runtime-option disable-color">
+                                    <div class="radio-container">
+                                        <input type="radio" class='test-focus' name="platformType" id="platformTypes[0]" [value]="platformTypes[0]" [checked]="typeOfPlatform == platformTypes[0]" (click)="changePlatformType('aws')">
+                                        <label for="platformTypes[0]"><span class='outer'></span><span class="background"></span>{{platformTypesLabels[0]}}</label>
+                                    </div>
+                                </section>
+                                <section class="runtime-option disable-event">
+                                    <div class="radio-container">
+                                        <input type="radio" class='test-focus' name="platformType" id="platformTypes[1]" [value]="platformTypes[1]" [checked]="typeOfPlatform == platformTypes[1]" (click)="changePlatformType('azure')">
+                                        <label for="platformTypes[1]"><span class='outer'></span><span class="background"></span>{{platformTypesLabels[1]}}</label>
+                                    </div>
+                                </section>
+                                <section class="runtime-option disable-event">
+                                    <div class="radio-container">
+                                        <input type="radio" class='test-focus' name="platformType" id="platformTypes[2]" [value]="platformTypes[2]" [checked]="typeOfPlatform == platformTypes[2]" (click)="changePlatformType('gcloud')">
+                                        <label for="platformTypes[2]"><span class='outer'></span><span class="background"></span>{{platformTypesLabels[2]}}</label>
+                                    </div>
+                                </section>
+                                
+                                
+                            </div>
+                        </div>
+                    </section>
                 </div>
             </section>
-            <section class="each-step-wrap domain-name">
+            <section *ngIf="deploymentTargets[typeOfService.toUpperCase()].active && apigeeFeature" class="form-row deployment-targets" [class.disable-color]="deploymenttargetSelected">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Namespace<span>*</span></p>
-                        <p class="step-details">Namespaces provide easier abstraction to implement similar security & access control on your APIs.</p>
+                    <p class="step-title">Choose your API deployment target<span>*</span></p>
                     </div>
-                    <div class="col-lg-8 col-md-8">
-                        <section class="col-lg-12  pad-left0">
-                            <div class="input-field-container">
-                                <div class="input-wrapper" [ngClass]="{'unavailable' : !domainName.valid && (domainName.dirty || domainName.touched) || (domainName.valid && invalidDomainName) }">
-                                    <input name="domainName" pattern="{{servicePatterns.domainName}}" maxlength="{{domainLimit}}" type="text" class="textForm" id="domainName" required placeholder="Enter namespace" [(ngModel)]="model.domainName" #domainName='ngModel' (blur)="validateName($event)" (ngModelChange)="invalidDomainName=false" required>
-                                    <p class="termsConditions" *ngIf="!domainName.valid && (domainName.dirty || domainName.touched)">Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
-                                    <p class="termsConditions" *ngIf="domainName.valid && invalidDomainName">Namespace should not start or end with hyphens</p>
-                                    <img *ngIf="serviceName.valid && domainName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">
-                                </div>
+                    
+
+                    <div  id="deployment-type-radio" *ngIf="deploymenttargetSelected" class="col-lg-8 col-md-8 pad-left0 input-field-container runtime-aln">
+                        <section class="runtime-option disable-color">
+                            <div class="radio-container">
+                                <input type="radio" class='test-focus' name="deploymentTarget" id="deploymentTargetsList[0]" [value]="deploymentTargetsList[0]" [checked]="selectedDeploymentTarget == deploymentTargetsList[0]" (click)="changeDeploymentTarget('aws_apigateway')">
+                                <label for="deploymentTargetsList[0]"><span class='outer'></span><span class="background"></span>{{deploymentTargetsLabels[0]}}</label>
+                            </div>
+                        </section>
+                        <section class="runtime-option disable-color">
+                            <div class="radio-container">
+                                <input type="radio" class='test-focus' name="deploymentTarget" id="deploymentTargetsList[1]" [value]="deploymentTargetsList[1]" [checked]="selectedDeploymentTarget == deploymentTargetsList[1]" (click)="changeDeploymentTarget('gcp_apigee')">
+                                <label for="deploymentTargetsList[1]"><span class='outer'></span><span class="background"></span>{{deploymentTargetsLabels[1]}}</label>
                             </div>
                         </section>
                     </div>
+
+                    <div  id="deployment-type" *ngIf="!deploymenttargetSelected" class="col-lg-8 col-md-8">
+                        <div class="flex">
+                            <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': selectedDeploymentTarget == 'aws_apigateway'}" (keyup.enter)="changeDeploymentTarget('api')" (click)="changeDeploymentTarget('aws_apigateway')">
+                                    <div class="" [ngClass]="{'selected': selectedDeploymentTarget == 'aws_apigateway'}">
+                                        <img src="./../../../../assets/images/icons/aws-api-gateway.svg"/>
+                                    </div>
+                                    <p>AWS API GATEWAY</p>
+                                </div>
+                            </section>
+                            <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': selectedDeploymentTarget == 'gcp_apigee'}" (keyup.enter)="changeDeploymentTarget('gcp_apigee')" (click)="changeDeploymentTarget('gcp_apigee')">
+                                    <div class="" [ngClass]="{'selected': selectedDeploymentTarget == 'gcp_apigee'}">
+                                        <img src="./../../../../assets/images/icons/Apigee.svg"/>
+                                    </div>
+                                    <p>GCP APIGEE</p>
+                                </div>
+                            </section>                           
+                        </div>
+                    </div>
                 </div>
             </section>
-            <section class="each-step-wrap service-description">
-                <div class="row">
+            <section  [class.disable-color]="typeofruntimeSelected" class="run-time" *ngIf="typeOfService != 'website'">
+                <div  class="row">
                     <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Service Description</p>
-                        <p class="step-details hide">Multiple APIs can be bundled under a single namespace. Namespace provide easier abstraction to implement similar security & access control on your APIs.</p>
+                        <p class="step-title">Choose your runtime<span>*</span></p>
                     </div>
-                    <div class="col-lg-8 col-md-8">
-                        <section class="col-lg-12  pad-left0">
-                            <div class="input-field-container">
-                                <div class="input-wrapper">
-                                    <textarea rows="2" cols="50" name="serviceDescription" type="text" class="textForm" placeholder="Service Description" id="serviceDescription" [(ngModel)]="model.serviceDescription"  #serviceDescription='ngModel'></textarea>
+                    <div   id="runtime-type-radio" *ngIf="typeofruntimeSelected" class="col-lg-8 col-md-8">
+                        <div class="col-lg-12  pad-left0 input-field-container runtime-aln">
+                            <section class="runtime-option disable-color">
+                                <div class="radio-container">
+                                    <input type="radio" class='test-focus' name="runtime" id="runtimeKeys[0]" [value]="runtimeKeys[0]" [checked]="runtime == runtimeKeys[0]" (click)="onSelectionChange(runtimeKeys[0])">
+                                    <label for="runtimeKeys[0]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[0]]}}</label>
                                 </div>
+                            </section>
+                            <section class="runtime-option disable-color">
+                                <div class="radio-container">
+                                    <input type="radio" name="runtime" id="runtimeKeys[1]" [value]="runtimeKeys[1]" [checked]="runtime == runtimeKeys[1]" (change)="onSelectionChange(runtimeKeys[1])">
+                                    <label for="runtimeKeys[1]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[1]]}}</label>
+                                </div>
+                            </section>
+                            <section class="runtime-option disable-color">
+                                <div class="radio-container">
+                                    <input type="radio" name="runtime" id="runtimeKeys[2]" [value]="runtimeKeys[2]" [checked]="runtime == runtimeKeys[2]" (change)="onSelectionChange(runtimeKeys[2])">
+                                    <label for="runtimeKeys[2]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[2]]}}</label>
+                                </div>
+                            </section>
+                            <section class="runtime-option disable-color">
+                                <div class="radio-container">
+                                    <input type="radio" name="runtime" id="runtimeKeys[3]" [value]="runtimeKeys[3]" [checked]="runtime == runtimeKeys[3]" (click)="onSelectionChange(runtimeKeys[3])">
+                                    <label for="runtimeKeys[3]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[3]]}}</label>
+                                </div>
+                            </section>
+                            <section class="runtime-option disable-color">
+                                <div class="radio-container">
+                                    <input type="radio" name="runtime" id="runtimeKeys[4]" [value]="runtimeKeys[4]" [checked]="runtime == runtimeKeys[4]" (click)="onSelectionChange(runtimeKeys[4])">
+                                    <label for="runtimeKeys[4]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[4]]}}</label>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+
+                    <div  id="runtime-type" *ngIf="!typeofruntimeSelected" class="col-lg-8 col-md-8">
+                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">                  
+                            <div tabindex="0" class="service-box"  [ngClass]="{'service-box-selected': runtime == runtimeKeys[0]}"(keyup.enter)="onSelectionChange(runtimeKeys[0])"  (click)="onSelectionChange(runtimeKeys[0])">
+                                <div class=""><img src="./../../../../assets/images/icons/nodejs.svg"/></div>
+                                <p>{{runtimeKeys[0]}}</p>
                             </div>
                         </section>
+                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                            <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[1]}"(keyup.enter)="onSelectionChange(runtimeKeys[1])"  (click)="onSelectionChange(runtimeKeys[1])">
+                                <div class="icon-icon-python"><img src="./../../../assets/images/icons/python.svg"/></div>
+                                <p>{{runtimeKeys[1]}}</p>
+                            </div>
+                        </section>
+                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                            <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[2]}"(keyup.enter)="onSelectionChange(runtimeKeys[2])"  (click)="onSelectionChange(runtimeKeys[2])">
+                                <div class="icon-icon-python"><img src="./../../../assets/images/icons/python.svg"/></div>
+                                <p>{{runtimeKeys[2]}}</p>
+                            </div>
+                        </section>
+                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">                  
+                            <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[3]}"(keyup.enter)="onSelectionChange(runtimeKeys[3])"  (click)="onSelectionChange(runtimeKeys[3])">
+                                <div class="icon-icon-go"><img src="./../../../assets/images/icons/Java.svg"/></div>
+                                <p>{{runtimeKeys[3]}}</p>
+                            </div>  
+                        </section>
+                        
+                        
+                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">                  
+                                <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[4]}"(keyup.enter)="onSelectionChange(runtimeKeys[4])"  (click)="onSelectionChange(runtimeKeys[4])">
+                                <div class="icon-icon-go"><img src="./../../../assets/images/icons/Go.svg"/></div>
+                                <p>{{runtimeKeys[4]}}</p>
+                            </div>
+                        </section>
+
+                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section disable-event">                  
+                            <div tabindex="0" class="service-box disabled-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[5]}" (keyup.enter)="onSelectionChange(runtimeKeys[5])" (click)="onSelectionChange(runtimeKeys[5])">
+                                <div class="icon-icon-go"><img src="./../../../assets/images/icons/C.svg"/></div>
+                                <p>C#</p>
+                            </div>
+                        </section>  
                     </div>
                 </div>
             </section>
-            <section class="each-step-wrap slack-channel-integration">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Slack Channel Integration</p>
-                    </div>
-                    <div class="col-lg-8 col-md-8">
-                        <section class="col-lg-12  pad-left0">
-                            <div class="input-field-container">
-                                <div class="slack-checkbox custom-cb" [class.disable-event]='!SlackEnabled'>
-                                    <input type="checkbox" id="checkbox-slack" class="ng-untouched ng-valid ng-dirty ng-valid-parse" [disabled]='!SlackEnabled' aria-invalid="false" [checked]="slackSelected" (change)="slackSelected = !slackSelected">
-                                    <label for="checkbox-slack" [class.disble]='!SlackEnabled'></label>
-                                    <div class="cb-status-dets"> Do you want us to notify you through #Slack?</div>
-                                </div>
-                                <div *ngIf="slackSelected == true">
-                                    <div class="input-wrapper" [ngClass]="{'available': slackAvailble, 'unavailable': slackNotAvailble|| channelNameError || !channelname.valid && (channelname.dirty || channelname.touched)}">
-                                        <input name="channelname" id="channelname" type="text" class="textForm" pattern="{{servicePatterns.slackChannel}}" required placeholder="Enter Slack Channel name" #channelname='ngModel' [(ngModel)]="model.slackName" (blur)="checkSlackNameAvailability()" (ngModelChange)="onSlackChange($event)">
+
+            
+        </div>
+    </section>
+
+    <form (ngSubmit)="onSubmit(); serviceForm.reset()" #serviceForm="ngForm" class='mob-form-pad'>
+
+    <section id="additional"  *ngIf='!serviceRequested' class="type-section" [class.disable-color]="typeevents">
+        <div class="sec-heading flex" (click)="additionalOpen()">
+            <div class='icon-icon-right align-center' [class.rotate-icon-right]="typeform">
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="1.2rem" height="1.2rem" viewBox="0 0 357 357" style="enable-background:new 0 0 357 357;" xml:space="preserve" class=""><g><g>
+                    <g id="play-arrow">
+                        <polygon points="38.25,0 38.25,357 318.75,178.5   " data-original="#000000" class="active-path" data-old_color="#ed008c" fill="#ed008c"/>
+                    </g>
+                    </g></g> 
+                </svg>
+                <!-- <img class="icon-right" src="./../../../../assets/images/icons/icon-traingle.svg"> -->
+            </div>
+            <div class="sec-heading-text">
+                additional details
+            </div>
+        </div>
+        <div id="typeform" class="sec-content" [class.open-form]="typeform">
+                <section id="service-name" class="each-step-wrap service-name">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-4">
+                            <p class="step-title" (click)="scrollTo('service-namespace')" >Service Name<span>*</span></p>
+                            <p class="step-details">Name of your API, Microservice or Website that you want to create.</p>
+                        </div>
+                        <div class="col-lg-8 col-md-8">
+                            <section class="col-lg-12  pad-left0">
+                                <div class="input-field-container">
+                                    <div class="input-wrapper" [ngClass]="{'available': serviceAvailable && !invalidServiceName && !invalidDomainName, 'unavailable': serviceNotAvailable || !serviceName.valid && (serviceName.dirty || serviceName.touched) || (serviceName.valid && invalidServiceName)}">
+                                        <input  name="serviceName" pattern="{{servicePatterns.serviceName}}" type="text" maxlength="{{serviceLimit}}" class="textForm" id="serviceName" required [(ngModel)]="model.serviceName" placeholder="Enter service name" (ngModelChange)="invalidServiceName = false;serviceAvailable=false" #serviceName='ngModel'  >
                                         <img class="input-loader ng-hide">
-                                        <p class="termsConditions" *ngIf="!channelname.valid && (channelname.dirty || channelname.touched)">Slack channel must contain only letters, numbers, hyphens and underscores.</p>
-                                        <p class="termsConditions" *ngIf="channelname.valid && slackAvailble">Slack channel is available.</p>
-                                        <p class="termsConditions" *ngIf="channelname.valid && slackNotAvailble">Slack channel is not available. Please provide a valid slack channel.</p>
-                                        <p class="termsConditions" *ngIf="channelname.valid && channelNameError">Error in validating Slack Channel name. Please try again or contact administrator.</p>
-                                        <img *ngIf="channelname.valid && slackChannelLoader" class="input-loader" src="../assets/images/icons/loading.png">
+                                        <p class="termsConditions" *ngIf="!serviceName.valid && (serviceName.dirty || serviceName.touched)">Service name must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
+                                        <p class="termsConditions" *ngIf="serviceName.valid && serviceAvailable && !isDomainDefined">Service name is available !</p>
+                                        <p class="termsConditions" *ngIf="serviceName.valid && serviceAvailable && isDomainDefined && !invalidServiceName && !invalidDomainName">Service name in the specified namespace is available!</p>
+                                        <p class="termsConditions" *ngIf="serviceName.valid && serviceNotAvailable && !isDomainDefined">Service name is not available. Please try another service name</p>
+                                        <p class="termsConditions" *ngIf="serviceName.valid && serviceNotAvailable && isDomainDefined">Service name in the specified namespace is not available. Please try another combination of namespace & service name.</p>
+                                        <p class="termsConditions" *ngIf="serviceName.valid && invalidServiceName">Service name should not start or end with hyphens</p>
+                                        <img *ngIf="serviceName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">
                                     </div>
                                 </div>
-                            </div>
-                        </section>
+                            </section>
+                        </div>
                     </div>
-                </div>
-            </section>
-            <section class="each-step-wrap cache-ttl-integration" *ngIf="typeOfService == 'api'">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Cache Time-to-Live (TTL)</p>
-                    </div>
-                    <div class="col-lg-8 col-md-8">
-                        <section class="col-lg-12  pad-left0">
-                            <div class="input-field-container">
-                                <div class="slack-checkbox custom-cb disable-event">
-                                    <input disabled type="checkbox" id="checkbox-ttl" [checked]="ttlSelected" (change)="ttlSelected = !ttlSelected" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false">
-                                    <label for="checkbox-ttl" class="disble"></label>
-                                    <div class="cb-status-dets"> Yes, enable caching for my API.</div>
-                                </div>
-                                <div *ngIf="ttlSelected == true">
-                                    <div class="input-wrapper" [ngClass]="{'unavailable': invalidttl}">
-                                        <input name="ttlField" type="number" class="textForm" required placeholder="Enter time in seconds" [(ngModel)]="model.ttlValue" (ngModelChange)="onTTLChange($event)" #ttlField='ngModel' min="1" max="3600" OnlyNumber="true">
-                                        <img class="input-loader ng-hide">
-                                        <p class="termsConditions"> Maximum value fot TTL is 3600 seconds</p>
+                </section>
+                <section id="service-namespace" class="each-step-wrap domain-name">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-4">
+                            <p class="step-title">Namespace<span>*</span></p>
+                            <p class="step-details">Namespaces provide easier abstraction to implement similar security & access control on your APIs.</p>
+                        </div>
+                        <div class="col-lg-8 col-md-8">
+                            <section class="col-lg-12  pad-left0">
+                                <div class="input-field-container">
+                                    <div class="input-wrapper" [ngClass]="{'unavailable' : !domainName.valid && (domainName.dirty || domainName.touched) || (domainName.valid && invalidDomainName) }">
+                                        <input name="domainName"  pattern="{{servicePatterns.domainName}}" maxlength="{{domainLimit}}" type="text" class="textForm" id="domainName" required placeholder="Enter namespace" [(ngModel)]="model.domainName" #domainName='ngModel' (blur)="validateName($event,'service-description')" (ngModelChange)="invalidDomainName=false" required>
+                                        <p class="termsConditions" *ngIf="!domainName.valid && (domainName.dirty || domainName.touched)">Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
+                                        <p class="termsConditions" *ngIf="domainName.valid && invalidDomainName">Namespace should not start or end with hyphens</p>
+                                        <img *ngIf="serviceName.valid && domainName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">
                                     </div>
                                 </div>
+                            </section>
+                        </div>
+                    </div>
+                </section>
+                <section id="service-description" class="each-step-wrap service-description">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-4">
+                            <p class="step-title">Service Description</p>
+                            <p class="step-details hide">Multiple APIs can be bundled under a single namespace. Namespace provide easier abstraction to implement similar security & access control on your APIs.</p>
+                        </div>
+                        <div class="col-lg-8 col-md-8">
+                            <section class="col-lg-12  pad-left0">
+                                <div class="input-field-container">
+                                    <div class="input-wrapper">
+                                        <textarea  rows="2" cols="50" name="serviceDescription" type="text" class="textForm" placeholder="Service Description" id="serviceDescription" [(ngModel)]="model.serviceDescription"  #serviceDescription='ngModel' (blur)="typeevents = true"></textarea>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </section>
+    
+                <section id="deployment-descriptor" class="each-step-wrap service-description">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-4">
+                            <p class="step-title">Deployment Descriptor</p>
+                        </div>
+                        <div class="col-lg-8 col-md-8">
+                            <section class="col-lg-12  pad-left0">
+                                <div class="slack-checkbox custom-cb" >
+                                    <input type="checkbox" id="checkbox-descriptor" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="descriptorSelected" (change)="descriptorSelected = !descriptorSelected">
+                                    <label for="checkbox-descriptor" ></label>
+                                    <div class="cb-status-dets"> Yes, specify deployment details</div>
+                                </div>
+                                <filters *ngIf="descriptorSelected" class="filters" [filtersList]="deploymentDescriptorData" [multiple]="false" [selectedList]="selectedList" (onSelected)="onFilterSelected($event)"></filters>
+
+                                <div *ngIf="descriptorSelected" class="input-field-container">
+                                    <div class="input-wrapper">
+                                        <!-- <input type="file" name="slsFile" id="slsFile" [(ngModel)]="slsFile"  (change)="getFiles($event)"> -->
+                                        <textarea rows="2" cols="50" name="deploymentDescriptorText" type="text" class="textForm descriptor" id="deploymentDescriptorText" [(ngModel)]="deploymentDescriptorText"  (blur)="validateYAML()"></textarea>
+                                        <!-- #deploymentDescriptorText='ngModel'  -->
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </section>
+    
+                <section id="slack-channel" class="each-step-wrap slack-channel-integration">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-4">
+                            <p class="step-title">Slack Channel Integration</p>
+                        </div>
+                        <div class="col-lg-8 col-md-8">
+                            <section class="col-lg-12  pad-left0">
+                                <div class="input-field-container">
+                                    <div class="slack-checkbox custom-cb" [class.disable-event]='!SlackEnabled'>
+                                        <input type="checkbox" id="checkbox-slack" class="ng-untouched ng-valid ng-dirty ng-valid-parse" [disabled]='!SlackEnabled' aria-invalid="false" [checked]="slackSelected" (change)="slackSelected = !slackSelected">
+                                        <label for="checkbox-slack" [class.disble]='!SlackEnabled'></label>
+                                        <div class="cb-status-dets"> Do you want us to notify you through #Slack?</div>
+                                    </div>
+                                    <div *ngIf="slackSelected == true">
+                                        <div class="input-wrapper" [ngClass]="{'available': slackAvailble, 'unavailable': slackNotAvailble|| channelNameError || !channelname.valid && (channelname.dirty || channelname.touched)}">
+                                            <input name="channelname" id="channelname" type="text" class="textForm" pattern="{{servicePatterns.slackChannel}}" required placeholder="Enter Slack Channel name" #channelname='ngModel' [(ngModel)]="model.slackName" (blur)="checkSlackNameAvailability()" (ngModelChange)="onSlackChange($event)">
+                                            <img class="input-loader ng-hide">
+                                            <p class="termsConditions" *ngIf="!channelname.valid && (channelname.dirty || channelname.touched)">Slack channel must contain only letters, numbers, hyphens and underscores.</p>
+                                            <p class="termsConditions" *ngIf="channelname.valid && slackAvailble">Slack channel is available.</p>
+                                            <p class="termsConditions" *ngIf="channelname.valid && slackNotAvailble">Slack channel is not available. Please provide a valid slack channel.</p>
+                                            <p class="termsConditions" *ngIf="channelname.valid && channelNameError">Error in validating Slack Channel name. Please try again or contact administrator.</p>
+                                            <img *ngIf="channelname.valid && slackChannelLoader" class="input-loader" src="../assets/images/icons/loading.png">
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </section>
+                <section id="cache-ttl" class="each-step-wrap cache-ttl-integration" *ngIf="typeOfService == 'api'">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-4">
+                            <p class="step-title">Cache Time-to-Live (TTL)</p>
+                        </div>
+                        <div class="col-lg-8 col-md-8">
+                            <section class="col-lg-12  pad-left0">
+                                <div class="input-field-container">
+                                    <div class="slack-checkbox custom-cb disable-event">
+                                        <input disabled type="checkbox" id="checkbox-ttl" [checked]="ttlSelected" (change)="ttlSelected = !ttlSelected" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false">
+                                        <label for="checkbox-ttl" class="disble"></label>
+                                        <div class="cb-status-dets"> Yes, enable caching for my API.</div>
+                                    </div>
+                                    <div *ngIf="ttlSelected == true">
+                                        <div class="input-wrapper" [ngClass]="{'unavailable': invalidttl}">
+                                            <input name="ttlField" type="number" class="textForm" required placeholder="Enter time in seconds" [(ngModel)]="model.ttlValue" (ngModelChange)="onTTLChange($event)" #ttlField='ngModel' min="1" max="3600" OnlyNumber="true">
+                                            <img class="input-loader ng-hide">
+                                            <p class="termsConditions"> Maximum value fot TTL is 3600 seconds</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- end of aws events -->
+                <section id="cdn-config" class="each-step-wrap cloudfront-url" *ngIf="typeOfService == 'website'">
+                    <div class="row">
+                        <div class="col-lg-4 col-md-4">
+                            <p class="step-title">CDN configuration</p>
+                            <p class="step-details hide">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p>
+                        </div>
+                        <div class="col-lg-8 col-md-8">
+                            <section class="col-lg-12  pad-left0">
+                                <div class="input-field-container">
+                                    <div class="slack-checkbox custom-cb disable-event">
+                                        <input disabled type="checkbox" id="checkbox-cdnconfig" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="true" (change)="cdnConfigSelected = !cdnConfigSelected"><!--[checked]="cdnConfigSelected" -->
+                                        <label for="checkbox-cdnconfig" class="disble"></label>
+                                        <div class="cb-status-dets">Do you need CDN configured for your website?</div>
+                                    </div>
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </section>
+                
+        </div>
+    </section>
+
+    <section  *ngIf='!serviceRequested' class="type-section hide" [class.disable-color]="">
+        <div class="sec-heading flex" (click)="typeofservice = !typeofservice">
+            <div class='icon-icon-right align-center' [class.rotate-icon-right]="typeofservice">
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="1.2rem" height="1.2rem" viewBox="0 0 357 357" style="enable-background:new 0 0 357 357;" xml:space="preserve" class=""><g><g>
+                    <g id="play-arrow">
+                        <polygon points="38.25,0 38.25,357 318.75,178.5   " data-original="#000000" class="active-path" data-old_color="#ed008c" fill="#ed008c"/>
+                    </g>
+                    </g></g> 
+                </svg>
+                <!-- <img class="icon-right" src="./../../../../assets/images/icons/icon-traingle.svg"> -->
+            </div>
+            <div class="sec-heading-text">
+                Security Details
+            </div>
+        </div>
+        <div id="typeofservice" class="sec-content" [class.open-sec-content]="typeofservice">
+            <section class="each-step-wrap type-of-service">
+                <div class="row">
+                    <div class="col-lg-4 col-md-4">
+                        <p class="step-title">Choose the type of service you want to create<span>*</span></p>
+                    </div>
+                    <div class="col-lg-8 col-md-8">
+                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                            <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')" (click)="changeServiceType('api')">
+                                <div class="icon-icon-api" [ngClass]="{'selected': typeOfService == 'function'}"></div>
+                                <p>API</p>
+                            </div>
+                        </section>
+                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                            <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
+                                <div class="icon-icon-function" [ngClass]="{'selected': typeOfService == 'function'}"></div>
+                                <p>LAMBDA</p>
+                            </div>
+                        </section>
+                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0 service-box-section">
+                            <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'website'}" (keyup.enter)="changeServiceType('website')" (click)="changeServiceType('website')">
+                                <div class="icon-icon-web" [ngClass]="{'selected': typeOfService == 'function'}"></div>
+                                <p>WEBSITE</p>
                             </div>
                         </section>
                     </div>
                 </div>
             </section>
-            <section class="each-step-wrap event-schedule" *ngIf="typeOfService == 'function'">
+        </div>
+    </section>
+
+    <section id="typeevents" [class.hide]='serviceRequested' class="type-section" *ngIf="typeOfService == 'function'" [class.disable-color]="">
+        <div class="sec-heading flex" (click)="typeevents = !typeevents">
+            <div class='icon-icon-right align-center' [class.rotate-icon-right]="typeevents">
+                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="1.2rem" height="1.2rem" viewBox="0 0 357 357" style="enable-background:new 0 0 357 357;" xml:space="preserve" class=""><g><g>
+                    <g id="play-arrow">
+                        <polygon points="38.25,0 38.25,357 318.75,178.5   " data-original="#000000" class="active-path" data-old_color="#ed008c" fill="#ed008c"/>
+                    </g>
+                    </g></g> 
+                </svg>
+                <!-- <img class="icon-right" src="./../../../../assets/images/icons/icon-traingle.svg"> -->
+            </div>
+            <div class="sec-heading-text">
+                Event schedule
+            </div>
+        </div>
+        <div  class="sec-content" [class.open-sec-content-deplyoments]="typeevents">
+            <section id="event-schedule" class="each-step-wrap event-schedule" *ngIf="typeOfService == 'function'">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
                         <p class="step-title">Event Schedule</p>
@@ -331,7 +654,7 @@
                 </div>
             </section>
             <!-- start of aws events -->
-            <section class="each-step-wrap aws-events" *ngIf="typeOfService == 'function'">
+            <section id="aws-events" class="each-step-wrap aws-events" *ngIf="typeOfService == 'function'">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
                         <p class="step-title">AWS Events</p>
@@ -364,10 +687,10 @@
                                 </div>
                             </section>
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                              <div class="radio-container">
-                                  <input type="radio" name="AWSEvents" id="sqs" [value]="sqs" [checked]="eventExpression.type == 'sqs'" (click)="onAWSEventChange('sqs')">
-                                  <label for="sqs"><span></span><span class="background"></span>SQS</label>
-                              </div>
+                                <div class="radio-container">
+                                    <input type="radio" name="AWSEvents" id="sqs" [value]="sqs" [checked]="eventExpression.type == 'sqs'" (click)="onAWSEventChange('sqs')">
+                                    <label for="sqs"><span></span><span class="background"></span>SQS</label>
+                                </div>
                             </section>
                         </div>
                         <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': eventExpression.type == 'none'}">
@@ -383,7 +706,7 @@
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input type="text" disabled="disabled" class="inline-input input-label aws-events-left-block" value="{{dynamoStreamString}}">
                                         <input id="dynamoTable" name="dynamoTable" type="text" minlength="3" maxlength="{{eventMaxLength.table_name}}" #dynamoTable='ngModel' pattern="{{servicePatterns.tableName}}" [(ngModel)]="eventExpression.dynamoTable"  [focus]="focusDynamo" (blur)="validateEvents(eventExpression.dynamoTable)" (ngModelChange)="invalidEventName = false;" class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Table Name" >
-                                  </div>
+                                    </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkDynamodb()) && (!dynamoTable.valid && (dynamoTable.dirty || dynamoTable.touched)))">Table name must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
                                 <p class="termsConditions error-message" *ngIf="(chkDynamodb() && invalidEventName)">Table name Should not begin or end with special character.</p>
@@ -402,7 +725,7 @@
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input type="text" disabled="disabled" class="inline-input input-label stream aws-events-left-block" value="{{kinesisStreamString}}">
                                         <input id="streamARN" name="streamARN" type="text" #streamARN="ngModel" maxlength="{{eventMaxLength.stream_name}}" pattern="{{servicePatterns.streamName}}" [(ngModel)]="eventExpression.streamARN" [focus]="focusKinesis" (blur)="validateEvents(eventExpression.streamARN)" (ngModelChange)="invalidEventName = false;" class="inline-input stream aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Stream Name" >
-                                  </div>
+                                    </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkfrKinesis()) && (!streamARN.valid && (streamARN.dirty || streamARN.touched)))">Stream name must contain only letters, numbers, hyphens, underscores or periods.</p>
                                 <p class="termsConditions error-message" *ngIf="(chkfrKinesis() && invalidEventName)">Stream name Should not begin or end with special character.</p>
@@ -420,7 +743,7 @@
                                     <div class="text">Bucket ARN</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input id="S3BucketName" name="S3BucketName" type="text"  minlength="3" maxlength="{{eventMaxLength.bucket_name}}" pattern="{{servicePatterns.bucketName}}" #S3BucketName="ngModel" [(ngModel)]="eventExpression.S3BucketName" [focus]="focusS3" (blur)="validateEvents(eventExpression.S3BucketName)" (ngModelChange)="invalidEventName = false;" class="inline-input aws-events-left-block aw-events-s3 ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Bucket Name"  autofocus>
-                                  </div>
+                                    </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkS3()) && (!S3BucketName.valid && (S3BucketName.dirty || S3BucketName.touched)))">Bucket name must contain only lowercase letters, numbers or hyphens. Enter atleast 3 characters</p>
                                 <p class="termsConditions error-message" *ngIf="(chkS3() && invalidEventName)">Bucket name Should not begin or end with special character.</p>
@@ -430,48 +753,39 @@
 
                             <div class="sqs-fields row zero-margin arrow_box hide" [class.show]="chkSQS()">
 
-                              <div class="col-lg-12">
-                                  <div class="text">Queue ARN</div>
-                                  <div class="label-input slct-bx-selected input-wrapper">
-                                      <input type="text" disabled="disabled" class="inline-input input-label stream-sqs aws-events-left-block" value="{{sqsStreamString}}">
-                                      <input id="SQSstreamARN" name="SQSstreamARN" type="text" #SQSstreamARN="ngModel" [(ngModel)]="eventExpression.SQSstreamARN" pattern="{{servicePatterns.queueName}}" maxlength="{{eventMaxLength.queue_name}}" [focus]="focusSQS" (blur)="validateEvents(eventExpression.SQSstreamARN)" (ngModelChange)="invalidEventName = false;" class="inline-input stream aws-events-right-block aws-events-right-block-sqs ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Queue Name" >
-                                  </div>
+                                <div class="col-lg-12">
+                                    <div class="text">Queue ARN</div>
+                                    <div class="label-input slct-bx-selected input-wrapper">
+                                        <input type="text" disabled="disabled" class="inline-input input-label stream-sqs aws-events-left-block" value="{{sqsStreamString}}">
+                                        <input id="SQSstreamARN" name="SQSstreamARN" type="text" #SQSstreamARN="ngModel" [(ngModel)]="eventExpression.SQSstreamARN" pattern="{{servicePatterns.queueName}}" maxlength="{{eventMaxLength.queue_name}}" [focus]="focusSQS" (blur)="validateEvents(eventExpression.SQSstreamARN)" (ngModelChange)="invalidEventName = false;" class="inline-input stream aws-events-right-block aws-events-right-block-sqs ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Queue Name" >
+                                    </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkSQS()) && (!SQSstreamARN.valid && (SQSstreamARN.dirty || SQSstreamARN.touched)))">Queue name must contain only letters, numbers, hyphens or underscores.</p>
                                 <p class="termsConditions error-message" *ngIf="(chkSQS() && invalidEventName)">Queue name Should not begin or end with special character.</p>
                                 <p class="learn-more">Function would be triggered whenever new messages are added to the source SQS queue</p>
-                              </div>
+                                </div>
 
                         </div>
                     </div>
                 </div>
             </section>
-            <!-- end of aws events -->
-            <section class="each-step-wrap cloudfront-url" *ngIf="typeOfService == 'website'">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4">
-                        <p class="step-title">CDN configuration</p>
-                        <p class="step-details hide">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p>
-                    </div>
-                    <div class="col-lg-8 col-md-8">
-                        <section class="col-lg-12  pad-left0">
-                            <div class="input-field-container">
-                                <div class="slack-checkbox custom-cb disable-event">
-                                    <input disabled type="checkbox" id="checkbox-cdnconfig" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="true" (change)="cdnConfigSelected = !cdnConfigSelected"><!--[checked]="cdnConfigSelected" -->
-                                    <label for="checkbox-cdnconfig" class="disble"></label>
-                                    <div class="cb-status-dets">Do you need CDN configured for your website?</div>
-                                </div>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </section>
-            <p class="requiredInfo"><span>*</span>Indicates required fields</p>
-            <section class="submit-form">
-                <button type="submit" [disabled]="!serviceForm.valid || (disableForm())" class="btn btn-primary">SUBMIT</button>
-            </section>
-        </form>
+        </div>
+    </section>
+
+    <p  *ngIf='!serviceRequested' class="requiredInfo"><span>*</span>Indicates required fields</p>
+    <section  *ngIf='!serviceRequested' class="submit-form">
+        <button type="submit" [disabled]="!serviceForm.valid || (disableForm())" class="btn btn-primary">SUBMIT</button>
+    </section>
+    </form>
+
+    <div  *ngIf='!serviceRequested' class="loader-wrp" [class.show]="isLoading">
+        <div class="loader">
+            <div class="inner one"></div>
+            <div class="inner two"></div>
+            <div class="inner three"></div>
+        </div>
     </div>
+
     <div *ngIf='serviceRequested'>
         <section class="success-screen" *ngIf='serviceRequestSuccess'>
             <img src="../assets/images/create-success.png">
@@ -481,7 +795,7 @@
                 </section>
                 <section >
                     <p class="refer">You can find more details on next steps <a  target="_blank" href="{{docs_link}}">here</a>.</p>
-
+    
                 </section>
             <section class="footer-btn">
                 <btn-jazz-primary text="DONE" newclass="back-btn" (click)="closeCreateService(serviceRequestSuccess)"></btn-jazz-primary>
@@ -499,4 +813,15 @@
             </section>
         </section>
     </div>
+        
 </div>
+
+
+
+
+
+
+
+
+
+

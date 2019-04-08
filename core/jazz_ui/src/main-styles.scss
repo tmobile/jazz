@@ -546,3 +546,19 @@ search-box{
     opacity:0.75;
 }
 
+.flex{
+    display: flex;
+}
+.flex-col{
+    display: flex;
+    flex-direction: column;
+}
+
+.justify-center{
+    display: flex;
+    justify-content: center;
+}
+
+.align-center{
+    align-self: center;
+}

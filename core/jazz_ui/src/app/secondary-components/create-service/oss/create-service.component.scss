@@ -38,7 +38,7 @@
 
 .type-of-platform,
 .type-of-service {
-  padding-bottom: 0;
+  // padding-bottom: 0;
 }
 
 .service-box {
@@ -60,6 +60,7 @@
   height: 3.33rem;
   width: 88%;
   max-width: 70px;
+  object-fit: contain;
 }
 
 .service-box p {
@@ -69,6 +70,7 @@
   font-weight: bold;
   letter-spacing: 0.7px;
   color: #cccccc;
+  text-transform: uppercase;
 }
 
 .service-box-selected p {
@@ -77,6 +79,16 @@
 
 .service-box.service-box-selected {
   border: solid 2px #ed008c !important;
+ animation:servicebox-scale 0.1s;
+}
+
+@keyframes servicebox-scale{
+  from{
+    transform: scale(1.05);
+  }
+  to{
+    transform: scale(1);
+  }
 }
 
 .service-box {
@@ -93,7 +105,7 @@
   &.service-box-selected {
     .icon-icon-api,
     .icon-icon-lambda,
-    .icon-icon-web {
+    .icon-icon-web, {
       color: #ed008c;
     }
   }
@@ -412,6 +424,7 @@
 
 .disable-event {
   pointer-events: none;
+  
   input[type="radio"]+label {
     opacity: 0.3;
   }
@@ -658,6 +671,7 @@
 
 .create-service-header {
   position: relative;
+  border:none;
   .icon-icon-close {
     position: absolute;
     top: 2rem;
@@ -849,4 +863,129 @@ p.learn-more {
 }
 .runtime-aln{
   display: flex;
+}
+
+.type-section{
+  padding: 2rem 0;
+  .sec-heading{
+    .icon-icon-right{
+      .icon-right{
+        height:1.2rem;
+      }
+    }
+    .sec-heading-text{
+      font-size: 1.5rem;
+      text-transform: uppercase;
+      margin:0 1rem;
+      font-weight: bold;
+    }
+  }
+  .sec-content{
+    // max-height: 0;
+    overflow: hidden;
+    transition: 0.5s all;
+  }
+
+  .open-sec-content{
+    // max-height: 35rem;
+    transition: 0.5s all;
+  }
+  .open-sec-content-deplyoments{
+    // max-height: 60rem;    
+    transition: 0.5s all;
+  }
+  .open-form{
+    // max-height: 100rem;    
+    transition: 0.5s all;
+  }
+  .rotate-icon-right{
+    transform: rotate(90deg);
+  }
+}
+
+.disable-color{
+  
+  color:#ddd;
+  
+  input[type="radio"]+label {
+    opacity: 0.3;
+    &:hover{
+      cursor: pointer;
+      opacity: 1;
+    }
+  }
+  input[type="checkbox"]+label+div {
+    color: #ddd;
+    border-color: #ddd;
+  }
+  /deep/input[type="checkbox"] label {
+    border-color: #dddd;
+  }
+  p,span{
+    color: #ddd;
+    transition: 0.5s ease;
+
+  }
+  polygon{
+    fill: #ddd;
+    transition: 0.5s ease;
+  }
+  /deep/radio-checkbox{
+    input[type="radio"]+label {
+      opacity: 0.3;
+    }
+  }
+}
+
+
+.close-create-service{
+  &:hover{
+    // transform: rotate(30deg);
+    // transition: 0.3s all
+    animation: rotate-close 0.2s
+  }
+}
+
+@keyframes rotate-close {
+  from {
+transform: rotate(25deg);
+  }
+  to {
+transform: rotate(0deg);
+}
+}
+.descriptor{
+  border-radius: 8px !important;
+  background-color: #f3f3f3;
+  height: 13rem !important;
+}
+.custom-sec{
+  margin:1rem 0;
+}
+.buildcustom-radio{
+  margin:0 1rem;
+}
+
+.in-active{
+  opacity: 0.7;
+
+  *{
+    opacity: 0.7;
+
+  }
+}
+
+.ac-tive{
+  opacity:1;
+  *{
+    opacity: 1;
+  }
+}
+
+.deployment-targets{
+  padding:4rem 0;
+}
+
+.run-time{
+  padding:4rem 0;
 }

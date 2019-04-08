@@ -2,7 +2,6 @@
   "name": "services-onboarding",
   "version": "0.0.0",
   "license": "MIT",
-  "angular-cli": {},
   "scripts": {
     "ng": "ng",
     "start": "ng serve",
@@ -42,8 +41,10 @@
     "ng2-charts": "1.6.0",
     "ng2-dropdown": "0.0.21",
     "ng2-popover": "0.0.14",
+    "ng2-scroll-to-el": "^1.2.1",
     "really-relaxed-json": "0.2.24",
-    "rxjs": "5.5.6"
+    "rxjs": "5.5.6",
+    "yaml-lint": "^1.2.4"
   },
   "devDependencies": {
     "@angular/cli": "1.7.3",

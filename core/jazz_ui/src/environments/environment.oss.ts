@@ -1,12 +1,60 @@
 export const environment = {
   production: true,
-  INSTALLER_VARS: {INSTALLER_VARS},
+  INSTALLER_VARS: {
+    "CREATE_SERVICE": {
+      "DEPLOYMENT_TARGETS": {
+          "API": {
+              "active": true,
+              "options": [
+                  {"label": "AWS API Gateway", "value": "aws_apigateway"},
+                  {"label": "GCP APIGEE", "value": "gcp_apigee"}
+              ]
+          },
+          "WEBSITE": {
+              "active": false,
+              "options": [
+                  {"label": "AWS S3", "value": "aws_s3"},
+                  {"label": "AWS Cloudfront", "value": "aws_cloudfront"}
+              ]
+          },
+          "FUNCTION": {
+              "active": false,
+              "options": [
+                  {"label": "AWS Lambda", "value": "aws_lambda"}
+              ]
+          },
+          "CUSTOM":{
+              "active":false,
+              "options":[]
+
+          }
+      }
+    },
+    "feature": {
+        "multi_env": true,
+        "apigee": "true"
+    },
+    "service_tabs": {
+        "overview": true,
+        "access_control": true,
+        "metrics": true,
+        "logs": true,
+        "cost": false
+    },
+    "environment_tabs": {
+        "overview": true,
+        "deployments": true,
+        "code_quality": "false",
+        "logs": true,
+        "assets": true
+    }
+},
   configFile: 'config/config.oss.json',
-  baseurl: "https://{API_GATEWAY_KEY_PROD}.execute-api.{inst_region}.amazonaws.com/prod",
+  baseurl: "https://lp5zztke62.execute-api.us-east-1.amazonaws.com/prod",
   api_doc_name: "https://{api_doc_name}.s3.amazonaws.com",
   envName: "oss",
-  multi_env: {multi_env},
-  slack_support: {slack_support},
+  multi_env: true,
+  slack_support: true,
   envLists:  {"nodejs8.10": "Nodejs 8.10", "python2.7": "Python 2.7", "python3.6": "Python 3.6", "java8": "Java 8", "go1.x": "Go 1.x"},
   serviceTabs: ["{overview}", "{access control}", "{metrics}", "{logs}", "{cost}"],
   environmentTabs: ["{env_overview}", "{deployments}", "{code quality}", "{metrics}", "{assets}", "{env_logs}"],
@@ -40,5 +88,18 @@ export const environment = {
   aws: {
     account_number:'{account_number}',
     region:"{region}"
-  }
+  },
+  deploymentDescriptorText:
+`
+-  API:
+    name: test-service
+    namespace: jazztest
+    runtime:
+      - python
+-  Lambda:
+    name: test-lambda
+    namespace: jazztest
+    runtime:
+      - java
+`
 };
