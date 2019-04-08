@@ -21,7 +21,7 @@ export class EnvOverviewSectionComponent implements OnInit {
 
   accList=env_internal.urls.accounts;
 	regList=env_internal.urls.regions;
-	  accSelected:string = this.accList[0];
+	accSelected:string = this.accList[0];
   regSelected:string=this.regList[0];
  
 
@@ -33,13 +33,23 @@ export class EnvOverviewSectionComponent implements OnInit {
   private env:any;
   branchname: any;
   friendlyChanged:boolean = false;
+  textChanged:boolean=false;
   tempFriendlyName:string;
+  yaml:string = "";
+  tempTextArea:string;
   friendlyName : string;
+  yamlName:string;
   lastCommitted: any;
+  isCancel:boolean=false;
   editBtn:boolean = true;
   saveBtn:boolean = false;
+  saveButton:boolean=false;
+  editButton:boolean=true;
   showCancel:boolean = false;
+  showCncl:boolean=false;
   environmnt:any;
+  isDiv:boolean=true;
+  isvalid:boolean=false;
   envResponseEmpty:boolean = false;
   envResponseTrue:boolean = false;
   envResponseError:boolean = false;
@@ -48,6 +58,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   hourscommit: boolean = false;
   seccommit: boolean = false;
   mincommit: boolean = false;
+  isEditClicked:boolean=false;
   commitDiff: any;
   copylinkmsg = "COPY LINK TO CLIPBOARD";
   envstatus:any;
@@ -124,19 +135,78 @@ popup(state){
   
 }
   onEditClick(){
-    
     this.tempFriendlyName=this.friendlyName;
     this.showCancel=true;
     this.saveBtn=true;
     this.editBtn=false;
-
   }
+
+  onEditAppClick(){
+    this.yaml=this.yamlName;
+    this.isEditClicked=true;
+    this.showCncl=true;
+    this.isDiv=false;
+    this.saveButton=true;
+    this.editButton=false;
+    this.isCancel=true;
+    this.saveBtn=false;
+  }
+  descriptor(){
+    this.showCncl=false;
+    this.editButton=true;
+    this.saveBtn=false;
+    this.saveButton=false;
+    var errMsgBody;
+    if(this.textChanged){
+      this.put_payload.deployment_descriptor= this.yaml;
+      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
+            .subscribe(
+                (Response)=>{
+                  let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
+                  this.toast_pop('success',"",successMessage);
+
+                  this.callServiceEnv();
+                  this.yaml='';
+                },
+                (error)=>{
+                  try{
+                    errMsgBody=JSON.parse(error._body);
+                  }
+                  catch(e){
+                  }
+                  let errorMessage='';
+                  if(errMsgBody!=undefined)
+                    errorMessage = errMsgBody.message;
+                  // let errorMessage = this.toastmessage.errorMessage(Error,"updateEnv");
+                  this.toast_pop('error', 'Oops!', errorMessage)
+                  this.callServiceEnv();
+
+                }
+              );
+              this.isLoading=true;
+              this.envResponseTrue=false;
+              this.textChanged=false;
+              this.isCancel=false;
+            
+              
+    }
+    
+  }
+  checkYaml(){
+    const yamlLint = require('yaml-lint');
+    yamlLint.lint(this.yaml).then(() => {
+
+      this.isvalid=true;
+    }).catch((error) => {
+      this.isvalid=false;
+    });
+  }
+
   onSaveClick(){
     this.showCancel=false;
     this.saveBtn=false;
     this.editBtn=true;
     var errMsgBody;
-
     if(this.friendlyChanged){
       this.put_payload.friendly_name= this.tempFriendlyName;
       this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
@@ -170,8 +240,19 @@ popup(state){
     }
     
   }
-  onCancelClick(){
+  onCancel(){
     this.showCancel=false;
+    this.saveButton=false;
+    this.editButton=true;
+    this.isDiv=true;
+    this.showCncl=false;
+    this.saveBtn=false;
+    this.editBtn=true;
+    this.yaml='';
+    this.isEditClicked=false;
+  }
+  onCancelClick(){
+    this.showCncl=false;
     this.saveBtn=false;
     this.editBtn=true;
     this.tempFriendlyName='';
@@ -248,7 +329,8 @@ popup(state){
             this.envstatus = deployment_status[this.status_val].replace("_"," ");
 
             var envResponse = response.data.environment[0];
-            this.friendlyName = envResponse.friendly_name
+            this.friendlyName = envResponse.friendly_name;
+            this.yamlName= envResponse.deployment_descriptor;
             this.branchname = envResponse.physical_id;
             this.lastCommitted = envResponse.last_updated;
             this.frndload.emit(this.friendlyName);
@@ -493,6 +575,7 @@ selectAccount(account){
     this.selectedAccount.push(account);
     this.put_payload.accounts=this.selectedAccount;
     this.friendlyChanged=true;
+    this.textChanged=true;
     for (var i = 0; i < this.accounts.length; i++) {
       if (this.accounts[i] === account) {
         this.accounts.splice(i, 1);
@@ -504,6 +587,7 @@ removeAccount(index, account) {
   this.accounts.push(account);
   this.selectedAccount.splice(index, 1);
   this.friendlyChanged=true;
+  this.textChanged=true;
 }
 selectRegion(region){
   this.selApprover = region;
@@ -513,6 +597,7 @@ selectRegion(region){
     this.selectedRegion.push(region);
     this.put_payload.regions=this.selectedRegion;
     this.friendlyChanged=true;
+    this.textChanged=true;
 
     for (var i = 0; i < this.regions.length; i++) {
       if (this.regions[i] === region) {
@@ -542,6 +627,7 @@ removeRegion(index, region) {
   this.regions.push(region);
   this.selectedRegion.splice(index, 1);
   this.friendlyChanged=true;
+  this.textChanged=true;
 }
 keypressAccount(hash){
   if (hash.key == 'ArrowDown') {
