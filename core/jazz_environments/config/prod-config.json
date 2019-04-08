@@ -3,7 +3,7 @@
     "SERVICE_API_RESOURCE": "/prod/jazz/is-service-available",
     "services_environment_table": "{inst_stack_prefix}_Environments_Prod",
     "service_environment_required_fields": ["logical_id", "service", "domain", "status", "created_by", "physical_id"],
-    "service_environment_changeable_fields": ["friendly_name", "endpoint", "status", "metadata"],
+    "service_environment_changeable_fields": ["friendly_name", "endpoint", "status", "metadata","deployment_descriptor"],
     "service_environment_unchangeable_fields": ["service", "logical_id", "physical_id", "domain", "created", "created_by", "last_updated"],
     "service_environment_status": ["active", "inactive", "pending_approval", "deployment_started", "deployment_failed", "deployment_completed", "deletion_started", "deletion_failed", "archived"],
     "service_environment_filter_params": ["service", "domain", "logical_id", "physical_id"],
