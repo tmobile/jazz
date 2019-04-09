@@ -237,7 +237,7 @@ describe('platform_logs', function() {
 
   /*
   * Given event.body.asset_type that is listed as valid in config, handler() should not inform of asset_type exception
-  * @param{object} event -> event.body.asset_type is either apilogs or applicationlogs, not invalidlogs or other
+  * @param{object} event -> event.body.asset_type can be any whitelisted asset(apigateway, lambda, s3 etc), not invalidasset or other
   * @params{object, function} aws context, and callback function as described in beforeEach
   * @returns{string} error message indicating a bad request was made
   */
