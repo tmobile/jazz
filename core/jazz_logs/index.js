@@ -67,10 +67,15 @@ module.exports.handler = (event, context, cb) => {
 				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for category - " + config.VALID_CATEGORIES.join(", "))));
 			}
 
+			if (event.body.asset_type && config.VALID_ASSET_TYPES.indexOf(event.body.asset_type) === -1) {
+				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for asset type - " + config.VALID_ASSET_TYPES.join(", "))));
+			}
+
 			var service = event.body.service,
 				domain = event.body.domain,
 				env = event.body.environment.toLowerCase(),
 				categoryType = event.body.category.toLowerCase(),
+				assetType = event.body.asset_type ? event.body.asset_type.toLowerCase() : "",
 				logType = event.body.type.toUpperCase(),
 				page = event.body.offset ? event.body.offset : 0,
 				startTime = event.body.start_time ? event.body.start_time : utils.setStartDate(config.DEFAULT_TIME_IN_DAYS),
@@ -105,13 +110,18 @@ module.exports.handler = (event, context, cb) => {
 			}
 
 			logger.info("QueryObj: " + JSON.stringify(querys));
-
 			var servCategory = [];
-
-			if (categoryType.toLowerCase() == 'api') {
-				servCategory = ["apilogs", "applicationlogs"];
-			} else if (categoryType.toLowerCase() == 'function') {
-				servCategory = ["applicationlogs"];
+			if (assetType) {
+				let indexMap = config.ASSET_INDEX_MAP.filter(assetObj => (assetObj.asset_type === assetType));
+				if (indexMap.length) {
+					servCategory = indexMap[0].es_index;
+				} else {
+					let response = {
+						count: 0,
+						logs: []
+					};
+					return cb(null, responseObj(response, event.body));
+				}
 			}
 
 			var req = utils.requestLoad;
@@ -144,11 +154,8 @@ module.exports.handler = (event, context, cb) => {
 						utils.responseModel.count = count;
 						utils.responseModel.logs = logs;
 
-						// TODO: Remove as this is hack for UI fix
-						var ret = { "data": utils.responseModel };
-
 						logger.info('Output :' + JSON.stringify(utils.responseModel));
-						return cb(null, responseObj(ret, event.body));
+						return cb(null, responseObj(utils.responseModel, event.body));
 
 					} else {
 						var error_message = 'Unknown error occured';
