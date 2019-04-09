@@ -25,7 +25,6 @@ export class EnvironmentDetailComponent implements OnInit {
 
   isFunction: boolean = false;
   breadcrumbs = [];
-  assetType=[];
   api_doc_name: string = '';
   selectedTab = 0;
   service: any = {};
@@ -201,8 +200,7 @@ export class EnvironmentDetailComponent implements OnInit {
       environment: this.envSelected,
       limit: undefined
     }).subscribe((assetsResponse) => {
-      this.assets = assetsResponse.data.assets;
-      this.assetType=this.assets[0].asset_type;    
+      this.assets = assetsResponse.data.assets;  
       this.service.assets = this.assets;
     }, (err) => {
       this.toast_pop('error', 'Oops!', 'Failed to load Assets.');
