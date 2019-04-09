@@ -142,4 +142,20 @@ def validateActions(deploymentDescriptor) {
   return allTogether;
 }
 
+/* To identify the plugin element location an example is used as follows:
+   https://github.com/serverless/examples/blob/master/aws-node-rest-api-with-dynamodb-and-offline/serverless.yml
+*/
+def validatePlugins(deploymentDescriptor) {
+  def deploymentDescriptorDoc = readYaml(text: deploymentDescriptor)
+  def pluginsElem = deploymentDescriptorDoc['plugins']
+  if(pluginsElem) {
+    def outstandingPlugins = pluginsElem.clone()
+    outstandingPlugins.removeAll(allowedPlugins)
+    return outstandingPlugins
+  } else {
+    return []
+  }
+}
+
+
 return this

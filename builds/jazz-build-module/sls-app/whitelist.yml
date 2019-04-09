@@ -451,3 +451,14 @@ actions:
     - DescribeSpotPriceHistory
     - DescribeStaleSecurityGroups
     - DescribeSubnets
+
+plugins:
+  - serverless-webpack
+  - serverless-appsync-plugin
+  - serverless-step-functions
+  - serverless-plugin-warmup
+  - serverless-plugin-typescript
+  - serverless-plugin-canary-deployments
+  - serverless-mocha-plugin
+  - serverless-kms-secrets
+    

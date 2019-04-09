@@ -262,7 +262,12 @@ node() {
             def serverlessyml = readFile('./serverless.yml').trim()
             def outstandingActions = whiteListModule.validateActions(serverlessyml)
             if(outstandingActions.isEmpty()) {
-              events.sendCompletedEvent('TEMPLATE_VALIDATION', 'Template validation has been completed', context_map, environment_logical_id)
+              def outstandingPlugins = whiteListModule.validatePlugins(serverlessyml)
+              if(outstandingPlugins.isEmpty()) {
+                events.sendCompletedEvent('TEMPLATE_VALIDATION', 'Template validation has been completed', context_map, environment_logical_id)
+              } else {
+                error "The following plugins are not allowed: ${outstandingPlugins}"
+              }
             } else {
               error "The action types are not allowed: ${outstandingActions}"
             }
