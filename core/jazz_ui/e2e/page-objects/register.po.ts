@@ -19,12 +19,11 @@ export class Register {
   navigateTo() {
     return browser.get('');
   }
-
   getLoginButton(){
    return element(by.css('div.login'));
   }
   getRegister(){
-    return element(by.css('div.newUser'));
+    return element(by.css('div.newUser1'));
   }
   getBackToLogin()
   {
