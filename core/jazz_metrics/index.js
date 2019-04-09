@@ -162,9 +162,23 @@ function getAssetsDetails(config, eventBody, authToken) {
           }
 
           var userStatistics = eventBody.statistics.toLowerCase();
-          // Massaging data from assets api , to get required list of assets which contains type, asset_name and statistics.
-          var assetsArray = utils.getAssetsObj(apiAssetsArray, userStatistics);
-          resolve(assetsArray);
+
+          if (eventBody.asset_type) {
+            let requiredAsset = apiAssetsArray.filter(asset => (asset.asset_type === eventBody.asset_type));
+            if (requiredAsset.length){
+              let assetsArray = utils.getAssetsObj(requiredAsset, userStatistics);
+              resolve(assetsArray);
+            } else {
+              reject({
+                error: "inputError",
+                message: `Provided asset type details are not available for the service: ${eventBody.service}`
+              })
+            }
+          } else {
+            // Massaging data from assets api , to get required list of assets which contains type, asset_name and statistics.
+            var assetsArray = utils.getAssetsObj(apiAssetsArray, userStatistics);
+            resolve(assetsArray);
+          }
         } else {
           logger.info("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
           resolve([]);

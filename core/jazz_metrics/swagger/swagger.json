@@ -438,6 +438,20 @@
             "Minimum",
             "Maximum"
           ]
+        },
+        "asset_type": {
+          "type": "string",
+          "description": "Asset type to fetch metrics",
+          "enum": [
+            "lambda",
+            "apigateway",
+            "cloudfront",
+            "s3",
+            "dynamodb",
+            "sqs",
+            "kinesis_stream",
+            "apigee_proxy"
+          ]
         }
       }
     }

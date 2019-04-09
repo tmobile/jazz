@@ -23,5 +23,15 @@
       "604800": "week",
       "2592000": "month"
     }
-  }
+  },
+  "ASSET_TYPES": [
+    "lambda",
+    "apigateway",
+    "cloudfront",
+    "s3",
+    "dynamodb",
+    "sqs",
+    "kinesis_stream",
+    "apigee_proxy"
+  ]
 }
