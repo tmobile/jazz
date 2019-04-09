@@ -144,10 +144,10 @@ describe('Overview', () => {
     browser.driver.sleep(fivek);
     //Creating the Lambda
     jazzServices_po.getLambda().click();
-    var min = 11;
-    var max = 99;
+    var min = 111;
+    var max = 999;
     var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
-    servicename = 'servicename' + randomNum;
+    servicename = 'service' + randomNum;
     createservice(servicename);
     jazzServices_po.getEventScheduleFixedRate().click();
     serviceapprover();
@@ -160,8 +160,9 @@ describe('Overview', () => {
     expect(jazzServices_po.getFunctionStatus(servicename).getText()).toEqual('active');
     }catch( err ){
       console.log(err);
-      console.log("Servie is not created");
+      console.log("Service is not created");
     }
+
   });
 
   it('Verify Function', () => {
@@ -191,6 +192,7 @@ describe('Overview', () => {
       jazzServices_po.getProdName().click();
       waitForSpinnerDisappear();
     }
+  
   });
 
   it('Verify METRICS Navigation for Lambda', () => {
@@ -340,13 +342,6 @@ describe('Overview', () => {
             jazzServices_po.gitBranchName().sendKeys(test);
             browser.wait(EC.elementToBeClickable(jazzServices_po.btnGitCreateBranch()), timeOutHigh);
             jazzServices_po.btnGitCreateBranch().click();
-            
-            //Below code is to write the text into index.js file in SCM for generating logs
-            // jazzServices_po.gitIndexFile().click();
-            // jazzServices_po.gitEditIndexFile().click();
-            // jazzServices_po.removeLineFirst().sendKeys('Vijay');
-            // jazzServices_po.gitComitChanges().click();
-
             browser.sleep(twok);
             browser.navigate().refresh();
             browser.sleep(twok);
@@ -380,9 +375,11 @@ describe('Overview', () => {
       browser.switchTo().window(handles[0]).then(function () {
         browser.sleep(twok);
         waitforservice(jazzServices_po.activeTestBranch(), fifteenk);
-        jazzServices_po.activeTestBranch().click();
+        jazzServices_po.activeTestBranch().click().
+        then(null, function(err){
+          console.log("the error occurred is : "+ err.name);
+        });
         waitForSpinnerDisappear();
-        browser.driver.switchTo().activeElement();
         browser.sleep(fivek);
       });
     });
@@ -393,14 +390,7 @@ describe('Overview', () => {
   it('Verify METRICS Navigation for Lambda for Test Branch', () => {
     try{
     browser.sleep(twok);
-    browser.driver.switchTo().activeElement();
-    refreshbutton(jazzServices_po.getMetrices(), fivek);
-    jazzServices_po.getMetrices().click();
-    waitForMetricsSpinner();
-    refreshbutton(jazzServices_po.getDeploymentStatus(), fivek);
-    jazzServices_po.getDeploymentStatus().click();
-    waitForSpinnerDisappear();
-    fluentwaittry(jazzServices_po.getTestFunction(), fivek);
+    fluentwaittry(jazzServices_po.getTestFunction(), fifteenk);
     expect(jazzServices_po.getTestFunction().getText()).toEqual('TEST FUNCTION');
     jazzServices_po.getTestFunction().click();
     browser.wait(EC.visibilityOf(jazzServices_po.getTestArea()), timeOutHigh);

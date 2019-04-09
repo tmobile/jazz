@@ -371,7 +371,10 @@ export class Jazz {
   getTestBranchName() {
     return element(by.xpath('//div[@class="stage-title2 stageDisp"]'));
   }
-
+  getLoginSpinner()
+  {
+    return element(by.css('div.loader'));
+  }
   getSpinner() {
     return element(by.css('div.loading-circle'));
   }

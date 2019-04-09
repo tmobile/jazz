@@ -257,14 +257,6 @@ describe('Overview', () => {
   });
 
   it('Verify Wesbsite Asset', () => {
-    // refreshbutton(jazzServices_po.getAsset(), fivek);
-    // //To get the Asset Tab
-    // jazzServices_po.getAsset().click();
-    // waitForSpinnerDisappear();
-    // refreshbutton(jazzServices_po.getAssetStatusVerify(), fivek);
-    // //Verifying the Assets are ACTIVE
-    // expect(jazzServices_po.getAssetStatusVerify().getText().then(function (text) { return text.toLowerCase() })).toEqual('active');
-    // refreshbutton(jazzServices_po.getAssetHeader(), fivek);
     try{
     commanUtils.verfiyAsset();
     fluentwaittry(jazzServices_po.getServiceFromAsset(), fivek);
@@ -349,13 +341,6 @@ describe('Overview', () => {
             browser.wait(EC.elementToBeClickable(jazzServices_po.btnGitCreateBranch()), timeOutHigh);
             jazzServices_po.btnGitCreateBranch().click();
             browser.sleep(tenk);
-
-            //Below code is to write the text into index.js file in SCM for generating logs
-            // jazzServices_po.gitIndexFile().click();
-            // jazzServices_po.gitEditIndexFile().click();
-            // jazzServices_po.removeLineFirst().sendKeys('Vijay');
-            // jazzServices_po.gitComitChanges().click();
-
             browser.navigate().refresh();
             browser.sleep(twok);
             jazzServices_po.getGitLogoutIcon().click();
@@ -388,7 +373,20 @@ describe('Overview', () => {
       browser.switchTo().window(handles[0]).then(function () {
         browser.sleep(fivek);
         waitforservice(jazzServices_po.activeTestBranch(), fifteenk);
-        jazzServices_po.activeTestBranch().click();
+        // if(jazzServices_po.activeTestBranch()) {
+        //   jazzServices_po.activeTestBranch().click();
+        //   waitForSpinnerDisappear();
+        //   browser.driver.switchTo().activeElement();
+        //   browser.sleep(fivek);
+        // }
+        // else{
+        //   fluentwaittry(jazzServices_po.getServiceFromAsset(), fivek);
+        //   jazzServices_po.getServiceFromAsset().click();
+        // }
+        jazzServices_po.activeTestBranch().click().
+        then(null, function(err){
+          console.log("the error occurred is : "+ err.name);
+        });
         waitForSpinnerDisappear();
         browser.driver.switchTo().activeElement();
         browser.sleep(fivek);
@@ -403,13 +401,6 @@ describe('Overview', () => {
   it('Verify METRICS Navigation for Website for Test Branch', () => {
     try{
     browser.sleep(twok);
-    browser.driver.switchTo().activeElement();
-    refreshbutton(jazzServices_po.getMetrices(), fivek);
-    jazzServices_po.getMetrices().click();
-    waitForMetricsSpinner();
-    refreshbutton(jazzServices_po.getDeploymentStatus(), fivek);
-    jazzServices_po.getDeploymentStatus().click();
-    waitForSpinnerDisappear();
     fluentwaittry(jazzServices_po.goToFunction(), fivek);
     expect(jazzServices_po.goToFunction().getText()).toEqual('GO TO WEBSITE');
     jazzServices_po.goToFunction().click();
