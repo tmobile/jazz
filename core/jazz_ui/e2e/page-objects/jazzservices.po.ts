@@ -49,22 +49,22 @@ export class Jazz {
     return element(by.xpath('(//table-template//div[@class="table-row pointer"]/div)[1]'));
   }
   getAPIType(servicename) {
-    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[2]'));
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[2]'));
   }
   getFunctionType(servicename) {
-    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[2]'));
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[2]'));
   }
   getWebsiteType(servicename) {
-    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[2]'));
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[2]'));
   }
   getAPIStatus(servicename) {
-    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[5]'));
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[5]'));
   }
   getFunctionStatus(servicename) {
-    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[5]'));
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[5]'));
   }
   getWebsiteStatus(servicename) {
-    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[5]'));
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[5]'));
   }
   getDummy() {
     return element(by.xpath('//*[@id="exampleName"]'));
@@ -93,7 +93,7 @@ export class Jazz {
   getRefresh() {
     return element(by.xpath('*//div[@class="refresh-button"]'));
   }
-  getServiceFromAsset() {
+  getServiceHomePage() {
     return element(by.xpath('//div[@class="navigation-item"]/span[@class="icon-icon-back hide"]/following-sibling::a[text()="Services"]'));
   }
   getWebsiteName() {
@@ -148,7 +148,7 @@ export class Jazz {
     return element(by.xpath('//span[@title="Refresh"]'));
   }
   serviceStatus(servicename) {
-    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[contains(text(), "active")]'));
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[contains(text(), "active")]'));
   }
   getMetrices() {
     return element(by.xpath('//li[contains(text(),"metrics")]'));
@@ -371,7 +371,10 @@ export class Jazz {
   getTestBranchName() {
     return element(by.xpath('//div[@class="stage-title2 stageDisp"]'));
   }
-
+  getLoginSpinner()
+  {
+    return element(by.css('div.loader'));
+  }
   getSpinner() {
     return element(by.css('div.loading-circle'));
   }
@@ -390,8 +393,8 @@ export class Jazz {
   getGitLogout() {
     return element(by.xpath('//a[@class="sign-out-link"]'));
   }
-  getService(servicename) {
-    return element(by.xpath('(//table-template//div[@class="table-row pointer"]/div)[contains(text(),"' + servicename + '")]'));
-  }
+  getService(servicename) { 
+    return element(by.xpath('(//table-template//div[@class="table-row pointer"]/div)[contains(text(),"'+servicename+'")]'));  
+    }
 
 }

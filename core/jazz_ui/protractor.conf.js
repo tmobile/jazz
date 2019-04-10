@@ -25,6 +25,8 @@ exports.config = {
     'chromeOptions': {
       // Get rid of --ignore-certificate yellow warning
       args: ['--headless', '--disable-gpu', '--no-sandbox', '--test-type=browser'],
+      // Set download path and avoid prompting for download even though 
+      // this is already the default on Chrome but for completeness
       prefs: {
           'download': {
               'prompt_for_download': false,
@@ -36,7 +38,7 @@ exports.config = {
   },
   directConnect: false,
   baseUrl: 'http://localhost:4200/',
-  // seleniumAddress: 'http://localhost:4444/wd/hub',
+   //seleniumAddress: 'http://localhost:4444/wd/hub',
   framework: 'jasmine',
   jasmineNodeOpts: {
     showColors: true,
