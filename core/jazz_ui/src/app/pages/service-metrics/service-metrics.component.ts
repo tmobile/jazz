@@ -90,12 +90,15 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     setTimeout(() => {
       this.sectionStatus = 'loading';
     if (!this.activatedRoute.snapshot.params['env']) {
-      return this.getEnvironments() 
+      return (this.getEnvironments() && this.getAssetType()) 
         .then(() => {
           return (this.applyFilter());
         });
     } else {
-      return this.applyFilter();
+      return this.getAssetType()
+      .then(()=>{
+        return (this.applyFilter());
+      })
     }
 
     })
@@ -148,9 +151,10 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
             selected:validAssetList[0].replace(/_/g, " ")
 				};
 				if(!data){
-          self.assetSelected=validAssetList[0];
+          self.assetSelected=validAssetList[0].replace(/_/g," ");
         }
         this.payload.asset_type = this.assetSelected.replace(/ /g ,"_");
+        self.assetSelected=validAssetList[0].replace(/ /g,"_");
        let assetField = self.filters.getFieldValueOfLabel('ASSET TYPE');
         if (!assetField) {
 					self.formFields.splice(0, 0, self.assetFilter);
@@ -282,6 +286,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           }
         }
       }
+      if(changedFilter.label === 'ASSET TYPE'){
+        this.assetSelected=changedFilter.selected.replace(/ /g,"_")
+    } 
     }
 
     if (changedFilter && (changedFilter.label === 'ASSET' || 
@@ -295,7 +302,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   queryMetricsData() {
     this.sectionStatus = 'loading';
-    this.getAssetType();
     let request = {
       url: '/jazz/metrics',
       body: {

@@ -249,7 +249,7 @@ export class ServiceLogsComponent implements OnInit {
 								if(!data){
 									self.assetSelected=validAssetList[0].replace(/_/g," ");
 								}
-								this.payload.asset_type = this.assetSelected.replace(/_/g ," ");
+								this.payload.asset_type = this.assetSelected.replace(/ /g ,"_");
 								self.assetSelected=validAssetList[0].replace(/_/g," ");
 								self.callLogsFunc();
 								self.getFilter(self.advancedFilters);
