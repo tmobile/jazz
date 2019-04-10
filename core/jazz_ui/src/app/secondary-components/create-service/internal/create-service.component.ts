@@ -180,6 +180,10 @@ export class CreateServiceComponent implements OnInit {
   closeCreateService(serviceRequest) {
     if (serviceRequest) {
       this.servicelist.serviceCall();
+      this.showToastPending(
+        'Service is getting ready',
+        this.toastmessage.customMessage('successPending', 'createService'),
+      );
     }
     this.cache.set("updateServiceList", true);
     this.serviceRequested = false;
@@ -188,6 +192,29 @@ export class CreateServiceComponent implements OnInit {
     this.onClose.emit(false);
   }
 
+
+  /**
+   * Display pending toast
+   * @param title Toast title
+   * @param body  Toast body
+   * @returns
+   */
+  // TODO: Abstract out to service
+  showToastPending (title: string, body: string): void {
+    const options = {
+      body: body,
+      closeHtml: '<button>Dismiss</button>',
+      showCloseButton: true,
+      timeout: 0,
+      title: title,
+      type: 'wait',
+    };
+
+    // TODO: Investigate need for manual class addition
+    const tst = document.getElementById('toast-container');
+    tst.classList.add('toaster-anim');
+    this.toasterService.pop(options);
+  }
 
 
   selectedApprovers = [];
@@ -337,6 +364,8 @@ export class CreateServiceComponent implements OnInit {
       );
   }
 
+  // TODO:          Abstract invocations of toast_pop(...)
+  // TODO cont'd:   to service
   toast_pop(error, oops, errorMessage) {
     var tst = document.getElementById('toast-container');
 
