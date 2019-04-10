@@ -29,16 +29,27 @@ describe('login', () => {
       login_po = new Login();
       JazzServices_po = new Jazz();
     });
+
+    function waitForSpinnerLogin() {
+      browser.wait(EC.not(EC.visibilityOf(JazzServices_po.getLoginSpinner())), 180000);
+    }
  
     it('login', () => {
       browser.refresh();
       browser.wait(EC.visibilityOf(login_po.getLoginButton()), timeOutHigh);
       login_po.getLoginButton().click();
-      login_po.getUserNameInput().sendKeys(config.USER_NAME);
-      login_po.getPasswordInput().sendKeys(config.PASSWORD);
-      login_po.submitLoginButton().click();
-      browser.wait(EC.visibilityOf(JazzServices_po.getPageTitle()), timeOutHigh);
-      const page_title = JazzServices_po.getPageTitle().getText();
-      expect(page_title).toEqual('Services');
+      if (browser.wait(EC.visibilityOf(login_po.submitLoginButton()), timeOutHigh))
+      {
+        login_po.getUserNameInput().sendKeys(config.USER_NAME);
+        login_po.getPasswordInput().sendKeys(config.PASSWORD);
+        login_po.submitLoginButton().click();
+        waitForSpinnerLogin();
+        browser.wait(EC.visibilityOf(JazzServices_po.getPageTitle()), timeOutHigh);
+        const page_title = JazzServices_po.getPageTitle().getText();
+        expect(page_title).toEqual('Services');
+      }
+      else{
+        throw new Error('Page is not uploaded. waited for 3 min');  
+      }
     });
 });

@@ -93,7 +93,7 @@ export class Jazz {
   getRefresh() {
     return element(by.xpath('*//div[@class="refresh-button"]'));
   }
-  getServiceFromAsset() {
+  getServiceHomePage() {
     return element(by.xpath('//div[@class="navigation-item"]/span[@class="icon-icon-back hide"]/following-sibling::a[text()="Services"]'));
   }
   getWebsiteName() {
@@ -371,7 +371,10 @@ export class Jazz {
   getTestBranchName() {
     return element(by.xpath('//div[@class="stage-title2 stageDisp"]'));
   }
-
+  getLoginSpinner()
+  {
+    return element(by.css('div.loader'));
+  }
   getSpinner() {
     return element(by.css('div.loading-circle'));
   }
