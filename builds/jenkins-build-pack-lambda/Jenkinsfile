@@ -776,8 +776,8 @@ def writeServerlessFile(config, env) {
   sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
-
-  if ((config['service'] == 'cloud-logs-streamer' || config['service'] == 'deployments-event-handler' || config['service'] == 'environment-event-handler') && config['domain'] == 'jazz' && configLoader.JENKINS.DOCKERIZED == "true") {
+  def service_lambda_list = configModule.getLambdaServiceList()
+  if ((config['service'] in service_lambda_list) && config['domain'] == 'jazz' && configLoader.JENKINS.DOCKERIZED == "true") {
   	addVpcDetails()
   }
 

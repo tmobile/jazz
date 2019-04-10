@@ -672,7 +672,8 @@ def writeServerlessFile(config, environment_logical_id){
   sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
   sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
   sh "sed -i -- '/#Start:isScheduleEnabled/,/#End:isScheduleEnabled/d' ./serverless.yml"
-	if ((config['service'] == 'acl' || config['service'] == 'create-serverless-service' || config['service'] == 'delete-serverless-service') && config['domain'] == 'jazz' && configLoader.JENKINS.DOCKERIZED == "true") {
+  def service_api_list = configModule.getApiServiceList()
+  if ((config['service'] in service_api_list) && config['domain'] == 'jazz' && configLoader.JENKINS.DOCKERIZED == "true") {
   	addVpcDetails()
   }
   if (config['artifact']) {

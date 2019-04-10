@@ -31,4 +31,14 @@ def parseJson(def json) {
     new groovy.json.JsonSlurperClassic().parseText(json)
 }
 
+def getLambdaServiceList() {
+    def service_list = ["cloud-logs-streamer", "deployments-event-handler", "environment-event-handler"]
+    return service_list
+}
+
+def getApiServiceList() {
+    def service_list = ["acl", "create-serverless-service", "environment-event-handler", "delete-serverless-service"]
+    return service_list
+}
+
 return this
