@@ -148,7 +148,11 @@ export class Jazz {
     return element(by.xpath('//span[@title="Refresh"]'));
   }
   serviceStatus(servicename) {
+<<<<<<< HEAD
     return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[contains(text(), "active")]'));
+=======
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="' + servicename + '"]/parent::div/div[contains(text(), "active")]'));
+>>>>>>> upstream/ui_automation
   }
   getMetrices() {
     return element(by.xpath('//li[contains(text(),"metrics")]'));
@@ -371,10 +375,14 @@ export class Jazz {
   getTestBranchName() {
     return element(by.xpath('//div[@class="stage-title2 stageDisp"]'));
   }
+<<<<<<< HEAD
   getLoginSpinner()
   {
     return element(by.css('div.loader'));
   }
+=======
+
+>>>>>>> upstream/ui_automation
   getSpinner() {
     return element(by.css('div.loading-circle'));
   }
@@ -393,8 +401,14 @@ export class Jazz {
   getGitLogout() {
     return element(by.xpath('//a[@class="sign-out-link"]'));
   }
+<<<<<<< HEAD
   getService(servicename) { 
     return element(by.xpath('(//table-template//div[@class="table-row pointer"]/div)[contains(text(),"'+servicename+'")]'));  
     }
+=======
+  getService(servicename) {
+    return element(by.xpath('(//table-template//div[@class="table-row pointer"]/div)[contains(text(),"' + servicename + '")]'));
+  }
+>>>>>>> upstream/ui_automation
 
 }
