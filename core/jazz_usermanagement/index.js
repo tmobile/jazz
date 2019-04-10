@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright � 2017 T-Mobile USA, Inc.
+// Copyright © 2017 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
+const getList = require("./components/getList.js");
 
 const scmFactory = require("./scm/scmFactory.js");
 
@@ -52,7 +53,7 @@ function handler(event, context, cb)  {
 			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "invalid or missing arguments")));
 		}
 
-		if (event.method !== 'POST') {
+		if (!(event.method === 'POST' || event.method === 'GET')) {
 			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "Service operation not supported")));
 		}
 
@@ -106,6 +107,22 @@ function handler(event, context, cb)  {
 						return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while updating user password for: " + service_data.email)));
 					}
 				});
+		} else if (subPath.indexOf('users') > -1) {
+
+			if(!event.principalId) {
+				return cb(JSON.stringify(errorHandler.throwUnauthorizedError("401", "Unauthorized")));
+			}
+
+			if (event.method === "GET") {
+				getList.listUsers(config)
+				.then(res => {
+				logger.info("User list: " + JSON.stringify(res));
+				return cb(null, responseObj({result: res, errorCode: "0", message: null}));
+				})
+				.catch(err => {
+				return cb(JSON.stringify(errorHandler.throwInternalServerError('106', JSON.stringify(err))));
+				});
+			}
 		} else {
 			logger.info('User Reg Request::' + JSON.stringify(service_data));
 

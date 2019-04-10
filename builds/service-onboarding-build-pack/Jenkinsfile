@@ -26,6 +26,7 @@ import groovy.transform.Field
 @Field def serviceMetadataLoader
 @Field def service_config
 @Field def utilModule
+@Field def aclModule
 
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def auth_token = ''
@@ -66,7 +67,7 @@ node  {
 
 		events.sendStartedEvent("VALIDATE_INPUT", 'input validation starts', context_map)
 		if (service_config['type'] == "api" || service_config['type'] == "function" || service_config['type'] == "website") {
-			if (service_config['runtime'].startsWith("nodejs") || service_config['runtime'].startsWith("python") ||  service_config['runtime'].startsWith("java") ||  service_config['runtime'].startsWith("go") || service_config['runtime'] == "n/a") {
+			if (service_config['runtime'].startsWith("nodejs") || service_config['runtime'].startsWith("python") ||  service_config['runtime'].startsWith("java") ||  service_config['runtime'].startsWith("go") || service_config['runtime'] == "n/a" || service_config['framework'] == 'angular' || service_config['framework'] == 'react') {
 				switch (service_config['type']) {
 					case "api":
 						if (service_config['runtime'].startsWith("nodejs")) {
@@ -99,7 +100,13 @@ node  {
 						break
 
 					case "website":
-						service_template = 'static-website-template'
+						if(service_config['framework'] == 'angular') {
+							service_template = 'angular-website-template'
+						} else if(service_config['framework'] == 'react') {
+							service_template = 'react-website-template'
+						} else {
+							service_template = 'static-website-template'
+						}
 						break
 				}
 			} else {
@@ -134,13 +141,13 @@ node  {
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getTemplateUrl(service_template)]]])
 				def config = LoadConfiguration()
 				def roleARN
-				
+
 				if (service_config['domain'] && service_config['domain'] == "jazz") {
 					roleARN = configLoader.AWS.PLATFORMSERVICES_ROLEID
 				} else {
 					roleARN = configLoader.AWS.USERSERVICES_ROLEID
 				}
-				
+
 				def serviceMetadataJson = [
 					"securityGroupIds": configLoader.AWS.SECURITY_GROUP_IDS,
 					"subnetIds": configLoader.AWS.SUBNET_IDS,
@@ -253,13 +260,13 @@ node  {
 				}
 
 				try {
-					events.sendStartedEvent("ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO", 'adding write permission to repo started', context_map)
-					scmModule.setRepoPermissions(service_config['created_by'], repo_name, admin_group)
-					events.sendCompletedEvent('ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO', 'adding write permission to repo started', context_map)
+					events.sendStartedEvent("ADD_POLICIES_AND_REPO_PERMISSIONS", 'adding policies and write permission to repo started', context_map)
+					aclModule.updateServiceACL(service_id, auth_token, "${g_base_url}/jazz/acl/policies", service_config['created_by'])
+					events.sendCompletedEvent('ADD_POLICIES_AND_REPO_PERMISSIONS', 'adding policies and write permission to repo started', context_map)
 				}
 				catch (ex) {
 					send_status_email("FAILED")
-					events.sendFailureEvent('ADD_WRITE_PERMISSIONS_TO_SERVICE_REPO', ex.getMessage(), context_map)
+					events.sendFailureEvent('ADD_POLICIES_AND_REPO_PERMISSIONS', ex.getMessage(), context_map)
 					error ex.getMessage()
 				}
 
@@ -441,6 +448,9 @@ def loadBuildModules(buildModuleUrl){
 		echo "Service metadata loader module loaded successfully."
 
 		utilModule = load "utility-loader.groovy"
+
+		aclModule = load "acl-module.groovy"
+		echo "ACL module loaded successfully."
 	}
 }
 

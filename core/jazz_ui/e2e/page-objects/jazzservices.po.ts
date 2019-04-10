@@ -340,7 +340,6 @@ export class Jazz {
     return element(by.xpath('//input[@value="Sign in"]'));
   }
 
-
   drpGitBranchType() {
     return element(by.xpath('//a[@class="btn dropdown-toggle has-tooltip"]//i[@class="fa fa-caret-down"]'));
   }

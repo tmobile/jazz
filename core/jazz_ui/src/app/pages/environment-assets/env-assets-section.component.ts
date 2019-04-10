@@ -112,8 +112,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 	count: any = [];
 	relativeUrl:string = '/jazz/assets';
 
-
-  @Input() service: any = {};
+	@Input() service: any = {};
 
   constructor(
 		private request:RequestService,
@@ -192,8 +191,7 @@ export class EnvAssetsSectionComponent implements OnInit {
       limit: this.limitValue,
       offset: this.offsetval
     };
-
-    this.subscription = this.http.get(this.relativeUrl, payload).subscribe(
+    this.subscription = this.http.get(this.relativeUrl, payload, this.service.id).subscribe(
       (response) => {
 
         if((response.data == undefined) || (response.data.length == 0)){
