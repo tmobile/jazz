@@ -390,12 +390,24 @@ transform: rotateY(-50%)
   border: 1px solid  #D5D7D9 ;
   height: calc(100% - 5em);
 }
+.textbox {
+  display: flex;
+  border-radius: 5px;
+}
+.col-detail{
+  width: 50%;
+}
 .text-area{
   width:100%;
-  height: calc(100% - 2em);
-  padding: 0;
+  outline: none;
+  border:none;
+  overflow: hidden;
+  padding: 0.3em;
   resize:none;
-  background-color: #eeeeee;
+  flex-grow: 1;
+  background-color: #F8F8F8;
+  border-radius: 0 5px 5px 0;
+  min-height: 12rem;
 }
 .text-area-div{
   height: calc(100% - 4em);
@@ -615,7 +627,18 @@ transform: rotateY(-50%)
   font-weight: bold;
   display: inline-block;
   width: 13rem;
-  margin-bottom: 10px;
+  margin-bottom: 15px;
+}
+.validation{
+  padding-top:0.5em;
+  margin:0;
+}
+.line-numbers{
+    text-align:center;
+    border-radius: 5px 0 0 5px;
+    width: 4rem;
+    background-color: #EEEEEE;
+    padding: 2px 2px 2px 2px;
 }
 
 .det-Value {

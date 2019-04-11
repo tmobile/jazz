@@ -534,7 +534,7 @@ onFilterCancel(event) {
     this.addQueryParam(queryParamKey, offsetValue, false );
 
     queryParamKey = 'type=';
-    var queryParamValue = this.selectedListData[0];
+    var queryParamValue = this.selectedListData[0].replace(/ /g,"_");
     if(queryParamValue == "all"){
       queryParamValue = "";
     }

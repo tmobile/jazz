@@ -184,8 +184,8 @@ ngOnInit()
       if(response&&response.data&&response.data.assets){
 				let assets=_(response.data.assets).map('asset_type').uniq().value();
 				self.assetWithDefaultValue=assets;
-				let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
-				self.assetWithDefaultValue = validAssetList;
+			//	let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
+				self.assetWithDefaultValue = assets;
         for(var i=0;i<self.assetWithDefaultValue.length;i++){
         self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
         }
@@ -193,11 +193,11 @@ ngOnInit()
             column: 'Filter By:',
             label: 'ASSET TYPE',
             options:  self.assetList,
-            values: validAssetList,
-            selected:validAssetList[0].replace(/_/g," ")
+            values: assets,
+            selected:assets[0].replace(/_/g," ")
 				};
 				if(!data){
-					self.assetSelected=validAssetList[0];
+					self.assetSelected=assets[0];
 				}
        let assetField = self.filters.getFieldValueOfLabel('ASSET TYPE');
         if (!assetField) {

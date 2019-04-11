@@ -29,7 +29,7 @@
 	</div>
 </div>
 <div class="row-detail">
-<div style="width:50%;">
+<div class="col-detail">
 <div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined' >
 	<ul class=" col-md-12 col-sm-12">
 		<li class='det-wrp'>
@@ -279,12 +279,17 @@
 			<btn-jazz-secondary  class='btn-edit-overview' [disablebtn]="!isvalid" *ngIf='saveButton' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" [disablebtn]='disableEditBtn()'  (click)='descriptor()'></btn-jazz-secondary>
 		</div>
 	</div>
-	<div class="blank-div" *ngIf="isDiv"></div>
-	<div class="text-area-div" *ngIf="isEditClicked" >
-		<textarea class="text-area" #yamlText (ngModelChange)="textChanged = true" [(ngModel)]="yaml" id="yaml" name="yaml" (blur)='checkYaml()'></textarea>
+	<div class="blank-div" [class.hide]="isEditClicked"></div>
+	<div class="text-area-div" [class.hide]="!isEditClicked" >
+		<div class="textbox">
+			<div class="line-numbers">
+					<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
+				  </div>
+		<textarea class="text-area"  #yamlText (ngModelChange)="textChanged = true && lineNumbers()"[(ngModel)]="yaml" id="yaml" name="yaml" (blur)='checkYaml()'></textarea>	
+	   </div>
 		<div *ngIf="isCancel">
-		<p *ngIf="isvalid">Valid Yaml file.</p>
-		<p *ngIf="!isvalid">Invalid Yaml file.</p>
+		<p class = "validation" *ngIf="isvalid">Valid Yaml file.</p>
+		<p class = "validation" *ngIf="!isvalid">Invalid Yaml file.</p>
 		</div>
 	</div>
 	<div class="loading" [class.show]="isLoading">

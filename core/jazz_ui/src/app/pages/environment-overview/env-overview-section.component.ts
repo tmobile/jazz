@@ -77,8 +77,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   copyLink:string="Copy Link";
  
   message:string="lalalala"
-  
-  
+  public lineNumberCount: any = new Array(7).fill('');
   private subscription:any;
 
   @Input() service: any = {};
@@ -192,16 +191,25 @@ popup(state){
     }
     
   }
+  lineNumbers() {
+    let lines;
+    if(this.yaml){
+      lines = this.yaml.split(/\r*\n/);
+      let line_numbers = lines.length;
+      if(line_numbers < 7){
+        line_numbers = 7;
+      }
+      this.lineNumberCount = new Array(line_numbers).fill('');
+    }  
+  }
   checkYaml(){
     const yamlLint = require('yaml-lint');
     yamlLint.lint(this.yaml).then(() => {
-
       this.isvalid=true;
     }).catch((error) => {
       this.isvalid=false;
     });
   }
-
   onSaveClick(){
     this.showCancel=false;
     this.saveBtn=false;
