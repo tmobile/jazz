@@ -254,7 +254,7 @@ async function getAuthorizationDetails(event, user, resource, config) {
       } else {
         category = "manage";
         permission = 'admin'
-        if (resource.indexOf("logs ") !== -1 || resource.indexOf("metrics ") !== -1) {
+        if (resource.indexOf("logs") !== -1 || resource.indexOf("metrics") !== -1) {
           permission = 'read'
         }
       }
