@@ -184,7 +184,6 @@ ngOnInit()
       if(response&&response.data&&response.data.assets){
 				let assets=_(response.data.assets).map('asset_type').uniq().value();
 				self.assetWithDefaultValue=assets;
-			//	let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 				self.assetWithDefaultValue = assets;
         for(var i=0;i<self.assetWithDefaultValue.length;i++){
         self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
