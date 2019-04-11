@@ -37,8 +37,9 @@ async function handler(event, context, cb) {
   logger.init(event, context);
 
   logger.info('event: ' + JSON.stringify(event));
+  let headers = exportable.changeToLowerCase(event.headers);
 
-  if (!event || !event.headers.Authorization) {
+  if (!event || !headers.authorization) {
     logger.error('No access token, Request will be denied!');
     return cb("Unauthorized");
   }
@@ -63,7 +64,7 @@ async function handler(event, context, cb) {
       throw ("Unauthorized");
     }
 
-    var token = event.headers.Authorization;
+    var token = headers.authorization;
     let result = await wrapper(jwtValidation(token, resp.data, cognitoUserPoolEndpoint, event, context));
     if (result.error) {
       logger.error("jwtValidation validation failed. " + JSON.stringify(result));
@@ -86,7 +87,8 @@ async function handler(event, context, cb) {
 
 async function ValidateToken(pems, event) {
   return new Promise((resolve, reject) => {
-    var token = event.headers.Authorization;
+    let headers = exportable.changeToLowerCase(event.headers);
+    var token = headers.authorization;
     //Fail if the token is not jwt
     var decodedJwt = jwt.decode(token, { complete: true });
     if (!decodedJwt) {
@@ -201,9 +203,10 @@ async function processCognitoUserDetails(event, context, result, config) {
 
 async function getAuthorizationDetails(event, user, resource, config) {
   let authToken = await auth.getAuthToken(config);
+  let headers = exportable.changeToLowerCase(event.headers);
   if (event.httpMethod === 'GET' && resource.indexOf("services") !== -1) {
     let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
-    let serviceData = await aclServices.getServiceMetadata(config, authToken, user, event.headers[header_key]);
+    let serviceData = await aclServices.getServiceMetadata(config, authToken, user, headers[header_key]);
     logger.debug("serviceData: " + JSON.stringify(serviceData))
     let allow = false;
     if (event.resource.indexOf("/services/{id}") !== -1) {
@@ -230,7 +233,7 @@ async function getAuthorizationDetails(event, user, resource, config) {
       return errorHandlerModule.throwInputValidationError("Method not supported");
     }
     let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
-    let permissionData = await aclServices.checkPermissionData(config, authToken, user, event.headers[header_key], "manage", permission);
+    let permissionData = await aclServices.checkPermissionData(config, authToken, user, headers[header_key], "manage", permission);
     logger.debug("acl/policies Data : " + JSON.stringify(permissionData))
     return {
       allow: permissionData.authorized
@@ -251,10 +254,13 @@ async function getAuthorizationDetails(event, user, resource, config) {
       } else {
         category = "manage";
         permission = 'admin'
+        if (resource.indexOf("logs ") !== -1 || resource.indexOf("metrics ") !== -1) {
+          permission = 'read'
+        }
       }
     }
     let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
-    let permissionData = await aclServices.checkPermissionData(config, authToken, user, event.headers[header_key], category, permission);
+    let permissionData = await aclServices.checkPermissionData(config, authToken, user, headers[header_key], category, permission);
     logger.debug("permissionData: " + JSON.stringify(permissionData))
     return {
       allow: permissionData.authorized
@@ -302,6 +308,14 @@ const wrapper = (promise) => {
     });
 }
 
+function changeToLowerCase(data) {
+  let newArr = {};
+  for (let key in data) {
+    newArr[key.toLowerCase()] = data[key];
+  }
+  return newArr;
+}
+
 const exportable = {
   handler,
   ValidateToken,
@@ -310,7 +324,8 @@ const exportable = {
   getAuthorizationDetails,
   validateCognitoUser,
   processCognitoUserDetails,
-  wrapper
+  wrapper,
+  changeToLowerCase
 };
 
 module.exports = exportable;
