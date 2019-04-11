@@ -147,7 +147,7 @@
                     class="path10"></span>
               </div>
               <div class='oops'>Oops!</div>
-              <div>Something went wrong while fetching your data<br><a (click)="refreshCostData($event)">REFRESH</a> to
+              <div>{{errorMessage}}<br><a (click)="refreshCostData($event)">REFRESH</a> to
                   give it another try.</div>
               <br>
               <div class='ctc-us'>If the problem persists, <a (click)='reportIssue()'> contact us</a>.</div>
