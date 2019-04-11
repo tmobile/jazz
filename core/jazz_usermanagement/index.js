@@ -32,14 +32,14 @@ const logger = require("./components/logger.js");
 
 const scmFactory = require("./scm/scmFactory.js");
 
-function handler(event, context, cb)  {
+function handler(event, context, cb) {
 
 	var errorHandler = errorHandlerModule();
 	logger.init(event, context);
 
 	var config = configModule.getConfig(event, context);
 
-	if (!config || config.length) { 	
+	if (!config || config.length) {
 		logger.error("Cannot load config object, will stop processing");
 		return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Internal error, please reach out to admins")));
 	}
@@ -51,8 +51,8 @@ function handler(event, context, cb)  {
 		if (!event || !event.method || !event.resourcePath) {
 			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "invalid or missing arguments")));
 		}
-
-		if (event.method !== 'POST') {
+		var methods = ["POST", "GET", "PUT"];
+		if (methods.indexOf(event.method) == -1) {
 			return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "Service operation not supported")));
 		}
 
@@ -61,18 +61,18 @@ function handler(event, context, cb)  {
 		var subPath = getSubPath(event.resourcePath);
 		const cognito = new AWS.CognitoIdentityServiceProvider({ apiVersion: '2016-04-19', region: config.REGION });
 
-		if (subPath.indexOf('reset') > -1) {
+		if (subPath.indexOf('reset') > -1 && event.method === 'POST') {
 			logger.info('User password reset Request:' + JSON.stringify(service_data));
 
 			exportable.validateResetParams(service_data)
-			.then(() => exportable.forgotPassword(cognito, config, service_data) )
+				.then(() => exportable.forgotPassword(cognito, config, service_data))
 				.then(result => {
-						  logger.info("Password reset was successful for user: " + service_data.email);
-						  return cb(null, responseObj({ result: "success", errorCode: "0", message: "Password reset was successful for user: " + service_data.email }));
-					  })
+					logger.info("Password reset was successful for user: " + service_data.email);
+					return cb(null, responseObj({ result: "success", errorCode: "0", message: "Password reset was successful for user: " + service_data.email }));
+				})
 				.catch((err) => {
 					logger.error("Failed while resetting user password: " + JSON.stringify(err));
-					
+
 					if (err.errorType) {
 						// error has already been handled and processed for API gateway
 						return cb(JSON.stringify(err));
@@ -83,11 +83,11 @@ function handler(event, context, cb)  {
 						return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while resetting user password for: " + service_data.email)));
 					}
 				});
-		} else if (subPath.indexOf('updatepwd') > -1) {
+		} else if (subPath.indexOf('updatepwd') > -1 && event.method === 'POST') {
 			logger.info('User password update Request::' + JSON.stringify(service_data));
 
 			exportable.validateUpdatePasswordParams(service_data)
-				.then(() =>  exportable.updatePassword(cognito, config, service_data))
+				.then(() => exportable.updatePassword(cognito, config, service_data))
 				.then(result => {
 					logger.info("Successfully updated password for user: " + service_data.email);
 					return cb(null, responseObj({ result: "success", errorCode: "0", message: "Successfully updated password for user: " + service_data.email }));
@@ -106,7 +106,7 @@ function handler(event, context, cb)  {
 						return cb(JSON.stringify(errorHandler.throwInternalServerError("106", "Failed while updating user password for: " + service_data.email)));
 					}
 				});
-		} else {
+		} else if (event.method === 'POST') {
 			logger.info('User Reg Request::' + JSON.stringify(service_data));
 
 			exportable.validateCreaterUserParams(config, service_data)
@@ -128,6 +128,57 @@ function handler(event, context, cb)  {
 						}
 
 						return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Failed while registering user: " + service_data.userid)));
+					}
+				});
+		}
+
+		if (event.method === 'GET') {
+			var queryParams = event.query;
+			exportable.validateUserListQuery(queryParams, config)
+				.then((params) => exportable.getUserList(cognito, params))
+				.then(results => {
+					logger.info(results);
+					return cb(null, responseObj({ result: 'Success', users: results.Users, paginationtoken: results.PaginationToken }, { queryParams }));
+				})
+				.catch(function (err) {
+					logger.error("Failed while Fetching user list" + JSON.stringify(err));
+					if (err.errorType) {
+
+						return cb(JSON.stringify(err));
+					} else {
+						if (err.code) {
+
+							return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+						}
+
+						return cb(JSON.stringify(errorHandler.throwInternalServerError("500", "Some thing went wrong while fetch data")));
+					}
+				});
+		}
+
+		if (event.method === 'PUT' && event.path.id) {
+			var params = {
+				UserPoolId: config.USER_POOL_ID,
+				Username: event.path.id
+			};
+			exportable.validateUserPayloadDetails(event.path.id, service_data)
+				.then(() => exportable.updateUserDetails(cognito, params, service_data))
+				.then(results => {
+					logger.info(results);
+					return cb(null, responseObj({ result: 'Success', message: results.message }, { userId: event.path.id, input: service_data }));
+				})
+				.catch(function (err) {
+					logger.error("Failed while Changing status " + JSON.stringify(err));
+					if (err.errorType) {
+
+						return cb(JSON.stringify(err));
+					} else {
+						if (err.code) {
+
+							return cb(JSON.stringify(errorHandler.throwInputValidationError(err.code, err.message)));
+						}
+
+						return cb(JSON.stringify(errorHandler.throwInternalServerError("500", "Some thing went wrong while changing user status")));
 					}
 				});
 		}
@@ -177,7 +228,7 @@ function validateUpdatePasswordParams(userInput) {
 		var errorHandler = errorHandlerModule();
 
 		if (!userInput.email) {
-			logger.warn("no email address provided for password update"); 
+			logger.warn("no email address provided for password update");
 			return reject(errorHandler.throwInputValidationError("102", "Email is required field"));
 		}
 
@@ -201,13 +252,13 @@ function validateUpdatePasswordParams(userInput) {
  * @param {object} userInput
  * @returns promise
  */
-function validateCreaterUserParams(config, userInput) { 
+function validateCreaterUserParams(config, userInput) {
 	var errorHandler = errorHandlerModule();
 
 	return new Promise((resolve, reject) => {
 
 		var missing_required_fields = _.difference(_.values(config.required_fields), _.keys(userInput));
-		
+
 		if (missing_required_fields.length > 0) {
 			logger.error("Following field(s) are required - " + missing_required_fields.join(", "));
 			return reject(errorHandler.throwInputValidationError("102", "Following field(s) are required - " + missing_required_fields.join(", ")));
@@ -290,8 +341,90 @@ function getRequestToCreateSCMUser(config, userData) {
 	return scm.addUserRequest(userData.userid.toLowerCase(), userData.userpassword);
 }
 
+function getUserList(cognitoClient, params) {
+	return new Promise((resolve, reject) => {
+		cognitoClient.listUsers(params, (err, result) => {
+			if (err) {
+				reject(err);
+			} else {
+				resolve(result);
+			}
+		});
+	});
+}
 
-const exportable = {	
+
+function validateUserListQuery(queryParams, config) {
+	var params = {
+		UserPoolId: config.USER_POOL_ID,
+	};
+	return new Promise((resolve, reject) => {
+		var errorHandler = errorHandlerModule();
+		if (queryParams.limit && (isNaN(parseInt(queryParams.limit)))) {
+			logger.warn("Limit is invalid");
+
+			return reject(errorHandler.throwInputValidationError("102", "Limit is invalid"));
+		} else {
+			if (queryParams.limit) {
+				params.Limit = queryParams.limit;
+			}
+			if (queryParams.filter) {
+				params.Filter = "email ^= \"" + queryParams.filter + "\"";
+			}
+			if (queryParams.paginationtoken) {
+				params.PaginationToken = decodeURIComponent(queryParams.paginationtoken);
+			}
+			logger.info(params);
+
+			resolve(params);
+		}
+	});
+}
+
+function validateUserPayloadDetails(userId, data) {
+	return new Promise((resolve, reject) => {
+		var errorHandler = errorHandlerModule();
+		if (typeof userId !== 'string') {
+			logger.warn("User id is not string");
+
+			return reject(errorHandler.throwInputValidationError("102", "user id is invalid"));
+		}
+		var status_array = [1, 0];
+		if (status_array.indexOf(data.status) == -1) {
+		  logger.warn("Status is not valid");
+		  
+		  return reject(errorHandler.throwInputValidationError("102", "status is invalid"));
+		}
+
+		resolve('Success');
+	});
+}
+
+function updateUserDetails(cognitoClient, params, data) {
+	return new Promise((resolve, reject) => {
+		if (data.status == 1) {
+			cognitoClient.adminEnableUser(params, (err, result) => {
+				if (err) {
+					reject(err);
+				} else {
+					result.message = "User Enabled Successfully";
+					resolve(result);
+				}
+			});
+		} else {
+			cognitoClient.adminDisableUser(params, (err, result) => {
+				if (err) {
+					reject(err);
+				} else {
+					result.message = "User Disabled Successfully";
+					resolve(result);
+				}
+			});
+		}
+	});
+}
+
+const exportable = {
 	handler,
 	validateResetParams,
 	validateUpdatePasswordParams,
@@ -299,7 +432,12 @@ const exportable = {
 	createUser,
 	forgotPassword,
 	updatePassword,
-	getRequestToCreateSCMUser
-	
+	getRequestToCreateSCMUser,
+	validateUserListQuery,
+	getUserList,
+	validateUserPayloadDetails,
+	updateUserDetails
+
 };
+
 module.exports = exportable;

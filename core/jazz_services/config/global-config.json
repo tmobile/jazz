@@ -99,12 +99,19 @@
             "type": "Object"
         },
         {
+            "key": "deployment_descriptor",
+            "required": false,
+            "editable": false,
+            "isEmptyAllowed": false,
+            "type": "String"
+        },
+        {
             "key": "deployment_targets",
             "required": true,
             "editable": false,
             "isEmptyAllowed": false,
             "type": "Object"
-        }       
+        }
     ],
     "SERVICE_STATUS": [
         "creation_started",
@@ -138,6 +145,14 @@
         {
             "type": "website",
             "fields": []
+        },
+        {
+            "type": "sls-app",
+            "fields": [
+                {
+                    "key": "runtime"
+                }
+            ]
         }
     ]
 }
