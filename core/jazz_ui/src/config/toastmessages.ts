@@ -52,6 +52,8 @@ export const toastMessage = {
     },
     "createService":{
         "success":"Your service will be available shortly. You can track the progress on service page ",
+        "successPending":"Your service will be ready momentarily and will appear on the Services page soon.",
+        "successReady":"Your new service has been created and can now be viewed on the Services page.",
         "error400":"Looks like we couldn't create your service. Please try again.",
         "error401":"Token expired",
         "error404":"Looks like we couldn't create your service. Please try again.",
@@ -91,7 +93,7 @@ export const toastMessage = {
         "error0":"Your login failed, seems like we can't reach our servers."
     },
     "register":{
-        "success":"A verification email is sent to ",
+        "success":"A verification email has been sent to ",
         "error400":"Your registration failed. Seems like something went wrong.",
         "error401":"Token expired",
         "error404":"Your registration failed. Seems like something went wrong.",
