@@ -331,6 +331,38 @@ describe('platform_services', function() {
   });
 
   /*
+  * Given an event.method = get and service and domain values to query, service and domain info should be added to the filter
+  * @param {object} event->event.method="GET", event.path.id is undefined, query values of service & domain are defined
+  * @params {object, function} default aws context, and callback function as defined in beforeEach
+  */
+  it("should include service and domain info in dynamodb filter if given specific event props", function(){
+    event.method = "GET";
+    event.path.id = undefined;
+
+    var service = "admin";
+    var domain = "pits";
+    Object.assign(event.query, { service, domain });
+
+    var dataType = "S";
+    var scanParams = [":SERVICE_NAME", ":SERVICE_DOMAIN"];
+    var filterStrings = ["contains(SERVICE_NAME, :SERVICE_NAME)", "contains(SERVICE_DOMAIN, :SERVICE_DOMAIN)"];
+
+    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
+    AWS.mock("DynamoDB", "scan", spy);
+    //trigger spy by calling index.handler()
+    var callFunction = index.handler(event, context, callback);
+    //assigning the item filter values passed to DynamoDB.scan as values to check against
+    var filterExp = spy.args[0][0].FilterExpression;
+    var expAttrVals = spy.args[0][0].ExpressionAttributeValues;
+    var allCases = filterExp.includes(filterStrings[0])
+      && filterExp.includes(filterStrings[1])
+      && expAttrVals[scanParams[0]][dataType] == service
+      && expAttrVals[scanParams[1]][dataType] == domain;
+    AWS.restore("DynamoDB");
+    assert.isTrue(allCases);
+  });
+
+  /*
   * Given a userID that IS listed among admin_users, a filter is not used for only the user's services
   * @param {object} event->event.method="GET", event.path.id is undefined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
