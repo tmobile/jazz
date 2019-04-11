@@ -447,7 +447,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 		}
 		// paginatePage()
 		this.paginatePage(this.currentlyActive);
- }
+  }
 
 	ngOnChanges(x:any) {
     this.route.params.subscribe(
@@ -458,18 +458,28 @@ export class EnvAssetsSectionComponent implements OnInit {
 			}
     });
     this.callServiceEnvAssets();
-}
+  }
 
-refreshCostData(event){
-  this.callServiceEnvAssets();
-}
-public goToAbout(hash){
-	this.router.navigateByUrl('landing');
-	this.cache.set('scroll_flag',true);
-	this.cache.set('scroll_id',hash);
-}
+  refreshCostData(event){
+    this.callServiceEnvAssets();
+  }
+  public goToAbout(hash){
+    this.router.navigateByUrl('landing');
+    this.cache.set('scroll_flag',true);
+    this.cache.set('scroll_id',hash);
+  }
 
-  public assetTypeToLabel(type) {
+  public assetTypeToLabel(type, provider) {
+	  if(type === 'swagger_url' || type === 'endpoint_url'){
+      return 'URL';
+    }
+    else if(provider === 'aws'){
+      return 'ARN'
+    }
+    else if(provider === 'azure') {
+      return 'Resource'
+    }
+
     switch(type) {
       case 'swagger_url':
       case 'endpoint_url':

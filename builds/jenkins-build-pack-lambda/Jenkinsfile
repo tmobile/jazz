@@ -21,6 +21,7 @@ import groovy.transform.Field
 @Field def utilModule
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
+@Field def azureDeployer
 
 @Field def auth_token = ''
 @Field def config
@@ -131,6 +132,9 @@ node() {
   domain = config['domain']
 
   def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
+  def servicePlatform = config['platform']
+  def serviceType = config['type']
+  def eventScheduleRate = config['eventScheduleRate']
 
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
@@ -153,7 +157,10 @@ node() {
 
 
   dir(repo_name) {
-    loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
+    if (servicePlatform == null || servicePlatform != "azure") {
+
+      loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
+    }
     if (domain && domain == "jazz") {
       stage('Update Service Template') {
         echo "Inside Update service template"
@@ -221,9 +228,54 @@ node() {
 
       events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 
+
+      def logicalId
+
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
+
+        if (servicePlatform && servicePlatform == 'azure') {
+
+
+          timestamps {
+
+            if (environment_logical_id == "prod") {
+              logicalId = config['service_id'].substring(0, 7) + environment_logical_id
+            } else {
+              logicalId = environment_logical_id.split('-')[0] //13 + 10
+            }
+            def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
+            def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
+
+            def serviceInfo = [
+              'stackName'         : stackName,
+              'storageAccountName': storageName,
+              "repoCredentialId"  : repo_credential_id,
+              'envId'             : environment_logical_id,
+              'serviceCatalog'    : config,
+              'isScheduleEnabled' : isScheduleEnabled,
+              'isStreamEnabled'   : isStreamEnabled,
+              'isQueueEnabled'    : isSQSEventEnabled,
+              'isDbEnabled'       : isDynamoDbEnabled,
+              'isStorageEnabled'  : isS3EventEnabled
+            ]
+            try {
+              def endpoint = azureDeployer.createFunction(serviceInfo)
+              environmentDeploymentMetadata.setEnvironmentEndpoint(endpoint)
+              def svc_response = "Your service endpoint: $endpoint"
+
+              sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response)
+
+            } catch (ex) {
+              handleFail(ex, context_map, environment_logical_id, config, gitCommitHash)
+            }
+
+
+          }
+          return
+        }
+
         try {
           // initialize aws credentials
           def randomString = utilModule.generateRequestId();
@@ -310,27 +362,40 @@ node() {
             serviceConfigdata.setLogStreamPermission(config)
             serviceConfigdata.setKinesisStream(config)
           }
-          def svc_response = echoServiceInfo(environment_logical_id)
-          send_status_email(config, 'COMPLETED', svc_response)
 
         } catch (ex) {
-          send_status_email(config, 'FAILED', '')
-          events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
-          events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-          events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
-          error ex.getMessage()
+          handleFail(ex, context_map, environment_logical_id, config, gitCommitHash)
         }
         environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
-        def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
-
-        events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null), environment_logical_id)
-        events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion Event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
-        events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)
-
+        def svc_response = echoServiceInfo(environment_logical_id)
+        sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response)
       } //end of withCredentials
     } //end of deployment to an environment
   }
 }
+
+
+private void sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response) {
+
+  def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
+  echo "==============================================================================================="
+  echo svc_response
+  echo "==============================================================================================="
+  send_status_email(config, 'COMPLETED', svc_response)
+  events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null), environment_logical_id)
+  events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion Event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
+  events.sendCompletedEvent('DEPLOY_TO_AWS', "Successfully deployed services to ${servicePlatform}", serviceContext, environment_logical_id)
+}
+
+def handleFail(ex, context_map, environment_logical_id, config, gitCommitHash) {
+  echo "error: $ex"
+  send_status_email(config, 'FAILED', '')
+  events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
+  events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+  events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
+  error ex.getMessage()
+}
+
 
 def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld) {
   def s3BucketErrString = "CloudFormation - CREATE_FAILED - AWS::S3::Bucket - "
@@ -597,7 +662,7 @@ def validateDeploymentConfigurations(def prop) {
 		if (_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x"]
+			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x", "c#"]
 			def flag = false
 
 			for (int i = 0; i < validRuntimes.size(); i++) {
@@ -620,7 +685,9 @@ def validateDeploymentConfigurations(def prop) {
 		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
 			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
 		}
-	} else {
+	} else if (config['platform'] == "azure") {
+    // we use azure default timeout
+  } else {
 		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
 	}
 
@@ -713,10 +780,6 @@ def echoServiceInfo(String env) {
         svc_response = "Your service endpoint: " + arn
       }
     }
-
-    echo "==============================================================================================="
-    echo svc_response
-    echo "==============================================================================================="
 
     return svc_response
 
@@ -1040,6 +1103,18 @@ def loadBuildModules(buildModuleUrl) {
 
     environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
     echo "Environment deployment data loader module loaded successfully."
+
+    def resourceUtility = load "resource-utility.groovy"
+    resourceUtility.initialize(configLoader)
+    echo "resource util init successfully."
+
+    def azureUtility = load "azure-utility.groovy"
+    azureUtility.initialize(configLoader, resourceUtility)
+    echo "Azure util init successfully."
+    azureDeployer = load "azure-function-deploy-module.groovy"
+    azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtility)
+    echo "Azure deploy module init successfully."
+
   }
 }
 

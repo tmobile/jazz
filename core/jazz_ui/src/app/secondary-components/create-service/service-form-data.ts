@@ -46,3 +46,20 @@ export class EventExpression {
     public SQSstreamARN: string,
   ) {  }
 }
+
+
+
+export class EventLabels {
+  constructor(
+  	public functionLabel: string,
+    public databaseLabel: string,
+    public databaseNameLabel: string,
+    public streamLabel: string,
+    public streamNameLabel: string,
+    public storageLabel: string,
+    public storageNameLabel: string,
+    public queueLabel: string,
+    public queueNameLabel: string,
+
+  ) {  }
+}

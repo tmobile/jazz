@@ -34,6 +34,16 @@ var validateARN = (arn) => {
   }
 
 };
+
+var validateEndpoint = (endpoint) => {
+  if (endpoint && endpoint.startsWith("http")) {
+    return true;
+  } else {
+    return validateARN(endpoint);
+  }
+
+};
+
 var execStatus = () => {
   return {
     "success": "Success",
@@ -44,6 +54,6 @@ var execStatus = () => {
 }
 
 module.exports = {
-  validateARN,
+  validateEndpoint,
   execStatus
 };

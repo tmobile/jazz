@@ -99,12 +99,19 @@
             "type": "Object"
         },
         {
+          "key": "platform",
+          "required": true,
+          "editable": false,
+          "isEmptyAllowed": false,
+          "type": "String"
+        },
+        {
             "key": "deployment_targets",
             "required": true,
             "editable": false,
             "isEmptyAllowed": false,
             "type": "Object"
-        }       
+        }
     ],
     "SERVICE_STATUS": [
         "creation_started",
@@ -116,7 +123,7 @@
         "active",
         "inactive"
     ],
-    "SERVICE_RUNTIMES": ["nodejs8.10", "python2.7", "python3.6", "java8", "go1.x"],
+    "SERVICE_RUNTIMES": ["nodejs8.10", "python2.7", "python3.6", "java8", "go1.x", "c#"],
     "TYPE_FIELD_KEY": "type",
     "SERVICE_INTER_DEPENDENT_FIELDS_MAP": [
         {

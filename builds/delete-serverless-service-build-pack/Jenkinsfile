@@ -24,6 +24,7 @@ import groovy.json.JsonSlurperClassic
 @Field def apigeeModule
 @Field def lambdaEvents
 @Field def aclModule
+@Field def azureDeployer
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -122,7 +123,7 @@ node {
 				flowType = "API"
 				loadServerlessConfig()
 				updateSwaggerConfig()
-			} else if (fileExists('build.lambda')) {
+			} else if (fileExists('build.lambda') || fileExists('build.function')) {
 				flowType = "LAMBDA"
 				loadServerlessConfig()
 			} else if (fileExists('build.website')) {
@@ -138,6 +139,39 @@ node {
 			}
 		}
 	}
+
+  if (azureDeployer.isAzure(service_config)) {
+    stage('Undeploy Service') {
+
+      for (_envId in environmentIds) {
+        current_environment_id = _envId
+        try {
+          def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+          if (branch && branch != 'NA') {
+            environmentMetadataLoader.setBranch(branch)
+            events.setBranch(branch)
+            sonarModule.setBranch(branch)
+          }
+          events.setEnvironment(_envId)
+          events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+          echo 'undeploying service for environment: ' + _envId
+          azureDeployer.deleteResources(_envId, repo_credential_id, service_config)
+
+          if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
+            cleanupCodeQualityReports()
+          }
+          archiveAssetDetails(_envId)
+          events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
+        } catch (ex) {
+          echo "Environment Deletion failed for envId: $_envId . Error Details:" + ex
+          events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+          error "Environment Deletion failed for envId: $_envId . Error Details:" + ex
+        }
+      }
+    }
+    cleanupScm(repo_name)
+    return
+  }
 
 
 	dir(repo_name){
@@ -278,6 +312,16 @@ def deletePolicies(serviceId, authToken, aclUrl) {
 		echo "ex: $ex"
 		events.sendFailureEvent('REMOVE_POLICIES_AND_REPO_PERMISSIONS', ex.getMessage(), context_map)
 	}
+}
+
+def cleanupScm(repo_name) {
+
+  if (is_service_deletion) {
+    stage('Cleanup SCM') {
+      cleanup(repo_name)
+      events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
+    }
+  }
 }
 
 def cleanupEventSourceMapping(env) {
@@ -474,6 +518,10 @@ def writeServerlessFile(){
  * @return
  */
 def updateSwaggerConfig() {
+
+  if (azureDeployer.isAzure(service_config)) {
+    return
+  }
 	try {
 		if (fileExists('swagger/swagger.json')) {
 			sh "sed -i -- 's/{service_name}/${service_config['service']}/g' swagger/swagger.json"
@@ -1077,6 +1125,9 @@ def LoadConfiguration() {
 }
 
 def loadServerlessConfig() {
+  if (azureDeployer.isAzure(service_config)) {
+    return
+  }
 
 	def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
 	echo "loadServerlessConfig:: ${service_config['providerRuntime']}::" + configPackURL
@@ -1246,6 +1297,16 @@ def loadBuildModules(buildModuleUrl){
 
 		aclModule = load "acl-module.groovy"
 		echo "ACL module loaded successfully."
+    def resourceUtility = load "resource-utility.groovy"
+    resourceUtility.initialize(configLoader)
+    echo "resource util init successfully."
+
+    def azureUtil = load "azure-utility.groovy"
+    azureUtil.initialize(configLoader, resourceUtility)
+    echo "Azure util init successfully."
+    azureDeployer = load "azure-function-deploy-module.groovy"
+    azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtil)
+    echo "Azure deploy module init successfully."
 	}
 }
 

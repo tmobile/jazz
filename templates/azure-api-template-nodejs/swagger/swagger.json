@@ -1,0 +1,93 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "${domain}",
+    "version": "1.0"
+  },
+  "host": "${domain}.azurewebsites.net" ,
+  "basePath": "/api",
+  "schemes": [
+    "https"
+  ],
+  "securityDefinitions": {
+    "apiKeyHeader": {
+      "type": "apiKey",
+      "name": "Ocp-Apim-Subscription-Key",
+      "in": "header"
+    },
+    "apiKeyQuery": {
+      "type": "apiKey",
+      "name": "subscription-key",
+      "in": "query"
+    }
+  },
+  "security": [
+    {
+      "apiKeyHeader": []
+    },
+    {
+      "apiKeyQuery": []
+    }
+  ],
+  "paths": {
+    "/${functionName}": {
+      "get": {
+        "description": "A demonstration of a GET call on a sample resource.",
+        "operationId": "retrieve-resource",
+        "summary": "Retrieve resource",
+        "parameters": [
+          {
+            "name": "name",
+            "in": "query",
+            "description": "A sample parameter that is required and has a default value of \"sample\".",
+            "required": false,
+            "type": "string",
+            "default": "sample",
+            "enum": [
+              "sample"
+            ]
+          },
+          {
+            "name": "param2",
+            "in": "query",
+            "description": "Another sample parameter, set to not required.",
+            "type": "number"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Returned in all cases."
+          }
+        }
+      },
+      "post": {
+        "description": "A demonstration of a POST call based on the echo backend above. The request body is expected to contain JSON-formatted data (see example below). A policy is used to automatically transform any request sent in JSON directly to XML. In a real-world scenario this could be used to enable modern clients to speak to a legacy backend.",
+        "operationId": "create-resource",
+        "summary": "Create resource",
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "schema": {
+              "$ref": "#/definitions/Body"
+            }
+          }
+        ],
+        "consumes": [
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        }
+      }
+    }
+  },
+  "definitions": {
+    "Body": {
+      "example": "{\r\n\t\"param\": \"test\"\r\n}"
+    }
+  },
+  "tags": []
+}

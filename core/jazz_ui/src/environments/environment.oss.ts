@@ -39,6 +39,15 @@ export const environment = {
   },
   aws: {
     account_number:'{account_number}',
-    region:"{region}"
+    region:"{region}",
+    envLists:  {"nodejs8.10": "Nodejs 8.10", "python2.7": "Python 2.7", "python3.6": "Python 3.6", "java8": "Java 8", "go1.x": "Go 1.x"},
+  },
+
+  azure: {
+    envLists:  {"nodejs8.10": "Nodejs 8.10", "c#": "C#"},
+  },
+
+  gcloud: {
+    envLists:  {},
   }
 };

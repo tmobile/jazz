@@ -1,454 +1,607 @@
-// @font-face {
-//     font-family: Lato;
-//     src: url(/assets/fonts/lato/Lato-Thin.ttf);
-//     font-weight: 100;
-// }
-// @font-face {
-//     font-family: Lato;
-//     src: url(/assets/fonts/lato/Lato-Light.ttf);
-//     font-weight: 300;
-// }
-// @font-face {
-//     font-family: Lato;
-//     src: url(/assets/fonts/lato/Lato-Regular.eot);
-//     src: url(/assets/fonts/lato/Lato-Regular.woff) format('woff'),
-//          url(/assets/fonts/lato/Lato-Regular.woff2) format('woff2'),
-//          url(/assets/fonts/lato/Lato-Regular.ttf) format('ttf');
-//     font-weight: 500;
-// }
-// @font-face {
-//     font-family: Lato;
-//     src: url(/assets/fonts/lato/Lato-Bold.eot);
-//     src: url(/assets/fonts/lato/Lato-Bold.woff) format('woff'),
-//          url(/assets/fonts/lato/Lato-Bold.woff2) format('woff2'),
-//          url(/assets/fonts/lato/Lato-Bold.ttf) format('ttf');
-//     font-weight: 700;
-// }
-// @font-face {
-//     font-family: Lato;
-//     src: url(/assets/fonts/lato/Lato-Heavy.ttf);
-//     font-weight: 900;
-// }
+@font-face {
+    font-family: Lato;
+    src: url(/assets/fonts/lato/Lato-Thin.ttf);
+    font-weight: 100;
+}
+@font-face {
+    font-family: Lato;
+    src: url(/assets/fonts/lato/Lato-Light.ttf);
+    font-weight: 300;
+}
+@font-face {
+    font-family: Lato;
+    src: url(/assets/fonts/lato/Lato-Regular.eot);
+    src: url(/assets/fonts/lato/Lato-Regular.woff) format('woff'),
+         url(/assets/fonts/lato/Lato-Regular.woff2) format('woff2'),
+         url(/assets/fonts/lato/Lato-Regular.ttf) format('ttf');
+    font-weight: 500;
+}
+@font-face {
+    font-family: Lato;
+    src: url(/assets/fonts/lato/Lato-Bold.eot);
+    src: url(/assets/fonts/lato/Lato-Bold.woff) format('woff'),
+         url(/assets/fonts/lato/Lato-Bold.woff2) format('woff2'),
+         url(/assets/fonts/lato/Lato-Bold.ttf) format('ttf');
+    font-weight: 700;
+}
+@font-face {
+    font-family: Lato;
+    src: url(/assets/fonts/lato/Lato-Heavy.ttf);
+    font-weight: 900;
+}
 
-// @font-face {
-//     font-family: 'icomoon';
-//     src: url(/assets/fonts/icomoon.eot);
-//     src: url(/assets/fonts/icomoon.woff) format('woff'),
-//          url(/assets/fonts/icomoon.ttf) format('ttf'),
-//          url(/assets/fonts/icomoon.svg#icomoon) format('svg');
-//     font-weight: normal;
-//     font-style: normal;
-// }
-
-
-// [class^="icon-"], [class*=" icon-"] {
-//   /* use !important to prevent issues with browser extensions that change fonts */
-//   font-family: 'icomoon' !important;
-//   speak: none;
-//   font-style: normal;
-//   font-weight: normal;
-//   font-variant: normal;
-//   text-transform: none;
-//   line-height: 1;
-
-//   /* Better Font Rendering =========== */
-//   -webkit-font-smoothing: antialiased;
-//   -moz-osx-font-smoothing: grayscale;
-// }
-
-// .icon-icon-feedback:before {
-//   content: "\ea26";
-// }
-// .icon-icon-help:before {
-//   content: "\ea27";
-// }
-// .icon-icon-logout:before {
-//   content: "\ea28";
-// }
-// .icon-icon-function:before {
-//   content: "\e9f2";
-// }
-// .icon-icon-web:before {
-//   content: "\e9f3";
-// }
-// .icon-icon-AWS .path1:before {
-//     content: "\ea67";
-//     color: rgb(32, 28, 29);
-// }
-
-// .icon-icon-AWS .path2:before {
-//     content: "\ea68";
-//     margin-left: -2.6630859375em;
-//     color: rgb(0, 0, 0);
-// }
-
-// .icon-icon-AWS .path3:before {
-//     content: "\ea69";
-//     margin-left: -2.6630859375em;
-//     color: rgb(247, 168, 13);
-// }
-
-// .icon-icon-AWS .path4:before {
-//     content: "\ea6a";
-//     margin-left: -2.6630859375em;
-//     color: rgb(247, 168, 13);
-// }
-
-// .icon-icon-AWS .path5:before {
-//     content: "\ea6b";
-//     margin-left: -2.6630859375em;
-//     color: rgb(247, 168, 13);
-// }
-
-// .icon-icon-AWS .path6:before {
-//     content: "\ea6c";
-//     margin-left: -2.6630859375em;
-//     color: rgb(247, 168, 13);
-// }
-
-// .icon-icon-AWS .path7:before {
-//     content: "\ea6d";
-//     margin-left: -2.6630859375em;
-//     color: rgb(247, 168, 13);
-// }
-
-// .icon-icon-AWS .path8:before {
-//   content: "\ea6e";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path9:before {
-//   content: "\ea6f";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path10:before {
-//   content: "\ea70";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path11:before {
-//   content: "\ea71";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path12:before {
-//   content: "\ea71";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path13:before {
-//   content: "\ea73";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path14:before {
-//   content: "\ea74";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path15:before {
-//   content: "\ea75";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path16:before {
-//   content: "\ea76";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path17:before {
-//   content: "\ea77";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path18:before {
-//   content: "\ea78";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path19:before {
-//   content: "\ea79";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path20:before {
-//   content: "\ea7a";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path21:before {
-//   content: "\ea7b";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path22:before {
-//   content: "\ea7c";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path23:before {
-//   content: "\ea7d";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path24:before {
-//   content: "\ea7e";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path25:before {
-//   content: "\ea7f";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path26:before {
-//   content: "\ea80";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path27:before {
-//   content: "\ea81";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path28:before {
-//   content: "\ea82";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path29:before {
-//   content: "\ea83";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path30:before {
-//   content: "\ea84";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path31:before {
-//   content: "\ea85";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path32:before {
-//   content: "\ea86";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
-// .icon-icon-AWS .path33:before {
-//   content: "\ea87";
-//   margin-left: -2.6630859375em;
-//   color: rgb(247, 168, 13);
-// }
+@font-face {
+    font-family: 'icomoon';
+    src: url(/assets/fonts/icomoon.eot?b2haw5);
+    src: url(/assets/fonts/icomoon.woff?b2haw5) format('woff'),
+         url(/assets/fonts/icomoon.ttf?b2haw5) format('ttf'),
+         url(/assets/fonts/icomoon.svg?b2haw5#icomoon) format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
 
 
+[class^="icon-"], [class*=" icon-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'icomoon' !important;
+  speak: none;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
 
-// // .icon-logo-azure:before{
-// //   content : "\e91b";
-// // }
-// .icon-logo-azure .path1:before {
-//   content: "\e91b";
-//   color: rgb(0, 173, 239);
-// }
-// .icon-logo-azure .path2:before {
-//   content: "\e966";
-//   margin-left: -1em;
-//   color: rgb(60, 158, 187);
-// }
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
 
-// .icon-logo-docker .path1:before {
-//   content: "\e91c";
-//   color: rgb(54, 69, 72);
-// }
-// .icon-logo-docker .path2:before {
-//   content: "\e967";
-//   margin-left: -1.7607421875em;
-//   color: rgb(34, 160, 200);
-// }
-// .icon-logo-docker .path3:before {
-//   content: "\e968";
-//   margin-left: -1.7607421875em;
-//   color: rgb(55, 177, 217);
-// }
-// .icon-logo-docker .path4:before {
-//   content: "\e969";
-//   margin-left: -1.7607421875em;
-//   color: rgb(27, 129, 165);
-// }
-// .icon-logo-docker .path5:before {
-//   content: "\e96a";
-//   margin-left: -1.7607421875em;
-//   color: rgb(29, 145, 180);
-// }
-// .icon-logo-docker .path6:before {
-//   content: "\e96b";
-//   margin-left: -1.7607421875em;
-//   color: rgb(35, 163, 194);
-// }
-// .icon-logo-docker .path7:before {
-//   content: "\e96c";
-//   margin-left: -1.7607421875em;
-//   color: rgb(52, 187, 222);
-// }
-// .icon-logo-docker .path8:before {
-//   content: "\e96d";
-//   margin-left: -1.7607421875em;
-//   color: rgb(35, 163, 194);
-// }
-// .icon-logo-docker .path9:before {
-//   content: "\e96e";
-//   margin-left: -1.7607421875em;
-//   color: rgb(52, 187, 222);
-// }
-// .icon-logo-docker .path10:before {
-//   content: "\e96f";
-//   margin-left: -1.7607421875em;
-//   color: rgb(35, 163, 194);
-// }
-// .icon-logo-docker .path11:before {
-//   content: "\e970";
-//   margin-left: -1.7607421875em;
-//   color: rgb(52, 187, 222);
-// }
-// .icon-logo-docker .path12:before {
-//   content: "\e971";
-//   margin-left: -1.7607421875em;
-//   color: rgb(35, 163, 194);
-// }
-// .icon-logo-docker .path13:before {
-//   content: "\e972";
-//   margin-left: -1.7607421875em;
-//   color: rgb(211, 236, 236);
-// }
-// .icon-logo-docker .path14:before {
-//   content: "\e973";
-//   margin-left: -1.7607421875em;
-//   color: rgb(54, 69, 72);
-// }
-// .icon-logo-docker .path15:before {
-//   content: "\e974";
-//   margin-left: -1.7607421875em;
-//   color: rgb(189, 217, 215);
-// }
-// .icon-logo-docker .path16:before {
-//   content: "\e975";
-//   margin-left: -1.7607421875em;
-//   color: rgb(211, 236, 236);
-// }
+.icon-icon-Azure-Functions:before {
+    content: "\eaad";
+  }
 
-// .icon-logo-googleCloud .path1:before {
-//     content: "\e91d";
-//     color: rgb(255, 206, 64);
-// }
+.icon-icon-feedback:before {
+  content: "\ea26";
+}
+.icon-icon-help:before {
+  content: "\ea27";
+}
+.icon-icon-logout:before {
+  content: "\ea28";
+}
+.icon-icon-function:before {
+  content: "\e9f2";
+}
+.icon-icon-web:before {
+  content: "\e9f3";
+}
+.icon-icon-AWS .path1:before {
+    content: "\ea67";
+    color: rgb(32, 28, 29);
+}
 
-// .icon-logo-googleCloud .path2:before {
-//     content: "\e976";
-//     margin-left: -1.119140625em;
-//     color: rgb(219, 68, 54);
-// }
+.icon-icon-AWS .path2:before {
+    content: "\ea68";
+    margin-left: -2.6630859375em;
+    color: rgb(0, 0, 0);
+}
 
-// .icon-logo-googleCloud .path3:before {
-//     content: "\e977";
-//     margin-left: -1.119140625em;
-//     color: rgb(84, 125, 191);
-// }
+.icon-icon-AWS .path3:before {
+    content: "\ea69";
+    margin-left: -2.6630859375em;
+    color: rgb(247, 168, 13);
+}
 
-// .icon-logo-googleCloud .path4:before {
-//     content: "\e978";
-//     margin-left: -1.119140625em;
-//     color: rgb(238, 238, 238);
+.icon-icon-AWS .path4:before {
+    content: "\ea6a";
+    margin-left: -2.6630859375em;
+    color: rgb(247, 168, 13);
+}
+
+.icon-icon-AWS .path5:before {
+    content: "\ea6b";
+    margin-left: -2.6630859375em;
+    color: rgb(247, 168, 13);
+}
+
+.icon-icon-AWS .path6:before {
+    content: "\ea6c";
+    margin-left: -2.6630859375em;
+    color: rgb(247, 168, 13);
+}
+
+.icon-icon-AWS .path7:before {
+    content: "\ea6d";
+    margin-left: -2.6630859375em;
+    color: rgb(247, 168, 13);
+}
+
+.icon-icon-AWS .path8:before {
+  content: "\ea6e";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path9:before {
+  content: "\ea6f";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path10:before {
+  content: "\ea70";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path11:before {
+  content: "\ea71";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path12:before {
+  content: "\ea71";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path13:before {
+  content: "\ea73";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path14:before {
+  content: "\ea74";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path15:before {
+  content: "\ea75";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path16:before {
+  content: "\ea76";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path17:before {
+  content: "\ea77";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path18:before {
+  content: "\ea78";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path19:before {
+  content: "\ea79";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path20:before {
+  content: "\ea7a";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path21:before {
+  content: "\ea7b";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path22:before {
+  content: "\ea7c";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path23:before {
+  content: "\ea7d";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path24:before {
+  content: "\ea7e";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path25:before {
+  content: "\ea7f";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path26:before {
+  content: "\ea80";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path27:before {
+  content: "\ea81";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path28:before {
+  content: "\ea82";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path29:before {
+  content: "\ea83";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path30:before {
+  content: "\ea84";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path31:before {
+  content: "\ea85";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path32:before {
+  content: "\ea86";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+.icon-icon-AWS .path33:before {
+  content: "\ea87";
+  margin-left: -2.6630859375em;
+  color: rgb(247, 168, 13);
+}
+
+
+
+
+.icon-icon-AWS-inactive {
+	color: #ccc;
+}
+
+
+
+.icon-icon-AWS .path1:before {
+    content: "\ea67";
+    color: rgb(32, 28, 29);
+}
+
+.icon-icon-AWS-inactive .path2:before {
+    content: "\ea68";
+    margin-left: -2.6630859375em;
+}
+
+.icon-icon-AWS-inactive .path3:before {
+    content: "\ea69";
+    margin-left: -2.6630859375em;
+}
+
+.icon-icon-AWS-inactive .path4:before {
+    content: "\ea6a";
+    margin-left: -2.6630859375em;
+}
+
+.icon-icon-AWS-inactive .path5:before {
+    content: "\ea6b";
+    margin-left: -2.6630859375em;
+}
+
+.icon-icon-AWS-inactive .path6:before {
+    content: "\ea6c";
+    margin-left: -2.6630859375em;
+}
+
+.icon-icon-AWS-inactive .path7:before {
+    content: "\ea6d";
+    margin-left: -2.6630859375em;
+}
+
+.icon-icon-AWS-inactive .path8:before {
+  content: "\ea6e";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path9:before {
+  content: "\ea6f";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path10:before {
+  content: "\ea70";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path11:before {
+  content: "\ea71";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path12:before {
+  content: "\ea71";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path13:before {
+  content: "\ea73";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path14:before {
+  content: "\ea74";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path15:before {
+  content: "\ea75";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path16:before {
+  content: "\ea76";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path17:before {
+  content: "\ea77";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path18:before {
+  content: "\ea78";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path19:before {
+  content: "\ea79";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path20:before {
+  content: "\ea7a";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path21:before {
+  content: "\ea7b";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path22:before {
+  content: "\ea7c";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path23:before {
+  content: "\ea7d";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path24:before {
+  content: "\ea7e";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path25:before {
+  content: "\ea7f";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path26:before {
+  content: "\ea80";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path27:before {
+  content: "\ea81";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path28:before {
+  content: "\ea82";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path29:before {
+  content: "\ea83";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS-inactive .path30:before {
+  content: "\ea84";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS .path31:before {
+  content: "\ea85";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS .path32:before {
+  content: "\ea86";
+  margin-left: -2.6630859375em;
+}
+.icon-icon-AWS .path33:before {
+  content: "\ea87";
+  margin-left: -2.6630859375em;
+}
+
+
+
+// .icon-logo-azure:before{
+//   content : "\e91b";
 // }
-// .icon-icon-add:before {
-//   content: "\e91f";
-//   color: #fff;
-// }
-// .icon-icon-alert:before {
-//   content: "\e920";
-//   color: #d0011b;
-// }
-// .icon-icon-back:before {
-//   content: "\e921";
-//   color: #ed008c;
-// }
-// .icon-icon-close:before {
-//   content: "\e922";
-//   color: #ed008c;
-// }
-// .icon-icon-create:before {
-//   content: "\e923";
-// }
-// .icon-icon-deploy:before {
-//   content: "\e924";
-// }
-// .icon-icon-deployment:before {
-//   content: "\e925";
-//   color: #1ea6ce;
-// }
-// .icon-icon-down:before {
-//   content: "\e926";
-//   color: #ed008c;
-// }
-// .icon-icon-edit:before {
-//   content: "\e927";
-//   color: #ccc;
-// }
-// .icon-icon-api:before {
-//   content: "\e928";
-// }
-// .icon-icon-expand:before {
-//   content: "\e929";
-//   color: #eee;
-// }
-// .icon-icon-good .path1:before {
-//   content: "\e92a";
-//   color: rgb(92, 174, 1);
-// }
-// .icon-icon-good .path2:before {
-//   content: "\e92b";
-//   margin-left: -1em;
-//   color: rgb(255, 255, 255);
-// }
-// .icon-icon-info:before {
-//   content: "\e92c";
-//   color: #f01f86;
-// }
-// .icon-icon-manage:before {
-//   content: "\e92d";
-// }
-// .icon-icon-merge:before {
-//   content: "\e92e";
-//   color: #60b602;
-// }
-// .icon-icon-minimize:before {
-//   content: "\e92f";
-//   color: #eee;
-// }
-// .icon-icon-notifcation:before {
-//   content: "\e930";
-//   color: #fff;
-// }
-// .icon-icon-search:before {
-//   content: "\e931";
-//   color: #fff;
-// }
-// .icon-icon-bad .path1:before {
-//   content: "\e932";
-//   color: rgb(208, 1, 27);
-// }
-// .icon-icon-bad .path2:before {
-//   content: "\e933";
-//   margin-left: -1em;
-//   color: rgb(255, 255, 255);
-// }
-// .icon-icon-settings:before {
-//   content: "\e934";
-// }
-// .icon-logo:before {
-//   content: "\e935";
-// }
-// .icon-tmobile-logo:before {
-//   content: "\e936";
-//   color: #fff;
-// }
+.icon-logo-azure .path1:before {
+  content: "\e91b";
+  color: rgb(0, 173, 239);
+}
+.icon-logo-azure .path2:before {
+  content: "\e966";
+  margin-left: -1em;
+  color: rgb(60, 158, 187);
+}
+
+.icon-logo-docker .path1:before {
+  content: "\e91c";
+  color: rgb(54, 69, 72);
+}
+.icon-logo-docker .path2:before {
+  content: "\e967";
+  margin-left: -1.7607421875em;
+  color: rgb(34, 160, 200);
+}
+.icon-logo-docker .path3:before {
+  content: "\e968";
+  margin-left: -1.7607421875em;
+  color: rgb(55, 177, 217);
+}
+.icon-logo-docker .path4:before {
+  content: "\e969";
+  margin-left: -1.7607421875em;
+  color: rgb(27, 129, 165);
+}
+.icon-logo-docker .path5:before {
+  content: "\e96a";
+  margin-left: -1.7607421875em;
+  color: rgb(29, 145, 180);
+}
+.icon-logo-docker .path6:before {
+  content: "\e96b";
+  margin-left: -1.7607421875em;
+  color: rgb(35, 163, 194);
+}
+.icon-logo-docker .path7:before {
+  content: "\e96c";
+  margin-left: -1.7607421875em;
+  color: rgb(52, 187, 222);
+}
+.icon-logo-docker .path8:before {
+  content: "\e96d";
+  margin-left: -1.7607421875em;
+  color: rgb(35, 163, 194);
+}
+.icon-logo-docker .path9:before {
+  content: "\e96e";
+  margin-left: -1.7607421875em;
+  color: rgb(52, 187, 222);
+}
+.icon-logo-docker .path10:before {
+  content: "\e96f";
+  margin-left: -1.7607421875em;
+  color: rgb(35, 163, 194);
+}
+.icon-logo-docker .path11:before {
+  content: "\e970";
+  margin-left: -1.7607421875em;
+  color: rgb(52, 187, 222);
+}
+.icon-logo-docker .path12:before {
+  content: "\e971";
+  margin-left: -1.7607421875em;
+  color: rgb(35, 163, 194);
+}
+.icon-logo-docker .path13:before {
+  content: "\e972";
+  margin-left: -1.7607421875em;
+  color: rgb(211, 236, 236);
+}
+.icon-logo-docker .path14:before {
+  content: "\e973";
+  margin-left: -1.7607421875em;
+  color: rgb(54, 69, 72);
+}
+.icon-logo-docker .path15:before {
+  content: "\e974";
+  margin-left: -1.7607421875em;
+  color: rgb(189, 217, 215);
+}
+.icon-logo-docker .path16:before {
+  content: "\e975";
+  margin-left: -1.7607421875em;
+  color: rgb(211, 236, 236);
+}
+
+.icon-logo-googleCloud .path1:before {
+    content: "\e91d";
+    color: rgb(255, 206, 64);
+}
+
+.icon-logo-googleCloud .path2:before {
+    content: "\e976";
+    margin-left: -1.119140625em;
+    color: rgb(219, 68, 54);
+}
+
+.icon-logo-googleCloud .path3:before {
+    content: "\e977";
+    margin-left: -1.119140625em;
+    color: rgb(84, 125, 191);
+}
+
+.icon-logo-googleCloud .path4:before {
+    content: "\e978";
+    margin-left: -1.119140625em;
+    color: rgb(238, 238, 238);
+}
+.icon-icon-add:before {
+  content: "\e91f";
+  color: #fff;
+}
+.icon-icon-alert:before {
+  content: "\e920";
+  color: #d0011b;
+}
+.icon-icon-back:before {
+  content: "\e921";
+  color: #ed008c;
+}
+.icon-icon-close:before {
+  content: "\e922";
+  color: #ed008c;
+}
+.icon-icon-create:before {
+  content: "\e923";
+}
+.icon-icon-deploy:before {
+  content: "\e924";
+}
+.icon-icon-deployment:before {
+  content: "\e925";
+  color: #1ea6ce;
+}
+.icon-icon-down:before {
+  content: "\e926";
+  color: #ed008c;
+}
+.icon-icon-edit:before {
+  content: "\e927";
+  color: #ccc;
+}
+.icon-icon-api:before {
+  content: "\e928";
+}
+.icon-icon-expand:before {
+  content: "\e929";
+  color: #eee;
+}
+.icon-icon-good .path1:before {
+  content: "\e92a";
+  color: rgb(92, 174, 1);
+}
+.icon-icon-good .path2:before {
+  content: "\e92b";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-icon-info:before {
+  content: "\e92c";
+  color: #f01f86;
+}
+.icon-icon-manage:before {
+  content: "\e92d";
+}
+.icon-icon-merge:before {
+  content: "\e92e";
+  color: #60b602;
+}
+.icon-icon-minimize:before {
+  content: "\e92f";
+  color: #eee;
+}
+.icon-icon-notifcation:before {
+  content: "\e930";
+  color: #fff;
+}
+.icon-icon-search:before {
+  content: "\e931";
+  color: #fff;
+}
+.icon-icon-bad .path1:before {
+  content: "\e932";
+  color: rgb(208, 1, 27);
+}
+.icon-icon-bad .path2:before {
+  content: "\e933";
+  margin-left: -1em;
+  color: rgb(255, 255, 255);
+}
+.icon-icon-settings:before {
+  content: "\e934";
+}
+.icon-logo:before {
+  content: "\e935";
+}
+.icon-tmobile-logo:before {
+  content: "\e936";
+  color: #fff;
+}

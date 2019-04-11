@@ -15,9 +15,9 @@
 // =========================================================================
 
 /**
-Fetch metrics per service using CloudWatch APIs
-@author:
-@version: 1.0
+ Fetch metrics per service using CloudWatch APIs
+ @author:
+ @version: 1.0
  **/
 
 const moment = require('moment');
@@ -25,9 +25,12 @@ const errorHandlerModule = require("./components/error-handler.js"); //Import th
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
 const logger = require("./components/logger.js")(); //Import the logging module.
-const request = require('request');
 const utils = require("./components/utils.js"); //Import the utils module.
 const validateUtils = require("./components/validation.js");
+const request = require('request');
+const monitorManagementClient = require('azure-arm-monitor');
+const msRestAzure = require('ms-rest-azure');
+const momentDurationFormatSetup = require("moment-duration-format");
 const global_config = require("./config/global-config.json");
 const metricConfig = require("./components/metrics.json");
 
@@ -37,18 +40,18 @@ function handler(event, context, cb) {
   logger.debug("EVENT : " + JSON.stringify(event));
 
   try {
-		/*
-		 * event input format :
-		 *   {
-		 *        "domain": "jazztest",
-		 *        "service": "get-monitoring-data",
-		 *        "environment": "prod",
-		 *        "end_time": "2017-06-27T06:56:00.000Z",
-		 *        "start_time": "2017-06-27T05:55:00.000Z",
-		 *        "interval":"300",
-		 *        "statistics":"average"
-		 *    }
-		 */
+    /*
+         * event input format :
+         *   {
+         *        "domain": "jazztest",
+         *        "service": "get-monitoring-data",
+         *        "environment": "prod",
+         *        "end_time": "2017-06-27T06:56:00.000Z",
+         *        "start_time": "2017-06-27T05:55:00.000Z",
+         *        "interval":"300",
+         *        "statistics":"average"
+         *    }
+         */
     var eventBody = event.body;
     let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
     exportable.genericValidation(event, header_key)
@@ -191,8 +194,9 @@ function validateAssets(assetsArray, eventBody) {
     if (assetsArray.length > 0) {
       var newAssetArray = [];
       var invalidTypeCount = 0;
+
       logger.debug("Validating assets");
-      assetsArray.forEach((assetItem) => {
+      assetsArray.filter(assetItem => assetItem.provider == 'aws').forEach((assetItem) => {
         if (assetItem.isError) {
           logger.error(assetItem.isError);
           invalidTypeCount++;
@@ -211,34 +215,35 @@ function validateAssets(assetsArray, eventBody) {
 
             if (assetItem.provider === 'aws') {
               exportable.getActualParam(paramMetrics, getAssetNameDetails.nameSpace, assetItem, eventBody)
-              .then(res => {
-                newAssetArray.push({
-                  "nameSpace": "aws",
-                  "actualParam": res,
-                  "userParam": assetItem
+                .then(res => {
+                  newAssetArray.push({
+                    "nameSpace": "aws",
+                    "actualParam": res,
+                    "userParam": assetItem
+                  });
+                  logger.debug("Validated Assets: " + JSON.stringify(newAssetArray));
+                  resolve(newAssetArray);
+                })
+                .catch(error => {
+                  logger.error(error);
+                  reject(error);
                 });
-                logger.debug("Validated Assets: " + JSON.stringify(newAssetArray));
-                resolve(newAssetArray);
-              })
-              .catch(error => {
-                logger.error(error);
-                reject(error);
-              });
             } else if (assetItem.provider === 'gcp') {
               exportable.getApigeeParam(paramMetrics, eventBody)
-              .then(res => {
-                newAssetArray.push({
-                  "nameSpace": "gcp",
-                  "actualParam": res,
-                  "userParam": assetItem
+                .then(res => {
+                  newAssetArray.push({
+                    "nameSpace": "gcp",
+                    "actualParam": res,
+                    "userParam": assetItem,
+                    "provider": assetItem.provider
+                  });
+                  logger.debug("Validated Assets: " + JSON.stringify(newAssetArray));
+                  resolve(newAssetArray);
+                })
+                .catch(error => {
+                  logger.error(error);
+                  reject(error);
                 });
-                logger.debug("Validated Assets: " + JSON.stringify(newAssetArray));
-                resolve(newAssetArray);
-              })
-              .catch(error => {
-                logger.error(error);
-                reject(error);
-              });
             }
           } else {
             logger.error(getAssetNameDetails.message);
@@ -247,6 +252,23 @@ function validateAssets(assetsArray, eventBody) {
               message: getAssetNameDetails.message
             });
           }
+        }
+      });
+
+      assetsArray.filter(assetItem => assetItem.provider == 'azure').forEach((assetItem) => {
+        if (assetItem.isError) {
+          logger.error(assetItem.isError);
+          invalidTypeCount++;
+          if (invalidTypeCount === assetsArray.length) {
+            reject({
+              result: "inputError",
+              message: "Unsupported metric type."
+            });
+          }
+        } else {
+
+          newAssetArray.push(assetItem);
+          resolve(newAssetArray);
         }
       });
     } else {
@@ -360,14 +382,27 @@ function getMetricsDetails(newAssetArray, eventBody, config) {
       }
       else if (assetParam.nameSpace === 'gcp') {
         exportable.apigeeMetricDetails(assetParam, eventBody, config)
-        .then(res => {
-          metricsStatsArray.push(res);
+          .then(res => {
+            metricsStatsArray.push(res);
             if (metricsStatsArray.length === newAssetArray.length) {
               resolve(metricsStatsArray);
             }
-        })
-        .catch(error => reject(error));
+          })
+          .catch(error => reject(error));
       }
+    });
+
+    // call azure api if 'azure' is found as a provider
+    newAssetArray.filter(assetParam => assetParam.provider == 'azure').forEach(assetParam => {
+      exportable.azureMetricDefinitions(config, assetParam)
+        .then( definitions => exportable.azureMetricDetails(definitions, config, assetParam, eventBody))
+        .then(res => {
+          metricsStatsArray.push(res);
+          resolve(metricsStatsArray);
+        })
+        .catch(error => {
+          reject(error);
+        });
     });
   });
 }
@@ -394,9 +429,9 @@ function apigeeMetricDetails(assetParam, eventBody, config) {
 
     var metricData = metricConfig.namespaces.gcp.apigee_proxy.metrics.map(item => {
       let data = {
-          label: item.Label,
-          unit: item.Unit,
-          metricName: `${item.Statistics.toLowerCase()}(${item.MetricName})`
+        label: item.Label,
+        unit: item.Unit,
+        metricName: `${item.Statistics.toLowerCase()}(${item.MetricName})`
       };
       return data;
     });
@@ -443,7 +478,6 @@ function cloudWatchDetails(assetParam) {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
       let cloudwatch = param.Namespace === "AWS/CloudFront" ? utils.getCloudfrontCloudWatch() : utils.getCloudWatch();
-
       cloudwatch.getMetricStatistics(param, (err, data) => {
         if (err) {
           logger.error("Error while getting metrics from cloudwatch: " + JSON.stringify(err));
@@ -470,6 +504,157 @@ function cloudWatchDetails(assetParam) {
   });
 }
 
+/*
+* Prepare to obtain azure metrics definiations
+*/
+function azureMetricDefinitions(config, assetParam) {
+  var data = {};
+  var resourceid = assetParam.provider_id;
+  var expectedMetrics = [];
+  assetParam.metrics.forEach(item => {
+    expectedMetrics.push(item.MetricName);
+  });
+
+
+  return new Promise((resolve, reject) => {
+    subscriptionId = config.AZURE.SUBSCRIPTIONID;
+
+    // to obtain the azure credentials
+    msRestAzure.loginWithServicePrincipalSecret(
+      config.AZURE.CLIENTID,
+      config.AZURE.PASSWORD,
+      config.AZURE.TENANTID,
+      (err, credentials) => {
+
+        if (err) {
+          logger.error("Error while obtaining azure credentials " + JSON.stringify(err));
+          reject({
+            "result": "inputError",
+            "message": err.message
+          });
+        } else {
+
+          // to create an azure client
+          const client = new monitorManagementClient(credentials, subscriptionId);
+          //const uri = `/subscriptions/${subscriptionId}${resourceid}`
+          const uri = `${resourceid}`
+
+          // to get the metrics definitions
+          return client.metricDefinitions.list(uri).then((items) => {
+            if (items == null || items == undefined)
+              reject({
+                "result": "inputError",
+                "message": "Failed in obtaining metric definitions"
+              });
+
+            items.forEach(item => {
+              if (expectedMetrics.includes(item.name.value)){
+                var attrs = {};
+                attrs["unit"] = item.unit;
+                attrs["aggregationtype"] = item.primaryAggregationType;
+                attrs["supportedAggregationTypes"] = item.supportedAggregationTypes; //array type
+                attrs["namespace"] = item.namespace;
+                data[item.name.value] = attrs;
+              }
+            });
+            resolve(data);
+          });
+        }
+      });
+  });
+};
+
+/*
+* Prepare to obtain metrcis based on the metric definitions
+*/
+function azureMetricDetails(definitions, config, assetParam, eventBody) {
+
+  //prepare the metric names & primary aggregation types
+  var resourceid = assetParam.provider_id;
+  var names = [];
+  var statistics = eventBody.statistics;
+
+  for (var name in definitions) {
+    //names += name + ",";
+    names.push(name);
+  }
+
+  return new Promise((resolve, reject) => {
+    subscriptionId = config.AZURE.SUBSCRIPTIONID;
+
+    // to obtain the azure credentials
+    msRestAzure.loginWithServicePrincipalSecret(
+      config.AZURE.CLIENTID,
+      config.AZURE.PASSWORD,
+      config.AZURE.TENANTID,
+      (err, credentials) => {
+
+        // create an azure client
+        const client = new monitorManagementClient(credentials, subscriptionId);
+        var options = {'metricnames': names.join()}
+        options['interval'] = moment.duration(60, "minutes");
+        options['timespan'] = eventBody.start_time + "/" + eventBody.end_time;
+        options['aggregation'] = statistics;
+        const uri = `${resourceid}`
+
+        // query azure to get the multiple metric results
+        return client.metrics.list(uri, options).then((result) => {
+          var metrics = [];
+
+          if (!(result && result.value)) {
+            logger.error("Failed in obtaining metric results. Here is the response:  " + JSON.stringify(result));
+            return reject({"result": "inputError", "message": "Failed in obtaining metric results"});
+          }
+
+          result.value.forEach(item => {
+            if (item.name && item.name.value) {
+              var defname = item.name.value; // "UsedCapacity", "Availabilty", etc
+              var datapoints = [];
+            } else {
+              logger.error("Returned metric does not have 'name' property. Here is the metric: " + JSON.stringify(item));
+              return reject({"result": "inputError", "message": "Returned metric does not have a name"});
+            }
+
+            if (!item.timeseries){
+              logger.error("Returned metric does not have 'timeseries' property: Here is the metric: " + JSON.stringify(item));
+              return reject({"result": "inputError", "message": "Returned metric does not have timeseries"});
+            }
+            item.timeseries.forEach(dot => {
+              if (!dot.data){
+                logger.error("Timeseries does not have 'data' property. Here is the Timeseries: " + JSON.stringify(dot));
+                return reject({"result": "inputError", "message": "Timeseries does not have data"});
+              }
+              dot.data.forEach(p => {
+                definitions[defname]["supportedAggregationTypes"].forEach(aggr=> {
+                  if (aggr.toUpperCase() === statistics.toUpperCase()){
+                    if (p[aggr.toLowerCase()]>0){
+                      point = {"Timestamp": p.timeStamp, "Unit": definitions[defname]["unit"]};
+                      point[statistics] = p[aggr.toLowerCase()];
+                      datapoints.push(point);
+                    }
+                  }
+                })
+              });
+            });
+            points = {
+              "metric_name": defname,
+              "datapoints": datapoints
+            };
+            metrics.push(points);
+            data = {
+              "type": assetParam.asset_type,
+              "asset_name": {"provider_id": assetParam.provider_id, "asset_type": assetParam.asset_type},
+              "statistics": statistics,
+              "metrics": metrics
+            };
+            resolve(data);
+          });
+        });
+      });
+  });
+};
+
+
 const exportable = {
   handler,
   genericValidation,
@@ -480,6 +665,8 @@ const exportable = {
   getApigeeParam,
   getMetricsDetails,
   cloudWatchDetails,
+  azureMetricDefinitions,
+  azureMetricDetails,
   apigeeMetricDetails
 }
 

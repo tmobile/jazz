@@ -61,6 +61,8 @@ var handler = (event, context, cb) => {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'Service Name' can have up to 20 characters")));
         } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
             return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
+        } else if (!service_creation_data.platform) {
+          return cb(JSON.stringify(errorHandler.throwInputValidationError("'platform' is not defined")));
         }
 
         // validate service types
@@ -232,7 +234,8 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
             "REGION": service_creation_data.region,
             "USERNAME": user_id,
             "IS_PUBLIC_ENDPOINT": service_creation_data.is_public_endpoint || false,
-            "STATUS": "creation_started"
+            "STATUS": "creation_started",
+            "PLATFORM": service_creation_data.platform
         };
 
         var serviceMetadataObj = {};

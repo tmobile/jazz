@@ -23,8 +23,8 @@
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
-                            <div class="icon-icon-function" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                            <p>LAMBDA</p>
+                            <div [ngClass]="{'selected': typeOfService == 'function', 'icon-icon-azure-functions': typeOfPlatform =='azure', 'icon-icon-function': typeOfPlatform =='aws' || typeOfPlatform =='gcloud' }"></div>
+                            <p>{{eventLabels.functionLabel}}</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0 service-box-section">
@@ -51,7 +51,7 @@
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
+                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
                             <div class="icon-icon-azure"></div>
                             <p>Azure</p>
                         </div>
@@ -84,34 +84,10 @@
                 </div>
                 <div class="col-lg-8 col-md-8">
                     <div class="col-lg-12  pad-left0 input-field-container runtime-aln">
-                        <section class="runtime-option">
+                        <section class="runtime-option" *ngFor="let runtimeKey of this.runtimeKeys">
                             <div class="radio-container">
-                                <input type="radio" class='test-focus' name="runtime" id="runtimeKeys[0]" [value]="runtimeKeys[0]" [checked]="runtime == runtimeKeys[0]" (click)="onSelectionChange(runtimeKeys[0])">
-                                <label for="runtimeKeys[0]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[0]]}}</label>
-                            </div>
-                        </section>
-                        <section class="runtime-option">
-                            <div class="radio-container">
-                                <input type="radio" name="runtime" id="runtimeKeys[1]" [value]="runtimeKeys[1]" [checked]="runtime == runtimeKeys[1]" (change)="onSelectionChange(runtimeKeys[1])">
-                                <label for="runtimeKeys[1]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[1]]}}</label>
-                            </div>
-                        </section>
-                        <section class="runtime-option">
-                            <div class="radio-container">
-                                <input type="radio" name="runtime" id="runtimeKeys[2]" [value]="runtimeKeys[2]" [checked]="runtime == runtimeKeys[2]" (change)="onSelectionChange(runtimeKeys[2])">
-                                <label for="runtimeKeys[2]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[2]]}}</label>
-                            </div>
-                        </section>
-                        <section class="runtime-option">
-                            <div class="radio-container">
-                                <input type="radio" name="runtime" id="runtimeKeys[3]" [value]="runtimeKeys[3]" [checked]="runtime == runtimeKeys[3]" (click)="onSelectionChange(runtimeKeys[3])">
-                                <label for="runtimeKeys[3]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[3]]}}</label>
-                            </div>
-                        </section>
-                        <section class="runtime-option">
-                            <div class="radio-container">
-                                <input type="radio" name="runtime" id="runtimeKeys[4]" [value]="runtimeKeys[4]" [checked]="runtime == runtimeKeys[4]" (click)="onSelectionChange(runtimeKeys[4])">
-                                <label for="runtimeKeys[4]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[4]]}}</label>
+                                <input type="radio" class='test-focus' name="runtime" id={{runtimeKey}} [value]=runtimeKey [checked]="runtime == runtimeKey" (click)="onSelectionChange(runtimeKey)">
+                                <label for={{runtimeKey}}><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKey]}}</label>
                             </div>
                         </section>
                     </div>
@@ -334,7 +310,7 @@
             <section class="each-step-wrap aws-events" *ngIf="typeOfService == 'function'">
                 <div class="row">
                     <div class="col-lg-4 col-md-4">
-                        <p class="step-title">AWS Events</p>
+                        <p class="step-title">Event Types</p>
                         <p class="step-details">Select appropriate events that you want to subscribe to.</p>
                     </div>
                     <div class="col-lg-8 col-md-8">
@@ -348,25 +324,25 @@
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="dynamodb" [value]="dynamodb" [checked]="eventExpression.type == 'dynamodb'" (click)="onAWSEventChange('dynamodb')">
-                                    <label for="dynamodb"><span></span><span class="background"></span>DynamoDB</label>
+                                    <label for="dynamodb"><span></span><span class="background"></span>{{eventLabels.databaseLabel}}</label>
                                 </div>
                             </section>
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="kinesis" [value]="kinesis" [checked]="eventExpression.type == 'kinesis'" (click)="onAWSEventChange('kinesis')">
-                                    <label for="kinesis"><span></span><span class="background"></span>Kinesis</label>
+                                    <label for="kinesis"><span></span><span class="background"></span>{{eventLabels.streamLabel}}</label>
                                 </div>
                             </section>
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="s3" [value]="s3" [checked]="eventExpression.type == 's3'" (click)="onAWSEventChange('s3')">
-                                    <label for="s3"><span></span><span class="background"></span>S3</label>
+                                    <label for="s3"><span></span><span class="background"></span>{{eventLabels.storageLabel}}</label>
                                 </div>
                             </section>
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                               <div class="radio-container">
                                   <input type="radio" name="AWSEvents" id="sqs" [value]="sqs" [checked]="eventExpression.type == 'sqs'" (click)="onAWSEventChange('sqs')">
-                                  <label for="sqs"><span></span><span class="background"></span>SQS</label>
+                                  <label for="sqs"><span></span><span class="background"></span>{{eventLabels.queueLabel}}</label>
                               </div>
                             </section>
                         </div>
@@ -375,71 +351,75 @@
                                 <div class="col-lg-3 padding-right-0">
                                     <div class="text">Event</div>
                                     <div class="slct-bx-wrp">
-                                        <div class="slct-bx-selected disabled">PutItem</div>
+                                        <div class="slct-bx-selected disabled">{{typeOfPlatform === 'aws' ? "PutItem" : "*"}}</div>
                                     </div>
                                 </div>
                                 <div class="col-lg-9">
-                                    <div class="text">Table ARN</div>
+                                    <div class="text">{{eventLabels.databaseNameLabel}}</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
-                                        <input type="text" disabled="disabled" class="inline-input input-label aws-events-left-block" value="{{dynamoStreamString}}">
-                                        <input id="dynamoTable" name="dynamoTable" type="text" minlength="3" maxlength="{{eventMaxLength.table_name}}" #dynamoTable='ngModel' pattern="{{servicePatterns.tableName}}" [(ngModel)]="eventExpression.dynamoTable"  [focus]="focusDynamo" (blur)="validateEvents(eventExpression.dynamoTable)" (ngModelChange)="invalidEventName = false;" class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Table Name" >
+                                        <input *ngIf="typeOfPlatform == 'aws'" type="text" disabled="disabled" class="inline-input input-label aws-events-left-block" value="{{dynamoStreamString}}">
+                                        <input id="dynamoTable" name="dynamoTable" type="text" minlength="3" maxlength="{{eventMaxLength.table_name}}" #dynamoTable='ngModel' pattern="{{servicePatterns.tableName}}" [(ngModel)]="eventExpression.dynamoTable"  [focus]="focusDynamo" (blur)="validateEvents(eventExpression.dynamoTable)" (ngModelChange)="invalidEventName = false;" [ngClass]="{'full-width' : typeOfPlatform !== 'aws'}" class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Table Name" >
                                   </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkDynamodb()) && (!dynamoTable.valid && (dynamoTable.dirty || dynamoTable.touched)))">Table name must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
                                 <p class="termsConditions error-message" *ngIf="(chkDynamodb() && invalidEventName)">Table name Should not begin or end with special character.</p>
-                                <p class="learn-more">Function would be triggered whenever a new entry is added to the table. Note that the DynamoDB table should exist already and Jazz creates a new stream for this table</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'aws'">Function would be triggered whenever a new entry is added to the table. Note that the DynamoDB table should exist already and Jazz creates a new stream for this table</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function would be triggered whenever a new entry is added or updated to the table. Note that Jazz will create the CosmosDB table</p>
                             </div>
 
                             <div class="kinesis-fields row zero-margin arrow_box hide" [class.show]="chkfrKinesis()">
                                 <div class="col-lg-3  padding-right-0">
                                     <div class="text">Event</div>
                                     <div class="slct-bx-wrp">
-                                        <div class="slct-bx-selected disabled">PutRecord</div>
+                                        <div class="slct-bx-selected disabled">{{typeOfPlatform === 'aws' ? "PutRecord" : "*"}}</div>
                                     </div>
                                 </div>
                                 <div class="col-lg-9">
-                                    <div class="text">Stream ARN</div>
+                                    <div class="text">{{eventLabels.streamNameLabel}}</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
-                                        <input type="text" disabled="disabled" class="inline-input input-label stream aws-events-left-block" value="{{kinesisStreamString}}">
-                                        <input id="streamARN" name="streamARN" type="text" #streamARN="ngModel" maxlength="{{eventMaxLength.stream_name}}" pattern="{{servicePatterns.streamName}}" [(ngModel)]="eventExpression.streamARN" [focus]="focusKinesis" (blur)="validateEvents(eventExpression.streamARN)" (ngModelChange)="invalidEventName = false;" class="inline-input stream aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Stream Name" >
+                                        <input *ngIf="typeOfPlatform == 'aws'" type="text" disabled="disabled" class="inline-input input-label stream aws-events-left-block" value="{{kinesisStreamString}}">
+                                        <input id="streamARN" name="streamARN" type="text" #streamARN="ngModel" maxlength="{{eventMaxLength.stream_name}}" pattern="{{servicePatterns.streamName}}" [(ngModel)]="eventExpression.streamARN" [focus]="focusKinesis" (blur)="validateEvents(eventExpression.streamARN)" (ngModelChange)="invalidEventName = false;" [ngClass]="{'full-width' : typeOfPlatform !== 'aws'}"  class="inline-input stream aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="{{eventLabels.streamNameLabel}}" >
                                   </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkfrKinesis()) && (!streamARN.valid && (streamARN.dirty || streamARN.touched)))">Stream name must contain only letters, numbers, hyphens, underscores or periods.</p>
                                 <p class="termsConditions error-message" *ngIf="(chkfrKinesis() && invalidEventName)">Stream name Should not begin or end with special character.</p>
-                                <p class="learn-more">Function would be triggered whenever the Lambda checkpoint has not reached the end of the Kinesis stream</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'aws'">Function would be triggered whenever the Lambda checkpoint has not reached the end of the Kinesis stream</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function would be triggered whenever respond to an event sent to an event hub event stream</p>
                             </div>
 
                             <div class="s3-fields row zero-margin arrow_box hide" [class.show]="chkS3()">
                                 <div class="col-lg-3  padding-right-0">
                                     <div class="text">Event</div>
                                     <div class="slct-bx-wrp">
-                                        <div class="slct-bx-selected disabled">PutItem</div>
+                                        <div class="slct-bx-selected disabled">{{typeOfPlatform === 'aws' ? "PutItem" : "*"}}</div>
                                     </div>
                                 </div>
                                 <div class="col-lg-9">
-                                    <div class="text">Bucket ARN</div>
+                                    <div class="text">{{eventLabels.storageNameLabel}}</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
-                                        <input id="S3BucketName" name="S3BucketName" type="text"  minlength="3" maxlength="{{eventMaxLength.bucket_name}}" pattern="{{servicePatterns.bucketName}}" #S3BucketName="ngModel" [(ngModel)]="eventExpression.S3BucketName" [focus]="focusS3" (blur)="validateEvents(eventExpression.S3BucketName)" (ngModelChange)="invalidEventName = false;" class="inline-input aws-events-left-block aw-events-s3 ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Bucket Name"  autofocus>
+                                        <input id="S3BucketName" name="S3BucketName" type="text"  minlength="3" maxlength="{{eventMaxLength.bucket_name}}" pattern="{{servicePatterns.bucketName}}" #S3BucketName="ngModel" [(ngModel)]="eventExpression.S3BucketName" [focus]="focusS3" (blur)="validateEvents(eventExpression.S3BucketName)" (ngModelChange)="invalidEventName = false;" class="inline-input aws-events-left-block aw-events-s3 ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="{{eventLabels.storageNameLabel}}"  autofocus>
                                   </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkS3()) && (!S3BucketName.valid && (S3BucketName.dirty || S3BucketName.touched)))">Bucket name must contain only lowercase letters, numbers or hyphens. Enter atleast 3 characters</p>
                                 <p class="termsConditions error-message" *ngIf="(chkS3() && invalidEventName)">Bucket name Should not begin or end with special character.</p>
 
-                                <p class="learn-more">Function would be triggered when an object is added or modified inside the bucket. Creating this lambda trigger will override any previously created triggers on this bucket for any ObjectCreated:*</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'aws'">Function would be triggered when an object is added or modified inside the bucket. Creating this lambda trigger will override any previously created triggers on this bucket for any ObjectCreated:*</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function would be triggered whenever a new or updated blob is detected. The blob contents are provided as input to the function</p>
                             </div>
 
                             <div class="sqs-fields row zero-margin arrow_box hide" [class.show]="chkSQS()">
 
                               <div class="col-lg-12">
-                                  <div class="text">Queue ARN</div>
+                                  <div class="text">{{eventLabels.queueNameLabel}}</div>
                                   <div class="label-input slct-bx-selected input-wrapper">
-                                      <input type="text" disabled="disabled" class="inline-input input-label stream-sqs aws-events-left-block" value="{{sqsStreamString}}">
-                                      <input id="SQSstreamARN" name="SQSstreamARN" type="text" #SQSstreamARN="ngModel" [(ngModel)]="eventExpression.SQSstreamARN" pattern="{{servicePatterns.queueName}}" maxlength="{{eventMaxLength.queue_name}}" [focus]="focusSQS" (blur)="validateEvents(eventExpression.SQSstreamARN)" (ngModelChange)="invalidEventName = false;" class="inline-input stream aws-events-right-block aws-events-right-block-sqs ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Queue Name" >
+                                      <input *ngIf="typeOfPlatform == 'aws'" type="text" disabled="disabled" class="inline-input input-label stream-sqs aws-events-left-block" value="{{sqsStreamString}}">
+                                      <input id="SQSstreamARN" name="SQSstreamARN" type="text" #SQSstreamARN="ngModel" [(ngModel)]="eventExpression.SQSstreamARN" pattern="{{servicePatterns.queueName}}" maxlength="{{eventMaxLength.queue_name}}" [focus]="focusSQS" (blur)="validateEvents(eventExpression.SQSstreamARN)" (ngModelChange)="invalidEventName = false;" [ngClass]="{'full-width' : typeOfPlatform !== 'aws'}" class="inline-input stream aws-events-right-block aws-events-right-block-sqs ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="{{eventLabels.queueNameLabel}}" >
                                   </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkSQS()) && (!SQSstreamARN.valid && (SQSstreamARN.dirty || SQSstreamARN.touched)))">Queue name must contain only letters, numbers, hyphens or underscores.</p>
                                 <p class="termsConditions error-message" *ngIf="(chkSQS() && invalidEventName)">Queue name Should not begin or end with special character.</p>
-                                <p class="learn-more">Function would be triggered whenever new messages are added to the source SQS queue</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'aws'">Function would be triggered whenever new messages are added to the source SQS queue</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function would be triggered whenever new messages are added to the source service bus queue</p>
                               </div>
 
                         </div>

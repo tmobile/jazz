@@ -47,6 +47,7 @@ export class ServiceDetailComponent implements OnInit {
   isENVavailable: boolean = true;
   disblebtn: boolean = true;
   ServiceName: string;
+  platfrom: string;
   deleteServiceVal: boolean;
   id: string;
   errMessage: string = '';
@@ -104,6 +105,7 @@ export class ServiceDetailComponent implements OnInit {
     } else {
       service.metadata = this.addEventSource(service.metadata);
       let returnObject = {
+        platform: service.platform,
         id: service.id,
         name: service.service,
         serviceType: service.type,
@@ -126,18 +128,42 @@ export class ServiceDetailComponent implements OnInit {
         returnObject["eventScheduleRate"] = service.metadata.eventScheduleRate;
         returnObject["eventScheduleEnable"] = service.metadata.eventScheduleEnable;
         if(service.metadata.event_source){
+          if(service.platform === 'azure'){
+            if(service.metadata.event_source ==="dynamodb"){
+              service.metadata.event_source = 'documentdb';
+
+            }else if(service.metadata.event_source ==="kinesis"){
+              service.metadata.event_source = 'event hubs';
+
+            }else if(service.metadata.event_source ==="s3") {
+              service.metadata.event_source = 'storage';
+            }
+            else if(service.metadata.event_source ==="sqs"){
+              service.metadata.event_source ="Service Bus Queue";
+            }
+
+          }
           returnObject["event_source"] = service.metadata.event_source;
         }
         if(service.metadata.event_source_dynamodb){
+          if(service.platform === 'azure'){
+            service.metadata.event_source_dynamodb = service.metadata.event_source_dynamodb.split('/')[1];
+          }
           returnObject["event_source_arn"] = service.metadata.event_source_dynamodb;
         }
         if(service.metadata.event_source_kinesis){
+          if(service.platform === 'azure'){
+            service.metadata.event_source_kinesis = service.metadata.event_source_kinesis.split('/')[1];
+          }
           returnObject["event_source_arn"] = service.metadata.event_source_kinesis;
         }
         if(service.metadata.event_source_s3){
           returnObject["event_source_arn"] = service.metadata.event_source_s3;
         }
         if(service.metadata.event_source_sqs){
+          if(service.platform === 'azure'){
+            service.metadata.event_source_sqs = service.metadata.event_source_sqs.split(':')[5];
+          }
           returnObject["event_source_arn"] = service.metadata.event_source_sqs;
         }
       }
@@ -166,7 +192,7 @@ export class ServiceDetailComponent implements OnInit {
       }
 
       this.service = this.processService(service);
-
+      this.platfrom = this.service.platform;
       // Update breadcrumbs
       this.breadcrumbs = [
         {
@@ -322,7 +348,8 @@ export class ServiceDetailComponent implements OnInit {
     var payload = {
       "service_name": this.service.name,
       "domain": this.service.domain,
-      "id": this.service.id
+      "id": this.service.id,
+      "platform" : this.service.platform
     };
     this.deleteServiceStatus.emit(this.deleteServiceVal);
     this.subscription = this.http.post('/jazz/delete-serverless-service', payload, this.service.id)

@@ -1,0 +1,11 @@
+{
+  "disabled": false,
+  "bindings": [
+    {
+      "name": "myEvent",
+      "type": "timerTrigger",
+      "direction": "in",
+      "schedule": "${file(deployment-env.yml):eventScheduleRate}"
+    }
+  ]
+}

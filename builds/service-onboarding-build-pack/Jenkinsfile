@@ -67,11 +67,16 @@ node  {
 
 		events.sendStartedEvent("VALIDATE_INPUT", 'input validation starts', context_map)
 		if (service_config['type'] == "api" || service_config['type'] == "function" || service_config['type'] == "website") {
-			if (service_config['runtime'].startsWith("nodejs") || service_config['runtime'].startsWith("python") ||  service_config['runtime'].startsWith("java") ||  service_config['runtime'].startsWith("go") || service_config['runtime'] == "n/a") {
+			if (service_config['runtime'].startsWith("nodejs") || service_config['runtime'].startsWith("python") ||  service_config['runtime'].startsWith("java") ||  service_config['runtime'].startsWith("go") || service_config['runtime'].startsWith("c#") || service_config['runtime'] == "n/a") {
 				switch (service_config['type']) {
 					case "api":
 						if (service_config['runtime'].startsWith("nodejs")) {
+							if(service_config['platform'] == "azure"){
+							service_template = "azure-api-template-nodejs"
+							}
+							else {
 							service_template = "api-template-nodejs"
+							}
 						}
 						else if (service_config['runtime'].startsWith("python")){
 							service_template = 'api-template-python'	
@@ -82,10 +87,23 @@ node  {
 						else if (service_config['runtime'].startsWith("go")) {
 							service_template = 'api-template-go'
 						}
+						else if(service_config['runtime'].startsWith("c#")){
+							if(service_config['platform'] == "azure"){
+								service_template = 'azure-api-template-csharp'
+							}
+						}
 						break
 
 					case "function":
-						if (service_config['runtime'].startsWith("nodejs")) {
+						if (service_config['platform'] == "azure") {
+							if (service_config['runtime'].startsWith("nodejs")) {
+								service_template = "azure-function-template-nodejs"
+							}
+							else if (service_config['runtime'].startsWith("c#")) {
+								service_template = 'azure-function-template-csharp'
+							}
+						}
+						else if (service_config['runtime'].startsWith("nodejs")) {
 							service_template = "lambda-template-nodejs"
 						}
 						else if (service_config['runtime'].startsWith("python")){

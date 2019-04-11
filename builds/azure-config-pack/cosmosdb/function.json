@@ -1,0 +1,15 @@
+{
+  "disabled": false,
+  "bindings": [
+    {
+      "name": "myEvent",
+      "type": "cosmosDBTrigger",
+      "direction": "in",
+      "databaseName": "{resource_name}",
+      "collectionName": "{resource_name}",
+      "leaseCollectionName": "leases",
+      "createLeaseCollectionIfNotExists": true,
+      "connectionStringSetting": "CONNECTION_STRING"
+    }
+  ]
+}

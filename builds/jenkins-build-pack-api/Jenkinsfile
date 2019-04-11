@@ -21,6 +21,11 @@ import groovy.transform.Field
 @Field def awsAPIGatewayModule
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
+@Field def azureDeployer
+
+@Field def azureRG
+@Field def AzureApim
+@Field def apigateway
 
 @Field def auth_token = ''
 @Field def config
@@ -116,6 +121,7 @@ node() {
     domain = config['domain']
     def runtime = config['providerRuntime']
     def service = config['service']
+    def servicePlatform = config['platform']
 
     def stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
@@ -124,8 +130,9 @@ node() {
     def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
 
     sonarModule.initialize(configLoader, config, branch)
-
-    loadServerlessConfig(config)
+    if (servicePlatform != 'azure') {
+      loadServerlessConfig(config)
+    }
 
     if (domain && domain == "jazz") {
       stage('Update Service Template'){
@@ -155,8 +162,10 @@ node() {
       try {
         events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation started', context_map, environment_logical_id)
         send_status_email(config, 'STARTED', "")
-        validateDeploymentConfigurations(config)
-        validateSwaggerSpec();
+        if (servicePlatform != 'azure') {
+          validateDeploymentConfigurations(config)
+          validateSwaggerSpec()
+        }
       } catch (ex) {
         events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map, environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -218,7 +227,7 @@ node() {
       if (env_metadata["AWS_API_ID"] != null) {
         aws_api_id = env_metadata["AWS_API_ID"]
       }
-
+      
       def swaggerDocUrl = ""
 
       try {
@@ -233,8 +242,50 @@ node() {
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-          // Generate serverless yml file with domain added in function name
-          echo "Generate deployment env with domain for ${env_key}"
+          if (servicePlatform == 'azure') {
+            withCredentials([
+              [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
+              [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
+              [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
+              [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
+            ]) {
+              if (environment_logical_id == "prod") {
+                AzureRG = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
+                AzureApim =  configLoader.AZURE.APIM["PRODUCTION"]
+                logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
+              }
+              else if(environment_logical_id.split('-')[1] == "stg"){
+                AzureRG = configLoader.AZURE.RESOURCE_GROUPS["STAGING"]
+                AzureApim =  configLoader.AZURE.APIM["STAGING"]
+                logicalId = environment_logical_id.split('-')[0] //13 + 10
+              }
+              else if(environment_logical_id.split('-')[1] == "dev"){
+                AzureRG = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
+                AzureApim =  configLoader.AZURE.APIM["DEVELOPMENT"]
+                logicalId = environment_logical_id.split('-')[0] //13 + 10
+              }
+              endpointUrl="https://${AzureApim}.azure-api.net/${stackName}/${stackName}"
+              swaggerDocUrl = "https://${AzureApim}.portal.azure-api.net/docs/services/${stackName}/export?DocumentFormat%3DSwagger"
+              apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.ApiManagement/service/$AzureApim"
+              def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
+              def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
+              def store_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Storage/storageAccounts/$storageName"
+              def function_app = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Web/sites/$stackName"
+              def hosting_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Web/serverFarms/$stackName/webHostingPlan"
+              createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name, storageName)
+
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", swaggerDocUrl, "swagger_url", config), environment_logical_id)
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", apigateway, "apigateway", config), environment_logical_id)
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", store_acct, "storage_account", config), environment_logical_id)
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", function_app, "functionapp", config), environment_logical_id)
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", hosting_acct, "app_service_plan", config), environment_logical_id)
+
+            }
+
+          } else {
+
+              // Generate serverless yml file with domain added in function name
+              echo "Generate deployment env with domain for ${env_key}"
 
           writeServerlessFile(config, environment_logical_id)
 
@@ -327,7 +378,7 @@ node() {
 
             def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
             send_status_email(config, 'COMPLETED', svc_status)
-
+          }
             resetCredentials(credsId)
 
             if (domain && domain == "jazz") {
@@ -601,6 +652,7 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config) {
   sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
   sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
   sh "sed -i -- 's/{envmnt}/${current_environment}/g' swagger/swagger.json" // {environment}
+
 
   // TODO: the below couple of statements will be replaced with regular expression in very near future;
   def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
@@ -1092,6 +1144,71 @@ def isExistingLogGroup (groupName, credsId){
 		isExistingLogGrp = true
 	}
 	return isExistingLogGrp
+}
+
+def createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name, storageName  ) {
+  writeSwaggerFileForAzure(stackName, repo_name)
+  sh "cd .. && rm -rf content.zip && cp -R ${repo_name} ${stackName}/ && zip -qr content.zip ${stackName}"
+  sh "cd .. && ls -l"
+
+  def zip = sh(script: 'readlink -f ../content.zip', returnStdout: true).trim()
+  def swagger = sh(script: 'readlink -f swagger/swagger.json', returnStdout: true).trim()
+
+  def functionRuntime = "node"
+  if(config['providerRuntime'] == "c#"){
+    functionRuntime = "dotnet"
+  }
+
+  def payloadString = [
+    className : "ApiApp",
+    command   : "create",
+    data      : [
+      resourceGroupName : AzureRG,
+      storageName       : storageName,
+      appName           : stackName,
+      tags: [
+        application : configLoader.INSTANCE_PREFIX,
+        owner       : config['created_by'],
+        domain      : config['domain'],
+        STAGE       : environment_logical_id,
+        environment : environment_logical_id,
+        service     : stackName
+      ],
+      runtime           : functionRuntime,
+      serviceName       : AzureApim,
+      apiId             : stackName,
+      tenantId          : AZURE_TENANT_ID,
+      subscriptionId    : AZURE_SUBSCRIPTION_ID,
+      clientId          : AZURE_CLIENT_ID,
+      clientSecret      : AZURE_CLIENT_SECRET,
+      zip               : zip,
+      basepath          : stackName,
+      swagger           : swagger
+    ]
+  ]
+
+  def azure_create_service_repo_name = "jazz_azure-create-service"
+  sh 'rm -rf ' + azure_create_service_repo_name
+  sh 'mkdir ' + azure_create_service_repo_name
+
+  def repocloneUrl = scmModule.getCoreRepoCloneUrl(azure_create_service_repo_name)
+
+  dir(azure_create_service_repo_name)
+    {
+      checkout([$class: 'GitSCM', branches: [[name: '*/' + "master"]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: configLoader.REPOSITORY.CREDENTIAL_ID, url: repocloneUrl]]])
+      sh "npm install -s"
+      def json = JsonOutput.toJson(payloadString)
+      writeFile(file:'payload.json', text: json)
+      sh "./bin/jazz-azure-cli ./payload.json"
+    }
+
+  sh 'rm -rf ' + azure_create_service_repo_name
+
+}
+
+def writeSwaggerFileForAzure(stackName, repo_name) {
+  sh "sed -i -- 's/\${domain}/${stackName}/g' swagger/swagger.json"
+  sh "sed -i -- 's/\${functionName}/${stackName}/g' swagger/swagger.json"
 }
 
 def removeLogGroup(groupName, credsId) {
