@@ -40,12 +40,13 @@ else{
     UserJourneyComponent
   ],
   imports: [
-    RouterModule.forRoot(routes),
+    
     BrowserModule,
     FormsModule,
     DropdownModule,
     HttpModule,
     ToasterModule,
+    RouterModule.forRoot(routes),
     NgIdleKeepaliveModule.forRoot(),
     SharedModule,
   ],

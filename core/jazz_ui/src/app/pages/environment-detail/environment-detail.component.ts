@@ -200,7 +200,7 @@ export class EnvironmentDetailComponent implements OnInit {
       environment: this.envSelected,
       limit: undefined
     }).subscribe((assetsResponse) => {
-      this.assets = assetsResponse.data.assets;
+      this.assets = assetsResponse.data.assets;  
       this.service.assets = this.assets;
     }, (err) => {
       this.toast_pop('error', 'Oops!', 'Failed to load Assets.');

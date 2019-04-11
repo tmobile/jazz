@@ -5,7 +5,7 @@
             <div [class.show]='filterSelected' class="filter-wrap">
                 <span class="icon-icon-filter-unselected"  title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; onClickFilter()"></span>                    
                 <div class='filter-inner'>
-                    <div class="filter-inner-wrap first-child" [class.hide]='service.islogs'>
+                    <div class="filter-inner-wrap first-child" [class.hide]='!service.islogs'>
                         <div class='view-label'>Filter by:</div>
                         <div class="eachFilter" *ngIf='advanced_filter_input.path.show && isAPI'>
                             <div><div class='hori-line'></div>PATH</div>
