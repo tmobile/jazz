@@ -756,9 +756,11 @@ def createSubscriptionFilters(stackName, region, roleId) {
   }
 }
 
-def addVpcDetails() {
+def addVpcDetails(config) {
 	echo "addVpcdetails to serverless.yml file"
 	sh "sed -i -- 's/vpcDisabled/vpc/g' ./serverless.yml"
+  sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
+  sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
 }
 
 def writeServerlessFile(config, env) {
@@ -774,11 +776,9 @@ def writeServerlessFile(config, env) {
   sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
   sh "sed -i -- 's|\${file(deployment-env.yml):eventScheduleRate}|${config['eventScheduleRate']}|g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
-  def service_lambda_list = configModule.getLambdaServiceList()
-  if ((config['service'] in service_lambda_list) && config['domain'] == 'jazz' && configLoader.JENKINS.DOCKERIZED == "true") {
-  	addVpcDetails()
+
+  if ((config['service'] in configLoader.JENKINS.LAMBDA_SERVICES) && config['domain'] == 'jazz' && configLoader.JENKINS.DOCKERIZED == "true") {
+    addVpcDetails(config)
   }
 
   if (config['artifact']) {
