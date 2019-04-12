@@ -1,12 +1,7 @@
-# Python Logging Component
-# @module: logger.py
-# @description: a simple logging module for python
-# @author:
-# @version: 1.0
-
 from datetime import datetime
-import os
 from inspect import currentframe, getframeinfo
+
+import os
 
 '''
 USAGE
@@ -14,22 +9,14 @@ USAGE
     from components.logger import Logger
     logger = Logger(event, context)
 
-    logger.warn('The following waring message will be logged');
-    logger.verbose('The following waring message will not be logged')
-
-
-    # Sample logging messages.
+    # Examples
     logger.error('Runtime errors or unexpected conditions.');
-    logger.warn('Runtime situations that are undesirable or unexpected,
-     but not necessarily "wrong".');
-    logger.info('Interesting runtime events (Eg. connection established,
-     data fetched etc).');
-    logger.verbose('Generally speaking, most lines logged by your applic
-    ation should be written as verbose.');
+    logger.warn('Runtime situations that are undesirable or unexpected, but not necessarily "wrong".');
+    logger.info('Interesting runtime events (Eg. connection established, data fetched etc).');
+    logger.verbose('Generally speaking, most lines logged by your application should be written as verbose.');
     logger.debug('Detailed information on the flow through the system');
 
 '''
-
 
 class Logger(object):
     # init log_level, default config, context_details
@@ -75,7 +62,7 @@ class Logger(object):
             self.config['context_details'] = ''
 
     def print_file(self, fil):
-        print self.get_linenumber()
+        print (self.get_linenumber())
 
     def get_linenumber(self):
         """
@@ -125,7 +112,7 @@ class Logger(object):
         # format message as required.
 
         if self.config.get('show_timestamp'):
-            #timestamp = str(datetime.datetime.now()) + "  "
+            # timestamp = str(datetime.datetime.now()) + "  "
             timestamp = str(datetime.utcnow().strftime(
                              '%Y-%m-%dT%H:%M:%S.%f')[:-3] + "Z  ")
         else:
