@@ -178,7 +178,7 @@ provider:
 
 
     tags: # Tags that will be asbred to each of the deployment resources
-      sbr-type: [aws-var-name:aws-tag-val]
+      sbr-type: "[aws-var-name:aws-tag-val]"
       sbr-render: user-only
       sbr-value:
         sbr-example:
@@ -204,14 +204,14 @@ provider:
     sbr-value:
       sbr-example: arn:aws:iam::XXXXXX:role/role
 
-  versionFunctions: false # Optional function versioning
+  versionFunctions: # Optional function versioning
     sbr-type: bool
     sbr-render: user-only
     sbr-value:
       sbr-example: false
 
   environment: # Service wide environment variables
-    sbr-type: [key:value]
+    sbr-type: "[aws-var-name:aws-tag-val]"
     sbr-render: user-only
     sbr-value:
       sbr-example:
@@ -250,7 +250,7 @@ provider:
         sbr-example: xxxxxxxxxx
 
     restApiResources: # List of existing resources that were created in the REST API. This is required or the stack will be conflicted
-      sbr-type: [path:aws-id]
+      sbr-type: "[path:aws-id]"
       sbr-render: user-only
       sbr-value:
         sbr-example:
@@ -321,7 +321,7 @@ provider:
 
 
   stackTags: # Optional CF stack tags
-    sbr-type: [aws-var-name:aws-tag-value]
+    sbr-type: "[aws-var-name:aws-tag-value]"
     sbr-render: merge
     sbr-value:
       sbr-formula:
@@ -414,7 +414,7 @@ provider:
                 - "123.123.123.123"
 
   tags: # Optional service wide function tags
-    sbr-type: [key:value]
+    sbr-type: "[aws-var-name:aws-tag-value]"
     sbr-render: merge
     sbr-value:
       sbr-formula:
@@ -461,17 +461,17 @@ package: # Optional deployment packaging configuration
       sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
 
 functions:
-    sbr-type: [aws-var-name:function]
+    sbr-type: "[aws-var-name:function]"
     sbr-render: user-only
 
 # The "Resources" your "Functions" use.  Raw AWS CloudFormation goes in here.
 resources:
   Resources:
-    sbr-type: [aws-var-name:resource]
+    sbr-type: "[aws-var-name:resource]"
     sbr-render: user-only
     # The "Outputs" that your AWS CloudFormation Stack should produce.  This allows references between services.
   Outputs:
-    sbr-type: [name:output]
+    sbr-type: "[name:output]"
     sbr-render: user-only
     sbr-value:
       sbr-example:
@@ -587,18 +587,18 @@ function:
       sbr-example: arn:aws:kms:us-east-1:XXXXXX:key/some-hash
 
   environment: # Function level environment variables
-    sbr-type: [aws-var-name:aws-tag-value]
+    sbr-type: "[aws-var-name:aws-tag-value]"
     sbr-render: user-only
-      sbr-value:
-        sbr-example:
-          functionEnvVar: 12345678
+    sbr-value:
+      sbr-example:
+        functionEnvVar: 12345678
 
   tags: # Function specific tags
-    sbr-type: [aws-var-name:aws-tag-value]
+    sbr-type: "[aws-var-name:aws-tag-value]"
     sbr-render: user-only
-      sbr-value:
-        sbr-example:
-          foo: bar
+    sbr-value:
+      sbr-example:
+        foo: bar
 
   vpc: # Optional VPC. But if you use VPC then both subproperties (securityGroupIds and subnetIds) are required
     securityGroupIds:
@@ -723,7 +723,7 @@ event:
           sbr-value:
             sbr-example: false
         input:
-          sbr-type: [aws-var-name:aws-tag-value]
+          sbr-type: "[aws-var-name:aws-tag-value]"
           sbr-render: user-only
           sbr-value:
             sbr-example:
@@ -799,7 +799,7 @@ event:
 
 resource:
   sbr-primary: false
-  sbr-type: aws-var-name:
+  sbr-type: aws-var-name
   sbr-render: user-only
   Type:
     sbr-type: enum
@@ -808,7 +808,7 @@ resource:
     sbr-value:
       sbr-example: AWS::DynamoDB::Table
   Properties:
-    sbr-type: [aws-var-name:aws-property-value]
+    sbr-type: "[aws-var-name:aws-property-value]"
     sbr-value:
       sbr-example:
         AttributeDefinitions:
