@@ -28,7 +28,6 @@ export class ReportIssueComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log("display msg: ", this.displayMassage);
     if (this.response) {
       this.displayMassage =  this.displayMassage || JSON.parse(this.response._body).message;
     }
