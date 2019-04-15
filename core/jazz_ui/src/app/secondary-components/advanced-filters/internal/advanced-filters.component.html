@@ -13,7 +13,7 @@
                         </div>
                         <div class="eachFilter" *ngIf='advanced_filter_input.environment.show'>
                             <div><div class='hori-line'></div>ENVIRONMENT</div>
-                            <dropdown class="dropdown-1"  [dropdwnContent]="envList" title="Select enviroment" [selected]="envSelected" (onSelected)="onEnvSelected($event)"></dropdown>            
+                            <dropdown class="dropdown-1"  [dropdwnContent]="envList" title="Select environment" [selected]="envSelected" (onSelected)="onEnvSelected($event)"></dropdown>            
                         </div>
                         <div class="eachFilter no-border-no-padding" *ngIf='advanced_filter_input.method.show && isAPI'>
                             <div><div class='hori-line'></div>METHOD</div>

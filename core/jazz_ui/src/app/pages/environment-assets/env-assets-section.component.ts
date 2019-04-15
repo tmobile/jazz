@@ -239,7 +239,7 @@ ngOnInit()
 		}
 		this.payload['service'] = this.service.name;
 		this.payload['domain'] = this.service.domain;
-		this.payload['enviroment'] = this.env;
+		this.payload['environment'] = this.env;
 		this.payload['limit'] = this.limitValue;
 		this.payload['offset'] = this.offsetval;
 		this.payload['asset_type']=this.assetSelected;

@@ -823,7 +823,7 @@ describe('handler', () => {
       });
   });
 
-  it('Verify processEvents is able to create enviroments', () => {
+  it('Verify processEvents is able to create environments', () => {
     let event = { "Records": [testPayloads.eventPayload] }
 
     requestPromiseStub.onFirstCall().callsFake((obj) => {

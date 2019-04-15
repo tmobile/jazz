@@ -68,11 +68,11 @@
                                     <div class='view-label'>View by:</div>
                                     <div class="eachFilter" *ngIf='service.serviceType == "function"'>
                                         <div><div class='hori-line'></div>ACCOUNT</div>
-                                        <dropdown class='dropdown-3'  [dropdwnContent]="accList" title="Select enviroment" [selected]="accSelected" (onSelected)="onaccSelected($event)"></dropdown>
+                                        <dropdown class='dropdown-3'  [dropdwnContent]="accList" title="Select environment" [selected]="accSelected" (onSelected)="onaccSelected($event)"></dropdown>
                                     </div>
                                     <div class="eachFilter" *ngIf='service.serviceType == "function"'>
                                         <div><div class='hori-line'></div>REGION</div>
-                                        <dropdown class='dropdown-3'  [dropdwnContent]="regList" title="Select enviroment" [selected]="regSelected" (onSelected)="onregSelected($event)"></dropdown>
+                                        <dropdown class='dropdown-3'  [dropdwnContent]="regList" title="Select environment" [selected]="regSelected" (onSelected)="onregSelected($event)"></dropdown>
                                     </div>
                                 </div>
                             </div>
