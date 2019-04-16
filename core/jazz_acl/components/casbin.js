@@ -34,7 +34,7 @@ async function dbConnection(config) {
       database: config.CASBIN.DATABASE,
       timeout: config.CASBIN.TIMEOUT
     });
-  } catch(err) {
+  } catch (err) {
     if (err.name !== "AlreadyHasActiveConnectionError") {
       logger.error(err.message);
       throw (errorHandlerModule.throwInternalServerError(err.message));
@@ -67,7 +67,7 @@ async function getFilteredPolicy(index, values, config) {
     const promisedPolicies = values.map(async value => await enforcer.getFilteredPolicy(index, value));
     const policies = await Promise.all(promisedPolicies);
     result = policies;
-  } catch(err) {
+  } catch (err) {
     logger.error(err.message);
     result.error = err.message;
   } finally {
@@ -88,10 +88,12 @@ async function checkPermissions(userId, serviceId, category, permission, config)
       result.authorized = true;
     } else {
       conn = await dbConnection(config);
+      const user_id = userId.toLowerCase()
       const enforcer = await casbin.newEnforcer('./config/rbac_model.conf', conn);
-      result.authorized = enforcer.enforce(userId, `${serviceId}_${category}`, permission);
+      result.authorized = enforcer.enforce(user_id, `${serviceId}_${category}`, permission);
     }
-  } catch(err) {
+    logger.debug("result in checkPermissions: " + JSON.stringify(result));
+  } catch (err) {
     logger.error(err.message);
     result = {
       error: err.message
@@ -107,6 +109,7 @@ async function checkPermissions(userId, serviceId, category, permission, config)
 
 /* Add and/or Remove filtered policy */
 async function addOrRemovePolicy(serviceId, config, action, policies) {
+  logger.debug("addOrRemovePolicy action: " + JSON.stringify(action));
   let result = {};
   let conn, enforcer;
   const objects = [`${serviceId}_manage`, `${serviceId}_code`, `${serviceId}_deploy`];
@@ -114,14 +117,14 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
   try {
     let getPolicies = await getFilteredPolicy(1, objects, config);
 
-    if (getPolicies && getPolicies.error) {//if there was any error capture that
+    if (getPolicies && getPolicies.error) { //if there was any error capture that
       result.error = getPolicies.error;
       return result;
     }
     getPolicies = getPolicies.filter(policy => policy.length > 0);
     totalPolicies = getPolicies.length;
 
-    if (getPolicies.length) {//found previous policies to be removed
+    if (getPolicies.length) { //found previous policies to be removed
       let removeResult = [];
       if (totalPolicies) {
         conn = await dbConnection(config);
@@ -148,7 +151,7 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
           result = await addPolicy(serviceId, policies, enforcer);
         }
       }
-    } else {//only add (nothing to remove)
+    } else { //only add (nothing to remove)
       if (action === 'add') {
         conn = await dbConnection(config);
         enforcer = await casbin.newEnforcer('./config/rbac_model.conf', conn);
@@ -158,7 +161,7 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
         }
       }
     }
-  } catch(err) {
+  } catch (err) {
     logger.error(err.message);
     result.error = err.message;
   } finally {
@@ -179,7 +182,7 @@ async function addPolicy(serviceId, policies, enforcer) {
     await enforcer.savePolicy();
   } else if (!savedPolicies.length) { //rollback deletion
     result.error = `Rollback transaction - could not add any policy`;
-  } else if(savedPolicies.length !== policies.length) {
+  } else if (savedPolicies.length !== policies.length) {
     result.error = `Rollback transaction - could add ${savedPolicies.length} of ${policies.length}`;
   } else {
     result.error = `Rollback transaction - failed to add/remove policies`;
@@ -191,7 +194,7 @@ async function addPolicy(serviceId, policies, enforcer) {
 /* Get the permissions for a service given a userId */
 async function getPolicyForServiceUser(serviceId, userId, config) {
   if (userId === config.SERVICE_USER) {
-    const dbResult =  await getList.getSeviceIdList(config, serviceId)
+    const dbResult = await getList.getSeviceIdList(config, serviceId)
     if (dbResult && dbResult.error) {
       return dbResult
     }
@@ -203,12 +206,20 @@ async function getPolicyForServiceUser(serviceId, userId, config) {
       return result;
     }
     let policies = formatPolicies(result);
-    let userPolicies = policies.filter(policy => policy.userId === userId);
-    userPolicies = userPolicies.map(policy => { return { permission: policy.permission, category: policy.category } });
+    const user_id = userId.toLowerCase()
+    let userPolicies = policies.filter(policy => policy.userId === user_id);
+    userPolicies = userPolicies.map(policy => {
+      return {
+        permission: policy.permission,
+        category: policy.category
+      }
+    });
 
-    return [{serviceId: serviceId, policies: userPolicies}];
+    return [{
+      serviceId: serviceId,
+      policies: userPolicies
+    }];
   }
-
 }
 
 /* attach admin policies */
@@ -226,7 +237,7 @@ function attachAdminPolicies(list) {
 async function getPolicyForUser(userId, config) {
   let policies = [];
   if (userId === config.SERVICE_USER) {
-    const dbResult =  await getList.getSeviceIdList(config, null)
+    const dbResult = await getList.getSeviceIdList(config, null)
     if (dbResult && dbResult.error) {
       return dbResult
     }
@@ -234,8 +245,10 @@ async function getPolicyForUser(userId, config) {
     let result = attachAdminPolicies(dbResult.data);
     return result;
   } else {
-    let result = await getFilteredPolicy(0, [userId], config);
+    const user_id = userId.toLowerCase()
+    let result = await getFilteredPolicy(0, [user_id], config);
     let serviceIdSeen = new Set();
+
 
     if (result && result.error) {
       return result;
@@ -262,17 +275,17 @@ async function getPolicyForUser(userId, config) {
         serviceIdSeen.add(serviceId);
       });
     });
-  }
 
-  return policies;
+    return policies;
+  }
 }
 
 function massagePolicies(policies) {
   if (policies && !policies.error) {
-    let filteredPolicies = policies.filter(el => el.length >=1);
+    let filteredPolicies = policies.filter(el => el.length >= 1);
     if (filteredPolicies.length) {
       filteredPolicies =
-      policies = filteredPolicies.map(policyArr => policyArr.map(policy => [policy[0], policy[1].split('_')[1], policy[2]]));
+        policies = filteredPolicies.map(policyArr => policyArr.map(policy => [policy[0], policy[1].split('_')[1], policy[2]]));
     } else {
       policies = [];
     }
@@ -288,8 +301,7 @@ function formatPolicies(result) {
       userId: policy[0],
       permission: policy[2],
       category: policy[1]
-    })
-  ));
+    })));
 
   return policies;
 }
