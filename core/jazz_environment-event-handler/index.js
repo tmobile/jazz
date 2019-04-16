@@ -196,6 +196,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
     environmentApiPayload.physical_id = svcContext.branch;
 
     if (eventPayload.EVENT_NAME.S === configData.EVENTS.INITIAL_COMMIT) {
+      environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
       exportable.processEventInitialCommit(environmentApiPayload, serviceDetails.id, configData, authToken)
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
