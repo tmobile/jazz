@@ -50,11 +50,12 @@ function handler(event, context, cb) {
 		 *    }
 		 */
     var eventBody = event.body;
+    let headers = exportable.changeToLowerCase(event.headers);
     let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
-    exportable.genericValidation(event, header_key)
+    exportable.genericValidation(event, header_key, headers)
       .then(() => validateUtils.validateGeneralFields(eventBody))
       .then(() => exportable.getToken(config))
-      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken, event.headers[header_key]))
+      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken, headers[header_key]))
       .then(res => exportable.validateAssets(res, eventBody))
       .then(res => exportable.getMetricsDetails(res, eventBody, config))
       .then(res => {
@@ -76,7 +77,7 @@ function handler(event, context, cb) {
 
 };
 
-function genericValidation(event, header_key) {
+function genericValidation(event, header_key, headers) {
   return new Promise((resolve, reject) => {
     if (!event && !event.body) {
       reject({
@@ -99,7 +100,7 @@ function genericValidation(event, header_key) {
       });
     }
 
-    if (!event.headers[header_key]) {
+    if (!headers[header_key]) {
       reject({
         result: "inputError",
         message: "No service id provided"
@@ -470,6 +471,14 @@ function cloudWatchDetails(assetParam) {
   });
 }
 
+function changeToLowerCase(data) {
+	let newArr = {};
+	for (let key in data) {
+		newArr[key.toLowerCase()] = data[key];
+	}
+	return newArr;
+}
+
 const exportable = {
   handler,
   genericValidation,
@@ -480,7 +489,8 @@ const exportable = {
   getApigeeParam,
   getMetricsDetails,
   cloudWatchDetails,
-  apigeeMetricDetails
+  apigeeMetricDetails,
+  changeToLowerCase
 }
 
 module.exports = exportable;

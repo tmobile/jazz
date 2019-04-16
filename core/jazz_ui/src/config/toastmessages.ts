@@ -1,7 +1,7 @@
 export const toastMessage = {
     "error0":"Something went wrong while fetching data",
     "error401":"Invalid credentials",
-    "error403":"Unable to recognize user. Please login again",
+    "error403": "You are not authorized to access the resource, please contact service owner!",
     "errorInternet":"No internet connection",
     "errorDefault":"Unexpected error",
     "dataNull":"Data not available",
@@ -187,5 +187,26 @@ export const toastMessage = {
         "errorIndicationMsg": "There must be at least one user delegated under each category. To add additional users, select \"Add User\" from the options below.",
         "removeAdminRule": "When saved, user will lose all kinds of access to this service. Do you want to proceed?",
         "addAdminRule": "When saved, user will be an administrator to this service. Do you want to proceed?"
+    },
+    "metricsResponse": {
+        "dataNull":"Something went wrong while we were fetching service metrics data!",
+        "error400":"Something went wrong while we were fetching service metrics data!",
+        "error401":"Token expired",
+        "error404":"Something went wrong while we were fetching service metrics data!",
+        "error500":"Something went wrong while we were fetching service metrics data!"
+    },
+    "getDeploymentsResponse": {
+        "dataNull":"Something went wrong while we were fetching service metrics data!",
+        "error400":"Something went wrong while we were fetching service metrics data!",
+        "error401":"Token expired",
+        "error404":"Something went wrong while we were fetching service metrics data!",
+        "error500":"Something went wrong while we were fetching service metrics data!"
+    },
+    "getAssetResponse": {
+        "dataNull":"Something went wrong while we were fetching service metrics data!",
+        "error400":"Something went wrong while we were fetching service metrics data!",
+        "error401":"Token expired",
+        "error404":"Something went wrong while we were fetching service metrics data!",
+        "error500":"Something went wrong while we were fetching service metrics data!"
     }
 };
