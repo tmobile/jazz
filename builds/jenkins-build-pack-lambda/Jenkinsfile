@@ -455,12 +455,8 @@ def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_
 
 def deleteAndRedeployService(environment_logical_id, credsId, env_key, accountDetails){
   echoServerlessFile()
-  def s3BucketNameValue;
-  for (item in accountDetails.REGIONS) {
-    if(item.REGION == service_config.region){
-      s3BucketNameValue = item.S3[env_key]
-    }
-  }
+  def s3BucketNameValue = getBucketValue(env_key, accountDetails);
+  
   sh "serverless remove --stage $environment_logical_id -v --bucket ${s3BucketNameValue} --profile ${credsId}"
   def redeployOutput = servelessDeploy(environment_logical_id, credsId, env_key, accountDetails)
   if (redeployOutput != 'success') {
@@ -475,12 +471,8 @@ def echoServerlessFile() {
 }
 
 def servelessDeploy(env, credsId, env_key, accountDetails){
-  def s3BucketNameValue;
-  for (item in accountDetails.REGIONS) {
-    if(item.REGION == service_config.region){
-      s3BucketNameValue = item.S3[env_key]
-    }
-  }
+  def s3BucketNameValue = getBucketValue(env_key, accountDetails);
+
   try {
     sh "serverless deploy --stage ${env} -v --bucket ${s3BucketNameValue} --profile ${credsId} > output.log"
     return "success"
@@ -491,6 +483,14 @@ def servelessDeploy(env, credsId, env_key, accountDetails){
   def outputLog = readFile('output.log').trim()
   echo "serverless deployment log $outputLog"
   return outputLog
+}
+
+def getBucketValue(env_key, accountDetails){
+  for (item in accountDetails.REGIONS) {
+    if(item.REGION == service_config.region){
+      return item.S3[env_key]
+    }
+  }
 }
 
 def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isSQSEventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
