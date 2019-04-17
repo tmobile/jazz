@@ -270,27 +270,30 @@
 	</div>
 </div>
 </div>
-<div class="service-details-application relative" *ngIf= "!website">
+<div class="service-details-application relative">
 	<div>
 	<span class="app-label">Application Definition</span>
 	<div   class='edit-service-overview-btn'>
 			<a  *ngIf='showCncl'  (click)='onCancel()'>CANCEL</a>
 			<btn-jazz-secondary class='btn-edit-overview'  *ngIf="editButton" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditAppClick()'></btn-jazz-secondary>
-			<btn-jazz-secondary  class='btn-edit-overview' [disablebtn]="invalid || disableSave" *ngIf='saveButton' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" [disablebtn]='disableEditBtn()'  (click)='descriptor()'></btn-jazz-secondary>
+			<btn-jazz-secondary  class='btn-edit-overview' [disablebtn]="!isvalid" *ngIf='saveButton' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" [disablebtn]='disableEditBtn()'  (click)='descriptor()'></btn-jazz-secondary>
 		</div>
 	</div>
-	<div class="text-area-div" >
+	<div class="blank-div" [class.hide]="isEditClicked"></div>
+	<div class="text-area-div" [class.hide]="!isEditClicked" >
 		<div class="textbox">
 			<div class="line-numbers">
 					<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
 				  </div>
-		<textarea class="text-area" [disabled]="textarea"  (ngModelChange)="textChanged  && lineNumbers()"
-		 [(ngModel)]="yaml" id="yaml" name="yaml" (blur)='checkYaml()'></textarea>	
+		<textarea class="text-area"  #yamlText (ngModelChange)="textChanged = true && lineNumbers()"[(ngModel)]="yaml" id="yaml" name="yaml" (blur)='checkYaml()'></textarea>	
 	   </div>
 		<div *ngIf="isCancel">
 		<p class = "validation" *ngIf="isvalid">Valid Yaml file.</p>
-		<p class = "validation" *ngIf="invalid">Invalid Yaml file.</p>
+		<p class = "validation" *ngIf="!isvalid">Invalid Yaml file.</p>
 		</div>
+	</div>
+	<div class="loading" [class.show]="isLoading">
+		<div class="loading-circle"></div>
 	</div>
 </div>
 <div class="loading-outer-div" [class.show]="isLoading">

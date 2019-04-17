@@ -33,10 +33,9 @@ export class EnvOverviewSectionComponent implements OnInit {
   private env:any;
   branchname: any;
   friendlyChanged:boolean = false;
-  textChanged:boolean = true;
+  textChanged:boolean=false;
   tempFriendlyName:string;
   yaml:string = "";
-  textarea:boolean= true;
   tempTextArea:string;
   friendlyName : string;
   yamlName:string;
@@ -73,15 +72,12 @@ export class EnvOverviewSectionComponent implements OnInit {
 	errorChecked:boolean=true;
 	errorInclude:any="";
   json:any={};
-  website:boolean = false;
   desc_temp:any;
   toastmessage:any;
   copyLink:string="Copy Link";
-  disableSave:boolean = true;
-  invalid:boolean = false;
  
   message:string="lalalala"
-  public lineNumberCount: any = new Array(7);
+  public lineNumberCount: any = new Array(7).fill('');
   private subscription:any;
 
   @Input() service: any = {};
@@ -145,24 +141,22 @@ popup(state){
   }
 
   onEditAppClick(){
-    this.yaml = this.yamlName;
-    this.showCncl = true;
-    this.isDiv = true;
-    this.saveButton = true;
-    this.editButton = false;
-    this.isCancel = false;
-    this.textChanged = true;
-    this.disableSave = true;
-    this.textarea = false;
+    this.yaml=this.yamlName;
+    this.isEditClicked=true;
+    this.showCncl=true;
+    this.isDiv=false;
+    this.saveButton=true;
+    this.editButton=false;
+    this.isCancel=true;
+    this.saveBtn=false;
   }
   descriptor(){
-    this.showCncl = false;
-    this.editButton = true;
-    this.textarea = true;
-    this.saveBtn = false;
-    this.saveButton = false;
+    this.showCncl=false;
+    this.editButton=true;
+    this.saveBtn=false;
+    this.saveButton=false;
     var errMsgBody;
-    if(this.textChanged === true){
+    if(this.textChanged){
       this.put_payload.deployment_descriptor= this.yaml;
       this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
             .subscribe(
@@ -188,42 +182,33 @@ popup(state){
 
                 }
               );
-              this.isLoading = true;
-              this.envResponseTrue = false;
-              this.textChanged = false;
-              this.isCancel = false;
-              this.disableSave = true;            
+              this.isLoading=true;
+              this.envResponseTrue=false;
+              this.textChanged=false;
+              this.isCancel=false;
+            
+              
     }
     
   }
   lineNumbers() {
     let lines;
-    if(this.yaml)
-    {
+    if(this.yaml){
       lines = this.yaml.split(/\r*\n/);
       let line_numbers = lines.length;
       if(line_numbers < 7){
         line_numbers = 7;
       }
-      this.lineNumberCount = new Array(line_numbers);
+      this.lineNumberCount = new Array(line_numbers).fill('');
     }  
   }
   checkYaml(){
-    let yaml = this.yaml.trim();
-    if(yaml) {
-      this.isCancel = true;
-      const yamlLint = require('yaml-lint');
-      yamlLint.lint(yaml).then(() => {
-        this.isvalid = true;
-        this.disableSave = false;
-      }).catch((error) => {
-        this.invalid = true;
-      });
-    }
-    else{
-      this.disableSave = true;
-      this.isCancel = false;
-    }
+    const yamlLint = require('yaml-lint');
+    yamlLint.lint(this.yaml).then(() => {
+      this.isvalid=true;
+    }).catch((error) => {
+      this.isvalid=false;
+    });
   }
   onSaveClick(){
     this.showCancel=false;
@@ -264,13 +249,15 @@ popup(state){
     
   }
   onCancel(){
-    this.showCncl = false;
-    this.saveButton = false;
-    this.editButton = true;
-    this.textarea = true;
-    this.yaml = this.yamlName;
-    this.isCancel = false;
-    this.disableSave = true;
+    this.showCancel=false;
+    this.saveButton=false;
+    this.editButton=true;
+    this.isDiv=true;
+    this.showCncl=false;
+    this.saveBtn=false;
+    this.editBtn=true;
+    this.yaml='';
+    this.isEditClicked=false;
   }
   onCancelClick(){
     this.showCncl=false;
@@ -333,16 +320,12 @@ popup(state){
       // this.http.get('/jazz/environments/prd?domain=jazz-testing&service=test-create').subscribe(
         (response) => {
 
-          let ser=response.data.environment[0].service;
           if(response.data == (undefined || '')){
            
             this.envResponseEmpty = true; 
             this.isLoading = false;
           }else{
             // response.data.environment[0].status='deletion_started'
-            if(ser == 'website'){
-              this.website = true; 
-            }
             this.onload.emit(response.data.environment[0].endpoint);
             this.envLoad.emit(response.data);
             this.environmnt=response.data.environment[0];
@@ -356,12 +339,12 @@ popup(state){
             var envResponse = response.data.environment[0];
             this.friendlyName = envResponse.friendly_name;
             this.yamlName= envResponse.deployment_descriptor;
-            this.yaml = this.yamlName;
             this.branchname = envResponse.physical_id;
             this.lastCommitted = envResponse.last_updated;
             this.frndload.emit(this.friendlyName);
-            this.formatLastCommit(); 
-            this.lineNumbers();              
+
+            this.formatLastCommit();               
+            
             this.envResponseTrue = true;
             this.envResponseEmpty = false;
             this.isLoading = false;
@@ -600,6 +583,7 @@ selectAccount(account){
     this.selectedAccount.push(account);
     this.put_payload.accounts=this.selectedAccount;
     this.friendlyChanged=true;
+    this.textChanged=true;
     for (var i = 0; i < this.accounts.length; i++) {
       if (this.accounts[i] === account) {
         this.accounts.splice(i, 1);
@@ -611,6 +595,7 @@ removeAccount(index, account) {
   this.accounts.push(account);
   this.selectedAccount.splice(index, 1);
   this.friendlyChanged=true;
+  this.textChanged=true;
 }
 selectRegion(region){
   this.selApprover = region;
@@ -620,6 +605,7 @@ selectRegion(region){
     this.selectedRegion.push(region);
     this.put_payload.regions=this.selectedRegion;
     this.friendlyChanged=true;
+    this.textChanged=true;
 
     for (var i = 0; i < this.regions.length; i++) {
       if (this.regions[i] === region) {
@@ -649,6 +635,7 @@ removeRegion(index, region) {
   this.regions.push(region);
   this.selectedRegion.splice(index, 1);
   this.friendlyChanged=true;
+  this.textChanged=true;
 }
 keypressAccount(hash){
   if (hash.key == 'ArrowDown') {

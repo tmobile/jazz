@@ -395,8 +395,7 @@ transform: rotateY(-50%)
   border-radius: 5px;
 }
 .col-detail{
-  flex-grow: 1;
-  flex-basis: 0;
+  width: 50%;
 }
 .text-area{
   width:100%;
@@ -417,8 +416,7 @@ transform: rotateY(-50%)
     border-radius: 3px;
     margin: 0;
     margin-left:1.5rem;
-    flex-grow: 1;
-    flex-basis: 0;
+    width:50%;
     padding: 1.6rem;
     padding-top: 2.5rem;
     background-color: #ffffff;
