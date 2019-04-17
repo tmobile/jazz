@@ -228,7 +228,7 @@ provider:
       sbr-example: regional
 
   apiKeys: # List of API keys to be used by your service API Gateway REST API
-    sbr-type: [aws-artifact-name]
+    sbr-type: "[aws-artifact-name]"
     sbr-render: user-only
     sbr-value:
       sbr-example:
@@ -334,7 +334,7 @@ provider:
         key: value
 
   iamManagedPolicies: # Optional IAM Managed Policies, which allows to include the policies into IAM Role
-    sbr-type: [arn-iam-policy]
+    sbr-type: "[arn-iam-policy]"
     sbr-render: merge
     sbr-value:
       sbr-formula: ${config.iamRoleARN}
@@ -342,7 +342,7 @@ provider:
         - arn:aws:iam:*****:policy/some-managed-policy
 
   iamRoleStatements: # IAM role statements so that services can be accessed in the AWS account
-    sbr-type: [aws-policy]
+    sbr-type: "[aws-policy]"
     sbr-render: user-only
     sbr-value:
       sbr-example:
@@ -357,7 +357,7 @@ provider:
 
 
   stackPolicy: # Optional CF stack policy. The example below allows updates to all resources except deleting/replacing EC2 instances (use with caution!)
-    sbr-type: [aws-policy]
+    sbr-type: "[aws-policy]"
     sbr-render: user-only
     sbr-value:
       sbr-example:
@@ -378,28 +378,28 @@ provider:
 
   vpc: # Optional VPC. But if you use VPC then both subproperties (securityGroupIds and subnetIds) are required
     securityGroupIds:
-      sbr-type: [aws-id]
+      sbr-type: "[aws-id]"
       sbr-render: user-only
       sbr-value:
         sbr-example:
           - securityGroupId1
           - securityGroupId2
     subnetIds:
-      sbr-type: [aws-id]
+      sbr-type: "[aws-id]"
       sbr-render: user-only
       sbr-value:
         sbr-example:
           - subnetId1
           - subnetId2
   notificationArns: # List of existing Amazon SNS topics in the same region where notifications about stack events are sent.
-    sbr-type: [aws-id]
+    sbr-type: "[aws-id]"
     sbr-render: user-only
     sbr-value:
       sbr-example:
         - 'arn:aws:sns:us-east-1:XXXXXX:mytopic'
 
   resourcePolicy:
-    sbr-type: [aws-policy]
+    sbr-type: "[aws-policy]"
     sbr-render: user-only
     sbr-value:
       sbr-example:
@@ -428,14 +428,14 @@ provider:
 
 package: # Optional deployment packaging configuration
   include: # Specify the directories and files which should be included in the deployment package
-    sbr-type: [path]
+    sbr-type: "[path]"
     sbr-render: user-only
     sbr-value:
       sbr-examples:
         - .git/**
         - .travis.yml
   exclude: # Specify the directories and files which should be excluded in the deployment package
-    sbr-type: [path]
+    sbr-type: "[path]"
     sbr-render: user-only
     sbr-value:
       sbr-examples:
@@ -602,14 +602,14 @@ function:
 
   vpc: # Optional VPC. But if you use VPC then both subproperties (securityGroupIds and subnetIds) are required
     securityGroupIds:
-      sbr-type: [aws-id]
+      sbr-type: "[aws-id]"
       sbr-render: user-only
       sbr-value:
         sbr-example:
           - securityGroupId1
           - securityGroupId2
     subnetIds:
-      sbr-type: [aws-id]
+      sbr-type: "[aws-id]"
       sbr-render: user-only
       sbr-value:
         sbr-example:
@@ -618,14 +618,14 @@ function:
 
   package:
     include: # Specify the directories and files which should be included in the deployment package
-      sbr-type: [path]
+      sbr-type: "[path]"
       sbr-render: user-only
       sbr-value:
         sbr-examples:
           - .git/**
           - .travis.yml
     exclude: # Specify the directories and files which should be excluded in the deployment package
-      sbr-type: [path]
+      sbr-type: "[path]"
       sbr-render: user-only
       sbr-value:
         sbr-examples:
@@ -672,7 +672,7 @@ function:
 
 event:
   sbr-primary: false
-  sbr-type: [enum]
+  sbr-type: "[enum]"
   sbr-render: user-only
   sbr-constraint:
     - s3:
@@ -683,7 +683,7 @@ event:
             sbr-example: photos
 
         event:
-          sbr-type: [enum]
+          sbr-type: "[enum]"
           sbr-constraint:
             sbr-whitelist: actions
           sbr-value:
