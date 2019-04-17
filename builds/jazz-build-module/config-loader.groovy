@@ -13,7 +13,7 @@ import static java.util.UUID.randomUUID
 echo "the module, 'config-loader', loaded successfully... congratulations..."
 
 /**
- * Load the service metadata from Catalog
+ * Load system configuration from the catalogue
  *
  */
 def loadConfigData(aws_credential_id, region, instance_prefix) {

@@ -279,11 +279,11 @@ node()  {
 					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment, null), environment)
 					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 					error "Deployment Failed. "+ ex.getMessage()
+				} finally {
+					// reset Credentials
+				  resetCredentials(credsId)
 				}
-
 			}
-			// reset Credentials
-			resetCredentials(credsId)
 		}
 	}
 }

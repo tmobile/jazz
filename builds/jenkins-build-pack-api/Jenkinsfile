@@ -234,7 +234,7 @@ node() {
       def aws_api_id = null
 
       def swaggerDocUrl = ""
-
+      def credsId = null
       try {
 
         // resetting env endpoint url
@@ -242,7 +242,7 @@ node() {
         events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
         withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
           def randomString = utilModule.generateRequestId();
-          def credsId = "jazz-${randomString}";
+          credsId = "jazz-${randomString}";
           sh "aws configure set profile.${credsId}.region ${config.region}"
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
@@ -362,8 +362,6 @@ node() {
             def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
             send_status_email(config, 'COMPLETED', svc_status)
 
-            resetCredentials(credsId)
-
             if (domain && domain == "jazz") {
               serviceConfigdata.setLogStreamPermission(config)
             }
@@ -379,6 +377,8 @@ node() {
         events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
         error ex.getMessage()
+      } finally {
+        resetCredentials(credsId)
       }
       environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
       def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
@@ -411,10 +411,11 @@ def updateSwagger(){
     withCredentials([
             [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'PRIMARY_AWS_ACCESS_KEY_ID', credentialsId: primaryData.CREDENTIAL_ID, secretKeyVariable: 'PRIMARY_AWS_SECRET_ACCESS_KEY']
         ])  {
+                def primaryCredsId = null
                 try {
                 // initialize aws credentials
                 def randomStringPrimary = utilModule.generateRequestId();
-                def primaryCredsId = "jazzprimary-${randomStringPrimary}";
+                primaryCredsId = "jazzprimary-${randomStringPrimary}";
                                 
                 sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
                 sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
@@ -422,16 +423,15 @@ def updateSwagger(){
 
                 sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --profile ${primaryCredsId} --region ${config.region} --recursive "
 				        echo "completed deployment........."                
-                
-                // reset Credentials
-                resetCredentials(primaryCredsId)
-
                 } catch(ex){
                 send_status_email(config, 'FAILED', '')
                 events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
                 events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
                 events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
                 error ex.getMessage()
+                } finally {                                 
+                // reset Credentials
+                resetCredentials(primaryCredsId)
                 }
             }
 }
@@ -999,10 +999,11 @@ def updatePolicy(env, destARN){
   withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'PRIMARY_AWS_ACCESS_KEY_ID', credentialsId: primaryDataValue.CREDENTIAL_ID, secretKeyVariable: 'PRIMARY_AWS_SECRET_ACCESS_KEY']
       ])  {
+            def primaryCredsId = null
             try {
               // initialize aws credentials
               def randomStringPrimary = utilModule.generateRequestId();
-              def primaryCredsId = "jazzprimary-${randomStringPrimary}";
+              primaryCredsId = "jazzprimary-${randomStringPrimary}";
                             
               sh "aws configure set profile.${primaryCredsId}.region ${primaryRegionValue}"
               sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
@@ -1014,16 +1015,15 @@ def updatePolicy(env, destARN){
 
               def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${service_config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
               sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
-              
-              // reset Credentials
-              resetCredentials(primaryCredsId)
-
             } catch(ex){
               send_status_email(config, 'FAILED', '')
               events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
               events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
               events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
               error ex.getMessage()
+            } finally{              
+              // reset Credentials
+              resetCredentials(primaryCredsId)
             }
           }
 }

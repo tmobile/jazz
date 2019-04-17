@@ -24,123 +24,123 @@ import groovy.json.JsonOutput
 
 
 node {
- echo "Starting the Job with Params ${params}"
- inputParams = params.input
- // Load the config
- def jazzBuildModuleURL = getBuildModuleUrl()
- loadBuildModules(jazzBuildModuleURL)
+  echo "Starting the Job with Params ${params}"
+  inputParams = params.input
+  // Load the config
+  def jazzBuildModuleURL = getBuildModuleUrl()
+  loadBuildModules(jazzBuildModuleURL)
 
- //check whether input param is not null
- if (inputParams == "") {
-  echo "No Params defined"
- } else if (inputParams == "all") {
-  finalAccounts = configLoader.AWS['ACCOUNTS']
- } else {
-  // Split the Input parameter by comma seperated value
-  String[] inputstr;
-  inputstr = inputParams.split(',');
-  awsAccounts = configLoader.AWS['ACCOUNTS']
-  // Filter the List of Accounts to delete
-  for (awsAccount in awsAccounts) {
-   // Check the AccountId is in inputStr array
-   def accountId = awsAccount['ACCOUNTID']
-   if (inputstr.contains(accountId)) {
-    finalAccounts.push(awsAccount)
-   }
-  }
- }
-
- if (finalAccounts.size() > 0) {
-  //Parse the Accounts and delete IAM,APIGateway,s3Buckets
-  for (account in finalAccounts) {
-   credentialId = account['CREDENTIAL_ID'] 
-   def accountID = account['ACCOUNTID'];
-   def iamRoles = account["IAM"]
-  def cloudFront = account["CLOUDFRONT"]
-   isPrimaryAccount = account['PRIMARY']
-    withCredentials([
-      [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialId}"]
-    ]) {
-       
-        // Get all Regions
-        def allregions = account["REGIONS"]
-        for (awsregion in allregions) {
-        echo "processing  Region ${awsregion['REGION']}"
-        def regionAws = awsregion['REGION']
-        //Check if the Region is Primary
-        def primaryRegion = awsregion['PRIMARY']
-        if( isPrimaryAccount && primaryRegion){
-          echo "Primary Account Primary cannot be deleted from the Job"
-        }else{
-          //Get Region based apiGateway and s3Buckets
-          def apiGateway = awsregion["API_GATEWAY"]
-          def s3Buckets = awsregion["S3"]
-          processApiGateway(apiGateway, regionAws)
-          processS3Buckets(s3Buckets)
-          deletePrimaryAccountPolicy(accountID, finalAccounts);
-          deleteUserServices(regionAws);
-          deleteStackCloudFrontDists(regionAws)
-        }
-      }
-      if ( !isPrimaryAccount ) {
-          processIamRoles(iamRoles);
-          processCloudFront(cloudFront);
+  //check whether input param is not null
+  if (inputParams == "") {
+    echo "No Params defined"
+  } else if (inputParams == "all") {
+    finalAccounts = configLoader.AWS['ACCOUNTS']
+  } else {
+    // Split the Input parameter by comma seperated value
+    String[] inputstr;
+    inputstr = inputParams.split(',');
+    awsAccounts = configLoader.AWS['ACCOUNTS']
+    // Filter the List of Accounts to delete
+    for (awsAccount in awsAccounts) {
+      // Check the AccountId is in inputStr array
+      def accountId = awsAccount['ACCOUNTID']
+      if (inputstr.contains(accountId)) {
+        finalAccounts.push(awsAccount)
       }
     }
   }
- } else {
-  echo "No Accounts available for Deletion"
- }
+
+  if (finalAccounts.size() > 0) {
+    //Parse the Accounts and delete IAM,APIGateway,s3Buckets
+    for (account in finalAccounts) {
+      credentialId = account['CREDENTIAL_ID']
+      def accountID = account['ACCOUNTID'];
+      def iamRoles = account["IAM"]
+      def cloudFront = account["CLOUDFRONT"]
+      isPrimaryAccount = account['PRIMARY']
+      withCredentials([
+        [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialId}"]
+      ]) {
+
+        // Get all Regions
+        def allregions = account["REGIONS"]
+        for (awsregion in allregions) {
+          echo "processing  Region ${awsregion['REGION']}"
+          def regionAws = awsregion['REGION']
+          //Check if the Region is Primary
+          def primaryRegion = awsregion['PRIMARY']
+          if (isPrimaryAccount && primaryRegion) {
+            echo "Primary Account Primary cannot be deleted from the Job"
+          } else {
+            //Get Region based apiGateway and s3Buckets
+            def apiGateway = awsregion["API_GATEWAY"]
+            def s3Buckets = awsregion["S3"]
+            processApiGateway(apiGateway, regionAws)
+            processS3Buckets(s3Buckets)
+            deletePrimaryAccountPolicy(accountID, finalAccounts);
+            deleteUserServices(regionAws);
+            deleteStackCloudFrontDists(regionAws)
+          }
+        }
+        if (!isPrimaryAccount) {
+          processIamRoles(iamRoles);
+          processCloudFront(cloudFront);
+        }
+      }
+    }
+  } else {
+    echo "No Accounts available for Deletion"
+  }
 }
 
 def processIamRoles(iamRoles) {
- def roleId = ""
- // Get the Iam roles and delete it
- iamRoles.each {
-  k,
-  v ->
+  def roleId = ""
+  // Get the Iam roles and delete it
+  iamRoles.each {
+    k,
+      v ->
   if (v.contains('/')) {
-   roleId = v.split("/");
-  }
+      roleId = v.split("/");
+    }
 
-  echo "Processing Iam Role of ${k}"
-  if (roleId[1] != "") {
-   deleteIam(roleId[1])
-  } else {
-   echo "Not a Valid Role Name"
+    echo "Processing Iam Role of ${k}"
+    if (roleId[1] != "") {
+      deleteIam(roleId[1])
+    } else {
+      echo "Not a Valid Role Name"
+    }
   }
- }
 }
 
 def processCloudFront(cloudfront) {
- def distribution_id = ""
+  def distribution_id = ""
 
- // Get the Iam roles and delete it
- cloudfront.each {
-  k,
-  v ->
-   deletecloudFront(v)
- }
+  // Get the Iam roles and delete it
+  cloudfront.each {
+    k,
+      v ->
+      deletecloudFront(v)
+  }
 }
 
 def processApiGateway(apigateway, regionAws) {
- // Get the Iam roles and delete it
- apigateway.each {
-  k,
-  v ->
-  echo "Processing API Gateway  of ${k}"
-  deleteAPIGateway(v, regionAws)
- }
+  // Get the Iam roles and delete it
+  apigateway.each {
+    k,
+      v ->
+      echo "Processing API Gateway  of ${k}"
+    deleteAPIGateway(v, regionAws)
+  }
 }
 
 def processS3Buckets(s3Buckets) {
- // Get the s3Buckets and delete it
- s3Buckets.each {
-  k,
-  v ->
-  echo "Processing s3Buckets of ${k}"
-  deletes3Bucket(v)
- }
+  // Get the s3Buckets and delete it
+  s3Buckets.each {
+    k,
+      v ->
+      echo "Processing s3Buckets of ${k}"
+    deletes3Bucket(v)
+  }
 }
 /**
   Function for Deleting IAM Roles
@@ -148,69 +148,69 @@ def processS3Buckets(s3Buckets) {
   Check if Role exists and delete it
 **/
 def deleteIam(roleName) {
- try {
-  def status = true;
   try {
-   sh "aws iam get-role --role-name ${roleName}"
+    def status = true;
+    try {
+      sh "aws iam get-role --role-name ${roleName}"
+    } catch (ex) {
+      echo "Iam $roleName is empty"
+      status = false
+    }
+    // If Iam exists delete it
+    if (status) {
+      //check and delete Custom Policies attached 
+      deleteInlinePolicies(roleName)
+      //check and delete if policies attached
+      detachIamPolicies(roleName)
+      //Delete the role
+      deleteIamRole(roleName)
+    } else {
+      echo "Iam named ${roleName} not found"
+    }
   } catch (ex) {
-   echo "Iam $roleName is empty"
-   status = false
+    echo "${ex.getMessage()}"
   }
-  // If Iam exists delete it
-  if (status) {
-   //check and delete Custom Policies attached 
-   deleteInlinePolicies(roleName)
-   //check and delete if policies attached
-   detachIamPolicies(roleName)
-   //Delete the role
-   deleteIamRole(roleName)
-  } else {
-   echo "Iam named ${roleName} not found"
-  }
- } catch (ex) {
-  echo "${ex.getMessage()}"
- }
 }
 
 def deleteIamRole(roleName) {
- echo "Deleting role ${roleName}"
- sh "aws iam delete-role --role-name ${roleName}"
- sleep(time: 20, unit: "SECONDS")
+  echo "Deleting role ${roleName}"
+  sh "aws iam delete-role --role-name ${roleName}"
+  sleep(time: 20, unit: "SECONDS")
 }
 
 def deleteInlinePolicies(roleName) {
- //get all inline Policies attached to a Role
- def allInlinePolicies = sh(script: "aws iam list-role-policies --role-name  ${roleName}", returnStdout: true).trim()
- def inlinePolicies = parseJson(allInlinePolicies)
- echo "${inlinePolicies}"
- def policesNames = inlinePolicies['PolicyNames']
- if (policesNames.size() > 0) {
-  for (policyName in policesNames) {
-   sh "aws iam delete-role-policy --role-name ${roleName} --policy-name ${policyName}"
-   sleep(time: 10, unit: "SECONDS")
+  //get all inline Policies attached to a Role
+  def allInlinePolicies = sh(script:"aws iam list-role-policies --role-name  ${roleName}", returnStdout: true).trim()
+  def inlinePolicies = parseJson(allInlinePolicies)
+  echo "${inlinePolicies}"
+  def policesNames = inlinePolicies['PolicyNames']
+  if (policesNames.size() > 0) {
+    for (policyName in policesNames) {
+      sh "aws iam delete-role-policy --role-name ${roleName} --policy-name ${policyName}"
+      sleep(time: 10, unit: "SECONDS")
+    }
+  } else {
+    echo "No Inline Policies attached with role ${roleName}"
   }
- } else {
-  echo "No Inline Policies attached with role ${roleName}"
- }
 }
 
 def detachIamPolicies(roleName) {
- //get all policies attached to a role
- def allPolicies = sh(script: "aws iam list-attached-role-policies  --role-name ${roleName}", returnStdout: true).trim()
- def policies = parseJson(allPolicies)
- def attachedPolicies = policies["AttachedPolicies"]
+  //get all policies attached to a role
+  def allPolicies = sh(script:"aws iam list-attached-role-policies  --role-name ${roleName}", returnStdout: true).trim()
+  def policies = parseJson(allPolicies)
+  def attachedPolicies = policies["AttachedPolicies"]
 
- if (attachedPolicies.size() > 0) {
-  echo "${attachedPolicies.size()}"
-  for (policy in attachedPolicies) {
-   def policyArn = policy["PolicyArn"]
-   echo "Policy Arn is ${policyArn}"
-   sh "aws iam detach-role-policy --role-name ${roleName} --policy-arn ${policyArn} &"
-   sleep(time: 10, unit: "SECONDS")
+  if (attachedPolicies.size() > 0) {
+    echo "${attachedPolicies.size()}"
+    for (policy in attachedPolicies) {
+      def policyArn = policy["PolicyArn"]
+      echo "Policy Arn is ${policyArn}"
+      sh "aws iam detach-role-policy --role-name ${roleName} --policy-arn ${policyArn} &"
+      sleep(time: 10, unit: "SECONDS")
+    }
+  } else {
+    echo "No Custom Policies attached with role ${roleName}"
   }
- } else {
-  echo "No Custom Policies attached with role ${roleName}"
- }
 }
 
 /**
@@ -219,24 +219,24 @@ def detachIamPolicies(roleName) {
   Check if api id exists and delete it
 **/
 def deleteAPIGateway(restApiId, regionAws) {
- try {
-  def status = true;
   try {
-   sh "aws apigateway get-rest-api --rest-api-id ${restApiId} --region ${regionAws}"
+    def status = true;
+    try {
+      sh "aws apigateway get-rest-api --rest-api-id ${restApiId} --region ${regionAws}"
+    } catch (ex) {
+      echo "API ID $restApiId not exists"
+      status = false
+    }
+    // If Iam exists delete it
+    if (status) {
+      sh "aws apigateway delete-rest-api --rest-api-id ${restApiId} --region ${regionAws}"
+      sleep(time: 30, unit: "SECONDS")
+    } else {
+      echo "API id ${restApiId} not exists"
+    }
   } catch (ex) {
-   echo "API ID $restApiId not exists"
-   status = false
+    echo "${ex.getMessage()}"
   }
-  // If Iam exists delete it
-  if (status) {
-   sh "aws apigateway delete-rest-api --rest-api-id ${restApiId} --region ${regionAws}"
-   sleep(time: 30, unit: "SECONDS")
-  } else {
-   echo "API id ${restApiId} not exists"
-  }
- } catch (ex) {
-  echo "${ex.getMessage()}"
- }
 }
 
 /**
@@ -245,46 +245,46 @@ def deleteAPIGateway(restApiId, regionAws) {
   Check if Cloud Front exists and delete it
 **/
 def deletecloudFront(distributionId) {
- try {
-  def status = true;
   try {
-   sh "aws cloudfront get-cloud-front-origin-access-identity --id ${distributionId} "
+    def status = true;
+    try {
+      sh "aws cloudfront get-cloud-front-origin-access-identity --id ${distributionId} "
+    } catch (ex) {
+      echo "Distrubtion ID ${distributionId} not exists"
+      status = false
+    }
+    // If Iam exists delete it
+    if (status) {
+      def ifMatchId = getEtag(distributionId)
+      sh "aws cloudfront delete-cloud-front-origin-access-identity --id  ${distributionId} --if-match ${ifMatchId}"
+      sleep(time: 30, unit: "SECONDS")
+    } else {
+      echo "Cloud front origin Access ${distributionId} not exists"
+    }
   } catch (ex) {
-   echo "Distrubtion ID ${distributionId} not exists"
-   status = false
+    //handleFailureEvent(ex.getMessage())
+    echo "${ex.getMessage()}"
   }
-  // If Iam exists delete it
-  if (status) {
-   def ifMatchId = getEtag(distributionId)
-   sh "aws cloudfront delete-cloud-front-origin-access-identity --id  ${distributionId} --if-match ${ifMatchId}"
-   sleep(time: 30, unit: "SECONDS")
-  } else {
-   echo "Cloud front origin Access ${distributionId} not exists"
-  }
- } catch (ex) {
-  //handleFailureEvent(ex.getMessage())
-  echo "${ex.getMessage()}"
- }
 }
 
 def getEtag(originAccessId) {
- def eTag = ""
- //get all policies attached to a role
- def originAccessIdentity = sh(script: "aws cloudfront get-cloud-front-origin-access-identity --id ${originAccessId} ", returnStdout: true).trim()
- def identity = parseJson(originAccessIdentity)
- eTag = identity["ETag"]
- return eTag
+  def eTag = ""
+  //get all policies attached to a role
+  def originAccessIdentity = sh(script:"aws cloudfront get-cloud-front-origin-access-identity --id ${originAccessId} ", returnStdout: true).trim()
+  def identity = parseJson(originAccessIdentity)
+  eTag = identity["ETag"]
+  return eTag
 }
 
 def isBucketEmpty(bucketName) {
- def status = false;
- try {
+  def status = false;
+  try {
     sh("aws s3api list-objects --bucket ${bucketName}  --output json --query '[length(Contents[])]'")
- } catch (ex) {
-  echo "Bucket $bucketName is empty"
-  status = true
- }
- return status
+  } catch (ex) {
+    echo "Bucket $bucketName is empty"
+    status = true
+  }
+  return status
 }
 /**
   Function for Deleting s3Bucket
@@ -292,28 +292,28 @@ def isBucketEmpty(bucketName) {
   Check if s3 Bucket exists and delete it
 **/
 def deletes3Bucket(bucketName) {
- try {
-  def s3Exists = true;
   try {
-   sh "aws s3api head-bucket --bucket ${bucketName} --output json"
+    def s3Exists = true;
+    try {
+      sh "aws s3api head-bucket --bucket ${bucketName} --output json"
+    } catch (ex) {
+      echo "Bucket does not exist"
+      s3Exists = false
+    }
+    if (s3Exists && (!isBucketEmpty(bucketName))) {
+      sh "aws s3 rm s3://${bucketName}/ --recursive --exclude '/'"
+      echo "Removing items from bucket"
+      sh "aws s3api delete-bucket --bucket ${bucketName}"
+      echo "Deleting the bucket"
+    } else if (s3Exists && (isBucketEmpty(bucketName))) {
+      sh "aws s3api delete-bucket --bucket ${bucketName}"
+      echo "Deleting the bucket"
+    } else {
+      echo "No s3bucket found with Bucket Name  ${bucketName}"
+    }
   } catch (ex) {
-   echo "Bucket does not exist"
-   s3Exists = false
+    echo "${ex.getMessage()}"
   }
-  if (s3Exists && (!isBucketEmpty(bucketName))) {
-   sh "aws s3 rm s3://${bucketName}/ --recursive --exclude '/'"
-   echo "Removing items from bucket"
-   sh "aws s3api delete-bucket --bucket ${bucketName}"
-   echo "Deleting the bucket"
-  } else if (s3Exists && (isBucketEmpty(bucketName))) {
-   sh "aws s3api delete-bucket --bucket ${bucketName}"
-   echo "Deleting the bucket"
-  } else {
-   echo "No s3bucket found with Bucket Name  ${bucketName}"
-  }
- } catch (ex) {
-  echo "${ex.getMessage()}"
- }
 }
 
 /**
@@ -327,33 +327,33 @@ def deletePrimaryAccountPolicy(accountId, accountsArray){
     def status = true;
     withCredentials([
       [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${primaryCredentialId}"]
-      ]) {
-        try {
-          sh "aws iam get-role-policy --role-name ${instance_prefix}_platform_services --policy-name ${instance_prefix}_${accountId}_NonPrimaryAssumePolicy"
-          } catch (ex) {
-            echo "${instance_prefix}_NonPrimaryAssumePolicy not exists"
-            status = false
-          }
-          
-          if (status) {
-            sh "aws iam delete-role-policy --role-name ${instance_prefix}_platform_services --policy-name ${instance_prefix}_${accountId}_NonPrimaryAssumePolicy"
-            sleep(time: 10, unit: "SECONDS")
-          } else {
-            echo "${instance_prefix}_NonPrimaryAssumePolicy not exists"
-          }
+    ]) {
+      try {
+        sh "aws iam get-role-policy --role-name ${instance_prefix}_platform_services --policy-name ${instance_prefix}_${accountId}_NonPrimaryAssumePolicy"
+      } catch (ex) {
+        echo "${instance_prefix}_NonPrimaryAssumePolicy not exists"
+        status = false
       }
-    } catch (ex) {
-      echo "${ex.getMessage()}"
+
+      if (status) {
+        sh "aws iam delete-role-policy --role-name ${instance_prefix}_platform_services --policy-name ${instance_prefix}_${accountId}_NonPrimaryAssumePolicy"
+        sleep(time: 10, unit: "SECONDS")
+      } else {
+        echo "${instance_prefix}_NonPrimaryAssumePolicy not exists"
+      }
     }
+  } catch (ex) {
+    echo "${ex.getMessage()}"
+  }
 }
 
-def getPrimaryCredentialId( allAccounts ) {
+def getPrimaryCredentialId(allAccounts) {
   def credsId = " ";
-  if(allAccounts.size() > 0 ){
-    for (account in allAccounts ) {
-        if(account['PRIMARY']){
-          credsId = account['CREDENTIAL_ID'];
-        }
+  if (allAccounts.size() > 0) {
+    for (account in allAccounts) {
+      if (account['PRIMARY']) {
+        credsId = account['CREDENTIAL_ID'];
+      }
     }
   }
   return credsId;
@@ -363,14 +363,14 @@ def getPrimaryCredentialId( allAccounts ) {
 * Tear down user created service
 **/
 def deleteUserServices(regionAws) {
-    echo "Region is ${regionAws}"
+  echo "Region is ${regionAws}"
   try {
     def output = sh(script:"aws cloudformation list-stacks --region ${regionAws} --stack-status-filter 'CREATE_IN_PROGRESS' 'CREATE_FAILED' 'CREATE_COMPLETE' 'UPDATE_IN_PROGRESS' 'UPDATE_COMPLETE'", returnStdout: true)
     def stacks = parseJson(output)
-    if ( stacks['StackSummaries'].size() > 0) {
-      for( stack in stacks['StackSummaries']  ) {
+    if (stacks['StackSummaries'].size() > 0) {
+      for (stack in stacks['StackSummaries']) {
         def stackName = stack.StackName
-        if( stackName.contains(instance_prefix)){
+        if (stackName.contains(instance_prefix)) {
           deleteStack(stackName, regionAws)
         }
       }
@@ -385,7 +385,7 @@ def deleteUserServices(regionAws) {
 /**
 * Delete cloudformation Stack
 **/
-def deleteStack(stackName, regionAws) { 
+def deleteStack(stackName, regionAws) {
   try {
     def status = true;
     try {
@@ -415,12 +415,12 @@ def deleteStackCloudFrontDists(regionAws) {
   try {
     def output = sh(script:"aws cloudfront list-distributions --region ${regionAws}", returnStdout: true)
     def stacks = parseJson(output)
-    if(stacks.size() > 0 ){
-      for(distribution in stacks['DistributionList']['Items']){
+    if (stacks.size() > 0) {
+      for (distribution in stacks['DistributionList']['Items']) {
         def id = distribution['Origins']['Items'][0]['Id']
-        if(id.startsWith(instance_prefix)){
-            echo "Processing Deletion of CloudFront Distribution Id ${id}"
-            checkAndDeleteCloudFront(distribution['Id'])
+        if (id.startsWith(instance_prefix)) {
+          echo "Processing Deletion of CloudFront Distribution Id ${id}"
+          checkAndDeleteCloudFront(distribution['Id'])
         }
       }
     }
@@ -430,18 +430,18 @@ def deleteStackCloudFrontDists(regionAws) {
 }
 
 def checkAndDeleteCloudFront(id) {
-    try {
-      def config = getDistributionConfig(id)
-      echo "Enabled is : ${config['DistributionConfig']['Enabled']}"
-      if( config['DistributionConfig']['Enabled'] ) {
-        // Disable the CloudFront Distribution
-        echo "Distribution is enabled"
-        disableCloudFront(id, config)
-      } 
-      deleteCloudFront(id)
-    } catch (ex) {
-        echo "{ex.message}"
+  try {
+    def config = getDistributionConfig(id)
+    echo "Enabled is : ${config['DistributionConfig']['Enabled']}"
+    if (config['DistributionConfig']['Enabled']) {
+      // Disable the CloudFront Distribution
+      echo "Distribution is enabled"
+      disableCloudFront(id, config)
     }
+    deleteCloudFront(id)
+  } catch (ex) {
+    echo "{ex.message}"
+  }
 }
 
 /**
@@ -458,7 +458,7 @@ def disableCloudFront(id, config){
     echo "Started disabling CloudFront Distribution Id ${id}"
     def disableDistribution = sh(script:"aws cloudfront update-distribution --id ${id} --distribution-config file://${filename} --if-match ${etag}", returnStdout: true)
     sh "rm -rf ${filename}"
-  } catch( ex ) {
+  } catch (ex) {
     echo "${ex.message}"
   }
 }
@@ -468,22 +468,22 @@ def disableCloudFront(id, config){
 def deleteCloudFront(id) {
   try {
     def readyToDelete = false
-    while(readyToDelete == false) {
+    while (readyToDelete == false) {
       def status = getCloudFrontStatus(id)
-      if (status['Distribution']['Status']=="InProgress") {
+      if (status['Distribution']['Status'] == "InProgress") {
         readyToDelete = false;
         echo "Sleeping for 30 secs "
-        sleep(time:30,unit:"SECONDS")
+        sleep(time: 30, unit: "SECONDS")
       } else {
         readyToDelete = true
       }
     }
-    if(readyToDelete == true){
+    if (readyToDelete == true) {
       def config = getDistributionConfig(id)
       def etag = config['ETag']
       def deleteDistribution = sh(script:"aws cloudfront delete-distribution --id ${id} --if-match ${etag}", returnStdout: true)
     }
-  } catch( ex ) {
+  } catch (ex) {
     echo "{ex.message}"
   }
 }
@@ -496,10 +496,10 @@ def getDistributionConfig(id) {
   try {
     def distributionConfig = sh(script:"aws cloudfront get-distribution-config --id ${id}", returnStdout: true)
     config = parseJson(distributionConfig)
-    } catch (ex) {
-        echo "${ex.message}"
-    }
-    return config  
+  } catch (ex) {
+    echo "${ex.message}"
+  }
+  return config
 }
 
 /**
@@ -517,12 +517,12 @@ def getCloudFrontStatus(id) {
 }
 
 def getBuildModuleUrl() {
- if (scm_type && scm_type != "bitbucket") {
-  // right now only bitbucket has this additional tag scm in its git clone path
-  return "http://${repo_base}/${repo_core}/jazz-build-module.git"
- } else {
-  return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
- }
+  if (scm_type && scm_type != "bitbucket") {
+    // right now only bitbucket has this additional tag scm in its git clone path
+    return "http://${repo_base}/${repo_core}/jazz-build-module.git"
+  } else {
+    return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+  }
 }
 
 /*
@@ -531,24 +531,24 @@ def getBuildModuleUrl() {
 
 def loadBuildModules(buildModuleUrl) {
 
- dir('build_modules') {
-  checkout([$class: 'GitSCM', branches: [
-   [name: '*/master']
-  ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
-   [credentialsId: repo_credential_id, url: buildModuleUrl]
-  ]])
+  dir('build_modules') {
+    checkout([$class: 'GitSCM', branches: [
+      [name: '*/master']
+    ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
+        [credentialsId: repo_credential_id, url: buildModuleUrl]
+      ]])
 
-  configModule = load "config-loader.groovy"
-  configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
-  echo "config loader loaded successfully."
+    configModule = load "config-loader.groovy"
+    configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
+    echo "config loader loaded successfully."
 
- }
+  }
 }
 
 @NonCPS
 def parseJson(jsonString) {
- def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
- def m = [: ]
- m.putAll(lazyMap)
- return m
+  def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+  def m = [: ]
+  m.putAll(lazyMap)
+  return m
 }
