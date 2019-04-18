@@ -1169,7 +1169,11 @@
                 "endpoint": {
                     "type": "string",
                     "description": "Endpoint where the service is accessible"
-                }
+                },
+                "deployment_descriptor": {
+                  "type": "string",
+                  "description":"Deployment descriptor using serverless.yml format (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)"
+               }
             }
         },
         "PutSuccessResponse": {
@@ -1327,7 +1331,11 @@
                 "endpoint": {
                     "type": "string",
                     "description": "Endpoint where the service is accessible"
-                }
+                },
+                "deployment_descriptor": {
+                  "type": "string",
+                  "description":"Deployment descriptor using serverless.yml format (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)"
+               }
             }
         },
         "UpdateEnvironmentObj": {
@@ -1353,7 +1361,11 @@
                 "endpoint": {
                     "type": "string",
                     "description": "Endpoint where the service is accessible"
-                }
+                },
+                "deployment_descriptor": {
+                  "type": "string",
+                  "description":"Deployment descriptor using serverless.yml format (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)"
+               }
             }
         }
     }
