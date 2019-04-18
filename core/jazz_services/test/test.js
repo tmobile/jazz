@@ -344,36 +344,6 @@ describe('platform_services', function() {
   });
 
   /*
-  * Given a userID that IS-NOT not listed among admin_users, dynamoDB only scans for specific user's services
-  * @param {object} event->event.method="GET", event.path.id is undefined
-  * @params {object, function} default aws context, and callback function as defined in beforeEach
-  */
-  it("should return only the user's relevant service data if user is not an admin", function(){
-    event.method = "GET";
-    event.path.id = undefined;
-    event.query.created_by = undefined;
-
-    //user that is not listed among admin_users
-    var userId = "Mete0ra";
-
-    event.principalId = userId;
-    var dataType = "S";
-    var filterString = "SERVICE_CREATED_BY" + " = :" + "SERVICE_CREATED_BY";
-    var scanParam = ":SERVICE_CREATED_BY";
-    //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
-    AWS.mock("DynamoDB", "scan", spy);
-    //trigger spy by calling index.handler()
-    var callFunction = index.handler(event, context, callback);
-    //assigning the item filter values passed to DynamoDB.scan as values to check against
-    var filterExp = spy.args[0][0].FilterExpression;
-    var expAttrVals = spy.args[0][0].ExpressionAttributeValues;
-    var allCases = filterExp.includes(filterString) &&
-                    expAttrVals[scanParam][dataType] == userId;
-    AWS.restore("DynamoDB");
-    assert.isTrue(allCases);
-  });
-
-  /*
   * Given an event.method = get and service and domain values to query, service and domain info should be added to the filter
   * @param {object} event->event.method="GET", event.path.id is undefined, query values of service & domain are defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
