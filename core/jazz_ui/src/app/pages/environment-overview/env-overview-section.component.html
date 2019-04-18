@@ -28,7 +28,7 @@
 		</div>
 	</div>
 </div>
-<div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined' >
+<div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined && !isLoading && !envResponseError' >
 	<ul class=" col-md-12 col-sm-12">
 		<li class='det-wrp'>
 			<!-- *ngIf='service.endpoints.dev != undefined' -->

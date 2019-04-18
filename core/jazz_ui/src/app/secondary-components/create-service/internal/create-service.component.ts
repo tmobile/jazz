@@ -205,7 +205,7 @@ export class CreateServiceComponent implements OnInit {
       body: body,
       closeHtml: '<button>Dismiss</button>',
       showCloseButton: true,
-      timeout: 0,
+      timeout: 10000,
       title: title,
       type: 'wait',
     };
