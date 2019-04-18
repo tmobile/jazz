@@ -777,7 +777,7 @@ def writeServerlessFile(config, env) {
   sh "sed -i -- 's|\${file(deployment-env.yml):eventScheduleRate}|${config['eventScheduleRate']}|g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
 
-  if ((config['service'] in configLoader.JENKINS.LAMBDA_SERVICES) && config['domain'] == 'jazz' && configLoader.JENKINS.DOCKERIZED == "true") {
+  if ((config['service'] in configLoader.JAZZ.VPC_SERVICES.FUNCTIONS) && config['domain'] == 'jazz' && configLoader.JENKINS.DOCKERIZED == true) {
     addVpcDetails(config)
   }
 
