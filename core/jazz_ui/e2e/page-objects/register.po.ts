@@ -19,7 +19,6 @@ export class Register {
   navigateTo() {
     return browser.get('');
   }
-
   getLoginButton(){
    return element(by.css('div.login'));
   }

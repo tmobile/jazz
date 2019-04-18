@@ -77,6 +77,7 @@ describe('platform_services', function() {
         "email" : "gonnaGetALittle@Wild.com",
 		    "metadata":{"service":"test-service2","securityGroupIds":"sg-cdb65db9"}
       },
+      "services": "[{\"serviceId\": \"k!ngd0m_0f_Mewni\",\"policies\": [{\"category\": \"manage\",\"permission\": \"admin\"},{\"category\": \"code\",\"permission\": \"write\"},{\"category\": \"deploy\",\"permission\": \"write\"}]}]",
       "principalId": "g10$saryck"
     };
     context = awsContext();
@@ -162,6 +163,14 @@ describe('platform_services', function() {
     event.method = "GET";
     var attemptBool = dynamoCheck("get", spy);
     assert.isTrue(attemptBool);
+  });
+
+  it("should indicate unauthorized error while accessing data from dynamoDB by id if 'GET' method and id are defined, but user does not have access permission", function(){
+    event.method = "GET";
+    event.services = "[]"
+    index.handler(event, context, (err, res) => {
+      expect(err).to.include('{"errorType":"Unauthorized","message":"You aren\'t authorized to access this service."}')
+    });
   });
 
   /*
@@ -266,8 +275,42 @@ describe('platform_services', function() {
   it("should attempt to get all/filtered items from dynamoDB if 'GET' method and no id are defined", function(){
     event.method = "GET";
     event.path.id = undefined;
-    var attemptBool = dynamoCheck("scan", spy);
-    assert.isTrue(attemptBool);
+    let dataObj = {
+      Items: [
+        {
+          SERVICE_ID: {S: "k!ngd0m_0f_Mewni"},
+          TIMESTAMP: {S: "qwerty"},
+          SERVICE_NAME: {S: event.query.service},
+          SERVICE_NAMESPACE: {S: event.query.domain}
+        }
+      ]
+    }
+    AWS.mock("DynamoDB", "scan", (params, cb) => {
+      return cb(null, dataObj);
+    });
+    index.handler(event, context, (err, res) => {
+      expect(res).to.include.all.keys("data", "input");
+      expect(res.data).to.include.all.keys("count", "services");
+      let serviceList = res.data.services;
+      for (i in serviceList) {
+        expect(serviceList[i].service).to.eq(dataObj.Items[i].SERVICE_NAME.S);
+        expect(serviceList[i].namespace).to.eq(dataObj.Items[i].SERVICE_NAMESPACE.S);
+        expect(serviceList[i].id).to.eq(dataObj.Items[i].SERVICE_ID.S);
+      };
+      AWS.restore("DynamoDB");
+    });
+  });
+
+  it("should expect empty list to get from dynamoDB for 'GET' method if id is defined and user don't have access to any services", function(){
+    event.method = "GET";
+    event.path.id = undefined;
+    event.services = "[]"
+    index.handler(event, context, (err, res) => {
+      expect(res).to.include.all.keys("data", "input");
+      expect(res.data).to.include.all.keys("count", "services");
+      expect(res.data.count).to.eq(0);
+      expect(res.data.services).to.be.empty;
+    });
   });
 
   /*
@@ -683,7 +726,7 @@ describe('platform_services', function() {
     assert.isTrue(logCheck);
 });
 
-  /* 
+  /*
   * Given a successful attempt at a dynamo service update, handler() should indicate metadata updated successfully
   * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
@@ -722,7 +765,7 @@ describe('platform_services', function() {
   assert.isTrue(logCheck);
   });
 
-  /* 
+  /*
   * Given a successful attempt at a dynamo service update, handler() should indicate array updated successfully
   * @param {object} event -> event.method is defined to be "PUT", event.path.id is defined
   * @params {object, function} default aws context, and callback function as defined in beforeEach
@@ -1048,14 +1091,31 @@ describe('platform_services', function() {
   * @params {object, function} default aws context, and callback function as defined in beforeEach
   * @returns {string} callback response containing error message with details
   */
-  it("should indicate that input data is missing given a POST with an event.body missing required fields", ()=>{
+  it("should indicate that input data is invalid given a POST with an event.body with wrong required fields", ()=>{
     //query has all required fields, cloning these properties will get us past first check
+    event.body.deployment_targets = {"invalid": "gcp_apigee"};
     Object.assign(event.body, event.query);
     event.body.newProperty = "Ludo!";
     event.method = "POST";
     event.path.id = undefined;
     errType = "inputError";
-    errMessage = "Following fields are invalid :  ";
+    errMessage = "Following fields are invalid : ";
+    //wrap the logger responses
+    stub = sinon.stub(logger, "error", spy);
+    //trigger stub/spy by calling handler
+    var callfunction = index.handler(event, context, callback);
+    var cbMessage = JSON.stringify(spy.args[0][0]);
+    var cbCheck = cbMessage.includes(errType) && cbMessage.includes(errMessage);
+    stub.restore();
+    assert.isTrue(cbCheck);
+  });
+
+  it("should indicate that input data is missing given a POST with an event.body missing required fields", ()=>{
+    //do NOT assign required fields from event.query to event.body
+    event.method = "POST";
+    event.path.id = undefined;
+    errType = "inputError";
+    errMessage = "Following field(s) are required ";
     //wrap the logger responses
     stub = sinon.stub(logger, "error", spy);
     //trigger stub/spy by calling handler
@@ -1074,12 +1134,21 @@ describe('platform_services', function() {
   */
   it("should attempt dynamoDB scan for matching services given a POST with valid body data", ()=>{
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = {"api": "apigee"}
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
     event.path.id = undefined;
     var attemptBool = dynamoCheck("scan",spy);
     assert.isTrue(attemptBool);
+  });
+
+  it("should attempt dynamoDB scan and fail given a POST with valid missing required body data", ()=>{
+    //do NOT assign required fields from event.query to event.body
+    event.method = "POST";
+    event.path.id = undefined;
+    var attemptBool = dynamoCheck("scan",spy);
+    assert.isFalse(attemptBool);
   });
 
   /*
@@ -1090,6 +1159,7 @@ describe('platform_services', function() {
   */
   it("should indicate an InternalServerError occured if DynamoDB.scan fails during POST", ()=>{
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = { "api": "gcp_apigee" };
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
@@ -1126,6 +1196,7 @@ describe('platform_services', function() {
   */
   it("should indicate service already exists if return obj from dynamoDB scan is non-empty", ()=>{
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = { "api": "gcp_apigee" };
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
@@ -1164,6 +1235,7 @@ describe('platform_services', function() {
   */
   it("should attempt to add service in dynamo for successful POST", function(){
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = { "api": "gcp_apigee" };
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";
@@ -1185,6 +1257,7 @@ describe('platform_services', function() {
   */
   it("should indicate an InternalServerError occured if DynamoDB.DocumentClient.put fails", () =>{
     //query has all required fields, cloning required fields to body
+    event.body.deployment_targets = { "api": "gcp_apigee" };
     Object.assign(event.body, event.query);
     event.body.region = ["east", "west"];
     event.method = "POST";

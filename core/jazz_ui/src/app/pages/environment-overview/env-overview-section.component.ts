@@ -64,14 +64,14 @@ export class EnvOverviewSectionComponent implements OnInit {
   desc_temp:any;
   toastmessage:any;
   copyLink:string="Copy Link";
- 
+  errMessage: string = "Something went wrong while fetching your data";
   message:string="lalalala"
   
   
   private subscription:any;
 
   @Input() service: any = {};
-  
+  @Input() isAdminAccess:boolean = false;
   temp_description:string;
   put_payload:any = {};
   services = {
@@ -139,7 +139,7 @@ popup(state){
 
     if(this.friendlyChanged){
       this.put_payload.friendly_name= this.tempFriendlyName;
-      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
+      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload, this.service.id)
             .subscribe(
                 (Response)=>{
                   let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
@@ -157,7 +157,7 @@ popup(state){
                   let errorMessage='';
                   if(errMsgBody!=undefined)
                     errorMessage = errMsgBody.message;
-                  // let errorMessage = this.toastmessage.errorMessage(Error,"updateEnv");
+                  this.errMessage = this.toastmessage.errorMessage(error, "updateEnv");
                   this.toast_pop('error', 'Oops!', errorMessage)
                   this.callServiceEnv();
 
@@ -226,8 +226,7 @@ popup(state){
       this.subscription.unsubscribe();
     }
     this.onload.emit(this.environmnt.endpoint);
-
-    this.subscription = this.http.get('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name).subscribe(
+    this.subscription = this.http.get('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
       // this.http.get('/jazz/environments/prd?domain=jazz-testing&service=test-create').subscribe(
         (response) => {
 
@@ -276,7 +275,8 @@ popup(state){
           this.errorAPI = env_internal.baseurl+"/jazz/environment/"+this.env;
           this.errorRequest = payload;
           this.errorUser = this.authenticationservice.getUserId();
-          this.errorResponse = JSON.parse(error._body);  
+          this.errorResponse = JSON.parse(error._body);
+          this.errMessage = this.toastmessage.errorMessage(error, "environment");
       })
     };
   

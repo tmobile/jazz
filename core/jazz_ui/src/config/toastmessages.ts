@@ -1,7 +1,7 @@
 export const toastMessage = {
     "error0":"Something went wrong while fetching data",
     "error401":"Invalid credentials",
-    "error403":"Unable to recognize user. Please login again",
+    "error403": "You are not authorized to access the resource, please contact service owner!",
     "errorInternet":"No internet connection",
     "errorDefault":"Unexpected error",
     "dataNull":"Data not available",
@@ -52,6 +52,8 @@ export const toastMessage = {
     },
     "createService":{
         "success":"Your service will be available shortly. You can track the progress on service page ",
+        "successPending":"Your service will be ready momentarily and will appear on the Services page soon.",
+        "successReady":"Your new service has been created and can now be viewed on the Services page.",
         "error400":"Looks like we couldn't create your service. Please try again.",
         "error401":"Token expired",
         "error404":"Looks like we couldn't create your service. Please try again.",
@@ -91,7 +93,7 @@ export const toastMessage = {
         "error0":"Your login failed, seems like we can't reach our servers."
     },
     "register":{
-        "success":"A verification email is sent to ",
+        "success":"A verification email has been sent to ",
         "error400":"Your registration failed. Seems like something went wrong.",
         "error401":"Token expired",
         "error404":"Your registration failed. Seems like something went wrong.",
@@ -162,7 +164,49 @@ export const toastMessage = {
         "error400":"Something went wrong while updating the service details. Please try again!",
         "error404":"Something went wrong while updating the service details. Please try again!",
         "error500":"Something went wrong while updating the service details. Please try again!"
-        
+    },
+    "updateServicePolicies":{
+      "success":"updated successfully.",
+      "error0": "Looks like we are having trouble reaching our servers. Please try later!",
+      "error400":"Something went wrong while updating the service details. Please try again!",
+      "error404":"Something went wrong while updating the service details. Please try again!",
+      "error500":"Something went wrong while updating the service details. Please try again!"
+    },
+    "listServicePolicies":{
+        "dataNull":"Something went wrong while we were fetching your service policy details!",
+        "error400":"Something went wrong while we were fetching your service policy details!",
+        "error401":"Token expired",
+        "error404":"Something went wrong while we were fetching your service policy details!",
+        "error500":"Something went wrong while we were fetching your service policy details!"
+    },
+    "aclConfirmation": {
+        "finalConfirmationMsg": "Are you sure you want to make this edit?",
+        "finalConfirmationHeader": "CONFIRMATION",
+        "acknowledgementHeader": "ACKNOWLEDGE",
+        "errorIndicationHeader": "Unable to Remove User",
+        "errorIndicationMsg": "There must be at least one user delegated under each category. To add additional users, select \"Add User\" from the options below.",
+        "removeAdminRule": "When saved, user will lose all kinds of access to this service. Do you want to proceed?",
+        "addAdminRule": "When saved, user will be an administrator to this service. Do you want to proceed?"
+    },
+    "metricsResponse": {
+        "dataNull":"Something went wrong while we were fetching service metrics data!",
+        "error400":"Something went wrong while we were fetching service metrics data!",
+        "error401":"Token expired",
+        "error404":"Something went wrong while we were fetching service metrics data!",
+        "error500":"Something went wrong while we were fetching service metrics data!"
+    },
+    "getDeploymentsResponse": {
+        "dataNull":"Something went wrong while we were fetching service metrics data!",
+        "error400":"Something went wrong while we were fetching service metrics data!",
+        "error401":"Token expired",
+        "error404":"Something went wrong while we were fetching service metrics data!",
+        "error500":"Something went wrong while we were fetching service metrics data!"
+    },
+    "getAssetResponse": {
+        "dataNull":"Something went wrong while we were fetching service metrics data!",
+        "error400":"Something went wrong while we were fetching service metrics data!",
+        "error401":"Token expired",
+        "error404":"Something went wrong while we were fetching service metrics data!",
+        "error500":"Something went wrong while we were fetching service metrics data!"
     }
-
 };

@@ -1,5 +1,5 @@
 import { Component, OnInit, ComponentFactoryResolver, ReflectiveInjector, ElementRef ,EventEmitter, Output, Inject, Input,ViewChild} from '@angular/core';
-import { RequestService } from "../../core/services";
+import { RequestService, MessageService } from "../../core/services";
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpModule } from '@angular/http';
 import { DataCacheService , AuthenticationService } from '../../core/services/index';
@@ -16,7 +16,7 @@ import { environment as env_internal } from './../../../environments/environment
 @Component({
   selector: 'env-assets-section',
 	templateUrl: './env-assets-section.component.html',
-	providers: [RequestService],
+	providers: [RequestService, MessageService],
   styleUrls: ['./env-assets-section.component.scss']
 })
 export class EnvAssetsSectionComponent implements OnInit {
@@ -111,12 +111,13 @@ export class EnvAssetsSectionComponent implements OnInit {
 	islink:boolean = false;
 	count: any = [];
 	relativeUrl:string = '/jazz/assets';
+	errMessage: string = "Something went wrong while fetching your data"
 
-
-  @Input() service: any = {};
+	@Input() service: any = {};
 
   constructor(
 		private request:RequestService,
+		private messageservice: MessageService,
 		private route: ActivatedRoute,
 		private router: Router,
 		private cache: DataCacheService,
@@ -125,6 +126,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 
   ) {
 		this.http = request;
+		this.toastmessage = messageservice;
 		this.componentFactoryResolver = componentFactoryResolver;
 		var comp = this;
 		setTimeout(function(){
@@ -192,8 +194,7 @@ export class EnvAssetsSectionComponent implements OnInit {
       limit: this.limitValue,
       offset: this.offsetval
     };
-
-    this.subscription = this.http.get(this.relativeUrl, payload).subscribe(
+    this.subscription = this.http.get(this.relativeUrl, payload, this.service.id).subscribe(
       (response) => {
 
         if((response.data == undefined) || (response.data.length == 0)){
@@ -289,7 +290,7 @@ export class EnvAssetsSectionComponent implements OnInit {
         this.errorRequest = payload;
         this.errorUser = this.authenticationservice.getUserId();
         this.errorResponse = JSON.parse(error._body);
-
+        this.errMessage = this.toastmessage.errorMessage(error, "getAssetResponse");
 
       })
 		};
@@ -477,7 +478,7 @@ public goToAbout(hash){
       case 'endpoint_url':
         return 'URL';
       default:
-        return 'ARN';
+        return 'Provider ID';
     }
   }
 

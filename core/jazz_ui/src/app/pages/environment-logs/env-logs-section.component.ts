@@ -194,15 +194,19 @@ export class EnvLogsSectionComponent implements OnInit {
 	}
 
 	onRowClicked(row, index) {
-		for (var i = 0; i < this.logs.length; i++) {
-			var rowData = this.logs[i]
-
-			if (i == index) {
-				rowData['expanded'] = !rowData['expanded'];
-			} else {
-				rowData['expanded'] = false;
+		var rowData = this.logs[index];
+		if (rowData) {
+			rowData['expanded'] = !rowData['expanded'];
+			this.expandText = 'Collapse all';
+			for (var i = 0; i < this.logs.length; i++) {
+				var rowData = this.logs[i];
+				if (rowData['expanded'] == false) {
+					this.expandText = 'Expand all';
+					break;
+				}
 			}
 		}
+
 	}
 
 	onFilter(column) {
@@ -407,7 +411,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		if (this.subscription) {
 			this.subscription.unsubscribe();
 		}
-		this.subscription = this.http.post('/jazz/logs', this.payload).subscribe(
+		this.subscription = this.http.post('/jazz/logs', this.payload, this.service.id).subscribe(
 			response => {
 				this.logs = response.data.logs  || response.data.data.logs;
 				if(this.logs != undefined)
@@ -437,7 +441,7 @@ export class EnvLogsSectionComponent implements OnInit {
 				try {
 					this.parsedErrBody = JSON.parse(this.errBody);
 					if (this.parsedErrBody.message != undefined && this.parsedErrBody.message != '') {
-						this.errMessage = this.parsedErrBody.message;
+						this.errMessage = this.errMessage || this.parsedErrBody.message;
 					}
 				} catch (e) {
 				}

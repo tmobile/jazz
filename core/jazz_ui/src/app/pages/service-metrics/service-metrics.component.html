@@ -1,4 +1,4 @@
-<div class="jz-section">
+<div class="jz-section metrics-section">
   <div class="jz-section-content">
     <div class="jz-row" style="justify-content: flex-end">
       <button class="jz-btn jz-btn-icon"
@@ -7,7 +7,7 @@
               (click)="filters.toggleModal()">
         <span class="icon-icon-filter-unselected"></span>
       </button>
-      <div class="jz-absolute" style="top: 0; right: 0; z-index: 1;">
+      <div class="jz-absolute filter-modal-position">
         <filter-modal #filters [fields]="formFields" (formChange)="applyFilter($event)"></filter-modal>
       </div>
     </div>
@@ -18,7 +18,7 @@
         </div>
       </div>
       <div *ngSwitchCase="'error'" class="jz-height-full">
-        <report-issue [response]="errorData.response" [request]="errorData.request" (onRefresh)="refresh()"></report-issue>
+        <report-issue [displayMassage]="errMessage" [response]="errorData.response" [request]="errorData.request" (onRefresh)="refresh()"></report-issue>
       </div>
       <div *ngSwitchCase="'empty'" class="jz-height-full jz-flex-centered">
         <div class="jz-text-center">

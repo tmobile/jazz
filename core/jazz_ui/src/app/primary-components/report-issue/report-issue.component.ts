@@ -10,6 +10,7 @@ import {Http} from '@angular/http';
 export class ReportIssueComponent implements OnInit {
   @Input() request;
   @Input() response;
+  @Input() displayMassage = "Something went wrong while fetching your data";
 
   @Output() onRefresh = new EventEmitter();
 
@@ -27,6 +28,9 @@ export class ReportIssueComponent implements OnInit {
   }
 
   ngOnInit() {
+    if (this.response) {
+      this.displayMassage =  this.displayMassage || JSON.parse(this.response._body).message;
+    }
     const userId = this.authenticationService.getUserId();
     this.reportIssueForm = {
       userFeedback: '',

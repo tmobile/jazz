@@ -15,6 +15,7 @@ import { RequestService, DataCacheService, MessageService, AuthenticationService
 import { ServiceMetricsComponent } from '../service-metrics/service-metrics.component';
 import { environment } from './../../../environments/environment';
 
+
 @Component({
   selector: 'service-detail',
   templateUrl: './service-detail.component.html',
@@ -70,6 +71,9 @@ export class ServiceDetailComponent implements OnInit {
   test: any = "delete testing";
   disabled_tab: boolean = false;
   refreshTabClicked: boolean = false;
+  isAdminAccess: boolean = false;
+  currentUser: any = {}
+  isError403: boolean = false;
 
 
   private sub: any;
@@ -77,7 +81,7 @@ export class ServiceDetailComponent implements OnInit {
   private toastmessage: any;
 
   statusData = ['All', 'Active', 'Pending', 'Stopped'];
-  tabData = ['overview', 'access control', 'metrics', 'logs', 'cost'];
+  tabData = ['overview', 'access control', 'metrics', 'cost', 'logs'];
 
   breadcrumbs = []
 
@@ -113,12 +117,14 @@ export class ServiceDetailComponent implements OnInit {
         repository: service.repository,
         tags: service.tags,
         endpoints: service.endpoints,
+        deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type],
         is_public_endpoint: service.is_public_endpoint,
         created_by: service.created_by
       }
       if (service.metadata) {
         returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;
         returnObject["eventScheduleRate"] = service.metadata.eventScheduleRate;
+        returnObject["eventScheduleEnable"] = service.metadata.eventScheduleEnable;
         if(service.metadata.event_source){
           returnObject["event_source"] = service.metadata.event_source;
         }
@@ -168,8 +174,9 @@ export class ServiceDetailComponent implements OnInit {
           'link': ''
         }]
       this.isLoadingService = false;
-      if (service.status == 'deletion_completed' || service.status == 'deletion_started' || service.status == 'creation_started' || service.status == 'creation_failed')
+      if (service.status == 'deletion_completed' || service.status == 'deletion_started' || service.status == 'creation_started' || service.status == 'creation_failed' || (!service.repository && service.domain == 'jazz'))
         this.canDelete = false;
+
     } else {
       this.isLoadingService = false;
       let errorMessage = this.toastmessage.successMessage(service, "serviceDetail");
@@ -194,16 +201,26 @@ export class ServiceDetailComponent implements OnInit {
 
   fetchService(id) {
     this.isLoadingService = true;
-    this.http.get('/jazz/services/' + id).subscribe(response => {
+    this.http.get('/jazz/services/' + id, null, id).subscribe(response => {
       let service = response.data;
       this.cache.set(id, service);
       this.onDataFetched(service);
       this.isGraphLoading = false;
       this.selectedTabComponent.refresh_env();
       this.setTabs();
+      if(service && service.policies && service.policies.length) {
+        service.policies.forEach(policy => {
+          if (policy.category === "manage" && policy.permission === "admin") {
+            this.setAdminAccess(true);
+          }
+        });
+      }
     }, (err) => {
-      if (err.status == "404") {
+      console.log("error here: ", err);
+      if (err.status === 404) {
         this.router.navigateByUrl('404');
+      } else if (err.status === 403) {
+        this.isError403 = true;
       }
       this.isLoadingService = false;
       let errorMessage = 'OOPS! something went wrong while fetching data';
@@ -235,7 +252,9 @@ export class ServiceDetailComponent implements OnInit {
   };
 
   env(event) {
-    if ((event != 'creation failed') && (event != 'creation started') && (event != 'deletion started') && (event != 'deletion completed')) {
+    if (!this.service.repository && this.service.domain == 'jazz') {
+      this.canDelete = false;
+    } else if ((event != 'creation failed') && (event != 'creation started') && (event != 'deletion started') && (event != 'deletion completed')) {
       this.canDelete = true;
     } else {
       this.canDelete = false;
@@ -309,7 +328,7 @@ export class ServiceDetailComponent implements OnInit {
       "id": this.service.id
     };
     this.deleteServiceStatus.emit(this.deleteServiceVal);
-    this.subscription = this.http.post('/jazz/delete-serverless-service', payload)
+    this.subscription = this.http.post('/jazz/delete-serverless-service', payload, this.service.id)
       .subscribe(
         (Response) => {
           var update = {
@@ -371,7 +390,7 @@ export class ServiceDetailComponent implements OnInit {
 
 
   onServiceNameChange() {
-    
+
     if (this.ServiceName.toLowerCase() == this.service['name']) {
       this.disblebtn = false;
     }
@@ -399,8 +418,12 @@ export class ServiceDetailComponent implements OnInit {
     }, 3000);
   }
 
-  ngOnInit() {
+  setAdminAccess(access) {
+    this.isAdminAccess = access;
+  }
 
+  ngOnInit() {
+    this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
     this.breadcrumbs = [
       {
         'name': this.service['name'],
@@ -414,6 +437,5 @@ export class ServiceDetailComponent implements OnInit {
   }
 
   ngOnChanges(x: any) {
-
   }
 }

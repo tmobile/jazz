@@ -54,14 +54,12 @@ export class ServicesListComponent implements OnInit {
     this.http = request;
   }
 
-  popToast(type, title, message) {
-      this.toasterService.pop(type, title, message);
-  }
-    private intervalSubscription: Subscription;
+private intervalSubscription: Subscription;
   private http: any;
   updateList: boolean=false;
   serviceListEmpty: boolean=false;
   updateinterval = 30000;
+  serviceCount: number = 0;
 
   deletedServiceId: string;
   selectedTab = 0;
@@ -199,6 +197,7 @@ export class ServicesListComponent implements OnInit {
             } else{
               this.serviceListEmpty = false;
               var pageCount = response.data.count;
+              this.serviceCount = pageCount;
               if(pageCount){
                 this.totalPagesTable = Math.ceil(pageCount/this.limitValue);
               }
@@ -207,15 +206,13 @@ export class ServicesListComponent implements OnInit {
               }
               this.serviceList = this.processServiceList(services);
               this.backupdata = this.serviceList;
+              setTimeout(() => this.toasterService.clear(), 10000);
               this.loadingState = 'default';
             }
 
           } else{
             this.loadingState = 'error';
-            // let errorMessage = this.toastMessage.successMessage(response,"serviceList");
-            // this.popToast('error', 'Oops!', errorMessage);
           }
-          // console.log("loadingState ",this.loadingState);
         },
         err => {
             this.loadingState = 'error';
@@ -230,12 +227,6 @@ export class ServicesListComponent implements OnInit {
               } catch(e) {
                 console.log('JSON Parse Error', e);
               }
-
-
-
-            // let errorMessage = this.toastMessage.errorMessage(err,"serviceList");
-            // this.popToast('error', 'Oops!', errorMessage);
-            // Log errors if any
         }
     );
   }
@@ -293,7 +284,7 @@ export class ServicesListComponent implements OnInit {
     return array;
   }
   addQueryParam(queryParamKey, queryParamValue, makeCall){
-   
+
 
     if( this.relativeUrl.indexOf('?') == -1 ){
         this.relativeUrl += '?';
@@ -320,12 +311,12 @@ export class ServicesListComponent implements OnInit {
 
   onFilter(event) {
 
-    
-    
+
+
     this.serviceList = this.backupdata;
-    
+
     for (var i = 0; i < this.tableHeader2.length; i++) {
-   
+
     var col = this.tableHeader2[i];
     if (col.filter['type'] === 'dropdown' && col.filter['_value'] != undefined) {
     var colFilterVal = col.filter['_value'].toLowerCase().replace(' ', '_');
@@ -344,28 +335,28 @@ export class ServicesListComponent implements OnInit {
     this.FilterTags.notifyServices(this.tableHeader2[i].key, colFilterVal);
     }
     }
-    
+
     if (col.filter != undefined && colFilterVal != undefined) {
     // adding ?
     if (this.relativeUrl.indexOf('?') == -1) {
     this.relativeUrl += '?';
     }
-    
+
     if (col.filter['type'] == 'dateRange') {
     // code...
-    
-    
+
+
     } else if (col.filter['type'] == 'dropdown' || (event.filter['type'] === 'input' && (event.keyCode === 13))) {
 
-    
+
     var queryParamKey = 'offset=';
     var offsetValue = 0;
     var queryParamValue = offsetValue;
     $(".pagination.justify-content-center li:nth-child(2)")[0].click();
     // this.pageSelected = 1;
-    
+
     this.addQueryParam(queryParamKey, queryParamValue, false);
-    
+
     if (event.key == col.key) {
     queryParamKey = col.key + '=';
     if (queryParamKey == "name=") {
@@ -374,15 +365,15 @@ export class ServicesListComponent implements OnInit {
     queryParamKey = "timestamp=";
     }
     queryParamValue = colFilterVal;
-   
+
     this.addQueryParam(queryParamKey, queryParamValue, true);
     }
-    
+
     }
     }
     }
     }
-    
+
     CancelFilters(event){
 switch(event){
 case 'name':{
@@ -396,7 +387,7 @@ label:'Name'
 // var ip=document.getElementById('inputfilter').setAttribute('ng-reflect-model','');
 this.tableTemplate.resetInput('name',a);
 
-this.onFilterCancel(a); 
+this.onFilterCancel(a);
 break;
 }
 case "domain":{
@@ -432,7 +423,7 @@ searchString:""
 }
 this.onServiceSearch(c);
 this.searchBox.clearSearchbox('');
-break; 
+break;
 }
 case "all":{
 var OBJ={
@@ -443,9 +434,9 @@ keyCode:13,
 label:'Name'
 };
 this.tableTemplate.resetInput('name',OBJ);
-this.onFilterCancel(OBJ); 
+this.onFilterCancel(OBJ);
 OBJ.key='domain';
-OBJ.label="Namespace"; 
+OBJ.label="Namespace";
 this.tableTemplate.resetInput('domain',OBJ);
 this.onFilterCancel(OBJ);
 OBJ.filterType='dropdown';
@@ -470,7 +461,7 @@ break;
 onFilterCancel(event) {
 
   for (var i = 0; i < this.tableHeader2.length; i++) {
-  
+
   var col = this.tableHeader2[i];
   if (col.filter['type'] === 'dropdown' && col.filter['_value'] != undefined) {
   var colFilterVal = event.filterValue.toLowerCase().replace(' ', '_');
@@ -483,40 +474,40 @@ onFilterCancel(event) {
   this.FilterTags.notifyServices(this.tableHeader2[i].key, colFilterVal);
   }
   }
-  
+
   if (col.filter != undefined && colFilterVal != undefined) {
   // adding ?
   if (this.relativeUrl.indexOf('?') == -1) {
   this.relativeUrl += '?';
   }
-  
+
   if (col.filter['type'] == 'dateRange') {
   // code...
-  
-  
+
+
   } else if (col.filter['type'] == 'dropdown' || (event.filterType == 'input' && (event.keyCode === 13))) {
-  
-  
+
+
   var queryParamKey = 'offset=';
   var offsetValue = 0;
   var queryParamValue = offsetValue;
   $(".pagination.justify-content-center li:nth-child(2)")[0].click();
   // this.pageSelected = 1;
-  
+
   this.addQueryParam(queryParamKey, queryParamValue, false);
-  
+
   if (event.key == col.key) {
   queryParamKey = col.key + '=';
   if (queryParamKey == "name=") {
   queryParamKey = "service=";
-  
+
   } else if (queryParamKey == "lastModified=") {
   queryParamKey = "timestamp=";
   }
   queryParamValue = colFilterVal;
   this.addQueryParam(queryParamKey, queryParamValue, true);
   }
-  
+
   }
   }
   }
@@ -525,7 +516,7 @@ onFilterCancel(event) {
 
   onFilterSelected(selectedList){
     this.selectedListData = selectedList;
-   
+
     var queryParamKey = 'offset=';
     var offsetValue = 0;
     $(".pagination.justify-content-center li:nth-child(2)")[0].click();
@@ -572,11 +563,11 @@ onFilterCancel(event) {
       // this.pageSelected = currentlyActivePage;
       this.serviceList = [];
       this.backupdata = [];
-      
+
 
 
       var queryParamKey = 'offset=';
-      
+
       var offsetValue = (this.limitValue * (currentlyActivePage-1));
 
 
@@ -592,10 +583,10 @@ onFilterCancel(event) {
     }
   }
   onServiceSearch(searchbar){
-    this.searchbar = searchbar; 
+    this.searchbar = searchbar;
     if(searchbar.keyCode == 13){
     this.FilterTags.notifyServices("search",searchbar.searchString);
-    
+
     var queryParamKey = 'offset=';
     $(".pagination.justify-content-center li:nth-child(2)")[0].click();
     var offsetValue = 0;
@@ -655,14 +646,19 @@ onFilterCancel(event) {
     // this.fetchServices();
     // this.paginatePage(1);
     // this.relativeUrl = '/jazz/services?limit=' + this.limitValue + '&offset=' + 0;
-    // this.serviceCall();
+    this.serviceCall();
     this.paginationInit();
     this.updateList = this.cache.get("updateServiceList");
     this.updateServices(this.updateList);
   }
   refreshData(event){
-		this.loadingState = 'default';
-		this.serviceCall();
+    this.loadingState = 'default';
+    this.updateList = this.cache.get("updateServiceList");
+    if (this.updateList) {
+      this.updateServices(this.updateList);
+    } else {
+      this.serviceCall();
+    }
 	}
   updateServices(isTrue){
 
@@ -685,6 +681,14 @@ onFilterCancel(event) {
           this.totalPagesTable = 0;
         }
           if (services !== undefined && services !== "" && services.length !== undefined) {
+            this.serviceListEmpty = false;
+            if (this.serviceList.length && pageCount > this.serviceCount) {
+              this.serviceCount = pageCount;
+              this.showToastSuccess(
+                'Your service is ready',
+                this.toastMessage.customMessage('successReady', 'createService'),
+              );
+            }
             this.serviceList = this.processServiceList(services);
             this.backupdata = this.processServiceList(services);
             this.loadingState = 'default';
@@ -693,6 +697,32 @@ onFilterCancel(event) {
 
     }
   }
+
+
+  /**
+   * Display success toast
+   * @param title Toast title
+   * @param body  Toast body
+   * @returns
+   */
+  // TODO: Abstract out to service
+  showToastSuccess (title: string, body: string): void {
+    const options = {
+      body: body,
+      closeHtml: '<button>Dismiss</button>',
+      showCloseButton: true,
+      timeout: 5000,
+      title: title,
+      type: 'success',
+    };
+
+    // TODO: Investigate need for manual class addition
+    const tst = document.getElementById('toast-container');
+    tst.classList.add('toaster-anim');
+    this.toasterService.pop(options);
+  }
+
+
   closeDetelePopup(){
     this.setMessage("hide popup","no msg");
   }
