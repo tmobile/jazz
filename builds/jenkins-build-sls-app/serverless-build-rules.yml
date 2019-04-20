@@ -674,7 +674,7 @@ event:
   sbr-primary: false
   sbr-type: "[enum]"
   sbr-render: user-only
-  sbr-constraint:
+  sbr-template:
     - s3:
         bucket:
           sbr-type: aws-bucket-name
