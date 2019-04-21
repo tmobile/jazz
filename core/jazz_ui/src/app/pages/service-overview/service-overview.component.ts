@@ -373,6 +373,13 @@ export class ServiceOverviewComponent implements OnInit {
     this.cdnConfigSelected = this.cdnConfigInitial;
 
   }
+  outSidePopup(){
+    this.showGeneralField = false;
+    this.saveClicked = false;
+    this.advancedSaveClicked = false;
+    this.onCancelClick();
+
+  }
 
   onCompleteClick() {
     this.isPUTLoading = true;

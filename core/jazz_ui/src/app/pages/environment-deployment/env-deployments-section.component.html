@@ -109,7 +109,7 @@
       </div>
       <div id='slid-table'>
         <table-template *ngIf="envResponseTrue" class="table-container env-deployment-log" [header]="tableHeader2"
-            (onSort)="onSort($event)" [showPaginationtable]="true" (paginatePage)="paginatePage($event)"
+            (onSort)="onSort($event)" [showPaginationtable]="pageSelected" (paginatePage)="paginatePage($event)"
             [totalPageNum]="totalPagesTable">
             <div class="table-row" [class.hide]="serviceListEmpty" *ngFor="let row of deployedList; let i = index">
               <!-- (click)="onRowClicked() -->

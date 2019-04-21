@@ -167,7 +167,7 @@
         </div>
     </div>
 
-    <div *ngIf='!envResponseError && !envResponseEmpty' class="table-pagination assets-pag" [class.show]="showPaginationtable && state !='loading' && state != 'empty' && state != 'error' && totalPageNum > 0">
+    <div *ngIf='!envResponseError && !envResponseEmpty' class="table-pagination assets-pag hide"  [class.show]="showPaginationtable && state !='loading' && state != 'empty' && state != 'error' && totalPageNum > 0">
         <nav class="pagination-nav" aria-label="Page navigation table">
             <ul class="pagination justify-content-center">
                 <li class="page-item" (click)="paginatePageInTable('prev')" [class.disable]="currentlyActive == 1">

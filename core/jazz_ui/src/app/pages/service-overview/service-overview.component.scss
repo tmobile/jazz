@@ -28,6 +28,12 @@
     animation-iteration-count: infinite;
     animation-fill-mode: both;
 }
+.icon-icon-close{
+    padding: 1rem;
+    cursor: pointer;
+    position: absolute;
+    right: 0;
+}
 
 .saving span:nth-child(1) {
     animation-delay: 0.25s;
@@ -1272,6 +1278,7 @@ details {
     .confirm-overlay-inner-wrap {
         align-self: center;
         background: white;
+        position: relative;
         border-radius: 10px;
     }
     .overlay-header {

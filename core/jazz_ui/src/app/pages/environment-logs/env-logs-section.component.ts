@@ -419,6 +419,9 @@ export class EnvLogsSectionComponent implements OnInit {
 					var pageCount = response.data.count;
 					if (pageCount) {
 						this.totalPagesTable = Math.ceil(pageCount / this.limitValue);
+						if(this.totalPagesTable === 1){
+						   this.paginationSelected = false;
+						}
 					}
 					else {
 						this.totalPagesTable = 0;

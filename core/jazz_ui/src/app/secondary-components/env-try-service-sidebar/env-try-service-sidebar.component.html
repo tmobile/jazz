@@ -23,7 +23,7 @@
           <div class="line-numbers">
             <div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
           </div>
-          <textarea [(ngModel)]="inputValue" (ngModelChange)="lineNumbers('ip')" class="input-textarea"
+          <textarea [(ngModel)]="inputIsValid" (ngModelChange)="lineNumbers('ip')" class="input-textarea"
                     (change)="toggleSavePayload(savingPayload)" (blur)="inputIsValid()"></textarea>
         </div>
         <div class='warning-chk-wrp'>

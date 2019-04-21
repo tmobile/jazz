@@ -22,8 +22,8 @@ import { environment as env_internal } from './../../../environments/environment
 export class EnvAssetsSectionComponent implements OnInit {
 
 	 state: string = 'default';
-   showPaginationtable: boolean = false;
-   currentlyActive: number = 1;
+	 showPaginationtable:boolean = true;
+	 currentlyActive: number = 1;
 	 totalPageNum: number = 12;
 	 offset:number = 0;
 	 offsetval:number = 0;
@@ -207,7 +207,10 @@ export class EnvAssetsSectionComponent implements OnInit {
 
 
         if(pageCount){
-          this.totalPageNum = Math.ceil(pageCount/this.limitValue);
+					this.totalPageNum = Math.ceil(pageCount/this.limitValue);
+					if(this.totalPageNum === 1){
+						this.showPaginationtable = false;
+					}
         }
         else{
           this.totalPageNum = 0;
