@@ -347,6 +347,7 @@ def loadServiceConfigurationData() {
       def apiOptions = ""
       def functionOptions = ""
       def websiteOptions = ""
+      def slsAppOptions = ""
 
       for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS.API) {
         apiOptions += '"' + item + '",'
@@ -363,6 +364,12 @@ def loadServiceConfigurationData() {
       }
       websiteOptions = websiteOptions.substring(0, websiteOptions.length() - 1)
 
+      for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS['SLS-APP']) {
+        slsAppOptions += '"' + item + '",'
+      }
+      slsAppOptions = slsAppOptions.substring(0, slsAppOptions.length() - 1)
+
+
       sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/dev-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/stg-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/prod-config.json"
@@ -377,6 +384,12 @@ def loadServiceConfigurationData() {
       sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/stg-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/prod-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/test-config.json"
+
+      sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/dev-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/stg-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/prod-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/test-config.json"
+
     }
 
     if ((service_name.trim() == "jazz_delete-serverless-service") || (service_name.trim() == "jazz_create-serverless-service")

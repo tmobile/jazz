@@ -335,6 +335,7 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
         }
 
         if(service_creation_data.service_type === "sls-app") { // application with a deployment descriptor
+          inputs.DEPLOYMENT_TARGETS = deploymentTargets; // This part was missing on Apr-5 and we received: 'deployment_targets missing' error
           const deployDescrValidator = require('./components/validate-sls-yml');
           if(service_creation_data.deployment_descriptor) { // If deployment descriptor is present then validate
             try {

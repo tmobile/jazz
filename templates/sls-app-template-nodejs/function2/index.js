@@ -4,10 +4,10 @@
 	@version: 1.0
 **/
 
-const configModule = require("./components/config.js");
-const logger = require("./components/logger.js");
-const responseObj = require("./components/response.js");
-const errorHandlerModule = require("./components/error-handler.js");
+const configModule = require("../components/config.js");
+const logger = require("../components/logger.js");
+const responseObj = require("../components/response.js");
+const errorHandlerModule = require("../components/error-handler.js");
 
 module.exports.handler = (event, context, cb) => {
 
@@ -31,8 +31,8 @@ module.exports.handler = (event, context, cb) => {
     */
 
     const sampleResponse = {
-      "foo": "foo-value",
-      "bar": "bar-value",
+      "foo": "foo-value2",
+      "bar": "bar-value2",
       "configKeys": myVal
     };
 

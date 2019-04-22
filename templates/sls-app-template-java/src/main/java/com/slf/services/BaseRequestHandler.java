@@ -11,7 +11,8 @@ import com.slf.util.EnvironmentConfig;
 
 /**
  * Abstract BaseJazzHandler for all handlers.
- * Provides a template for authoring AWS lambda functions. This implementation is based on the interface
+ * Provides a template for authoring AWS Serverless Application with its own deployment descriptor.
+ * This implementation is based on the interface
  * 'RequestHandler' with custom POJO Input/Output
  *
  * @author
