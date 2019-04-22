@@ -347,16 +347,12 @@ popup(state){
       // this.http.get('/jazz/environments/prd?domain=jazz-testing&service=test-create').subscribe(
         (response) => {
 
-          let ser=response.data.environment[0].service;
           if(response.data == (undefined || '')){
            
             this.envResponseEmpty = true; 
             this.isLoading = false;
-          }else{
-            // response.data.environment[0].status='deletion_started'
-            if(ser == 'sls-app'){
-              this.slsapp = true; 
-            }
+          }
+          else {            
             this.onload.emit(response.data.environment[0].endpoint);
             this.envLoad.emit(response.data);
             this.environmnt=response.data.environment[0];
@@ -548,8 +544,10 @@ form_endplist(){
   ngAfterViewInit(){
     setTimeout(function(){
       let textElement = document.getElementsByClassName('text-area')[0];
-      textElement.setAttribute('style', 'height:' + (textElement.scrollHeight) + 'px')
-    },3500)
+      if(textElement){
+        textElement.setAttribute('style', 'height:' + (textElement.scrollHeight) + 'px')
+      }
+      },3500)  
   }
 
   ngOnChanges(x:any) {
@@ -560,6 +558,10 @@ form_endplist(){
     this.environmnt={};
     if(this.service.domain != undefined)
       this.callServiceEnv();
+      let ser=this.service.serviceType;
+      if(ser == 'sls-app'){
+        this.slsapp = true; 
+      }
 }
 notify(services){
   this.service=services;
