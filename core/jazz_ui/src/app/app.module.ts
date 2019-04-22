@@ -49,7 +49,6 @@ else{
     ToasterModule,
     NgIdleKeepaliveModule.forRoot(),
     SharedModule,
-    ScrollToModule.forRoot()
   ],
   providers: [
     AuthenticationService,
