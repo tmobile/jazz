@@ -70,6 +70,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
   errorRequest:any={};
   rebuild_id:any;
   isRebuildReq:Boolean = false;
+  pageSelected:Boolean = true;
   errorMessage: string = "Something went wrong while fetching your data";
 
 	errorResponse:any={};
@@ -291,6 +292,9 @@ export class EnvDeploymentsSectionComponent implements OnInit {
           
           if(pageCount){
             this.totalPagesTable = Math.ceil(pageCount/this.limitValue);
+            if(this.totalPagesTable === 1){
+              this.pageSelected = false;
+            }
           }
           else{
             this.totalPagesTable = 0;

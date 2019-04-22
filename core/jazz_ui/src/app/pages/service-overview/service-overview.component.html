@@ -308,6 +308,7 @@
 
   <div class='confirm-overlay' (click)='onAdvanceClick()' *ngIf='saveClicked || advancedSaveClicked'>
     <div class='confirm-overlay-inner-wrap' (click)="$event.stopPropagation()">
+      <a class="icon-icon-close" (click)="outSidePopup()"></a>
         <div class='overlay-header'>Submitting Changes</div>
         <div class='overlay-body'>
           <div *ngIf="!isPUTLoading" class="overlay-text">Are you sure you want to make this edit?</div>
@@ -315,8 +316,8 @@
               <div class="loading-circle"></div>
           </div>
         </div>
-        <div class='overlay-btns'>
-          <btn-jazz-primary text="COMPLETE" [disablePrimaryBtn]="!isPayloadAvailable" (click)='onCompleteClick()'></btn-jazz-primary>
+        <div class='overlay-btns' *ngIf="!isPUTLoading">
+          <btn-jazz-primary text="CONFIRM" [disablePrimaryBtn]="!isPayloadAvailable" (click)='onCompleteClick()'></btn-jazz-primary>
         </div>
     </div>
   </div>

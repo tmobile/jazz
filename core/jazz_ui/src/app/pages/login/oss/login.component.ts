@@ -211,8 +211,10 @@ export class LoginComponent implements OnInit {
                             "userpassword":this.model.password,
                             "usercode":this.model.usercode
                         }
+                        this.loading = true;
             this.http.post('/jazz/usermanagement', payload).subscribe(
                 response => {
+                    this.loading = false;
                     //Registration changes here
                     let message=this.toastmessage.successMessage("success","register");
                     this.toast_pop('success', 'Verification email sent!', message + this.model.username);
@@ -222,6 +224,7 @@ export class LoginComponent implements OnInit {
                     this.regist = 'Forgot Password';
                 },
                 err => {
+                    this.loading = false;
                     let error = JSON.parse(err._body);
                     let errorMessage=this.toastmessage.errorMessage(err,"register");
                     this.toast_pop('error', 'Oops!', error.message);

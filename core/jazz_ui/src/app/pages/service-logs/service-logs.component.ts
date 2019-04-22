@@ -505,6 +505,9 @@ export class ServiceLogsComponent implements OnInit {
 			this.totalPagesTable = 0;
 			if(pageCount){
 			  this.totalPagesTable = Math.ceil(pageCount/this.limitValue);
+				if(this.totalPagesTable === 1){
+					this.paginationSelected = false;
+				}
 			}
 			else{
 			  this.totalPagesTable = 0;
