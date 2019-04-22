@@ -40,6 +40,19 @@ export const environment = {
     aws: {
       account_number:'{account_number}',
       region:"{region}"
-    }
+    },
+    deploymentDescriptorText:
+    `
+    -  API:
+        name: test-service
+        namespace: jazztest
+        runtime:
+          - python
+    -  Lambda:
+        name: test-lambda
+        namespace: jazztest
+        runtime:
+          - java
+    `
   };
   
