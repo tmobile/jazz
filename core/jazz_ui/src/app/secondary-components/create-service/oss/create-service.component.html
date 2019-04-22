@@ -9,56 +9,58 @@
 
     </section>
 
-    <section  *ngIf='!serviceRequested' id="service-type" class="type-section" [class.disable-color]="typeofserviceSelected" >
+    <section  *ngIf='!serviceRequested' id="service-type-section" class="type-section" [class.disable-color]="typeofserviceSelected" >
         <div class="sec-heading flex" (click)="typeofservice = !typeofservice">
-            <div class='icon-icon-right align-center' [class.rotate-icon-right]="typeofservice" >
-                    <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="1.2rem" height="1.2rem" viewBox="0 0 357 357" style="enable-background:new 0 0 357 357;" xml:space="preserve" class=""><g><g>
-                        <g id="play-arrow">
-                            <polygon points="38.25,0 38.25,357 318.75,178.5   " data-original="#000000" class="active-path" data-old_color="#ed008c" fill="#ed008c"/>
-                        </g>
-                        </g></g> 
-                    </svg>
-                    <!-- <img *ngIf="!typeofserviceSelected" class="icon-right" src="./../../../../assets/images/icons/icon-traingle.svg">
-                    <img *ngIf="typeofserviceSelected" class="icon-right" src="./../../../../assets/images/icons/icon-traingle-ddd.svg"> -->
-                
-            </div>
-            <div class="sec-heading-text">
+            
+            <div class="sec-heading-text margin-15">
                 Type of service
             </div>
         </div>
+
         <div id="typeofservice" class="sec-content" [class.open-sec-content]="typeofservice">
+
+            <p class="step-title">Choose the type of service you want to create<span>*</span></p>
+
             <section class="each-step-wrap type-of-service">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Choose the type of service you want to create<span>*</span></p>
-                    </div>
-                    <div  *ngIf="!typeofserviceSelected" class="col-lg-8 col-md-8">
-                        <div class="justify-center">
-                            <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                <div class="">
+                    <div  *ngIf="!typeofserviceSelected">
+                        <div class="space-between">
+                            <section class="pad-left0 service-box-section">
                                 <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')"  (click)="changeServiceType('api')">
                                     <div class="icon-icon-api" [ngClass]="{'selected': typeOfService == 'api'}"></div>
                                     <p>API</p>
                                 </div>
                             </section>
-                            <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                            <section class="pad-left0 service-box-section">
                                 <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
                                     <div class="icon-icon-function" [ngClass]="{'selected': typeOfService == 'function'}"></div>
                                     <p>LAMBDA</p>
                                 </div>
                             </section>
-                            <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0 service-box-section">
+                            <section class="ad-left0 service-box-section">
                                 <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'website'}" (keyup.enter)="changeServiceType('website')" (click)="changeServiceType('website')">
                                     <div class="icon-icon-web" [ngClass]="{'selected': typeOfService == 'website'}"></div>
                                     <p>WEBSITE</p>
                                 </div>
                             </section>
+
+                            <section class="service-box-section align-self">OR</section>
+                            <section class="pad-left0 service-box-section">
+                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'custom'}" (keyup.enter)="changeServiceType('custom')" (click)="changeServiceType('custom')">
+                                    <div class="icon-icon-custom" [ngClass]="{'selected': typeOfService == 'custom'}">
+                                        <img *ngIf="typeOfService == 'custom'" src="./../../../assets/images/icons/Build-custom.svg"/>
+                                        <img *ngIf="typeOfService != 'custom'" src="./../../../assets/images/icons/Build-custom-gray.svg"/>
+                                    </div>
+                                    <p>Build Custom</p>
+                                </div>
+                            </section>
                         </div>
-                        <div class="justify-center">
+                        <!-- <div class="justify-center service-type-width">
                             OR
                         </div>
-                        <div class="justify-center custom-sec">
+                        <div class="justify-center service-type-width custom-sec">
                             
-                            <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                            <section class="pad-left0 service-box-section">
                                 <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'custom'}" (keyup.enter)="changeServiceType('custom')" (click)="changeServiceType('custom')">
                                     <div class="icon-icon-custom" [ngClass]="{'selected': typeOfService == 'custom'}">
                                         <img *ngIf="typeOfService == 'custom'" src="./../../../assets/images/icons/Build-custom.svg"/>
@@ -68,7 +70,7 @@
                                 </div>
                             </section>
                                                        
-                        </div>
+                        </div> -->
                         
                     </div>
                     
@@ -113,29 +115,20 @@
         </div>
     </section>
 
-    <section  *ngIf='!serviceRequested' class="type-section" [class.disable-color]="typeofruntimeSelected">
+    <section id="deployment-type-section" *ngIf='!serviceRequested' class="type-section" [class.disable-color]="typeofruntimeSelected">
         <div class="sec-heading flex" (click)="deploymentOpen()">
-            <div class='icon-icon-right align-center' [class.rotate-icon-right]="typeofplatform">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="1.2rem" height="1.2rem" viewBox="0 0 357 357" style="enable-background:new 0 0 357 357;" xml:space="preserve" class=""><g><g>
-                    <g id="play-arrow">
-                        <polygon points="38.25,0 38.25,357 318.75,178.5   " data-original="#000000" class="active-path" data-old_color="#ed008c" fill="#ed008c"/>
-                    </g>
-                    </g></g> 
-                </svg>
-                <!-- <img class="icon-right" src="./../../../../assets/images/icons/icon-traingle.svg"> -->
-            </div>
             <div class="sec-heading-text" >
                 Deployment details
             </div>
         </div>
         <div id="typeofplatform" class="sec-content each-step-wrap" [class.open-sec-content-deplyoments]="typeofplatform">
+            <p class="step-title">Choose what platform you would like to use<span>*</span></p>
+
             <section class="type-of-platform" [class.disable-color]="typeofplatformSelected">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Choose what platform you would like to use<span>*</span></p>
-                    </div>
-                    <div  id="platform-type" *ngIf="!typeofplatformSelected" class="col-lg-8 col-md-8">
-                        <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                <div class="service-type-width">
+                   
+                    <div  id="platform-type" *ngIf="!typeofplatformSelected" class="space-between">
+                        <section class=" pad-left0 service-box-section">
                             <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}" (click)="changePlatformType('aws')">
                                     <div class="icon-icon-AWS">
                                             <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span>
@@ -143,13 +136,13 @@
                                 <p>AWS</p>
                             </div>
                         </section>
-                        <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                        <section class=" pad-left0 service-box-section">
                             <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
                                 <div class="icon-icon-azure"></div>
                                 <p>Azure</p>
                             </div>
                         </section>
-                        <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                        <section class=" pad-left0 service-box-section">
                             <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}" (click)="changePlatformType('gcloud')">
                                 <div class="icon-icon-googlecloud"></div>
                                 <p>Google Cloud</p>
@@ -158,7 +151,7 @@
                     </div>
 
                     <section  id="platform-type-radio" *ngIf="typeofplatformSelected" class="typeofservice-blur">                
-                        <div class="col-lg-8 col-md-8">
+                        <div class="">
                             <div class="col-lg-12  pad-left0 input-field-container runtime-aln">
                                 <section class="runtime-option disable-color">
                                     <div class="radio-container">
@@ -186,13 +179,13 @@
                 </div>
             </section>
             <section *ngIf="deploymentTargets[typeOfService.toUpperCase()].active && apigeeFeature" class="form-row deployment-targets" [class.disable-color]="deploymenttargetSelected">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4">
-                    <p class="step-title">Choose your API deployment target<span>*</span></p>
-                    </div>
+                <p id="deployment-type-label" class="step-title">Choose your API deployment target<span>*</span></p>
+
+                <div class="">
+                    
                     
 
-                    <div  id="deployment-type-radio" *ngIf="deploymenttargetSelected" class="col-lg-8 col-md-8 pad-left0 input-field-container runtime-aln">
+                    <div  id="deployment-type-radio" *ngIf="deploymenttargetSelected" class="pad-left0 input-field-container runtime-aln">
                         <section class="runtime-option disable-color">
                             <div class="radio-container">
                                 <input type="radio" class='test-focus' name="deploymentTarget" id="deploymentTargetsList[0]" [value]="deploymentTargetsList[0]" [checked]="selectedDeploymentTarget == deploymentTargetsList[0]" (click)="changeDeploymentTarget('aws_apigateway')">
@@ -207,22 +200,29 @@
                         </section>
                     </div>
 
-                    <div  id="deployment-type" *ngIf="!deploymenttargetSelected" class="col-lg-8 col-md-8">
-                        <div class="flex">
-                            <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                    <div  id="deployment-type" *ngIf="!deploymenttargetSelected" class="">
+                        <div class="service-type-width space-between">
+                            <section class="pad-left0 service-box-section">
                                 <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': selectedDeploymentTarget == 'aws_apigateway'}" (keyup.enter)="changeDeploymentTarget('api')" (click)="changeDeploymentTarget('aws_apigateway')">
                                     <div class="" [ngClass]="{'selected': selectedDeploymentTarget == 'aws_apigateway'}">
-                                        <img src="./../../../../assets/images/icons/aws-api-gateway.svg"/>
+                                        <img *ngIf="selectedDeploymentTarget == 'aws_apigateway'" [class.selected-image]="selectedDeploymentTarget == 'aws_apigateway'" src="./../../../../assets/images/icons/aws-api-gateway.svg"/>
+                                        <img *ngIf="selectedDeploymentTarget != 'aws_apigateway'" [class.selected-image]="selectedDeploymentTarget == 'aws_apigateway'" src="./../../../../assets/images/icons/greyscale-icons/icon-awsgateway.svg"/>
                                     </div>
                                     <p>AWS API GATEWAY</p>
                                 </div>
                             </section>
-                            <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
+                            <section class="pad-left0 service-box-section">
                                 <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': selectedDeploymentTarget == 'gcp_apigee'}" (keyup.enter)="changeDeploymentTarget('gcp_apigee')" (click)="changeDeploymentTarget('gcp_apigee')">
                                     <div class="" [ngClass]="{'selected': selectedDeploymentTarget == 'gcp_apigee'}">
-                                        <img src="./../../../../assets/images/icons/Apigee.svg"/>
+                                        <img *ngIf="selectedDeploymentTarget == 'gcp_apigee'" [class.selected-image]="selectedDeploymentTarget == 'gcp_apigee'" src="./../../../../assets/images/icons/Apigee.svg"/>
+                                        <img *ngIf="selectedDeploymentTarget != 'gcp_apigee'" [class.selected-image]="selectedDeploymentTarget == 'gcp_apigee'" src="./../../../../assets/images/icons/greyscale-icons/icon-apigee.svg"/>
                                     </div>
                                     <p>GCP APIGEE</p>
+                                </div>
+                            </section> 
+                            <section class="pad-left0 service-box-section">
+                                <div class="service-box ghost">
+
                                 </div>
                             </section>                           
                         </div>
@@ -230,9 +230,11 @@
                 </div>
             </section>
             <section  [class.disable-color]="typeofruntimeSelected" class="run-time" *ngIf="typeOfService != 'website'">
-                <div  class="row">
-                    <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Choose your runtime<span>*</span></p>
+                <p class="step-title">Choose your runtime<span>*</span></p>
+
+                <div  class="">
+                    <div id="runtime-type-label" class="col-lg-4 col-md-4">
+                        
                     </div>
                     <div   id="runtime-type-radio" *ngIf="typeofruntimeSelected" class="col-lg-8 col-md-8">
                         <div class="col-lg-12  pad-left0 input-field-container runtime-aln">
@@ -269,46 +271,72 @@
                         </div>
                     </div>
 
-                    <div  id="runtime-type" *ngIf="!typeofruntimeSelected" class="col-lg-8 col-md-8">
-                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">                  
-                            <div tabindex="0" class="service-box"  [ngClass]="{'service-box-selected': runtime == runtimeKeys[0]}"(keyup.enter)="onSelectionChange(runtimeKeys[0])"  (click)="onSelectionChange(runtimeKeys[0])">
-                                <div class=""><img src="./../../../../assets/images/icons/nodejs.svg"/></div>
-                                <p>{{runtimeKeys[0]}}</p>
-                            </div>
-                        </section>
-                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
-                            <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[1]}"(keyup.enter)="onSelectionChange(runtimeKeys[1])"  (click)="onSelectionChange(runtimeKeys[1])">
-                                <div class="icon-icon-python"><img src="./../../../assets/images/icons/python.svg"/></div>
-                                <p>{{runtimeKeys[1]}}</p>
-                            </div>
-                        </section>
-                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
-                            <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[2]}"(keyup.enter)="onSelectionChange(runtimeKeys[2])"  (click)="onSelectionChange(runtimeKeys[2])">
-                                <div class="icon-icon-python"><img src="./../../../assets/images/icons/python.svg"/></div>
-                                <p>{{runtimeKeys[2]}}</p>
-                            </div>
-                        </section>
-                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">                  
-                            <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[3]}"(keyup.enter)="onSelectionChange(runtimeKeys[3])"  (click)="onSelectionChange(runtimeKeys[3])">
-                                <div class="icon-icon-go"><img src="./../../../assets/images/icons/Java.svg"/></div>
-                                <p>{{runtimeKeys[3]}}</p>
-                            </div>  
-                        </section>
-                        
-                        
-                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">                  
-                                <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[4]}"(keyup.enter)="onSelectionChange(runtimeKeys[4])"  (click)="onSelectionChange(runtimeKeys[4])">
-                                <div class="icon-icon-go"><img src="./../../../assets/images/icons/Go.svg"/></div>
-                                <p>{{runtimeKeys[4]}}</p>
-                            </div>
-                        </section>
+                    <div  id="runtime-type" *ngIf="!typeofruntimeSelected" class="">
+                    
+                        <div class="runtime-row1 service-type-width space-between">
+                            <section class="pad-left0 service-box-section">                  
+                                <div tabindex="0" class="service-box"  [ngClass]="{'service-box-selected': runtime == runtimeKeys[0]}"(keyup.enter)="onSelectionChange(runtimeKeys[0])"  (click)="onSelectionChange(runtimeKeys[0])">
+                                    <div class="">
+                                            <img *ngIf="runtime == runtimeKeys[0]" [class.selected-image]="runtime == runtimeKeys[0]" src="./../../../../assets/images/icons/nodejs.svg"/>
+                                            <img *ngIf="runtime != runtimeKeys[0]" [class.selected-image]="runtime == runtimeKeys[0]" src="./../../../../assets/images/icons/greyscale-icons/icon-nodejs.svg"/>
+                                    </div>
+                                            <p>{{runtimeKeys[0]}}</p>
+                                </div>
+                            </section>
+                            <section class="pad-left0 service-box-section">
+                                <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[1]}"(keyup.enter)="onSelectionChange(runtimeKeys[1])"  (click)="onSelectionChange(runtimeKeys[1])">
+                                    <div class="icon-icon-python">
+                                            <img *ngIf="runtime == runtimeKeys[1]" [class.selected-image]="runtime == runtimeKeys[1]" src="./../../../assets/images/icons/python.svg"/>
+                                            <img *ngIf="runtime != runtimeKeys[1]" [class.selected-image]="runtime == runtimeKeys[1]" src="./../../../../assets/images/icons/greyscale-icons/icon-python.svg"/>
+                                        </div>
+                                    <p>{{runtimeKeys[1]}}</p>
+                                </div>
+                            </section>
+                            <section class="pad-left0 service-box-section">
+                                <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[2]}"(keyup.enter)="onSelectionChange(runtimeKeys[2])"  (click)="onSelectionChange(runtimeKeys[2])">
+                                    <div class="icon-icon-python">
+                                            <img *ngIf="runtime == runtimeKeys[2]" [class.selected-image]="runtime == runtimeKeys[2]" src="./../../../assets/images/icons/python.svg"/>
+                                            <img *ngIf="runtime != runtimeKeys[2]" [class.selected-image]="runtime == runtimeKeys[2]" src="./../../../../assets/images/icons/greyscale-icons/icon-python.svg"/>
+                                        </div>
+                                    <p>{{runtimeKeys[2]}}</p>
+                                </div>
+                            </section>
+                        </div>
 
-                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section disable-event">                  
-                            <div tabindex="0" class="service-box disabled-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[5]}" (keyup.enter)="onSelectionChange(runtimeKeys[5])" (click)="onSelectionChange(runtimeKeys[5])">
-                                <div class="icon-icon-go"><img src="./../../../assets/images/icons/C.svg"/></div>
-                                <p>C#</p>
-                            </div>
-                        </section>  
+                        <div class="runtime-row2 service-type-width space-between">
+                            <section class="pad-left0 service-box-section">                  
+                                <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[3]}"(keyup.enter)="onSelectionChange(runtimeKeys[3])"  (click)="onSelectionChange(runtimeKeys[3])">
+                                    <div class="icon-icon-go">
+                                            <img *ngIf="runtime == runtimeKeys[3]" [class.selected-image]="runtime == runtimeKeys[3]" src="./../../../assets/images/icons/Java.svg"/>
+                                            <img *ngIf="runtime != runtimeKeys[3]" [class.selected-image]="runtime == runtimeKeys[3]" src="./../../../../assets/images/icons/greyscale-icons/icon-java.svg"/>
+                                        </div>
+                                    <p>{{runtimeKeys[3]}}</p>
+                                </div>  
+                            </section>
+                            
+                            
+                            <section class="pad-left0 service-box-section">                  
+                                    <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[4]}"(keyup.enter)="onSelectionChange(runtimeKeys[4])"  (click)="onSelectionChange(runtimeKeys[4])">
+                                    <div class="icon-icon-go">
+                                            <img *ngIf="runtime == runtimeKeys[4]" [class.selected-image]="runtime == runtimeKeys[4]" src="./../../../assets/images/icons/Go.svg"/>
+                                            <img *ngIf="runtime != runtimeKeys[4]" [class.selected-image]="runtime == runtimeKeys[4]" src="./../../../../assets/images/icons/greyscale-icons/icon-go.svg"/>
+                                        </div>
+                                    <p>{{runtimeKeys[4]}}</p>
+                                </div>
+                            </section>
+    
+                            <section class="pad-left0 service-box-section disable-event">                  
+                                <div tabindex="0" class="service-box disabled-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[5]}" (keyup.enter)="onSelectionChange(runtimeKeys[5])" (click)="onSelectionChange(runtimeKeys[5])">
+                                    <div class="icon-icon-go">
+                                            <img  *ngIf="runtime == runtimeKeys[5]" [class.selected-image]="runtime == runtimeKeys[5]" src="./../../../assets/images/icons/C.svg"/>
+                                            <img  *ngIf="runtime != runtimeKeys[5]" [class.selected-image]="runtime == runtimeKeys[5]" src="./../../../../assets/images/icons/greyscale-icons/icon-c.svg"/>
+                                        </div>
+                                    <p>C#</p>
+                                </div>
+                            </section> 
+                        </div>
+                        
+                         
                     </div>
                 </div>
             </section>
@@ -321,28 +349,19 @@
 
     <section id="additional"  *ngIf='!serviceRequested' class="type-section" [class.disable-color]="typeevents">
         <div class="sec-heading flex" (click)="additionalOpen()">
-            <div class='icon-icon-right align-center' [class.rotate-icon-right]="typeform">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="1.2rem" height="1.2rem" viewBox="0 0 357 357" style="enable-background:new 0 0 357 357;" xml:space="preserve" class=""><g><g>
-                    <g id="play-arrow">
-                        <polygon points="38.25,0 38.25,357 318.75,178.5   " data-original="#000000" class="active-path" data-old_color="#ed008c" fill="#ed008c"/>
-                    </g>
-                    </g></g> 
-                </svg>
-                <!-- <img class="icon-right" src="./../../../../assets/images/icons/icon-traingle.svg"> -->
-            </div>
             <div class="sec-heading-text">
                 additional details
             </div>
         </div>
         <div id="typeform" class="sec-content" [class.open-form]="typeform">
                 <section id="service-name" class="each-step-wrap service-name">
-                    <div class="row">
-                        <div class="col-lg-4 col-md-4">
+                    <div class="">
+                        <div class="">
                             <p class="step-title" (click)="scrollTo('service-namespace')" >Service Name<span>*</span></p>
                             <p class="step-details">Name of your API, Microservice or Website that you want to create.</p>
                         </div>
-                        <div class="col-lg-8 col-md-8">
-                            <section class="col-lg-12  pad-left0">
+                        <div class="">
+                            <section class=" pad-left0">
                                 <div class="input-field-container">
                                     <div class="input-wrapper" [ngClass]="{'available': serviceAvailable && !invalidServiceName && !invalidDomainName, 'unavailable': serviceNotAvailable || !serviceName.valid && (serviceName.dirty || serviceName.touched) || (serviceName.valid && invalidServiceName)}">
                                         <input  name="serviceName" pattern="{{servicePatterns.serviceName}}" type="text" maxlength="{{serviceLimit}}" class="textForm" id="serviceName" required [(ngModel)]="model.serviceName" placeholder="Enter service name" (ngModelChange)="invalidServiceName = false;serviceAvailable=false" #serviceName='ngModel'  >
@@ -361,13 +380,13 @@
                     </div>
                 </section>
                 <section id="service-namespace" class="each-step-wrap domain-name">
-                    <div class="row">
-                        <div class="col-lg-4 col-md-4">
+                    <div class="">
+                        <div class="">
                             <p class="step-title">Namespace<span>*</span></p>
                             <p class="step-details">Namespaces provide easier abstraction to implement similar security & access control on your APIs.</p>
                         </div>
-                        <div class="col-lg-8 col-md-8">
-                            <section class="col-lg-12  pad-left0">
+                        <div class="">
+                            <section class="pad-left0">
                                 <div class="input-field-container">
                                     <div class="input-wrapper" [ngClass]="{'unavailable' : !domainName.valid && (domainName.dirty || domainName.touched) || (domainName.valid && invalidDomainName) }">
                                         <input name="domainName"  pattern="{{servicePatterns.domainName}}" maxlength="{{domainLimit}}" type="text" class="textForm" id="domainName" required placeholder="Enter namespace" [(ngModel)]="model.domainName" #domainName='ngModel' (blur)="validateName($event,'service-description')" (ngModelChange)="invalidDomainName=false" required>
@@ -381,13 +400,13 @@
                     </div>
                 </section>
                 <section id="service-description" class="each-step-wrap service-description">
-                    <div class="row">
-                        <div class="col-lg-4 col-md-4">
+                    <div class="">
+                        <div class="">
                             <p class="step-title">Service Description</p>
                             <p class="step-details hide">Multiple APIs can be bundled under a single namespace. Namespace provide easier abstraction to implement similar security & access control on your APIs.</p>
                         </div>
-                        <div class="col-lg-8 col-md-8">
-                            <section class="col-lg-12  pad-left0">
+                        <div class="">
+                            <section class="pad-left0">
                                 <div class="input-field-container">
                                     <div class="input-wrapper">
                                         <textarea  rows="2" cols="50" name="serviceDescription" type="text" class="textForm" placeholder="Service Description" id="serviceDescription" [(ngModel)]="model.serviceDescription"  #serviceDescription='ngModel' (blur)="typeevents = true"></textarea>
@@ -399,12 +418,12 @@
                 </section>
     
                 <section id="deployment-descriptor" class="each-step-wrap service-description">
-                    <div class="row">
-                        <div class="col-lg-4 col-md-4">
+                    <div class="">
+                        <div class="">
                             <p class="step-title">Deployment Descriptor</p>
                         </div>
-                        <div class="col-lg-8 col-md-8">
-                            <section class="col-lg-12  pad-left0">
+                        <div class="">
+                            <section class="cpad-left0">
                                 <div class="slack-checkbox custom-cb" >
                                     <input type="checkbox" id="checkbox-descriptor" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="descriptorSelected" (change)="descriptorSelected = !descriptorSelected">
                                     <label for="checkbox-descriptor" ></label>
@@ -425,12 +444,12 @@
                 </section>
     
                 <section id="slack-channel" class="each-step-wrap slack-channel-integration">
-                    <div class="row">
-                        <div class="col-lg-4 col-md-4">
+                    <div class="">
+                        <div class="">
                             <p class="step-title">Slack Channel Integration</p>
                         </div>
-                        <div class="col-lg-8 col-md-8">
-                            <section class="col-lg-12  pad-left0">
+                        <div class="">
+                            <section class="pad-left0">
                                 <div class="input-field-container">
                                     <div class="slack-checkbox custom-cb" [class.disable-event]='!SlackEnabled'>
                                         <input type="checkbox" id="checkbox-slack" class="ng-untouched ng-valid ng-dirty ng-valid-parse" [disabled]='!SlackEnabled' aria-invalid="false" [checked]="slackSelected" (change)="slackSelected = !slackSelected">
@@ -454,12 +473,12 @@
                     </div>
                 </section>
                 <section id="cache-ttl" class="each-step-wrap cache-ttl-integration" *ngIf="typeOfService == 'api'">
-                    <div class="row">
-                        <div class="col-lg-4 col-md-4">
+                    <div class="">
+                        <div class="">
                             <p class="step-title">Cache Time-to-Live (TTL)</p>
                         </div>
-                        <div class="col-lg-8 col-md-8">
-                            <section class="col-lg-12  pad-left0">
+                        <div class="">
+                            <section class="pad-left0">
                                 <div class="input-field-container">
                                     <div class="slack-checkbox custom-cb disable-event">
                                         <input disabled type="checkbox" id="checkbox-ttl" [checked]="ttlSelected" (change)="ttlSelected = !ttlSelected" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false">
@@ -481,13 +500,13 @@
                 
                 <!-- end of aws events -->
                 <section id="cdn-config" class="each-step-wrap cloudfront-url" *ngIf="typeOfService == 'website'">
-                    <div class="row">
-                        <div class="col-lg-4 col-md-4">
+                    <div class="">
+                        <div class="">
                             <p class="step-title">CDN configuration</p>
                             <p class="step-details hide">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p>
                         </div>
-                        <div class="col-lg-8 col-md-8">
-                            <section class="col-lg-12  pad-left0">
+                        <div class="">
+                            <section class="pad-left0">
                                 <div class="input-field-container">
                                     <div class="slack-checkbox custom-cb disable-event">
                                         <input disabled type="checkbox" id="checkbox-cdnconfig" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="true" (change)="cdnConfigSelected = !cdnConfigSelected"><!--[checked]="cdnConfigSelected" -->
@@ -505,15 +524,6 @@
 
     <section  *ngIf='!serviceRequested' class="type-section hide" [class.disable-color]="">
         <div class="sec-heading flex" (click)="typeofservice = !typeofservice">
-            <div class='icon-icon-right align-center' [class.rotate-icon-right]="typeofservice">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="1.2rem" height="1.2rem" viewBox="0 0 357 357" style="enable-background:new 0 0 357 357;" xml:space="preserve" class=""><g><g>
-                    <g id="play-arrow">
-                        <polygon points="38.25,0 38.25,357 318.75,178.5   " data-original="#000000" class="active-path" data-old_color="#ed008c" fill="#ed008c"/>
-                    </g>
-                    </g></g> 
-                </svg>
-                <!-- <img class="icon-right" src="./../../../../assets/images/icons/icon-traingle.svg"> -->
-            </div>
             <div class="sec-heading-text">
                 Security Details
             </div>
@@ -551,97 +561,101 @@
 
     <section id="typeevents" [class.hide]='serviceRequested' class="type-section" *ngIf="typeOfService == 'function'" [class.disable-color]="">
         <div class="sec-heading flex" (click)="typeevents = !typeevents">
-            <div class='icon-icon-right align-center' [class.rotate-icon-right]="typeevents">
-                <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" id="Capa_1" x="0px" y="0px" width="1.2rem" height="1.2rem" viewBox="0 0 357 357" style="enable-background:new 0 0 357 357;" xml:space="preserve" class=""><g><g>
-                    <g id="play-arrow">
-                        <polygon points="38.25,0 38.25,357 318.75,178.5   " data-original="#000000" class="active-path" data-old_color="#ed008c" fill="#ed008c"/>
-                    </g>
-                    </g></g> 
-                </svg>
-                <!-- <img class="icon-right" src="./../../../../assets/images/icons/icon-traingle.svg"> -->
-            </div>
             <div class="sec-heading-text">
                 Event schedule
             </div>
         </div>
-        <div  class="sec-content" [class.open-sec-content-deplyoments]="typeevents">
+        <div   lass="sec-content" [class.open-sec-content-deplyoments]="typeevents">
             <section id="event-schedule" class="each-step-wrap event-schedule" *ngIf="typeOfService == 'function'">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                <div class="">
+                    <div class="">
                         <p class="step-title">Event Schedule</p>
                     </div>
-                    <div class="col-lg-8 col-md-8">
-                        <div class="input-field-container event-schedule-radio row zero-margin">
-                            <section class="col-lg-3 col-md-3  pad-left0">
+                    <div class="">
+                        <div class="flex service-type-width input-field-container event-schedule-radio row zero-margin">
+                            <section class="pad-left0 rate-radio">
                                 <div class="radio-container">
                                     <input type="radio" name="EventSchedule" id="none" [value]="none" [checked]="rateExpression.type == 'none'" (click)="onEventScheduleChange('none')">
-                                    <label for="none"><span></span><span class="background"></span>None</label>
+                                    <label for="none">
+                                        <span>
+                                            <span class="background"></span>
+                                        </span>
+                                        
+                                    None</label>
                                 </div>
                             </section>
-                            <section class="col-lg-3 col-md-3  pad-left0">
+                            <section class="pad-left0 rate-radio">
                                 <div class="radio-container">
                                     <input type="radio" name="EventSchedule" id="fixedRate" [value]="rate" [checked]="rateExpression.type == 'rate'" (click)="onEventScheduleChange('rate')">
-                                    <label for="fixedRate"><span></span><span class="background"></span>Fixed Rate of</label>
+                                    <label for="fixedRate">
+                                        <span>
+                                            <span class="background"></span>
+                                        </span>
+                                       
+                                    Fixed Rate of</label>
                                 </div>
                             </section>
-                            <section class="col-lg-3 col-md-3  pad-left0">
+                            <section class="pad-left0 rate-radio">
                                 <div class="radio-container">
                                     <input type="radio" name="EventSchedule" id="cron" [value]="cron" [checked]="rateExpression.type == 'cron'" (click)="onEventScheduleChange('cron')">
-                                    <label for="cron"><span></span><span class="background"></span>Cron Expression</label>
+                                    <label for="cron">
+                                        <span>
+                                            <span class="background"></span>
+                                        </span>
+                                        
+                                    Cron Expression</label>
                                 </div>
                             </section>
                         </div>
                         <div class="event-schedule-fields" [ngClass]="{'zero-padding': rateExpression.type == 'none'}">
-                            <div class='clearfix'>
-                                <div class="cron-fields row zero-margin arrow_box" *ngIf="rateExpression.type == 'cron'">
-                                    <div class="col-lg-2">
-                                        <p class="sm-input-label">Minutes</p>
-                                        <div class="input-wrapper">
-                                            <input name="rateMinute" type="text" class="textForm" required [(ngModel)]="cronObj.minutes" #rateMinute='ngModel' (ngModelChange)="generateExpression(rateExpression)">
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <p class="sm-input-label">Hours</p>
-                                        <div class="input-wrapper">
-                                            <input name="rateHour" type="text" class="textForm" [(ngModel)]="cronObj.hours" #rateHour='ngModel' (ngModelChange)="generateExpression(rateExpression)" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <p class="sm-input-label">Day-of-month</p>
-                                        <div class="input-wrapper">
-                                            <input name="rateDayofMonth" type="text" class="textForm" [(ngModel)]="cronObj.dayOfMonth" #rateDayofMonth='ngModel' (ngModelChange)="generateExpression(rateExpression)" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <p class="sm-input-label">Month</p>
-                                        <div class="input-wrapper">
-                                            <input name="rateMonth" type="text" class="textForm" [(ngModel)]="cronObj.month" #rateMonth='ngModel' (ngModelChange)="generateExpression(rateExpression)" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <p class="sm-input-label">Day-of-week</p>
-                                        <div class="input-wrapper">
-                                            <input name="rateDayOfWeek" type="text" class="textForm" [(ngModel)]="cronObj.dayOfWeek" #rateDayOfWeek='ngModel' (ngModelChange)="generateExpression(rateExpression)" required>
-                                        </div>
-                                    </div>
-                                    <div class="col-lg-2">
-                                        <p class="sm-input-label">Year</p>
-                                        <div class="input-wrapper">
-                                            <input name="rateYear" type="text" class="textForm" required [(ngModel)]="cronObj.year" #rateYear='ngModel' (ngModelChange)="generateExpression(rateExpression)">
-                                        </div>
+                            <div class="flex cron-fields zero-margin arrow_box" *ngIf="rateExpression.type == 'cron'">
+                                <div class="">
+                                    <p class="sm-input-label">Minutes</p>
+                                    <div class="input-wrapper">
+                                        <input name="rateMinute" type="text" class="textForm" required [(ngModel)]="cronObj.minutes" #rateMinute='ngModel' (ngModelChange)="generateExpression(rateExpression)">
                                     </div>
                                 </div>
-                                <div class="rate-field row  zero-margin arrow_box" *ngIf="rateExpression.type == 'rate'">
-                                    <div class="col-lg-7 padding-right-0">
-                                        <div class="input-wrapper" [ngClass]="{'available': rateField.valid && (rateField.dirty || rateField.touched), 'unavailable': !rateField.valid && (rateField.dirty || rateField.touched)}">
-                                            <input name="rateField" type="number" class="textForm" required [(ngModel)]="rateExpression.duration" (ngModelChange)="generateExpression(rateExpression)" #rateField='ngModel' OnlyNumber="true">
-                                            <img class="input-loader ng-hide">
-                                        </div>
+                                <div class="">
+                                    <p class="sm-input-label">Hours</p>
+                                    <div class="input-wrapper">
+                                        <input name="rateHour" type="text" class="textForm" [(ngModel)]="cronObj.hours" #rateHour='ngModel' (ngModelChange)="generateExpression(rateExpression)" required>
                                     </div>
-                                    <div class="col-lg-5">
-                                        <div class="input-wrapper">
-                                            <dropdown [dropdwnContent]="rateData" [selected]="rateExpression.interval" [statusFilter]="statusFilter" (onSelected)="onSelectedDr($event)"></dropdown>
-                                        </div>
+                                </div>
+                                <div class="">
+                                    <p class="sm-input-label">Day-of-month</p>
+                                    <div class="input-wrapper">
+                                        <input name="rateDayofMonth" type="text" class="textForm" [(ngModel)]="cronObj.dayOfMonth" #rateDayofMonth='ngModel' (ngModelChange)="generateExpression(rateExpression)" required>
+                                    </div>
+                                </div>
+                                <div class="">
+                                    <p class="sm-input-label">Month</p>
+                                    <div class="input-wrapper">
+                                        <input name="rateMonth" type="text" class="textForm" [(ngModel)]="cronObj.month" #rateMonth='ngModel' (ngModelChange)="generateExpression(rateExpression)" required>
+                                    </div>
+                                </div>
+                                <div class="">
+                                    <p class="sm-input-label">Day-of-week</p>
+                                    <div class="input-wrapper">
+                                        <input name="rateDayOfWeek" type="text" class="textForm" [(ngModel)]="cronObj.dayOfWeek" #rateDayOfWeek='ngModel' (ngModelChange)="generateExpression(rateExpression)" required>
+                                    </div>
+                                </div>
+                                <div class="">
+                                    <p class="sm-input-label">Year</p>
+                                    <div class="input-wrapper">
+                                        <input name="rateYear" type="text" class="textForm" required [(ngModel)]="cronObj.year" #rateYear='ngModel' (ngModelChange)="generateExpression(rateExpression)">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex rate-field  zero-margin arrow_box" *ngIf="rateExpression.type == 'rate'">
+                                <div class="padding-right-0">
+                                    <div class="input-wrapper" [ngClass]="{'available': rateField.valid && (rateField.dirty || rateField.touched), 'unavailable': !rateField.valid && (rateField.dirty || rateField.touched)}">
+                                        <input name="rateField" type="number" class="textForm" required [(ngModel)]="rateExpression.duration" (ngModelChange)="generateExpression(rateExpression)" #rateField='ngModel' OnlyNumber="true">
+                                        <img class="input-loader ng-hide">
+                                    </div>
+                                </div>
+                                <div class="">
+                                    <div class="input-wrapper">
+                                        <dropdown [dropdwnContent]="rateData" [selected]="rateExpression.interval" [statusFilter]="statusFilter" (onSelected)="onSelectedDr($event)"></dropdown>
                                     </div>
                                 </div>
                             </div>
@@ -655,45 +669,70 @@
             </section>
             <!-- start of aws events -->
             <section id="aws-events" class="each-step-wrap aws-events" *ngIf="typeOfService == 'function'">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                <div class="">
+                    <div class="">
                         <p class="step-title">AWS Events</p>
                         <p class="step-details">Select appropriate events that you want to subscribe to.</p>
                     </div>
-                    <div class="col-lg-8 col-md-8">
-                        <div class="input-field-container event-schedule-radio row zero-margin">
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
+                    <div class="">
+                        <div class="input-field-container event-schedule-radio row zero-margin flex">
+                            <section class="pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input type="radio" name="AWSEvents" id="awsEventsNone" [value]="awsEventsNone" [checked]="eventExpression.type == 'awsEventsNone'" (click)="onAWSEventChange('awsEventsNone')">
-                                    <label for="awsEventsNone"><span></span><span class="background"></span>None</label>
+                                    <label for="awsEventsNone">
+                                        <span>
+                                                <span class="background"></span>
+                                        </span>
+                                        None
+                                    </label>
                                 </div>
                             </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
+                            <section class="pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="dynamodb" [value]="dynamodb" [checked]="eventExpression.type == 'dynamodb'" (click)="onAWSEventChange('dynamodb')">
-                                    <label for="dynamodb"><span></span><span class="background"></span>DynamoDB</label>
+                                    <label for="dynamodb">
+                                        <span>
+                                            <span class="background"></span>
+                                        </span>
+                                        DynamoDB
+                                    </label>
                                 </div>
                             </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
+                            <section class="pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="kinesis" [value]="kinesis" [checked]="eventExpression.type == 'kinesis'" (click)="onAWSEventChange('kinesis')">
-                                    <label for="kinesis"><span></span><span class="background"></span>Kinesis</label>
+                                    <label for="kinesis">
+                                        <span>
+                                                <span class="background"></span>
+                                        </span>
+                                        Kinesis
+                                    </label>
                                 </div>
                             </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
+                            <section class="pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="s3" [value]="s3" [checked]="eventExpression.type == 's3'" (click)="onAWSEventChange('s3')">
-                                    <label for="s3"><span></span><span class="background"></span>S3</label>
+                                    <label for="s3">
+                                        <span>
+                                                <span class="background"></span>
+                                        </span>
+                                        S3
+                                    </label>
                                 </div>
                             </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
+                            <section class="pad-left0 events-radio">
                                 <div class="radio-container">
                                     <input type="radio" name="AWSEvents" id="sqs" [value]="sqs" [checked]="eventExpression.type == 'sqs'" (click)="onAWSEventChange('sqs')">
-                                    <label for="sqs"><span></span><span class="background"></span>SQS</label>
+                                    <label for="sqs">
+                                        <span>
+                                                <span class="background"></span>
+                                        </span>
+                                        SQS
+                                    </label>
                                 </div>
                             </section>
                         </div>
-                        <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': eventExpression.type == 'none'}">
+                        <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': eventExpression.type == 'awsEventsNone'}" >
                             <div class="dynamodb-fields row zero-margin arrow_box hide" [class.show]="chkDynamodb()">
                                 <div class="col-lg-3 padding-right-0">
                                     <div class="text">Event</div>
@@ -763,7 +802,7 @@
                                 <p class="termsConditions error-message" *ngIf="((chkSQS()) && (!SQSstreamARN.valid && (SQSstreamARN.dirty || SQSstreamARN.touched)))">Queue name must contain only letters, numbers, hyphens or underscores.</p>
                                 <p class="termsConditions error-message" *ngIf="(chkSQS() && invalidEventName)">Queue name Should not begin or end with special character.</p>
                                 <p class="learn-more">Function would be triggered whenever new messages are added to the source SQS queue</p>
-                                </div>
+                            </div>
 
                         </div>
                     </div>

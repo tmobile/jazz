@@ -23,7 +23,6 @@ import { SharedModule } from './shared-module/shared.module';
 import { routes } from './app.route';
 import {UserJourneyComponent} from "./pages/user-journey/user-journey.component";
 import {UtilsService} from './core/services/utils.service';
-import { ScrollToModule } from 'ng2-scroll-to-el';
 
 let environmentval = environment.envName;
 let loadedModule;

@@ -47,10 +47,8 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
   deploymentTargetsList=["aws_apigateway","gcp_apigee"];
   deploymentTargetsLabels=["AWS API Gateway","GCP APIGEE"];
   ids=[
-    "service-type",
-    "platform-type",
-    "deployment-type",
-    "runtime-type",
+    "service-type-section",
+    "deployment-type-section",
     "additional",
     "typeevents"
   ]
@@ -161,7 +159,6 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
   public focusSQS = new EventEmitter<boolean>();
 
   scrollTo(id) {
-debugger
     const ele = document.getElementById(id);
     ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
   }
@@ -204,7 +201,6 @@ debugger
 
   getFiles(event){
     this.slsFile;
-    console.log('event', event)
     this.readThis(event.target);
 
     
@@ -217,8 +213,7 @@ debugger
 
     myReader.onloadend = function(e){
       // you can perform an action with readed data here
-      console.log('done')
-      console.log(myReader);
+
     }
 
     myReader.readAsText(file);
@@ -237,8 +232,8 @@ debugger
     // this.scrollTo(top, 10);
     // this.typeofserviceSelected = true;
     // this.typeofplatform = true;
+    // typeofserviceSelected
     var top = document.getElementById("platform-type").offsetTop ; 
-    console.log('top',top)               
 this.scrollTo('platform-type');
   }
 
@@ -765,22 +760,59 @@ this.scrollTo('platform-type');
       let ele = document.getElementById(this.ids[i]);
       if(el.offsetHeight + el.scrollTop == el.scrollHeight)
       {
-        debugger
-        ele.classList.remove('in-active');
+        
+        if(ele){
+          ele.classList.remove('in-active');
+        }
         continue;
       }
       let windowHeight = window.innerHeight;
+
+      if(this.ids[i]=="additional"){
+
+        if(rect.top < windowHeight/2){
+          if(ele){
+            ele.classList.add('ac-tive');
+          }
+        }
+        let eventEle = document.getElementById('typeevents');
+        if(eventEle){
+          if (!eventEle.classList.contains('in-active')){
+            if(ele){
+              ele.classList.remove('ac-tive');
+            }
+          }
+        }
+        
+      }
+      
       if(ele){
         var rect = ele.getBoundingClientRect();       
         let diff = windowHeight - ele.offsetHeight;
         
         if(i!=0){
-          if(rect.top < ((diff/2)-75) || rect.bottom > windowHeight-((diff/2)-75)){
-            ele.classList.add('in-active');    
+          
+          // if(rect.top < ((diff/2)-75) || rect.bottom > windowHeight-((diff/2)-75)){
+          if(rect.top > windowHeight/2){
+            ele.classList.add('in-active');  
+            if(this.ids[i].includes('type')){
+              let newId = this.ids[i]+'-label';
+              let element = document.getElementById(newId);
+              if(element){
+                element.classList.add('in-active');
+
+              }
+            } 
           }
           
           else{
-            ele.classList.remove('in-active');    
+            ele.classList.remove('in-active');   
+            if(this.ids[i].includes('type')){
+              let element = document.getElementById(this.ids[i]+'-label');
+              if(element){
+                element.classList.remove('in-active');
+              }
+            } 
           }
         }
         

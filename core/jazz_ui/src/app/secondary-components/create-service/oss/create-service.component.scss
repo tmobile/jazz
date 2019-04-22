@@ -1,7 +1,7 @@
 @import './../../../../main-styles';
 .create-service-wrap {
   background-color: white;
-  max-width: 980px;
+  max-width: 700px;
   width: 100vw;
   padding: 0 3.5rem;
   height: 100%;
@@ -23,13 +23,8 @@
 
 .service-box-section {
   padding-bottom: 15px;
-  min-width: 150px;
-  float: none;
   display: inline-block;
-  @media(min-width: 992px) {
-    padding-bottom: 20px;
-    min-width: 167px;
-  }
+  
   .service-box:focus {
     outline: none !important;
     border-color: #ed008c;
@@ -48,6 +43,8 @@
   padding: 2rem 0;
   cursor: pointer;
   min-height: 120px;
+  width:11rem;
+  height: 11rem;
   &.disabled-box {
     cursor: default;
   }
@@ -61,6 +58,7 @@
   width: 88%;
   max-width: 70px;
   object-fit: contain;
+  // opacity: 0.2;
 }
 
 .service-box p {
@@ -319,13 +317,15 @@
     padding-right: 5px;
   }
   &.arrow_box:after {
-    left: 50%;
+    left: 28.5%;
     margin-left: -7px;
   }
 }
-
+.rate-field>div{
+  width:50%;
+}
 .rate-field.arrow_box:after {
-  left: 25%;
+  left: 8%;
   margin-left: -12px;
 }
 
@@ -443,9 +443,8 @@
 }
 
 .event-schedule-fields,
-.aws-event-fields .row {
-  padding-top: 1.25rem;
-  padding-bottom: 1.25rem;
+.aws-event-fields {
+  padding: 1.25rem;
   background-color: lightgray;
   margin-left: 15px;
 }
@@ -453,10 +452,6 @@
 .zero-margin.row {
   margin-left: 0;
   margin-right: 0;
-}
-
-.each-step-wrap.aws-events input[type="radio"] + label span.background{
-  top: 5px;
 }
 
 .event-schedule-radio {
@@ -848,9 +843,11 @@ p.learn-more {
   }
 }
 .events-radio{
-  margin: 0 0.5rem;
+  margin-right: 2rem;
   width: auto;
-  padding: 0px 2.5rem 0 9px;
+}
+.rate-radio{
+  margin-right: 2rem;
 }
 .aws-events-left-block.stream-sqs{
   width: 19.5rem;
@@ -868,6 +865,7 @@ p.learn-more {
 .type-section{
   padding: 2rem 0;
   .sec-heading{
+    margin-bottom: 1rem;
     .icon-icon-right{
       .icon-right{
         height:1.2rem;
@@ -876,7 +874,6 @@ p.learn-more {
     .sec-heading-text{
       font-size: 1.5rem;
       text-transform: uppercase;
-      margin:0 1rem;
       font-weight: bold;
     }
   }
@@ -967,10 +964,10 @@ transform: rotate(0deg);
 }
 
 .in-active{
-  opacity: 0.7;
+  opacity: 0.7 !important;
 
   *{
-    opacity: 0.7;
+    opacity: 0.7 !important;
 
   }
 }
@@ -988,4 +985,23 @@ transform: rotate(0deg);
 
 .run-time{
   padding:4rem 0;
+}
+
+.selected-image{
+  // opacity:1 !important;
+}
+
+.service-type-width{
+  width:75%;
+}
+
+.deployment-target-width{
+  width:50%;
+}
+
+.ghost{
+  visibility: hidden;
+}
+.margin-15{
+  margin-bottom: 1.5rem;
 }

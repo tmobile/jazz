@@ -34,7 +34,7 @@ li {
 
 .step-title {
     margin: 0;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: bold;
     color: #222222;
     padding-bottom: 16px;
@@ -202,14 +202,16 @@ input[type="radio"] + label span {
     border: 1px solid #cccccc;
     &.background {
         position: absolute;
-        left: 4px;
-        top: 4px;
-        bottom: 4px;
+        // left: 4px;
+        // top: 4px;
+        // bottom: 4px;
         border: none;
         width: 11px;
         height: 11px;
         background-color: #fff;
         margin: 0;
+        display: flex;
+        transform: translate(3px,3px);
     }
 }
 
@@ -559,6 +561,15 @@ search-box{
     justify-content: center;
 }
 
+.space-between{
+    display: flex;
+    justify-content: space-between;
+}
+
 .align-center{
+    align-self: center;
+}
+.align-self{
+    display: flex;
     align-self: center;
 }
