@@ -1,24 +1,25 @@
 import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
 import * as _ from "lodash";
 
+
 @Component({
   selector: 'filter-modal',
   templateUrl: './filter-modal.component.html',
   styleUrls: ['./filter-modal.component.scss']
 })
-export class FilterModalComponent implements OnInit {
+export class FilterModalComponent implements  OnInit {
   @Output() formChange = new EventEmitter();
-  @Input() fields;
+  @Input() fields ;
   @Input() options;
-
+  @Input() assetList;
   public form = {
     columns: []
   };
   public opened = false;
+  public data:any;
 
   constructor() {
   }
-
   ngOnInit() {
     let columns = _(this.fields)
       .groupBy('column')
@@ -36,6 +37,21 @@ export class FilterModalComponent implements OnInit {
     this.ngOnInit();
   }
 
+  setFields(value)
+    {
+    this.fields = value; 
+    let columns = _(this.fields)
+      .groupBy('column')
+      .map((column, key, array) => {
+        return {
+          label: key,
+          fields: column
+        }
+      })
+      .value();
+    this.form.columns = columns;
+  }
+ 
   changeFilter(filterSelected, filterField) {
     filterField.selected = filterSelected;
     this.formChange.emit(filterField);
@@ -44,6 +60,7 @@ export class FilterModalComponent implements OnInit {
   getFieldValueOfLabel(fieldLabel) {
     try {
       let foundField = this.getAllFields().find((field) => {
+       
         return field.label === fieldLabel
       });
       let value = foundField.values[foundField.options.findIndex((option) => {

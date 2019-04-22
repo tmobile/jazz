@@ -97,6 +97,46 @@
           "produces": [
             "application/json"
           ],
+          "parameters": [
+            {
+              "name": "environment",
+              "in": "query",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "name": "asset_type",
+              "in": "query",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "name": "provider",
+              "in": "query",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "name": "provider_id",
+              "in": "query",
+              "required": false,
+              "type": "string"
+            },
+            {
+              "name": "limit",
+              "in": "query",
+              "required": false,
+              "type": "integer",
+              "format": "int32"
+            },
+            {
+              "name": "offset",
+              "in": "query",
+              "required": false,
+              "type": "integer",
+              "format": "int32"
+            }
+          ],
           "responses": {
             "200": {
               "description": "Successful Execution",

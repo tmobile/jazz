@@ -28,6 +28,8 @@
 		</div>
 	</div>
 </div>
+<div class="row-detail">
+<div class="col-detail">
 <div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined' >
 	<ul class=" col-md-12 col-sm-12">
 		<li class='det-wrp'>
@@ -59,7 +61,7 @@
 		<div   class='edit-service-overview-btn'>
 			<!-- <btn-jazz-secondary class='btn-edit-overview' *ngIf='showCancel'  text='CANCEL' (click)='onCancelClick()' ></btn-jazz-secondary> -->
 			<a  *ngIf='showCancel'  (click)='onCancelClick()'>CANCEL</a>
-			<btn-jazz-secondary [disablebtn]='(status_val > 4) || (status_val == 3) || branchname == "master"' class='btn-edit-overview'  *ngIf="editBtn" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
+			<btn-jazz-secondary  class='btn-edit-overview' [disablebtn]='(status_val > 4) || (status_val == 3) || branchname == "master" || !isAdminAccess' *ngIf="editBtn" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
 			<btn-jazz-secondary  class='btn-edit-overview' *ngIf='saveBtn' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onSaveClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
 			<!-- [style.borders]="edit_save=='SAVE'? 'none':'1px solid'"  -->
 		</div>
@@ -74,7 +76,7 @@
 					<div class="det-label">Description</div>
 					<div class="det-value desc" >{{services.description || 'Give me the details for your services'}}</div>
 				</li>
-				<li>
+				<li class="last-update">
 					<div class="det-label">Last Updated</div>
 					<div class="det-value" *ngIf="dayscommit" >{{commitDiff}} days ago</div>
 					<div class="det-value" *ngIf="hourscommit" >{{commitDiff}} hours ago</div>
@@ -265,6 +267,34 @@
 	</div>
 	<div class="loading-row" [class.show]="isLoading">
 		<div class="loading-circle"></div>
+	</div>
+</div>
+</div>
+<div class="service-details-application relative" *ngIf= "!website">
+	<div>
+	<span class="app-label">Application Definition</span>
+	<div   class='edit-service-overview-btn'>
+			<a  *ngIf='showCncl'  (click)='onCancel()'>CANCEL</a>
+			<btn-jazz-secondary class='btn-edit-overview'  *ngIf="editButton" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditAppClick()'></btn-jazz-secondary>
+			<btn-jazz-secondary  class='btn-edit-overview' [disablebtn]="invalid || disableSave" *ngIf='saveButton' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" [disablebtn]='disableEditBtn()'  (click)='descriptor()'></btn-jazz-secondary>
+		</div>
+	</div>
+	<div class="text-area-div" >
+		<div class="textbox">
+			<div class="line-numbers">
+					<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
+				  </div>
+		<textarea class="text-area" [disabled]="textarea"  (ngModelChange)="textChanged  && lineNumbers()"
+		 [(ngModel)]="yaml" id="yaml" name="yaml" (blur)='checkYaml()'></textarea>	
+	   </div>
+		<div *ngIf="isCancel">
+		<p class = "validation" *ngIf="isvalid">Valid Yaml file.</p>
+		<p class = "validation" *ngIf="invalid">Invalid Yaml file.</p>
+		</div>
+	</div>
+</div>
+<div class="loading-outer-div" [class.show]="isLoading">
+		<div class="loading-circle circle"></div>
 	</div>
 </div>
 

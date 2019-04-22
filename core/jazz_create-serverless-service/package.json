@@ -9,6 +9,7 @@
     "test": "mocha"
   },
   "dependencies": {
+    "js-yaml": "^3.12.1",
     "request": "^2.75.0"
   },
   "devDependencies": {

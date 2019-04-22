@@ -65,7 +65,8 @@ node  {
 		context_map = [created_by : service_config['created_by']]
 
 		events.sendStartedEvent("VALIDATE_INPUT", 'input validation starts', context_map)
-		if (service_config['type'] == "api" || service_config['type'] == "function" || service_config['type'] == "website") {
+
+		if (service_config['type'] == "api" || service_config['type'] == "function" || service_config['type'] == "website" || service_config['type'] == "sls-app") {
 			if (service_config['runtime'].startsWith("nodejs") || service_config['runtime'].startsWith("python") ||  service_config['runtime'].startsWith("java") ||  service_config['runtime'].startsWith("go") || service_config['runtime'] == "n/a") {
 				switch (service_config['type']) {
 					case "api":
@@ -73,7 +74,7 @@ node  {
 							service_template = "api-template-nodejs"
 						}
 						else if (service_config['runtime'].startsWith("python")){
-							service_template = 'api-template-python'	
+							service_template = 'api-template-python'
 						}
 						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'api-template-java'
@@ -88,13 +89,28 @@ node  {
 							service_template = "lambda-template-nodejs"
 						}
 						else if (service_config['runtime'].startsWith("python")){
-							service_template = 'lambda-template-python'	
+							service_template = 'lambda-template-python'
 						}
 						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'lambda-template-java'
 						}
 						else if (service_config['runtime'].startsWith("go")) {
 							service_template = 'lambda-template-go'
+						}
+						break
+
+					case "sls-app":
+						if (service_config['runtime'].startsWith("nodejs")) {
+							service_template = "sls-app-template-nodejs"
+						}
+						else if (service_config['runtime'].startsWith("python")) {
+							service_template = 'sls-app-template-python'
+						}
+						else if (service_config['runtime'].startsWith("java")) {
+							service_template = 'sls-app-template-java'
+						}
+						else if (service_config['runtime'].startsWith("go")) {
+							service_template = 'sls-app-template-go'
 						}
 						break
 
@@ -134,13 +150,13 @@ node  {
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getTemplateUrl(service_template)]]])
 				def config = LoadConfiguration()
 				def roleARN
-				
+
 				if (service_config['domain'] && service_config['domain'] == "jazz") {
 					roleARN = configLoader.AWS.PLATFORMSERVICES_ROLEID
 				} else {
 					roleARN = configLoader.AWS.USERSERVICES_ROLEID
 				}
-				
+
 				def serviceMetadataJson = [
 					"securityGroupIds": configLoader.AWS.SECURITY_GROUP_IDS,
 					"subnetIds": configLoader.AWS.SUBNET_IDS,
@@ -293,7 +309,7 @@ def getAuthToken() {
 			'password': PWD
 		]
 		def payload = JsonOutput.toJson(login_json)
-		
+
 		try {
 			def token = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \

@@ -12,7 +12,9 @@ import { AdvancedFilterService } from './../../advanced-filter.service';
 import { AdvFilters } from './../../adv-filter.directive';
 import { environment } from './../../../environments/environment';
 import { environment as env_internal } from './../../../environments/environment.internal';
-
+import { environment as env_oss} from './../../../environments/environment.oss';
+import * as _ from 'lodash';
+declare let Promise;
 
 
 
@@ -43,6 +45,7 @@ export class ServiceLogsComponent implements OnInit {
 	}
 	filter_loaded:boolean = false;
 	@Input() service: any = {};
+	@Output() onAssetSelected:EventEmitter<any> = new EventEmitter<any>();
 	@ViewChild('filtertags') FilterTags: FilterTagsComponent;
 	@ViewChild(AdvFilters) advFilters: AdvFilters;
 	componentFactoryResolver:ComponentFactoryResolver;
@@ -74,8 +77,14 @@ export class ServiceLogsComponent implements OnInit {
 		},
 		region:{
 			show:false,
+		},
+		asset:{
+			show:true,
 		}
 	}
+	selectFilter:any={};
+	public assetWithDefaultValue:any=[];
+	public assetType:any;
 	fromlogs:boolean = true;
 	payload:any={};
 	private http:any;
@@ -83,6 +92,8 @@ export class ServiceLogsComponent implements OnInit {
 	errBody: any;
 	parsedErrBody: any;
 	errMessage: any;
+	public assetList:any = [];
+	public assetSelected:any;
 	private toastmessage:any;
 	loadingState:string='default';
 	 private subscription:any;
@@ -152,8 +163,7 @@ export class ServiceLogsComponent implements OnInit {
 	sliderMax:number = 7;
 	rangeList: Array<string> = ['Day', 'Week', 'Month', 'Year'];
 	selectedTimeRange:string= this.rangeList[0];
-	
-
+	assetEvent:string;
 	filterSelected: Boolean = false;
 	searchActive: Boolean = false;
 	searchbar: string = '';
@@ -166,19 +176,22 @@ export class ServiceLogsComponent implements OnInit {
 	offsetValue:number = 0;
 
 	envList = ['prod','stg'];
+
 	
 	accList=env_internal.urls.accounts;
 	regList=env_internal.urls.regions;
-	  accSelected:string = this.accList[0];
+	accSelected:string = this.accList[0];
 	regSelected:string=this.regList[0];
   
     instance_yes;
 	getFilter(filterServ){
 		
-		this.service['islogs']=false;
+		this.service['islogs']=true;
 		this.service['isServicelogs']=true;
 		this.service['ismetrics']=false;
-
+		if(this.assetList){
+			this.service['assetList']=this.assetList;
+		}
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
 		var comp = this;
@@ -192,7 +205,17 @@ export class ServiceLogsComponent implements OnInit {
 		
 			comp.onFilterSelect(event);
 		});
+		this.instance_yes.onAssetSelect.subscribe(event => {
+		
+			comp.onAssetSelect(event);
+		});
 
+	}
+
+	onAssetSelect(event){
+		this.assetEvent=event
+		this.FilterTags.notify('filter-Asset',event);
+		this.assetSelected=event;
 	}
 
 	refresh(){
@@ -207,13 +230,41 @@ export class ServiceLogsComponent implements OnInit {
 	onregSelected(event){
     this.FilterTags.notify('filter-Region',event);
     this.regSelected=event;
-   }
- 
-	// onEnvSelected(env){
+	 }
+	 getAssetType(data?){
+		 let self=this;
+		return this.http.get('/jazz/assets',{
+			      domain: self.service.domain,
+						service: self.service.name,              
+		}).toPromise().then((response:any)=>{
+			if(response&&response.data&&response.data.assets){
+								let assets=_(response.data.assets).map('asset_type').uniq().value();
+								let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
+		            self.assetWithDefaultValue = validAssetList;
+								for(var i=0;i<self.assetWithDefaultValue.length;i++)
+								{
+                self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
+                }
+							
+								if(!data){
+									self.assetSelected=validAssetList[0].replace(/_/g," ");
+								}
+								this.payload.asset_type = this.assetSelected.replace(/ /g ,"_");
+								self.assetSelected=validAssetList[0].replace(/_/g," ");
+								self.callLogsFunc();
+								self.getFilter(self.advancedFilters);
+								self.instance_yes.showAsset = true;
+								self.instance_yes.assetSelected = validAssetList[0].replace(/_/g," ");
+		}
+		})
+		.catch((error) => {
+			return Promise.reject(error);
+		})
+	}
+
 
 	onEnvSelected(envt){
 		this.FilterTags.notify('filter-Env',envt);
-
 		// this.logsSearch.environment = env;
 		if(env === 'prod'){
 			env='prod'
@@ -239,17 +290,15 @@ export class ServiceLogsComponent implements OnInit {
 			this.FilterTags.notifyLogs('filter-TimeRange',event.value);		
 			this.sliderFrom =1;
 			this.FilterTags.notifyLogs('filter-TimeRangeSlider',this.sliderFrom);
-			
 			var resetdate = this.getStartDate(event.value, this.sliderFrom);
 			this.selectedTimeRange = event.value;
 			this.payload.start_time = resetdate;
 			this.resetPayload();
-			
 			break;
 		  }
 		  
 		  case 'account':{
-			  this.FilterTags.notify('filter-Account',event.value);
+			this.FilterTags.notify('filter-Account',event.value);
 			this.accSelected=event.value;
 			break;
 		  }
@@ -257,7 +306,6 @@ export class ServiceLogsComponent implements OnInit {
 			this.FilterTags.notify('filter-Region',event.value);
 			this.regSelected=event.value;
 			break;
-				
 		  }
 		  case "environment":{
 			this.FilterTags.notifyLogs('filter-Environment',event.value);
@@ -265,15 +313,17 @@ export class ServiceLogsComponent implements OnInit {
 			this.payload.environment = event.value;
 			this.resetPayload();
 			break;
-		  }
-	
-	   
+			}
+			case "asset":{
+			this.FilterTags.notifyLogs('filter-Asset',event.value);
+			this.assetSelected=event.value;
+			this.payload.asset_type = this.assetSelected.replace(/ /g ,"_");
+			this.resetPayload();
+			}
 		}
-		
 	  }
 	getRange(e){
 		this.FilterTags.notifyLogs('filter-TimeRangeSlider',e.from);
-		
 		this.sliderFrom =e.from;
 		this.sliderPercentFrom=e.from_percent;
 		var resetdate = this.getStartDate(this.selectedTimeRange, this.sliderFrom);
@@ -331,7 +381,13 @@ export class ServiceLogsComponent implements OnInit {
 				this.instance_yes.onMethodListSelected('POST');
 		  
 			break;
-		  }
+			}
+			case 'asset':{
+
+				this.instance_yes.getAssetType('lambda');
+
+				break;
+			}
 		  case 'all':{ this.instance_yes.onRangeListSelected('Day');    
 				this.instance_yes.onPeriodSelected('15 Minutes');
 				this.instance_yes.onStatisticSelected('Average');
@@ -339,6 +395,7 @@ export class ServiceLogsComponent implements OnInit {
 				this.instance_yes.onregSelected('reg 1');
 				this.instance_yes.onEnvSelected('prod');
 				this.instance_yes.onMethodListSelected('POST');
+				this.instance_yes.getAssetType('lambda');
 				break;
 		  	}
 		}
@@ -625,6 +682,10 @@ export class ServiceLogsComponent implements OnInit {
 	
 	  }
 	  ngOnChanges(x:any){
+			if(x.service.currentValue.domain)
+			{
+				this.getAssetType()
+			}
 		  this.fetchEnvlist();
 	  }
 	ngOnInit() {
@@ -635,16 +696,12 @@ export class ServiceLogsComponent implements OnInit {
 		   "domain" :   this.service.domain ,//"jazz", //
 		   "environment" :  this.environment, //"dev"
 		   "category" :   this.service.serviceType ,//"api",//
-		   "size" : this.limitValue,
+			 "size" : this.limitValue,
 		   "offset" : this.offsetValue,
-		   "type":this.filterloglevel ||"ERROR",
+			 "type":this.filterloglevel ||"ERROR",
 		   "end_time": (new Date().toISOString()).toString(),
 		   "start_time":new Date(todayDate.setDate(todayDate.getDate()-this.sliderFrom)).toISOString()
 	   }				
-		this.callLogsFunc();
+		
 	}
-
-	
-	
-
 }

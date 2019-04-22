@@ -1,0 +1,3 @@
+providerRuntime : java8
+providerMemorySize : 256
+providerTimeout : 160

@@ -43,7 +43,11 @@
     "ng2-popover": "0.0.14",
     "really-relaxed-json": "0.2.24",
     "rxjs": "5.5.6",
+<<<<<<< HEAD
     "yaml-lint": "^1.2.4"
+=======
+    "yaml-lint": "1.2.4"
+>>>>>>> sls_app
   },
   "devDependencies": {
     "@angular/cli": "1.7.3",

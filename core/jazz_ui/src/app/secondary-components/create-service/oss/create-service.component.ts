@@ -132,7 +132,6 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
   invalidEventName:boolean = false;
   runtimeKeys : any;
   runtimeObject : any;
-
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
   public apigeeFeature = this.buildEnvironment.INSTALLER_VARS.feature.apigee && this.buildEnvironment.INSTALLER_VARS.feature.apigee.toString() === "true" ? true : false;
@@ -263,6 +262,7 @@ this.scrollTo('platform-type');
     this.typeOfRuntime=runtimeType;
    
   }
+  
 
   // function for changing platform type
   changePlatformType(platformType){
@@ -487,7 +487,6 @@ this.scrollTo('platform-type');
         "website": "aws_cloudfront"
       }
     }
-
     if(this.slackSelected){
         payload["slack_channel"] = this.model.slackName;
     }
@@ -496,10 +495,12 @@ this.scrollTo('platform-type');
     }
 
     this.isLoading = true;
+    console.log(payload)
     this.http.post('/jazz/create-serverless-service' , payload)
         .subscribe(
         (Response) => {
           var output = Response;
+          console.log("res",output)
           this.serviceRequested = true;
           this.serviceRequestSuccess = true;
           this.serviceRequestFailure = false;
@@ -507,6 +508,7 @@ this.scrollTo('platform-type');
           var index = output.data.indexOf("https://");
           this.serviceLink = output.data.slice(index, output.data.length);
           this.resMessage=this.toastmessage.successMessage(Response,"createService");
+          console.log("res", this.resMessage)
           this.resetEvents();
        },
         (error) => {
