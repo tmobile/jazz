@@ -2,6 +2,8 @@ import sys
 import os
 import json
 
+
+sys.path.append(".")
 sys.path.insert(0, 'library')
 
 from components.logger import Logger
