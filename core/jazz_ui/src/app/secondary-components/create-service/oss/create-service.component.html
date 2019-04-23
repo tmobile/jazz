@@ -185,21 +185,6 @@
                     
                     
 
-                    <div  id="deployment-type-radio" *ngIf="deploymenttargetSelected" class="pad-left0 input-field-container runtime-aln">
-                        <section class="runtime-option disable-color">
-                            <div class="radio-container">
-                                <input type="radio" class='test-focus' name="deploymentTarget" id="deploymentTargetsList[0]" [value]="deploymentTargetsList[0]" [checked]="selectedDeploymentTarget == deploymentTargetsList[0]" (click)="changeDeploymentTarget('aws_apigateway')">
-                                <label for="deploymentTargetsList[0]"><span class='outer'></span><span class="background"></span>{{deploymentTargetsLabels[0]}}</label>
-                            </div>
-                        </section>
-                        <section class="runtime-option disable-color">
-                            <div class="radio-container">
-                                <input type="radio" class='test-focus' name="deploymentTarget" id="deploymentTargetsList[1]" [value]="deploymentTargetsList[1]" [checked]="selectedDeploymentTarget == deploymentTargetsList[1]" (click)="changeDeploymentTarget('gcp_apigee')">
-                                <label for="deploymentTargetsList[1]"><span class='outer'></span><span class="background"></span>{{deploymentTargetsLabels[1]}}</label>
-                            </div>
-                        </section>
-                    </div>
-
                     <div  id="deployment-type" *ngIf="!deploymenttargetSelected" class="">
                         <div class="service-type-width space-between">
                             <section class="pad-left0 service-box-section">
