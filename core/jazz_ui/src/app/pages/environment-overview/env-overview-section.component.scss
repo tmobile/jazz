@@ -391,6 +391,8 @@ transform: rotateY(-50%)
   height: calc(100% - 5em);
 }
 .textbox {
+  max-height: 33.5rem;
+  overflow-y: auto;
   display: flex;
   border-radius: 5px;
 }
@@ -403,15 +405,13 @@ transform: rotateY(-50%)
   outline: none;
   border:none;
   overflow: hidden;
-  padding: 0.3em;
+  padding: 2px;
+  line-height: 1.5em;
   resize:none;
   flex-grow: 1;
   background-color: #F8F8F8;
   border-radius: 0 5px 5px 0;
   min-height: 12rem;
-}
-.text-area-div{
-  height: calc(100% - 4em);
 }
 .service-details-application{
     border-radius: 3px;
@@ -420,7 +420,6 @@ transform: rotateY(-50%)
     flex-grow: 1;
     flex-basis: 0;
     padding: 1.6rem;
-    padding-top: 2.5rem;
     background-color: #ffffff;
     -webkit-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
     box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
@@ -636,6 +635,8 @@ transform: rotateY(-50%)
   margin:0;
 }
 .line-numbers{
+    height: 100%;
+    line-height: 1.5em;
     text-align:center;
     border-radius: 5px 0 0 5px;
     width: 4rem;

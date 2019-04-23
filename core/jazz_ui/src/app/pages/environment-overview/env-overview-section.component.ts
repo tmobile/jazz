@@ -1,4 +1,4 @@
-import { Component, OnInit, Input , OnChanges, SimpleChange, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input , OnChanges, SimpleChange, Output, EventEmitter, AfterViewInit } from '@angular/core';
 import { RequestService ,MessageService} from "../../core/services";
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToasterService} from 'angular2-toaster';
@@ -13,7 +13,7 @@ import { environment as env_internal } from './../../../environments/environment
   providers: [RequestService,MessageService,DataService],
   styleUrls: ['./env-overview-section.component.scss']
 })
-export class EnvOverviewSectionComponent implements OnInit {
+export class EnvOverviewSectionComponent implements OnInit, AfterViewInit {
   
   @Output() onload:EventEmitter<any> = new EventEmitter<any>();
   @Output() envLoad:EventEmitter<any> = new EventEmitter<any>();
@@ -73,7 +73,7 @@ export class EnvOverviewSectionComponent implements OnInit {
 	errorChecked:boolean=true;
 	errorInclude:any="";
   json:any={};
-  website:boolean = false;
+  slsapp:boolean = false;
   desc_temp:any;
   toastmessage:any;
   copyLink:string="Copy Link";
@@ -167,6 +167,8 @@ popup(state){
       this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
             .subscribe(
                 (Response)=>{
+                  let textElement = document.getElementsByClassName('text-area')[0];
+                  textElement.setAttribute('style', 'height:' + (textElement.scrollHeight) + 'px')
                   let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
                   this.toast_pop('success',"",successMessage);
 
@@ -205,8 +207,17 @@ popup(state){
       if(line_numbers < 7){
         line_numbers = 7;
       }
+      if(this.lineNumberCount){
+        if(line_numbers > this.lineNumberCount.length){
+          let textElement = document.getElementsByClassName('text-area')[0];
+          textElement.setAttribute('style', 'height:' + (textElement.scrollHeight+16) + 'px')
+        } else if(line_numbers < this.lineNumberCount.length){
+          let textElement = document.getElementsByClassName('text-area')[0];
+          textElement.setAttribute('style', 'height:' + (textElement.scrollHeight-16) + 'px')
+        }
+      }
       this.lineNumberCount = new Array(line_numbers);
-    }  
+    }
   }
   checkYaml(){
     let yaml = this.yaml.trim();
@@ -271,7 +282,10 @@ popup(state){
     this.yaml = this.yamlName;
     this.isCancel = false;
     this.disableSave = true;
-  }
+    let textElement = document.getElementsByClassName('text-area')[0];
+    textElement.setAttribute('style', 'height: auto')
+    textElement.setAttribute('style', 'height:' + (textElement.scrollHeight) + 'px')
+}
   onCancelClick(){
     this.showCncl=false;
     this.saveBtn=false;
@@ -333,16 +347,12 @@ popup(state){
       // this.http.get('/jazz/environments/prd?domain=jazz-testing&service=test-create').subscribe(
         (response) => {
 
-          let ser=response.data.environment[0].service;
           if(response.data == (undefined || '')){
            
             this.envResponseEmpty = true; 
             this.isLoading = false;
-          }else{
-            // response.data.environment[0].status='deletion_started'
-            if(ser == 'website'){
-              this.website = true; 
-            }
+          }
+          else {            
             this.onload.emit(response.data.environment[0].endpoint);
             this.envLoad.emit(response.data);
             this.environmnt=response.data.environment[0];
@@ -531,6 +541,15 @@ form_endplist(){
       this.data.currentMessage.subscribe(message => this.message = message)
   }
 
+  ngAfterViewInit(){
+    setTimeout(function(){
+      let textElement = document.getElementsByClassName('text-area')[0];
+      if(textElement){
+        textElement.setAttribute('style', 'height:' + (textElement.scrollHeight) + 'px')
+      }
+      },3500)  
+  }
+
   ngOnChanges(x:any) {
     this.route.params.subscribe(
       params => {
@@ -539,6 +558,10 @@ form_endplist(){
     this.environmnt={};
     if(this.service.domain != undefined)
       this.callServiceEnv();
+      let ser=this.service.serviceType;
+      if(ser == 'sls-app'){
+        this.slsapp = true; 
+      }
 }
 notify(services){
   this.service=services;

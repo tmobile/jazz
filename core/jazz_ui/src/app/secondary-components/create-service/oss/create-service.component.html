@@ -87,31 +87,31 @@
                         <section class="runtime-option">
                             <div class="radio-container">
                                 <input type="radio" class='test-focus' name="runtime" id="runtimeKeys[0]" [value]="runtimeKeys[0]" [checked]="runtime == runtimeKeys[0]" (click)="onSelectionChange(runtimeKeys[0])">
-                                <label for="runtimeKeys[0]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[0]]}}</label>
+                                <label for="runtimeKeys[0]"><span class='outer'><span class="background"></span></span>{{runtimeObject[runtimeKeys[0]]}}</label>
                             </div>
                         </section>
                         <section class="runtime-option">
                             <div class="radio-container">
                                 <input type="radio" name="runtime" id="runtimeKeys[1]" [value]="runtimeKeys[1]" [checked]="runtime == runtimeKeys[1]" (change)="onSelectionChange(runtimeKeys[1])">
-                                <label for="runtimeKeys[1]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[1]]}}</label>
+                                <label for="runtimeKeys[1]"><span class='outer'><span class="background"></span></span>{{runtimeObject[runtimeKeys[1]]}}</label>
                             </div>
                         </section>
                         <section class="runtime-option">
                             <div class="radio-container">
                                 <input type="radio" name="runtime" id="runtimeKeys[2]" [value]="runtimeKeys[2]" [checked]="runtime == runtimeKeys[2]" (change)="onSelectionChange(runtimeKeys[2])">
-                                <label for="runtimeKeys[2]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[2]]}}</label>
+                                <label for="runtimeKeys[2]"><span class='outer'><span class="background"></span></span>{{runtimeObject[runtimeKeys[2]]}}</label>
                             </div>
                         </section>
                         <section class="runtime-option">
                             <div class="radio-container">
                                 <input type="radio" name="runtime" id="runtimeKeys[3]" [value]="runtimeKeys[3]" [checked]="runtime == runtimeKeys[3]" (click)="onSelectionChange(runtimeKeys[3])">
-                                <label for="runtimeKeys[3]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[3]]}}</label>
+                                <label for="runtimeKeys[3]"><span class='outer'><span class="background"></span></span>{{runtimeObject[runtimeKeys[3]]}}</label>
                             </div>
                         </section>
                         <section class="runtime-option">
                             <div class="radio-container">
                                 <input type="radio" name="runtime" id="runtimeKeys[4]" [value]="runtimeKeys[4]" [checked]="runtime == runtimeKeys[4]" (click)="onSelectionChange(runtimeKeys[4])">
-                                <label for="runtimeKeys[4]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[4]]}}</label>
+                                <label for="runtimeKeys[4]"><span class='outer'><span class="background"></span></span>{{runtimeObject[runtimeKeys[4]]}}</label>
                             </div>
                         </section>
                     </div>
@@ -252,19 +252,19 @@
                             <section class="col-lg-3 col-md-3  pad-left0">
                                 <div class="radio-container">
                                     <input type="radio" name="EventSchedule" id="none" [value]="none" [checked]="rateExpression.type == 'none'" (click)="onEventScheduleChange('none')">
-                                    <label for="none"><span></span><span class="background"></span>None</label>
+                                    <label for="none"><span><span class="background"></span></span>None</label>
                                 </div>
                             </section>
                             <section class="col-lg-3 col-md-3  pad-left0">
                                 <div class="radio-container">
                                     <input type="radio" name="EventSchedule" id="fixedRate" [value]="rate" [checked]="rateExpression.type == 'rate'" (click)="onEventScheduleChange('rate')">
-                                    <label for="fixedRate"><span></span><span class="background"></span>Fixed Rate of</label>
+                                    <label for="fixedRate"><span><span class="background"></span></span>Fixed Rate of</label>
                                 </div>
                             </section>
                             <section class="col-lg-3 col-md-3  pad-left0">
                                 <div class="radio-container">
                                     <input type="radio" name="EventSchedule" id="cron" [value]="cron" [checked]="rateExpression.type == 'cron'" (click)="onEventScheduleChange('cron')">
-                                    <label for="cron"><span></span><span class="background"></span>Cron Expression</label>
+                                    <label for="cron"><span><span class="background"></span></span>Cron Expression</label>
                                 </div>
                             </section>
                         </div>
@@ -342,31 +342,31 @@
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input type="radio" name="AWSEvents" id="awsEventsNone" [value]="awsEventsNone" [checked]="eventExpression.type == 'awsEventsNone'" (click)="onAWSEventChange('awsEventsNone')">
-                                    <label for="awsEventsNone"><span></span><span class="background"></span>None</label>
+                                    <label for="awsEventsNone"><span><span class="background"></span></span>None</label>
                                 </div>
                             </section>
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="dynamodb" [value]="dynamodb" [checked]="eventExpression.type == 'dynamodb'" (click)="onAWSEventChange('dynamodb')">
-                                    <label for="dynamodb"><span></span><span class="background"></span>DynamoDB</label>
+                                    <label for="dynamodb"><span><span class="background"></span></span>DynamoDB</label>
                                 </div>
                             </section>
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="kinesis" [value]="kinesis" [checked]="eventExpression.type == 'kinesis'" (click)="onAWSEventChange('kinesis')">
-                                    <label for="kinesis"><span></span><span class="background"></span>Kinesis</label>
+                                    <label for="kinesis"><span><span class="background"></span></span>Kinesis</label>
                                 </div>
                             </section>
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                                 <div class="radio-container ">
                                     <input  type="radio" name="AWSEvents" id="s3" [value]="s3" [checked]="eventExpression.type == 's3'" (click)="onAWSEventChange('s3')">
-                                    <label for="s3"><span></span><span class="background"></span>S3</label>
+                                    <label for="s3"><span><span class="background"></span></span>S3</label>
                                 </div>
                             </section>
                             <section class="col-lg-2 col-md-2  pad-left0 events-radio">
                               <div class="radio-container">
                                   <input type="radio" name="AWSEvents" id="sqs" [value]="sqs" [checked]="eventExpression.type == 'sqs'" (click)="onAWSEventChange('sqs')">
-                                  <label for="sqs"><span></span><span class="background"></span>SQS</label>
+                                  <label for="sqs"><span><span class="background"></span></span>SQS</label>
                               </div>
                             </section>
                         </div>
