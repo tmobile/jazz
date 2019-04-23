@@ -1,7 +1,7 @@
 <jazz-mob-header (backClick)='closeCreateService(serviceRequestSuccess)' class='show-for-mobile' [icon]="'notification'" [headText]="'Create a Service'" [status]="'none'"></jazz-mob-header>
 <div (scroll)="onScroll($event)" id="crs" class="create-service-wrap" (click)="closeDropdowns()" [ngClass]="isLoading ? 'body-fix':'body-auto'">
     <section  *ngIf='!serviceRequested' class="each-step-wrap create-service-header hide-for-mobile">
-        <h4 class="bold-title" >
+        <h4 class="bold-title cr-title">
             Build a Service
         </h4>
         <!-- <img (click)="closeCreateService(serviceRequestSuccess)" src="../assets/images/icons/icon-close@3x.png"> -->
@@ -229,7 +229,7 @@
                     </div>
                 </div>
             </section>
-            <section  [class.disable-color]="typeofruntimeSelected" class="run-time" *ngIf="typeOfService != 'website'">
+            <section [class.disable-color]="typeofruntimeSelected" class="run-time" *ngIf="typeOfService != 'website' && typeOfService != 'custom'">
                 <p class="step-title">Choose your runtime<span>*</span></p>
 
                 <div  class="">
@@ -417,7 +417,7 @@
                     </div>
                 </section>
     
-                <section id="deployment-descriptor" class="each-step-wrap service-description">
+                <section id="deployment-descriptor" class="each-step-wrap service-description" *ngIf="typeOfService == 'custom'">
                     <div class="">
                         <div class="">
                             <p class="step-title">Deployment Descriptor</p>

@@ -170,7 +170,6 @@ export class LandingComponent implements OnInit {
 }
 
 export function scrollTo(to, duration) {    
-    debugger
     var el = document.getElementsByTagName("main")[0];
     if (el.scrollTop == to) return;
     let direction = true;

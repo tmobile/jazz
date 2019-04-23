@@ -33,7 +33,6 @@
 
 .type-of-platform,
 .type-of-service {
-  // padding-bottom: 0;
 }
 
 .service-box {
@@ -58,7 +57,6 @@
   width: 88%;
   max-width: 70px;
   object-fit: contain;
-  // opacity: 0.2;
 }
 
 .service-box p {
@@ -878,26 +876,11 @@ p.learn-more {
     }
   }
   .sec-content{
-    // max-height: 0;
     overflow: hidden;
     transition: 0.5s all;
   }
 
-  .open-sec-content{
-    // max-height: 35rem;
-    transition: 0.5s all;
-  }
-  .open-sec-content-deplyoments{
-    // max-height: 60rem;    
-    transition: 0.5s all;
-  }
-  .open-form{
-    // max-height: 100rem;    
-    transition: 0.5s all;
-  }
-  .rotate-icon-right{
-    transform: rotate(90deg);
-  }
+  
 }
 
 .disable-color{

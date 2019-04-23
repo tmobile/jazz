@@ -52,15 +52,6 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
     "additional",
     "typeevents"
   ]
-  // "service-name",
-  // "service-namespace",
-  // "service-description",
-  // "deployment-descriptor",
-  // "slack-channel",
-  // "cache-ttl",
-  // "cdn-config",
-  // "event-schedule",
-  // "aws-events"
   typeform:boolean=false;
   typeevents:boolean=false;
   deploymentDescriptorData = ["API Template","Function Template", "Website Template", "Start New"]
@@ -225,42 +216,18 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
   // function for changing service type
   changeServiceType(serviceType){
     this.typeOfService = serviceType;
-    // let id = 'typeofplatform'
-
-    // var top = document.getElementById(id).offsetTop;  
-    // this.scrollTo(top, 10);
-    // this.typeofserviceSelected = true;
-    // this.typeofplatform = true;
-    // typeofserviceSelected
-    var top = document.getElementById("platform-type").offsetTop ; 
-this.scrollTo('platform-type');
+    this.scrollTo('platform-type');
   }
 
-  deploymentOpen(){
-    // this.typeofplatform = !this.typeofplatform;
-    // this.typeofserviceSelected = true;
 
-  }
-
-  additionalOpen(){
-    // this.typeform = !this.typeform;
-    // this.typeofruntimeSelected = true;
-    // this.deploymenttargetSelected = true;
-    // this.typeofplatformSelected = true;
-
-
-  }
 
   changeDeploymentTarget(deploymentTarget){
     this.selectedDeploymentTarget =  deploymentTarget;
     this.scrollTo('runtime-type');
-
-
   }
 
   changeRuntimeType(runtimeType){
-    this.typeOfRuntime=runtimeType;
-   
+    this.typeOfRuntime=runtimeType;   
   }
   
 
@@ -313,8 +280,6 @@ this.scrollTo('platform-type');
   // function to get approvers list
   public getData() {
     let currentUserId = this.authenticationservice.getUserId();
-
-
   }
 
   //function to validate event source names
@@ -868,23 +833,6 @@ this.scrollTo('platform-type');
       this.delClass(elem, classToAdd);
       }
     }
-
-  // newFunc(){
-    
-  //   // params: element id, class to add, distance from top, unit ('percent' or 'pixels')
-  //   this.elementRef.nativeElement.querySelector('my-element')
-  //   window.addEventListener('scroll', function() {
-  //     this.elementFromTop(document.getElementById('service-type'), 'element-from-top', 200, 'pixels');
-  //     }, false);
-  //   window.addEventListener('scroll', function() {
-  //     this.elementFromTop(document.getElementById('service-name'), 'element-from-top', 350, 'pixels');
-  //     }, false);
-  //   window.addEventListener('scroll', function() {
-  //     this.elementFromTop(document.getElementById('event-schedule'), 'element-from-top', 500, 'pixels');
-  //     }, false);
-  // })();
-  
-  // }
 
 
   generateExpression(rateExpression){
