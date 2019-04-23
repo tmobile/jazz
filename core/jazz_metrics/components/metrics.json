@@ -123,6 +123,36 @@
           }
         ],
         "dimensions": ["DistributionId", "Region"]
+      },
+      "dynamodb": {
+        "metrics": [
+          {
+            "MetricName": "ConsumedReadCapacityUnits",
+            "Unit": "Count",
+            "Dimensions": ["TableName", "GlobalSecondaryIndexName"]
+          },
+          {
+            "MetricName": "ConsumedWriteCapacityUnits",
+            "Unit": "Count",
+            "Dimensions": ["TableName", "GlobalSecondaryIndexName"]
+          },
+          {
+            "MetricName": "ReturnedBytes",
+            "Unit": "Bytes",
+            "Dimensions": ["Operation", "StreamLabel", "TableName"]
+          },
+          {
+            "MetricName": "ReturnedItemCount",
+            "Unit": "Count",
+            "Dimensions": ["Operation", "TableName"]
+          },
+          {
+            "MetricName": "ReturnedRecordsCount",
+            "Unit": "Count",
+            "Dimensions": ["Operation", "StreamLabel", "TableName"]
+          }
+        ],
+        "dimensions": ["TableName", "GlobalSecondaryIndexName", "Operation", "StreamLabel"]
       }
     },
     "gcp": {

@@ -189,7 +189,7 @@ var validateAssetType = (input) => {
     if(input.asset_type && global_config.ASSET_TYPES.indexOf(input.asset_type) === -1) {
       reject({
         result: "inputError",
-        message: "Invalid asset type"
+        message: `${input.asset_type} asset type is not supported.`
       });
     } else {
       resolve(input);
