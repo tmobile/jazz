@@ -55,11 +55,11 @@
       <div class="header-section left">
         <div class="header-tabs">
           <div class="header-tab"
-               *ngIf = "isService"
+               *ngIf = "isLoggedIn && isAdmin"
                routerLink="/services"
                routerLinkActive="active">Services</div>
           <div class="header-tab"
-               *ngIf="isAdmin"
+               *ngIf="isAdmin && isLoggedIn"
                routerLink="/admin"
                routerLinkActive="active">Admin</div>
         </div>

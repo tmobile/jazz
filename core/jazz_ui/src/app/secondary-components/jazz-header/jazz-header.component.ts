@@ -52,7 +52,6 @@ export class JazzHeaderComponent implements OnInit {
     loggedinUser:string='';
     overridingUrl:string = "";
     public isAdmin = false;
-    public isService = false;
 
 
     public toggleLoginPanel () {
