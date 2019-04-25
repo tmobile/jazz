@@ -43,7 +43,8 @@
     "ng2-dropdown": "0.0.21",
     "ng2-popover": "0.0.14",
     "really-relaxed-json": "0.2.24",
-    "rxjs": "5.5.6"
+    "rxjs": "5.5.6",
+    "yaml-lint": "1.2.4"
   },
   "devDependencies": {
     "@angular/cli": "1.7.3",

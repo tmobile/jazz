@@ -1,15 +1,51 @@
 {
-    "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
-    "SERVICE_API_RESOURCE": "/stg/jazz/is-service-available",
-    "services_environment_table": "{inst_stack_prefix}_Environments_Stg",
-    "service_environment_required_fields": ["logical_id", "service", "domain", "status", "created_by", "physical_id"],
-    "service_environment_changeable_fields": ["friendly_name", "endpoint", "status", "metadata"],
-    "service_environment_unchangeable_fields": ["service", "logical_id", "physical_id", "domain", "created", "created_by", "last_updated"],
-    "service_environment_status": ["active", "inactive", "pending_approval", "deployment_started", "deployment_failed", "deployment_completed", "deletion_started", "deletion_failed", "archived"],
-    "service_environment_filter_params": ["service", "domain", "logical_id", "physical_id"],
-    "service_environment_production_logical_id": "prod",
-    "service_environment_stage_logical_id": "stg",
-    "services_environment_index": "EnvironmentsDomainServiceIndex",
-    "ddb-region": "{conf-region}",
-    "admin_users": "{jazz_admin}"
+  "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+  "SERVICE_API_RESOURCE": "/stg/jazz/is-service-available",
+  "services_environment_table": "{inst_stack_prefix}_Environments_Stg",
+  "service_environment_required_fields": [
+    "logical_id",
+    "service",
+    "domain",
+    "status",
+    "created_by",
+    "physical_id"
+  ],
+  "service_environment_changeable_fields": [
+    "friendly_name",
+    "endpoint",
+    "status",
+    "metadata",
+    "deployment_descriptor"
+  ],
+  "service_environment_unchangeable_fields": [
+    "service",
+    "logical_id",
+    "physical_id",
+    "domain",
+    "created",
+    "created_by",
+    "last_updated"
+  ],
+  "service_environment_status": [
+    "active",
+    "inactive",
+    "pending_approval",
+    "deployment_started",
+    "deployment_failed",
+    "deployment_completed",
+    "deletion_started",
+    "deletion_failed",
+    "archived"
+  ],
+  "service_environment_filter_params": [
+    "service",
+    "domain",
+    "logical_id",
+    "physical_id"
+  ],
+  "service_environment_production_logical_id": "prod",
+  "service_environment_stage_logical_id": "stg",
+  "services_environment_index": "EnvironmentsDomainServiceIndex",
+  "ddb-region": "{conf-region}",
+  "admin_users": "{jazz_admin}"
 }

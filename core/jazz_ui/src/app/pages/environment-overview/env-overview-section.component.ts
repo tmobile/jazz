@@ -1,4 +1,4 @@
-import { Component, OnInit, Input , OnChanges, SimpleChange, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, Input , OnChanges, SimpleChange, Output, EventEmitter, AfterViewInit } from '@angular/core';
 import { RequestService ,MessageService} from "../../core/services";
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToasterService} from 'angular2-toaster';
@@ -13,7 +13,7 @@ import { environment as env_internal } from './../../../environments/environment
   providers: [RequestService,MessageService,DataService],
   styleUrls: ['./env-overview-section.component.scss']
 })
-export class EnvOverviewSectionComponent implements OnInit {
+export class EnvOverviewSectionComponent implements OnInit, AfterViewInit {
   
   @Output() onload:EventEmitter<any> = new EventEmitter<any>();
   @Output() envLoad:EventEmitter<any> = new EventEmitter<any>();
@@ -21,7 +21,7 @@ export class EnvOverviewSectionComponent implements OnInit {
 
   accList=env_internal.urls.accounts;
 	regList=env_internal.urls.regions;
-	  accSelected:string = this.accList[0];
+	accSelected:string = this.accList[0];
   regSelected:string=this.regList[0];
  
 
@@ -33,13 +33,24 @@ export class EnvOverviewSectionComponent implements OnInit {
   private env:any;
   branchname: any;
   friendlyChanged:boolean = false;
+  textChanged:boolean = true;
   tempFriendlyName:string;
+  yaml:string = "";
+  textarea:boolean= true;
+  tempTextArea:string;
   friendlyName : string;
+  yamlName:string;
   lastCommitted: any;
+  isCancel:boolean=false;
   editBtn:boolean = true;
   saveBtn:boolean = false;
+  saveButton:boolean=false;
+  editButton:boolean=true;
   showCancel:boolean = false;
+  showCncl:boolean=false;
   environmnt:any;
+  isDiv:boolean=true;
+  isvalid:boolean=false;
   envResponseEmpty:boolean = false;
   envResponseTrue:boolean = false;
   envResponseError:boolean = false;
@@ -48,6 +59,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   hourscommit: boolean = false;
   seccommit: boolean = false;
   mincommit: boolean = false;
+  isEditClicked:boolean=false;
   commitDiff: any;
   copylinkmsg = "COPY LINK TO CLIPBOARD";
   envstatus:any;
@@ -61,13 +73,15 @@ export class EnvOverviewSectionComponent implements OnInit {
 	errorChecked:boolean=true;
 	errorInclude:any="";
   json:any={};
+  slsapp:boolean = false;
   desc_temp:any;
   toastmessage:any;
   copyLink:string="Copy Link";
+  disableSave:boolean = true;
+  invalid:boolean = false;
  
   message:string="lalalala"
-  
-  
+  public lineNumberCount: any = new Array(7);
   private subscription:any;
 
   @Input() service: any = {};
@@ -124,19 +138,109 @@ popup(state){
   
 }
   onEditClick(){
-    
     this.tempFriendlyName=this.friendlyName;
     this.showCancel=true;
     this.saveBtn=true;
     this.editBtn=false;
+  }
 
+  onEditAppClick(){
+    this.yaml = this.yamlName;
+    this.showCncl = true;
+    this.isDiv = true;
+    this.saveButton = true;
+    this.editButton = false;
+    this.isCancel = false;
+    this.textChanged = true;
+    this.disableSave = true;
+    this.textarea = false;
+  }
+  descriptor(){
+    this.showCncl = false;
+    this.editButton = true;
+    this.textarea = true;
+    this.saveBtn = false;
+    this.saveButton = false;
+    var errMsgBody;
+    if(this.textChanged === true){
+      this.put_payload.deployment_descriptor= this.yaml;
+      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
+            .subscribe(
+                (Response)=>{
+                  let textElement = document.getElementsByClassName('text-area')[0];
+                  textElement.setAttribute('style', 'height:' + (textElement.scrollHeight) + 'px')
+                  let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
+                  this.toast_pop('success',"",successMessage);
+
+                  this.callServiceEnv();
+                  this.yaml='';
+                },
+                (error)=>{
+                  try{
+                    errMsgBody=JSON.parse(error._body);
+                  }
+                  catch(e){
+                  }
+                  let errorMessage='';
+                  if(errMsgBody!=undefined)
+                    errorMessage = errMsgBody.message;
+                  // let errorMessage = this.toastmessage.errorMessage(Error,"updateEnv");
+                  this.toast_pop('error', 'Oops!', errorMessage)
+                  this.callServiceEnv();
+
+                }
+              );
+              this.isLoading = true;
+              this.envResponseTrue = false;
+              this.textChanged = false;
+              this.isCancel = false;
+              this.disableSave = true;            
+    }
+    
+  }
+  lineNumbers() {
+    let lines;
+    if(this.yaml)
+    {
+      lines = this.yaml.split(/\r*\n/);
+      let line_numbers = lines.length;
+      if(line_numbers < 7){
+        line_numbers = 7;
+      }
+      if(this.lineNumberCount){
+        if(line_numbers > this.lineNumberCount.length){
+          let textElement = document.getElementsByClassName('text-area')[0];
+          textElement.setAttribute('style', 'height:' + (textElement.scrollHeight+16) + 'px')
+        } else if(line_numbers < this.lineNumberCount.length){
+          let textElement = document.getElementsByClassName('text-area')[0];
+          textElement.setAttribute('style', 'height:' + (textElement.scrollHeight-16) + 'px')
+        }
+      }
+      this.lineNumberCount = new Array(line_numbers);
+    }
+  }
+  checkYaml(){
+    let yaml = this.yaml.trim();
+    if(yaml) {
+      this.isCancel = true;
+      const yamlLint = require('yaml-lint');
+      yamlLint.lint(yaml).then(() => {
+        this.isvalid = true;
+        this.disableSave = false;
+      }).catch((error) => {
+        this.invalid = true;
+      });
+    }
+    else{
+      this.disableSave = true;
+      this.isCancel = false;
+    }
   }
   onSaveClick(){
     this.showCancel=false;
     this.saveBtn=false;
     this.editBtn=true;
     var errMsgBody;
-
     if(this.friendlyChanged){
       this.put_payload.friendly_name= this.tempFriendlyName;
       this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
@@ -170,8 +274,20 @@ popup(state){
     }
     
   }
+  onCancel(){
+    this.showCncl = false;
+    this.saveButton = false;
+    this.editButton = true;
+    this.textarea = true;
+    this.yaml = this.yamlName;
+    this.isCancel = false;
+    this.disableSave = true;
+    let textElement = document.getElementsByClassName('text-area')[0];
+    textElement.setAttribute('style', 'height: auto')
+    textElement.setAttribute('style', 'height:' + (textElement.scrollHeight) + 'px')
+}
   onCancelClick(){
-    this.showCancel=false;
+    this.showCncl=false;
     this.saveBtn=false;
     this.editBtn=true;
     this.tempFriendlyName='';
@@ -235,8 +351,8 @@ popup(state){
            
             this.envResponseEmpty = true; 
             this.isLoading = false;
-          }else{
-            // response.data.environment[0].status='deletion_started'
+          }
+          else {            
             this.onload.emit(response.data.environment[0].endpoint);
             this.envLoad.emit(response.data);
             this.environmnt=response.data.environment[0];
@@ -248,13 +364,14 @@ popup(state){
             this.envstatus = deployment_status[this.status_val].replace("_"," ");
 
             var envResponse = response.data.environment[0];
-            this.friendlyName = envResponse.friendly_name
+            this.friendlyName = envResponse.friendly_name;
+            this.yamlName= envResponse.deployment_descriptor;
+            this.yaml = this.yamlName;
             this.branchname = envResponse.physical_id;
             this.lastCommitted = envResponse.last_updated;
             this.frndload.emit(this.friendlyName);
-
-            this.formatLastCommit();               
-            
+            this.formatLastCommit(); 
+            this.lineNumbers();              
             this.envResponseTrue = true;
             this.envResponseEmpty = false;
             this.isLoading = false;
@@ -424,6 +541,15 @@ form_endplist(){
       this.data.currentMessage.subscribe(message => this.message = message)
   }
 
+  ngAfterViewInit(){
+    setTimeout(function(){
+      let textElement = document.getElementsByClassName('text-area')[0];
+      if(textElement){
+        textElement.setAttribute('style', 'height:' + (textElement.scrollHeight) + 'px')
+      }
+      },3500)  
+  }
+
   ngOnChanges(x:any) {
     this.route.params.subscribe(
       params => {
@@ -432,6 +558,10 @@ form_endplist(){
     this.environmnt={};
     if(this.service.domain != undefined)
       this.callServiceEnv();
+      let ser=this.service.serviceType;
+      if(ser == 'sls-app'){
+        this.slsapp = true; 
+      }
 }
 notify(services){
   this.service=services;

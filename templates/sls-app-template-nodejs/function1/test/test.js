@@ -3,7 +3,7 @@ const assert = require('chai').assert;
 const service = require('..');
 
 describe('Sample', () => {
-  it('tests handler', (done) => {
+  it('tests handler 1', (done) => {
     service.handler({"event": "event"},
                     {"functionName": "coolFunction-prod"},
                     (err, data) => {

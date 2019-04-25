@@ -10,6 +10,19 @@ export const environment = {
   envLists:  {"nodejs8.10": "Nodejs 8.10", "python2.7": "Python 2.7", "python3.6": "Python 3.6", "java8": "Java 8", "go1.x": "Go 1.x"},
   serviceTabs: ["{overview}", "{access control}", "{metrics}", "{logs}", "{cost}"],
   environmentTabs: ["{env_overview}", "{deployments}", "{code quality}", "{metrics}", "{assets}", "{env_logs}"],
+  assetTypeList:[
+		"lambda",
+		"apigateway",
+		"cloudfront",
+		"s3",
+		"dynamodb",
+		"cloudwatch_event",
+    "dynamodb_stream",
+    "iam_role",
+    "sqs",
+    "kinesis_stream",
+    "apigee_proxy"
+	],
   charachterLimits:{
     eventMaxLength:{
       "stream_name":128,

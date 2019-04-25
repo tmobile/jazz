@@ -1,5 +1,6 @@
-import { Component,ViewContainerRef, OnInit, Input, Output, EventEmitter,ViewChild } from '@angular/core';
+import { Component,ViewContainerRef, OnInit, Input,Inject,Output, EventEmitter,ViewChild,ComponentFactoryResolver } from '@angular/core';
 import { DataCacheService } from '../../../core/services/index';
+import { RequestService } from "../../../core/services";
 import { environment as env_internal } from './../../../../environments/environment.internal';
 
 @Component({
@@ -8,27 +9,31 @@ import { environment as env_internal } from './../../../../environments/environm
   styleUrls: ['./advanced-filters.component.scss']
 })
 export class AdvancedFiltersComponentOSS implements OnInit {
-   
-
-    constructor(public viewContainerRef: ViewContainerRef, private cache: DataCacheService) { }
+    private http;
+    constructor(public viewContainerRef: ViewContainerRef,
+                private cache: DataCacheService,	
+                private request:RequestService,
+              ){ this.http = this.request}
     data:any;
     @Input() advanced_filter_input:any = {};
     @Input() logs:boolean = false;
     @Input() assets:boolean = false;
-
     @Input() service: any = {};
-
-    
     @Output() onFilterSelect:EventEmitter<any> = new EventEmitter<any>();
-
-
+    @Output() onAssetSelect:EventEmitter<any> = new EventEmitter<any>();
+    @ViewChild('filters') filters;
+    public assetFilter;
+    public formFields: any = [];
+    public assetList:any=[];
     slider:any;
     sliderFrom = 1;
     sliderPercentFrom=0;
     sliderMax:number = 7;
-
+    showAsset:boolean = false;
+    assetSel:any={};
 
     filterSelected:boolean;
+    isAsset:boolean=false;
 
     selectFilter:any={}
     periodList: Array<string> = ['15 Minutes','1 Hour','6 Hours','1 Day','7 Days','30 Days'];
@@ -49,12 +54,11 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     pathList:Array<string>=[];
     pathSelected:string = '';
 
-
     accList=env_internal.urls.accounts;
 	regList=env_internal.urls.regions;
-	  accSelected:string = this.accList[0];
-	regSelected:string=this.regList[0];
-
+	accSelected:string = this.accList[0];
+    regSelected:string=this.regList[0];
+    
     envList:any=['prod','stg'];
     envSelected:string=this.envList[0];
   
@@ -114,7 +118,15 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         this.selectFilter["value"] = event;
         this.onFilterSelect.emit(this.selectFilter);
     }
-    
+
+    getAssetType(event){
+        console.log("event",event);
+        this.assetSel=event;
+        this.selectFilter["key"]='asset';
+        this.selectFilter["value"]=event;
+        this.onAssetSelect.emit(event);
+       this.onFilterSelect.emit(this.selectFilter)
+    }
     onEnvSelected(envt){
 
         this.envSelected = envt;
@@ -137,7 +149,8 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         this.selectFilter["value"]=method;
         this.onFilterSelect.emit(this.selectFilter);
     }
-
+    
+    
     onPathListicSelected(path){
         this.pathSelected=path;
         this.selectFilter["key"]='path';
@@ -164,7 +177,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     ngOnInit(){
         this.advanced_filter_input = this.data.advanced_filter_input;
         this.service = this.data.service;
-
+        this.assetList = this.service.assetList
         if(this.service.ismetrics){
             this.statisticSelected=this.statisticList[1];
         }

@@ -64,7 +64,8 @@ describe('platform_logs', function() {
         "domain": "bA11r00m",
         "category": "api",
         "offset": "44",
-        "type" : "debug"
+        "type" : "debug",
+        "asset_type": "lambda"
       },
       "method":"POST",
       "path" : {},
@@ -235,6 +236,26 @@ describe('platform_logs', function() {
   });
 
   /*
+  * Given event.body.asset_type that is listed as valid in config, handler() should not inform of asset_type exception
+  * @param{object} event -> event.body.asset_type can be any whitelisted asset(apigateway, lambda, s3 etc), not invalidasset or other
+  * @params{object, function} aws context, and callback function as described in beforeEach
+  * @returns{string} error message indicating a bad request was made
+  */
+ it("should allow only apilogs and applicationlogs to be listed as the asset type", () => {
+  errorMessage = "Only following values are allowed for asset type - ";
+  errorType = "BadRequest";
+  var invalidArray = ["lambda", "apigateway", "invalidasset"];
+  var acceptCount = 3;
+  //only have 2 of the values listed be acceptable
+  for(i in invalidArray){
+    if(inputValidation("body", "asset_type", invalidArray[i], errorMessage, errorType)){
+      acceptCount--;
+    }
+  }
+  assert.isTrue(acceptCount == 2);
+});
+
+  /*
   * Given an event.body.type not listed as valid through config or is not given, handler() indicates type isn't valid
   * @param{object} event -> event.body.type = falsy or is not listed as valid in config file
   * @params{object, function} aws context, and callback function as described in beforeEach
@@ -295,7 +316,7 @@ describe('platform_logs', function() {
     assert.isTrue(allChecks);
   });
   */
- 
+
   /*
   * Given a 200 response, handler() reveals content of returned response
   * @param {object, object, function} default event, context, and callback as described in beforeEach

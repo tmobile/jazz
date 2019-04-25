@@ -7,6 +7,11 @@
   <version>1.0</version>
   <name>sls-app-java-template</name>
 
+  <properties>
+      <maven.compiler.source>1.6</maven.compiler.source>
+      <maven.compiler.target>1.6</maven.compiler.target>
+  </properties>  
+
   <dependencies>
     <dependency>
       <groupId>com.amazonaws</groupId>

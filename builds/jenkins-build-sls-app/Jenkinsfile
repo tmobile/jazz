@@ -137,10 +137,14 @@ node() {
   events.sendStartedEvent('CREATE_DEPLOYMENT', 'Serverless application deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
   dir(repo_name) {
-  /* Writing the file from config */
-    def dd = prepareServerlessYml(config, environment_logical_id) // Generating the deployment descriptor
-    echo "prepareServerlessYml = ${dd}"
-    writeYaml(file: './serverless.yml', data: dd)
+    try {
+      def dd = prepareServerlessYml(config, environment_logical_id) // Generating the deployment descriptor
+      echo "prepareServerlessYml = ${dd}"
+      writeYaml(file: './serverless.yml', data: dd)
+    } catch(FileAlreadyExistsException faee) {
+      echo 'The serverless.yml exists inside the source code thus disregarding the deployment descriptor content from the service catalog'
+      echoServerlessFile()
+    }
 
     if (domain && domain == "jazz") {
       stage('Update Service Template') {
@@ -255,7 +259,18 @@ node() {
           def cftJson = parseJson(cft)
           def outstandingResources = whiteListModule.validate(cftJson)
           if(outstandingResources.isEmpty()) {
-            events.sendCompletedEvent('TEMPLATE_VALIDATION', 'Template validation has been completed', context_map, environment_logical_id)
+            def serverlessyml = readFile('./serverless.yml').trim()
+            def outstandingActions = whiteListModule.validateActions(serverlessyml)
+            if(outstandingActions.isEmpty()) {
+              def outstandingPlugins = whiteListModule.validatePlugins(serverlessyml)
+              if(outstandingPlugins.isEmpty()) {
+                events.sendCompletedEvent('TEMPLATE_VALIDATION', 'Template validation has been completed', context_map, environment_logical_id)
+              } else {
+                error "The following plugins are not allowed: ${outstandingPlugins}"
+              }
+            } else {
+              error "The action types are not allowed: ${outstandingActions}"
+            }
           } else {
             // Hopefully it'll raise an exception that is going to be immediately intercepted below
             error "The resource types not allowed: ${outstandingResources}"
@@ -372,18 +387,20 @@ def echoServerlessFile() {
   echo "serverless file data $serverlessyml"
 }
 
-def fillFunctionElem(elem, idx, config, env) {
-  if(!elem['name']) elem['name'] = "${config['domain']}-${config['service']}-${env}-${idx}".toString()
-  if(!elem['handler']) elem['handler'] = "index.handler"
-  if(!elem['role']) elem['role'] = config['iamRoleARN']
-  if(!elem['description']) elem['description'] = "${config['domain']}-${config['service']} Lambda Function".toString()
-  if(!elem['runtime']) elem['runtime'] = config['providerRuntime']
-  if(!elem['memorySize']) elem['memorySize'] = config['providerMemorySize']
-  if(!elem['timeout']) elem['timeout'] = config['providerTimeout']
+def fillFunctionElem(elem, varName, config, env) {
+  if(!elem['name']) elem['name'] = "${config['domain']}-${config['service']}-${varName}-${env}".toString()
+  if(!elem['handler']) elem['handler'] = "${varName}/index.handler"
+/*  if(!elem['role']) elem['role'] = config['iamRoleARN'] */
+/*  if(!elem['description']) elem['description'] = "${config['domain']}-${config['service']} Lambda Function".toString() */
+/*  if(!elem['runtime']) elem['runtime'] = config['providerRuntime'] */
+/*  if(!elem['memorySize']) elem['memorySize'] = config['providerMemorySize'] */
+/*  if(!elem['timeout']) elem['timeout'] = config['providerTimeout'] */
 }
 
 def prepareServerlessYml(aConfig, env) {
   def dd = aConfig['deployment_descriptor']
+  echo "---------- dd -------------> $dd"
+
   def doc = dd ? readYaml(text: dd) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
   if(!doc['service']) doc['service'] = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}".toString() // toString() is needed here because otherwise the de-serialization back to Yaml will be invalid
   def providerElem = doc['provider']
@@ -396,7 +413,14 @@ def prepareServerlessYml(aConfig, env) {
   if(!providerElem['region']) providerElem['region'] = config['region']
   if(!providerElem['stage']) providerElem['stage'] = env
   if(!providerElem['owner']) providerElem['owner'] = config['created_by']
-  if(!providerElem['domain']) providerElem['domain'] = ""
+  /* 3 lines below */
+  if(!providerElem['domain']) providerElem['domain'] = config['domain']
+  if(!providerElem['role']) providerElem['role'] = config['iamRoleARN']
+  if(!providerElem['runtime']) providerElem['runtime'] = config['providerRuntime']
+  if(!doc['package'] && config['artifact'] && providerElem['runtime'].toUpperCase().contains("JAVA")) {
+    doc['package'] = ['artifact' : "target/${config['artifact']}"]
+  }
+
   def stackTagsElem = providerElem['stackTags']
   if(!stackTagsElem) {
     stackTagsElem = [:]
@@ -408,13 +432,6 @@ def prepareServerlessYml(aConfig, env) {
   if(!stackTagsElem['owner']) stackTagsElem['owner'] = config['created_by']
   if(!stackTagsElem['environment']) stackTagsElem['environment'] = env
 
-  def customElem = doc['custom']
-  if(!customElem) {
-    customElem = [:]
-    doc['custom'] = customElem
-  }
-  if(!customElem['myStage']) customElem['myStage'] = env
-
   def functionsElem = doc['functions']
   if(!functionsElem) {
     functionsElem = ['handler':[:]]
@@ -422,11 +439,8 @@ def prepareServerlessYml(aConfig, env) {
     fillFunctionElem(functionsElem['handler'], 0, config, env)
   } else {
     // Traversing through the list of functions and calling fillFunctionElem with index to help with the name creation
-    functionsElem.collect{key, val -> val} // The logical name of function (key) is no use now so we throw it away and mapping values only
-                 .withIndex() // Adding the index to each value rendered. It helps with name creation if such has not been provided
-                 .collect{z -> fillFunctionElem(z[0], z[1], config, env)} // Applying the function for each [val, idx] pair generated
+    functionsElem.collect{key, val -> fillFunctionElem(val, key, config, env)}
   }
-
 // Supplying the Outputs element to render all arns for all 'resources/Resources that got listed'
   def smallResourcesElem = doc['resources']
   if(smallResourcesElem) {
@@ -612,25 +626,6 @@ def validateDeploymentConfigurations(def prop) {
 		error "Wrong configuration. Key 'region' is missing in the configuration"
 	}
 
-	def runtime = prop['providerRuntime']
-	if (runtime.indexOf("java") > -1) {
-
-		if (prop.containsKey("artifact")) {
-			if (prop['artifact'] == "") {
-				error "Wrong configuration. Value for Key 'artifact' is missing in the configuration"
-			}
-		} else {
-			error "Wrong configuration. Key 'artifact' is missing in the configuration"
-		}
-
-		if (prop.containsKey("mainClass")) {
-			if (prop['mainClass'] == "") {
-				error "Wrong configuration. Value for Key 'mainClass' is missing in the configuration"
-			}
-		} else {
-			error "Wrong configuration. Key 'mainClass' is missing in the configuration"
-		}
-	}
 }
 
 def echoServiceInfo(String env) {

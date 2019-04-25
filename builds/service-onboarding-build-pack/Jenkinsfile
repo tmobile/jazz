@@ -74,7 +74,7 @@ node  {
 							service_template = "api-template-nodejs"
 						}
 						else if (service_config['runtime'].startsWith("python")){
-							service_template = 'api-template-python'	
+							service_template = 'api-template-python'
 						}
 						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'api-template-java'
@@ -89,7 +89,7 @@ node  {
 							service_template = "lambda-template-nodejs"
 						}
 						else if (service_config['runtime'].startsWith("python")){
-							service_template = 'lambda-template-python'	
+							service_template = 'lambda-template-python'
 						}
 						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'lambda-template-java'
@@ -100,16 +100,16 @@ node  {
 						break
 
 					case "sls-app":
-						if (service_config['runtime'] == "nodejs") {
+						if (service_config['runtime'].startsWith("nodejs")) {
 							service_template = "sls-app-template-nodejs"
 						}
-						else if (service_config['runtime'] == "python") {
+						else if (service_config['runtime'].startsWith("python")) {
 							service_template = 'sls-app-template-python'
 						}
-						else if (service_config['runtime'] == "java") {
+						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'sls-app-template-java'
 						}
-						else if (service_config['runtime'] == "go1.x") {
+						else if (service_config['runtime'].startsWith("go")) {
 							service_template = 'sls-app-template-go'
 						}
 						break
@@ -309,7 +309,7 @@ def getAuthToken() {
 			'password': PWD
 		]
 		def payload = JsonOutput.toJson(login_json)
-		
+
 		try {
 			def token = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \

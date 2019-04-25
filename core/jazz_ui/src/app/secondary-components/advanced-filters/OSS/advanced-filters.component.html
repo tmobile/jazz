@@ -5,7 +5,7 @@
             <div [class.show]='filterSelected' class="filter-wrap">
                 <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>                    
                 <div class='filter-inner'>
-                    <div class="filter-inner-wrap first-child" [class.hide]='service.islogs'>
+                    <div class="filter-inner-wrap first-child env-logs" [class.hide]='!service.islogs'>
                         <div class='view-label'>Filter by:</div>
                         <div class="eachFilter" *ngIf='advanced_filter_input.path.show'>
                             <div><div class='hori-line'></div>PATH</div>
@@ -27,6 +27,10 @@
                             <div><div class='hori-line'></div>REGION</div>
                             <dropdown class="dropdown-3 method" title="Select method" [dropdwnContent]="regList" [selected]="regSelected" (onSelected)="onregSelected($event)"></dropdown>
                         </div>
+                        <div class="eachFilter" *ngIf='advanced_filter_input.asset.show && showAsset'>
+                        <div><div class='hori-line'></div>ASSET TYPE</div>
+                        <radio-group  #assetTypes [radioContent]="assetList" title="Select asset" [selected]="assetSelected" (onSelected)="getAssetType($event)"></radio-group>
+                    </div>
                     </div>
                     <div class="filter-inner-wrap">
                         <div class='view-label'>View by:</div>
@@ -35,8 +39,10 @@
                             <dropdown class="dropdown-3" title="Select range" [dropdwnContent]="rangeList" [selected]="selectedTimeRange" (onSelected)="onRangeListSelected($event)"></dropdown>
 
                             <div><div class='hori-line'></div>PERIOD</div>
-                                <dropdown class="dropdown-3" title="Select period" [dropdwnContent]="timePeriodList" [selected]="selectedTimePeriod" (onSelected)="onTimePeriodSelected($event)"></dropdown>
-                        </div>
+                               <dropdown class="dropdown-3" title="Select period" [dropdwnContent]="timePeriodList" [selected]="selectedTimePeriod" (onSelected)="onTimePeriodSelected($event)"></dropdown>
+                            
+                            </div>
+        
                         <div class="eachFilter" *ngIf='advanced_filter_input.period.show'>
                             <div><div class='hori-line'></div>PERIOD</div>
                             <dropdown class="dropdown-3" title="Select period" [dropdwnContent]="periodList" [selected]="periodSelected" (onSelected)="onPeriodSelected($event)"></dropdown>
