@@ -41,6 +41,19 @@ export const environment = {
       account_number:'{account_number}',
       region:"{region}"
     },
+    assetTypeList:[
+		"lambda",
+		"apigateway",
+		"cloudfront",
+		"s3",
+		"dynamodb",
+		"cloudwatch_event",
+        "dynamodb_stream",
+        "iam_role",
+        "sqs",
+        "kinesis_stream",
+        "apigee_proxy"
+	],
     deploymentDescriptorText:
     `
     -  API:
