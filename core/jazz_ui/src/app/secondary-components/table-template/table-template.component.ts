@@ -5,6 +5,7 @@ import { ViewChild } from '@angular/core/src/metadata/di';
 import { DropdownComponent } from './../../primary-components/dropdown/dropdown.component';
 import { environment } from './../../../environments/environment.oss';
 import { environment as env_internal } from './../../../environments/environment.internal';
+import { loadavg } from 'os';
 // import { Sort } from './jazz-table-sort';
 
 @Component({
@@ -13,7 +14,7 @@ import { environment as env_internal } from './../../../environments/environment
   styleUrls: ['./table-template.component.scss']
 })
 export class TableTemplateComponent implements OnInit {
-
+  @Input() load;
   @Input() type: string = '';
   @Input() message: string = '';
   @Input() errcode:number;
@@ -122,6 +123,7 @@ export class TableTemplateComponent implements OnInit {
       }
     }
     this.onSort.emit({key:col.key, reverse: col._reverse})
+   // this.isload = false;
   };
    paginatePageInTable(clickedPage){
      switch(clickedPage){
@@ -156,7 +158,7 @@ export class TableTemplateComponent implements OnInit {
     this.cache.set('scroll_flag',true);
     this.cache.set('scroll_id',hash);
  }
- 
+ isload:boolean = true;
  feedbackRes:boolean=false;
  openModal:boolean=false;
    feedbackMsg:string='';
