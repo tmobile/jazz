@@ -15,7 +15,8 @@
 #   sbr-whitelist: a child of sbr-constraint containing a section of whitelist.yml where the values can be selected from
 #   sbr-value: an optional value that contains the formula or formulas to calculate the config driven values to be inserted
 #   sbr-example: is a child of sbr-value. It is designated to store the default value for tag
-#   srb-formula:  is a child of sbr-value. It is designated to store the formula that derives the value from the set of config values and inline constants
+#   sbr-formula:  is a child of sbr-value. It is designated to store the formula that derives the value from the set of config values and inline constants
+#   sbr-template: is used instead of value in non-primary rules and itself contains the sub-set of rules because it cannot be represented by a single value
 
 service:
   name:
@@ -45,7 +46,7 @@ provider:
         - aws
         - azure
     sbr-value:
-      sbr-formula: ???
+      sbr-formula: ${config.cloud_provider}
       sbr-example: aws
 
   runtime:
@@ -178,7 +179,7 @@ provider:
 
 
     tags: # Tags that will be asbred to each of the deployment resources
-      sbr-type: "[aws-var-name:aws-tag-val]"
+      sbr-type: "[aws-var-name:aws-tag-value]"
       sbr-render: user-only
       sbr-value:
         sbr-example:
@@ -211,7 +212,7 @@ provider:
       sbr-example: false
 
   environment: # Service wide environment variables
-    sbr-type: "[aws-var-name:aws-tag-val]"
+    sbr-type: "[aws-var-name:aws-tag-value]"
     sbr-render: user-only
     sbr-value:
       sbr-example:
@@ -471,7 +472,7 @@ resources:
     sbr-render: user-only
     # The "Outputs" that your AWS CloudFormation Stack should produce.  This allows references between services.
   Outputs:
-    sbr-type: "[name:output]"
+    sbr-type: "[aws-artifact-name:arn]"
     sbr-render: user-only
     sbr-value:
       sbr-example:
@@ -487,188 +488,188 @@ aws-policy:
   sbr-primary: false
   sbr-type: sequence
   sbr-render: user-only
-
-  Effect:
-    sbr-type: enum
-    sbr-render: user-only
-    sbr-constraint:
-      sbr-enum:
-        - Allow
-        - Deny
-  Principal:
-    sbr-type: aws-principal
-    sbr-render: user-only
-  Resource:
-    sbr-type: enum
-    sbr-render: user-only
-    sbr-constraint:
-      sbr-whitelist: resource
-  Action:
-    sbr-type: enum
-    sbr-render: user-only
-    sbr-constraint:
-      sbr-whitelist: action
+  sbr-template:
+    Effect:
+      sbr-type: enum
+      sbr-render: user-only
+      sbr-constraint:
+        sbr-enum:
+          - Allow
+          - Deny
+    Principal:
+      sbr-type: aws-principal
+      sbr-render: user-only
+    Resource:
+      sbr-type: enum
+      sbr-render: user-only
+      sbr-constraint:
+        sbr-whitelist: resource
+    Action:
+      sbr-type: enum
+      sbr-render: user-only
+      sbr-constraint:
+        sbr-whitelist: action
 
 
 function:
   sbr-primary: false
   sbr-type: sequence
   sbr-render: user-only
+  sbr-template:
+    handler:
+      sbr-type: path
+      sbr-render: user-only
+      sbr-value:
+        sbr-example: index.handler
 
-  handler:
-    sbr-type: path
-    sbr-render: user-only
-    sbr-value:
-      sbr-example: index.handler
+    name:
+      sbr-type: aws-artifact-name
+      sbr-render: config-wins
+      sbr-value:
+        sbr-formula: ${configLoader.INSTANCE_PREFIX}-${config.domain}-${config.service}-${configLoader.asterisk}-${configLoader.environment_logical_id}
 
-  name:
-    sbr-type: aws-artifact-name
-    sbr-render: config-wins
-    sbr-value:
-      sbr-formula: ${configLoader.INSTANCE_PREFIX}-${config.domain}-${config.service}-${parent.var_name}-${environment_logical_id}
+    description:
+      sbr-type: aws-description
+      sbr-render: user-wins
+      sbr-value:
+        srb-formula: Description for ${configLoader.asterisk} function
 
-  description:
-    sbr-type: aws-description
-    sbr-render: user-wins
-    sbr-value:
-      srb-formula: Description for ${parent.var_name} function
+    memorySize: # memorySize for this specific function.
+      sbr-type: int
+      sbr-render: user-wins
+      sbr-constraint:
+        sbr-from: 256
+        sbr-to: 2048
+      sbr-value:
+        sbr-formula: ${config.providerMemorySize}
+        sbr-example: 512
 
-  memorySize: # memorySize for this specific function.
-    sbr-type: int
-    sbr-render: user-wins
-    sbr-constraint:
-      sbr-from: 256
-      sbr-to: 2048
-    sbr-value:
-      sbr-formula: ${config.providerMemorySize}
-      sbr-example: 512
+    runtime:
+      sbr-type: enum
+      sbr-render: user-wins
+      sbr-constraint:
+        sbr-enum:
+          - nodejs8.10
+          - java8
+          - python2.7
+          - python3.6
+          - go1.x
+      sbr-value:
+        sbr-formula: ${config.providerRuntime}
+        sbr-example: nodejs8.10
 
-  runtime:
-    sbr-type: enum
-    sbr-render: user-wins
-    sbr-constraint:
-      sbr-enum:
-        - nodejs8.10
-        - java8
-        - python2.7
-        - python3.6
-        - go1.x
-    sbr-value:
-      sbr-formula: ${config.providerRuntime}
-      sbr-example: nodejs8.10
+    timeout:
+      sbr-type: int
+      sbr-render: user-wins
+      sbr-constraint:
+          sbr-from: 5
+          sbr-to: 13
+      sbr-value:
+        sbr-formula: ${config.providerTimeout}
+        sbr-example: 6
 
-  timeout:
-    sbr-type: int
-    sbr-render: user-wins
-    sbr-constraint:
-        sbr-from: 5
-        sbr-to: 13
-    sbr-value:
-      sbr-formula: ${config.providerTimeout}
-      sbr-example: 6
+    role:  # Overwrite the default IAM role which is used for all functions
+      sbr-type: arn-iam
+      sbr-render: user-wins
+      sbr-value:
+        sbr-formula: ${iamRoleARN}
+        sbr-example: arn:aws:iam::XXXXXX:role/role
 
-  role:  # Overwrite the default IAM role which is used for all functions
-    sbr-type: arn-iam
-    sbr-render: user-wins
-    sbr-value:
-      sbr-formula: ${iamRoleARN}
-      sbr-example: arn:aws:iam::XXXXXX:role/role
+    onError: # Optional SNS topic / SQS arn (Ref, Fn::GetAtt and Fn::ImportValue are supported as well) which will be used for the DeadLetterConfig
+      sbr-type: arn-sns
+      sbr-render: user-only
+      sbr-value:
+        sbr-example: arn:aws:sns:us-east-1:XXXXXX:sns-topic
 
-  onError: # Optional SNS topic / SQS arn (Ref, Fn::GetAtt and Fn::ImportValue are supported as well) which will be used for the DeadLetterConfig
-    sbr-type: arn-sns
-    sbr-render: user-only
-    sbr-value:
-      sbr-example: arn:aws:sns:us-east-1:XXXXXX:sns-topic
+    awsKmsKeyArn:  # Optional KMS key arn which will be used for encryption (overwrites the one defined on the service level)
+      sbr-type: arn-kms
+      sbr-render: user-only
+      sbr-value:
+        sbr-example: arn:aws:kms:us-east-1:XXXXXX:key/some-hash
 
-  awsKmsKeyArn:  # Optional KMS key arn which will be used for encryption (overwrites the one defined on the service level)
-    sbr-type: arn-kms
-    sbr-render: user-only
-    sbr-value:
-      sbr-example: arn:aws:kms:us-east-1:XXXXXX:key/some-hash
-
-  environment: # Function level environment variables
-    sbr-type: "[aws-var-name:aws-tag-value]"
-    sbr-render: user-only
-    sbr-value:
-      sbr-example:
-        functionEnvVar: 12345678
-
-  tags: # Function specific tags
-    sbr-type: "[aws-var-name:aws-tag-value]"
-    sbr-render: user-only
-    sbr-value:
-      sbr-example:
-        foo: bar
-
-  vpc: # Optional VPC. But if you use VPC then both subproperties (securityGroupIds and subnetIds) are required
-    securityGroupIds:
-      sbr-type: "[aws-id]"
+    environment: # Function level environment variables
+      sbr-type: "[aws-var-name:aws-tag-value]"
       sbr-render: user-only
       sbr-value:
         sbr-example:
-          - securityGroupId1
-          - securityGroupId2
-    subnetIds:
-      sbr-type: "[aws-id]"
+          functionEnvVar: 12345678
+
+    tags: # Function specific tags
+      sbr-type: "[aws-var-name:aws-tag-value]"
       sbr-render: user-only
       sbr-value:
         sbr-example:
-          - subnetId1
-          - subnetId2
+          foo: bar
 
-  package:
-    include: # Specify the directories and files which should be included in the deployment package
-      sbr-type: "[path]"
+    vpc: # Optional VPC. But if you use VPC then both subproperties (securityGroupIds and subnetIds) are required
+      securityGroupIds:
+        sbr-type: "[aws-id]"
+        sbr-render: user-only
+        sbr-value:
+          sbr-example:
+            - securityGroupId1
+            - securityGroupId2
+      subnetIds:
+        sbr-type: "[aws-id]"
+        sbr-render: user-only
+        sbr-value:
+          sbr-example:
+            - subnetId1
+            - subnetId2
+
+    package:
+      include: # Specify the directories and files which should be included in the deployment package
+        sbr-type: "[path]"
+        sbr-render: user-only
+        sbr-value:
+          sbr-examples:
+            - .git/**
+            - .travis.yml
+      exclude: # Specify the directories and files which should be excluded in the deployment package
+        sbr-type: "[path]"
+        sbr-render: user-only
+        sbr-value:
+          sbr-examples:
+            - .git/**
+            - .travis.yml
+    excludeDevDependencies:
+      sbr-type: bool
       sbr-render: user-only
       sbr-value:
-        sbr-examples:
-          - .git/**
-          - .travis.yml
-    exclude: # Specify the directories and files which should be excluded in the deployment package
-      sbr-type: "[path]"
+        sbr-default: false
+        sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
+    artifact:
+      sbr-type: path
       sbr-render: user-only
       sbr-value:
-        sbr-examples:
-          - .git/**
-          - .travis.yml
-  excludeDevDependencies:
-    sbr-type: bool
-    sbr-render: user-only
-    sbr-value:
-      sbr-default: false
-      sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
-  artifact:
-    sbr-type: path
-    sbr-render: user-only
-    sbr-value:
-      sbr-example: path/to/my-artifact.zip # Own package that should be used. You must provide this file.
+        sbr-example: path/to/my-artifact.zip # Own package that should be used. You must provide this file.
 
-  individually: # Enables individual packaging for each function. If true you must provide package for each function. Defaults to false
-    sbr-type: bool
-    sbr-render: user-only
-    sbr-value:
-      sbr-default: false
-      sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
+    individually: # Enables individual packaging for each function. If true you must provide package for each function. Defaults to false
+      sbr-type: bool
+      sbr-render: user-only
+      sbr-value:
+        sbr-default: false
+        sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
 
-  layers: # An optional list Lambda Layers to use
-    sbr-type: [arn-layer]
-    sbr-render: user-only
-    sbr-value:
-      sbr-example:
-        - arn:aws:lambda:region:XXXXXX:layer:LayerName:Y # Layer Version ARN
-  tracing:  # optional, can be 'Active' or 'PassThrough' (overwrites the one defined on the provider level)
-    sbr-type: enum
-    sbr-render: user-only
-    sbr-constraint:
-      sbr-enum:
-        - Active
-        - PassThrough
+    layers: # An optional list Lambda Layers to use
+      sbr-type: "[arn-layer]"
+      sbr-render: user-only
+      sbr-value:
+        sbr-example:
+          - arn:aws:lambda:region:XXXXXX:layer:LayerName:Y # Layer Version ARN
+    tracing:  # optional, can be 'Active' or 'PassThrough' (overwrites the one defined on the provider level)
+      sbr-type: enum
+      sbr-render: user-only
+      sbr-constraint:
+        sbr-enum:
+          - Active
+          - PassThrough
       sbr-value:
         sbr-example: Active
 
-  events: # The Events that trigger this Function
-    sbr-type: [event]
-    sbr-render: user-only
+    events: # The Events that trigger this Function
+      sbr-type: "[event]"
+      sbr-render: user-only
 
 event:
   sbr-primary: false
@@ -684,6 +685,7 @@ event:
 
         event:
           sbr-type: "[enum]"
+          sbr-render: user-only
           sbr-constraint:
             sbr-whitelist: actions
           sbr-value:
@@ -696,7 +698,7 @@ event:
               sbr-value:
                 sbr-example: uploads/
           - suffix:
-              sbr-type: extension
+              sbr-type: str
               sbr-render: user-only
               sbr-value:
                 sbr-example: .jpg
@@ -708,7 +710,7 @@ event:
           sbr-value:
             sbr-example: 'Abrahadabrah'
         description:
-          sbr-type: asw-description
+          sbr-type: aws-description
           sbr-render: user-only
           sbr-value:
             sbr-example: The description for ${self.name}
@@ -740,7 +742,7 @@ event:
         inputTransformer:
           inputPathsMap:
             eventTime:
-              sbr-type: time
+              sbr-type: str
               sbr-render: user-only
               sbr-value:
                 sbr-example: '$.time'
@@ -753,7 +755,7 @@ event:
     - sqs:
         arn:
           sbr-type: arn-sqs
-          sbs-render: user-only
+          sbr-render: user-only
           sbr-value:
             sbr-example: arn:aws:sqs:region:XXXXXX:myQueue
         batchSize:
@@ -768,7 +770,7 @@ event:
     - stream:
         arn:
           sbr-type: arn-kinesis
-          sbs-render: user-only
+          sbr-render: user-only
           sbr-value:
             sbr-example: arn:aws:kinesis:region:XXXXXX:myKineisisStream
         batchSize:
@@ -794,23 +796,26 @@ event:
         enabled:
           sbr-type: bool
           sbr-render: user-only
-          sbr-constraint:
+          sbr-value:
             sbr-example: false
 
 resource:
   sbr-primary: false
-  sbr-type: aws-var-name
+  sbr-type: sequence
   sbr-render: user-only
-  Type:
-    sbr-type: enum
-    sbr-constraint:
-      sbr-whitelist: resources
-    sbr-value:
-      sbr-example: AWS::DynamoDB::Table
-  Properties:
-    sbr-type: "[aws-var-name:aws-property-value]"
-    sbr-value:
-      sbr-example:
-        AttributeDefinitions:
-          - AttributeName: email
-            AttributeType: S
+  sbr-template:
+    Type:
+      sbr-type: enum
+      sbr-render: user-only
+      sbr-constraint:
+        sbr-whitelist: resources
+      sbr-value:
+        sbr-example: AWS::DynamoDB::Table
+    Properties:
+      sbr-type: "[aws-var-name:aws-var-value]"
+      sbr-render: user-only
+      sbr-value:
+        sbr-example:
+          AttributeDefinitions:
+            - AttributeName: email
+              AttributeType: S
