@@ -685,6 +685,7 @@ onFilterCancel(event) {
           this.totalPagesTable = 0;
         }
           if (services !== undefined && services !== "" && services.length !== undefined) {
+            this.serviceListEmpty = false;
             if (this.serviceList.length && pageCount > this.serviceCount) {
               this.serviceCount = pageCount;
               this.showToastSuccess(

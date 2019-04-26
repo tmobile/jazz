@@ -531,7 +531,7 @@ export class ServiceLogsComponent implements OnInit {
 		  try {
 			this.parsedErrBody = JSON.parse(this.errBody);
 			if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
-			  this.errMessage = this.parsedErrBody.message;
+			  this.errMessage = this.errMessage || this.parsedErrBody.message;
 			}
 		  } catch(e) {
 			  console.log('JSON Parse Error', e);
