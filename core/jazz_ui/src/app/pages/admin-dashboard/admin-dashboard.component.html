@@ -1,36 +1,92 @@
-<jazz-mob-header (addClick)='showService(true)' [icon]="'add'" [headText]="'Services'"
-                 [status]="'none'"></jazz-mob-header>
+<jazz-mob-header (addClick)='showService(true)' [icon]="'add'" [headText]="'Services'" [status]="'none'">
+</jazz-mob-header>
+<div class="section-centered" *ngIf="isPUTLoading === 'loading'">
+  <div class="loading-circle"></div>
+</div>
 <section class="table-wrap">
   <div class="page-title-wrap hide-for-mobile">
     <h1 class="header1 bold-title">Admin</h1>
   </div>
-  <section class="json-viewer-container">
-    <div class="section-header">
-      <span *ngIf='!isCollapsed' class="icon-Collapse-All expandbtn" (click)='toggleCollapse(true)'></span>
-      <span *ngIf='isCollapsed' class="icon-Expand-All expandbtn" (click)='toggleCollapse(false)'></span>
-    </div>
 
-    <json-viewer #jsonRoot
-                 *ngIf="state === 'resolved'"
-                 [json]="adminData"></json-viewer>
-    <div class="section-centered"
-      *ngIf="state === 'loading'">
-      <div class="loading-circle"></div>
-    </div>
+  <div id="exTab1" class="container">
+    <ul class="nav nav-pills">
+      <li class="active">
+        <a href="#general" data-toggle="tab">General</a>
+      </li>
+      <li><a href="#users" data-toggle="tab">Users</a>
+      </li>
 
-    <div  *ngIf="state === 'error'" class="section-centered">
-      <div class="text-center">
-        <div class="icon-icon-server-error">
-          <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span>
+    </ul>
+
+    <div class="tab-content clearfix">
+      <div class="tab-pane active" id="general">
+        <section class="json-viewer-container">
+          <div class="section-header">
+            <span *ngIf='!isCollapsed' class="icon-Collapse-All expandbtn" (click)='toggleCollapse(true)'></span>
+            <span *ngIf='isCollapsed' class="icon-Expand-All expandbtn" (click)='toggleCollapse(false)'></span>
+          </div>
+
+          <json-viewer #jsonRoot *ngIf="state === 'resolved'" [json]="adminData"></json-viewer>
+          <div class="section-centered" *ngIf="state === 'loading'">
+            <div class="loading-circle"></div>
+          </div>
+
+          <div *ngIf="state === 'error'" class="section-centered">
+            <div class="text-center">
+              <div class="icon-icon-server-error">
+                <span class="path1"></span><span class="path2"></span><span class="path3"></span><span
+                  class="path4"></span><span class="path5"></span><span class="path6"></span><span
+                  class="path7"></span><span class="path8"></span><span class="path9"></span><span
+                  class="path10"></span>
+              </div>
+              <div class='oops'>Oops!</div><br>
+              <div>Something went wrong while fetching your data<br><a (click)="ngOnInit()">REFRESH</a> to give it
+                another try.</div>
+              <br>
+              <div class='ctc-us'>If the problem persists, <a (click)='reportIssue()'> contact us</a>.</div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <div class="tab-pane" id="users">
+        <div *ngIf="state === 'loading'">
+          <div class="loading-circle"></div>
         </div>
-        <div class='oops'>Oops!</div><br>
-        <div>Something went wrong while fetching your data<br><a (click)="ngOnInit()">REFRESH</a> to give it another try.</div>
-        <br><div class='ctc-us'>If the problem persists, <a (click)='reportIssue()'> contact us</a>.</div>
+        <section class="json-viewer-container">
+          <div *ngIf="isPUTLoading">
+            <div class="loading-circle"></div>
+          </div>
+          <div class="json-viewer-list">
+            <div class="json-viewer-row">
+              <div class="json-viewer-element primitive">
+                <div class="container">
+                  <div class="row" *ngFor="let users of userData">
+                    <div *ngIf="users.Attributes.length>3">
+                      <div class="col-md-4">
+                        <span class="json-header">{{users.Attributes[3].Value}}</span>
+                      </div>
+                      <div class="col-md-4">
+                        <span class="json-value">{{users.UserStatus}}</span>
+                      </div>
+                      <div class="col-md-4">
+                        <label class="switch">
+                          <input type="checkbox" [checked]="users.Enabled"
+                            (change)="checkValue(users.Enabled,users.Username)">
+                          <span class="slider round"></span>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="wrapper" *ngIf="loadMore">
+            <button class="btn btnT-radial-in btn-primary loginbutton button" (click)="showMore()">Load More</button>
+          </div>
+        </section>
       </div>
     </div>
-  </section>
+  </div>
   <footer></footer>
 </section>
-
-
-

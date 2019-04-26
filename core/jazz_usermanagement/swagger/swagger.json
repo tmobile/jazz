@@ -91,17 +91,15 @@
       },
       "post": {
         "description": "Post method swagger for Node template",
-        "parameters": [
-          {
-            "name": "param",
-            "in": "body",
-            "description": "post body parameter.",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/InputObj"
-            }
+        "parameters": [{
+          "name": "param",
+          "in": "body",
+          "description": "post body parameter.",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/InputObj"
           }
-        ],
+        }],
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -292,6 +290,221 @@
             }
           }
         }
+      },
+      "get": {
+        "description": "Method to Get All Users",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [{
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "paginationtoken",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Execution",
+            "schema": {
+              "$ref": "#/definitions/GetSuccessResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/400ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "$ref": "#/definitions/403ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/404ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/500ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "security": [{
+          "{envPrefix}-{domain}-token-authorizer": []
+        }],
+        "x-amazon-apigateway-integration": {
+          "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
+          "passthroughBehavior": "when_no_templates",
+          "httpMethod": "POST",
+          "credentials": "{conf-role}",
+          "requestTemplates": {
+            "application/json": "\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $input.json(\"$\"),\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n  \"resourcePath\" : \"$context.resourcePath\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}",
+            "application/x-www-form-urlencoded": "\n#define( $body )\n  {\n  #foreach( $token in $input.path('$').split('&') )\n    #set( $keyVal = $token.split('=') )\n    #set( $keyValSize = $keyVal.size() )\n    #if( $keyValSize >= 1 )\n      #set( $key = $util.urlDecode($keyVal[0]) )\n      #if( $keyValSize >= 2 )\n        #set( $val = $util.urlDecode($keyVal[1]) )\n      #else\n        #set( $val = '' )\n      #end\n      \"$key\": \"$val\"#if($foreach.hasNext),#end\n    #end\n  #end\n  }\n#end\n\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $body,\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n  \"resourcePath\" : \"$context.resourcePath\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n  \n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}"
+          },
+          "contentHandling": "CONVERT_TO_TEXT",
+          "type": "aws",
+          "responses": {
+            ".*\"InternalServerError\".*": {
+              "statusCode": "500",
+              "responseTemplates": {
+                "application/json": "$input.path('$.errorMessage')"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            },
+            ".*\"BadRequest\".*": {
+              "statusCode": "400",
+              "responseTemplates": {
+                "application/json": "$input.path('$.errorMessage')"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            },
+            "default": {
+              "statusCode": "200",
+              "responseTemplates": {
+                "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            },
+            ".*\"Unauthorized\".*": {
+              "statusCode": "401",
+              "responseTemplates": {
+                "application/json": "$input.path('$.errorMessage')"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            },
+            ".*\"Forbidden\".*": {
+              "statusCode": "403",
+              "responseTemplates": {
+                "application/json": "$input.path('$.errorMessage')"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            },
+            ".*\"NotFound\".*": {
+              "statusCode": "404",
+              "responseTemplates": {
+                "application/json": "$input.path('$.errorMessage')"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            }
+          }
+        }
       }
     },
     "/{service_name}/reset": {
@@ -374,17 +587,15 @@
       },
       "post": {
         "description": "Post method to reset user password",
-        "parameters": [
-          {
-            "name": "param",
-            "in": "body",
-            "description": "post body parameter.",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/InputObj"
-            }
+        "parameters": [{
+          "name": "param",
+          "in": "body",
+          "description": "post body parameter.",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/InputObj"
           }
-        ],
+        }],
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -657,17 +868,15 @@
       },
       "post": {
         "description": "Post method to update user password",
-        "parameters": [
-          {
-            "name": "param",
-            "in": "body",
-            "description": "post body parameter.",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/UpdatePwd"
-            }
+        "parameters": [{
+          "name": "param",
+          "in": "body",
+          "description": "post body parameter.",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/UpdatePwd"
           }
-        ],
+        }],
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -1130,11 +1339,292 @@
             }
           }
         },
-        "security": [
-          {
-            "{envPrefix}-{domain}-token-authorizer": []
+        "security": [{
+          "{envPrefix}-{domain}-token-authorizer": []
+        }]
+      }
+    },
+    "/{service_name}/{id}": {
+      "options": {
+        "description": "CORS Support",
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }],
+        "tags": [
+          "CORS"
+        ],
+        "x-amazon-apigateway-integration": {
+          "type": "mock",
+          "requestTemplates": {
+            "application/json": "{\"statusCode\" : 200}"
+          },
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseTemplates": {
+                "application/json": "$input.json('$')"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            }
           }
-        ]
+        },
+        "responses": {
+          "200": {
+            "description": "Default response for CORS method",
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/400ErrorResponse"
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/404ErrorResponse"
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/500ErrorResponse"
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Method to Update users status/details",
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }, {
+          "name": "param",
+          "in": "body",
+          "description": "post body parameter.",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/UpdateUsersObj"
+          }
+        }],
+        "consumes": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "produces": [
+          "application/json",
+          "application/x-www-form-urlencoded"
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Execution",
+            "schema": {
+              "$ref": "#/definitions/PutSuccessResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "schema": {
+              "$ref": "#/definitions/400ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "schema": {
+              "$ref": "#/definitions/401ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "schema": {
+              "$ref": "#/definitions/403ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "schema": {
+              "$ref": "#/definitions/404ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error",
+            "schema": {
+              "$ref": "#/definitions/500ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "security": [{
+          "{envPrefix}-{domain}-token-authorizer": []
+        }],
+        "x-amazon-apigateway-integration": {
+          "type": "aws",
+          "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
+          "httpMethod": "POST",
+          "credentials": "{conf-role}",
+          "requestTemplates": {
+            "application/json": "\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $input.json(\"$\"),\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n  \"resourcePath\" : \"$context.resourcePath\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}",
+            "application/x-www-form-urlencoded": "\n#define( $body )\n  {\n  #foreach( $token in $input.path('$').split('&') )\n    #set( $keyVal = $token.split('=') )\n    #set( $keyValSize = $keyVal.size() )\n    #if( $keyValSize >= 1 )\n      #set( $key = $util.urlDecode($keyVal[0]) )\n      #if( $keyValSize >= 2 )\n        #set( $val = $util.urlDecode($keyVal[1]) )\n      #else\n        #set( $val = '' )\n      #end\n      \"$key\": \"$val\"#if($foreach.hasNext),#end\n    #end\n  #end\n  }\n#end\n\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $body,\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n  \"resourcePath\" : \"$context.resourcePath\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n  \n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}"
+          },
+          "responses": {
+            ".*\"InternalServerError\".*": {
+              "statusCode": "500",
+              "responseTemplates": {
+                "application/json": "$input.path('$.errorMessage')"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            },
+            ".*\"BadRequest\".*": {
+              "statusCode": "400",
+              "responseTemplates": {
+                "application/json": "$input.path('$.errorMessage')"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            },
+            "default": {
+              "statusCode": "200",
+              "responseTemplates": {
+                "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            },
+            ".*\"Unauthorized\".*": {
+              "statusCode": "401",
+              "responseTemplates": {
+                "application/json": "$input.path('$.errorMessage')"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            },
+            ".*\"Forbidden\".*": {
+              "statusCode": "403",
+              "responseTemplates": {
+                "application/json": "$input.path('$.errorMessage')"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            },
+            ".*\"NotFound\".*": {
+              "statusCode": "404",
+              "responseTemplates": {
+                "application/json": "$input.path('$.errorMessage')"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            }
+          }
+        }
       }
     }
   },
@@ -1265,6 +1755,92 @@
         "bar": {
           "type": "string",
           "description": "Sample key in the output object"
+        }
+      }
+    },
+    "UserObj": {
+      "type": "object",
+      "description": "user object returned by get users",
+      "required": [
+        "Username",
+        "UserCreateDate",
+        "UserLastModifiedDate",
+        "Enabled",
+        "UserStatus"
+      ],
+      "properties": {
+        "Username": {
+          "type": "string",
+          "description": "String id to uniquely identify a user"
+        },
+        "UserCreateDate": {
+          "type": "string",
+          "description": "Created date"
+        },
+        "UserLastModifiedDate": {
+          "type": "string",
+          "description": "last modified date"
+        },
+        "Enabled": {
+          "type": "string",
+          "description": "status of user"
+        },
+        "UserStatus": {
+          "type": "string",
+          "description": "Status of user"
+        }
+      }
+    },
+    "UserQueryObj": {
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "name of the user"
+        }
+      }
+    },
+    "GetSuccessResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/UserObj"
+          }
+        },
+        "input": {
+          "$ref": "#/definitions/UserQueryObj"
+        }
+      },
+      "description": "200 Success Response payload for get user method"
+    },
+    "PutSuccessResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "type": "object",
+          "description": "The response payload",
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "Message for Successful updation of user details"
+            }
+          }
+        },
+        "input": {
+          "$ref": "#/definitions/UpdateUsersObj"
+        }
+      },
+      "description": "200 Success Response payload for update service"
+    },
+    "UpdateUsersObj": {
+      "description": "Input object with set of fields that can be updated",
+      "type": "object",
+      "properties": {
+        "status": {
+          "type": "boolean",
+          "description": "1- to active , 0 - to deactive"
         }
       }
     },
