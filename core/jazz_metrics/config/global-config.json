@@ -32,6 +32,7 @@
     "dynamodb",
     "sqs",
     "kinesis_stream",
-    "apigee_proxy"
+    "apigee_proxy",
+    "dynamodb_stream"
   ]
 }

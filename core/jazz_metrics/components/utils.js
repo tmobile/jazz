@@ -86,7 +86,9 @@ function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset, provider) {
       'aws/apigateway': 'AWS/ApiGateway',
       'aws/lambda': 'AWS/Lambda',
       'aws/cloudfront': 'AWS/CloudFront',
-      'aws/s3': 'AWS/S3'
+      'aws/s3': 'AWS/S3',
+      'aws/dynamodb': 'AWS/DynamoDB',
+      'aws/dynamodb_stream': 'AWS/DynamoDB'
     };
 
     if (Object.keys(nameSpaceList).indexOf(awsAddedNameSpace) > -1) {
@@ -232,6 +234,15 @@ function updateAWSAsset(newAssetObj, asset) {
     case "cloudfront":
       newAssetObj = updateCloudfrontAsset(newAssetObj, relativeId);
       break;
+
+    case "dynamodb":
+      newAssetObj = updateDynamodbAsset(newAssetObj, relativeId);
+      break;
+
+    case "updateDynamodbStreamAsset":
+      newAssetObj = updateDynamodbStreamAsset(newAssetObj, relativeId);
+      break;
+
     default:
       newAssetObj = {
         "message": "Metric not supported for asset type " + assetType,
@@ -259,6 +270,23 @@ function updateLambdaAsset(newAssetObj, relativeId, arnString) {
     var funcValue = extractValueFromString(arnString, relativeId);
     newAssetObj.asset_name.FunctionName = funcValue;
   }
+  return newAssetObj;
+}
+
+function updateDynamodbAsset(newAssetObj, relativeId) {
+  let parts = relativeId.split("/");
+  let tableName = parts[1];
+  newAssetObj.asset_name.TableName = tableName;
+  newAssetObj.asset_name.Operation = "PutItem";
+  return newAssetObj;
+}
+
+function updateDynamodbStreamAsset(newAssetObj, relativeId) {
+  let parts = relativeId.split("/");
+  let tableName = parts[1];
+  newAssetObj.asset_name.TableName = tableName;
+  newAssetObj.asset_name.Operation = "GetRecord";
+  newAssetObj.asset_name.StreamLabel = parts[3];
   return newAssetObj;
 }
 
