@@ -14,7 +14,8 @@
         "request": "*",
         "guid": "0.0.12",
         "moment": "*",
-        "lodash": "*"
+        "lodash": "*",
+        "js-yaml": "^3.12.1"
     },
     "devDependencies": {
         "aws-lambda-mock-context": "^3.1.1",

@@ -27,6 +27,8 @@ const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const crud = require("./components/crud")();
 const validateUtils = require("./components/validation")();
+const deployDescrValidatorMod = require('./components/validate-sls-yml.js');
+
 var errorHandler = errorHandlerModule();
 
 var handler = (event, context, cb) => {
@@ -74,7 +76,28 @@ var handler = (event, context, cb) => {
                     service = event.query.service.toLowerCase();
                     domain = event.query.domain.toLowerCase();
 
-                    var update_environment_payload = Object.assign({}, event.body);
+                    var update_environment_payload = event.body;
+
+                    if(update_environment_payload.deployment_descriptor) { // If deployment descriptor is present then validate
+                        try {
+                            const outstandingResources = deployDescrValidatorMod.validateResources(update_environment_payload.deployment_descriptor);
+                            if(outstandingResources.length) { 
+                            reject({result: 'inputError', message: `Invalid deployment_descriptor. The resource types not allowed ${outstandingResources}`});
+                            } else {
+                            const outstandingEvents = deployDescrValidatorMod.validateEvents(update_environment_payload.deployment_descriptor);
+                            if(outstandingEvents.length) { // some events that are not allowed were found so let's reject the request
+                                reject({result: 'inputError', message: `Invalid deployment_descriptor. The event types not allowed ${outstandingEvents}`});
+                            } else {
+                                const outstandingActions = deployDescrValidatorMod.validateActions(update_environment_payload.deployment_descriptor);
+                                if(outstandingActions.length) {
+                                    reject({result: 'inputError', message: `Invalid deployment_descriptor. The action types not allowed ${outstandingActions}`});
+                                }
+                            }
+                            }
+                        } catch(e) {
+                        reject({result: 'inputError', message: `Invalid deployment_descriptor format. Nested exception is ${e}`});
+                        }
+                    }
 
                     validateUpdateInput(update_environment_payload, environment_id)
                         .then(() => validateEnvironmentExists(env_tableName, indexName, service, domain, environment_id))
@@ -90,9 +113,10 @@ var handler = (event, context, cb) => {
                                 return cb(JSON.stringify(err));
                             } else {
                                 if (err.result === "inputError") {
+                                    console.log('log 12');
                                     return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
                                 }
-
+                                console.log('log 13');
                                 return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected error occurred.")));
                             }
                         });
