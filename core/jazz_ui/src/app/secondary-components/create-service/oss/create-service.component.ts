@@ -38,6 +38,7 @@ export class CreateServiceComponent implements OnInit {
   disablePlatform = true;
   selected:string = "Minutes";
   runtime:string = Object.keys(env_oss.envLists)[0];
+  webtime:string = Object.keys(env_oss.webLists)[0];
   eventSchedule:string = 'fixedRate';
   private slackSelected: boolean = false;
   private ttlSelected: boolean = false;
@@ -94,6 +95,9 @@ export class CreateServiceComponent implements OnInit {
   invalidEventName:boolean = false;
   runtimeKeys : any;
   runtimeObject : any;
+  webObject : any;
+  webKeys : any;
+
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
   public apigeeFeature = this.buildEnvironment.INSTALLER_VARS.feature.apigee && this.buildEnvironment.INSTALLER_VARS.feature.apigee.toString() === "true" ? true : false;
@@ -111,6 +115,8 @@ export class CreateServiceComponent implements OnInit {
     this.toastmessage = messageservice;
     this.runtimeObject = env_oss.envLists;
     this.runtimeKeys = Object.keys(this.runtimeObject);
+    this.webObject = env_oss.webLists;
+    this.webKeys = Object.keys(this.webObject);
   }
 
   public focusDynamo = new EventEmitter<boolean>();
@@ -142,6 +148,10 @@ export class CreateServiceComponent implements OnInit {
   closeCreateService(serviceRequest){
     if(serviceRequest){
       this.servicelist.serviceCall();
+      this.showToastPending(
+        'Service is getting ready',
+        this.toastmessage.customMessage('successPending', 'createService'),
+      );
     }
     this.cache.set("updateServiceList", true);
     this.serviceRequested = false;
@@ -150,6 +160,29 @@ export class CreateServiceComponent implements OnInit {
     this.onClose.emit(false);
   }
 
+
+  /**
+   * Display pending toast
+   * @param title Toast title
+   * @param body  Toast body
+   * @returns
+   */
+  // TODO: Abstract out to service
+  showToastPending (title: string, body: string): void {
+    const options = {
+      body: body,
+      closeHtml: '<button>Dismiss</button>',
+      showCloseButton: true,
+      timeout: 0,
+      title: title,
+      type: 'wait',
+    };
+
+    // TODO: Investigate need for manual class addition
+    const tst = document.getElementById('toast-container');
+    tst.classList.add('toaster-anim');
+    this.toasterService.pop(options);
+  }
 
 
   selectedApprovers = [];
@@ -160,7 +193,7 @@ export class CreateServiceComponent implements OnInit {
   changeServiceType(serviceType){
     this.typeOfService = serviceType;
   }
-  
+
 
   // function for changing platform type
   changePlatformType(platformType){
@@ -172,6 +205,10 @@ export class CreateServiceComponent implements OnInit {
   // function called on runtime change(radio)
   onSelectionChange(val){
     this.runtime = val;
+  }
+
+  onWebSelectionChange(val){
+    this.webtime = val;
   }
 
   // function called on event schedule change(radio)
@@ -285,6 +322,8 @@ export class CreateServiceComponent implements OnInit {
     );
   }
 
+  // TODO:          Abstract invocations of toast_pop(...)
+  // TODO cont'd:   to service
   toast_pop(error,oops,errorMessage)
   {
       var tst = document.getElementById('toast-container');
@@ -370,6 +409,7 @@ export class CreateServiceComponent implements OnInit {
       }
 
     } else if(this.typeOfService == 'website'){
+      payload["framework"] = this.webtime;
       payload["create_cloudfront_url"] = this.cdnConfigSelected;
       payload["deployment_targets"] = {
         "website": "aws_cloudfront"
@@ -447,7 +487,7 @@ export class CreateServiceComponent implements OnInit {
     this.getData();
     this.createService();
     this.typeOfService = 'api';
-    this.selectedApprovers=[];
+    this.selectedApprovers = [];
   }
 
 

@@ -34,6 +34,7 @@ const metricConfig = require("./components/metrics.json");
 function handler(event, context, cb) {
   var errorHandler = errorHandlerModule();
   var config = configObj.getConfig(event, context);
+  logger.debug("EVENT : " + JSON.stringify(event));
 
   try {
 		/*
@@ -49,10 +50,11 @@ function handler(event, context, cb) {
 		 *    }
 		 */
     var eventBody = event.body;
-    exportable.genericValidation(event)
+    let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
+    exportable.genericValidation(event, header_key)
       .then(() => validateUtils.validateGeneralFields(eventBody))
       .then(() => exportable.getToken(config))
-      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken))
+      .then((authToken) => exportable.getAssetsDetails(config, eventBody, authToken, event.headers[header_key]))
       .then(res => exportable.validateAssets(res, eventBody))
       .then(res => exportable.getMetricsDetails(res, eventBody, config))
       .then(res => {
@@ -74,7 +76,7 @@ function handler(event, context, cb) {
 
 };
 
-function genericValidation(event) {
+function genericValidation(event, header_key) {
   return new Promise((resolve, reject) => {
     if (!event && !event.body) {
       reject({
@@ -89,10 +91,18 @@ function genericValidation(event) {
         message: "Invalid method"
       });
     }
+
     if (!event.principalId) {
       reject({
         result: "unauthorized",
         message: "Unauthorized"
+      });
+    }
+
+    if (!event.headers[header_key]) {
+      reject({
+        result: "inputError",
+        message: "No service id provided"
       });
     }
 
@@ -133,13 +143,14 @@ function getToken(config) {
   });
 }
 
-function getAssetsDetails(config, eventBody, authToken) {
+function getAssetsDetails(config, eventBody, authToken, serviceId) {
   return new Promise((resolve, reject) => {
     var asset_api_options = {
       url: config.SERVICE_API_URL + config.ASSETS_URL + "?domain=" + eventBody.domain + "&service=" + eventBody.service + "&environment=" + eventBody.environment,
       headers: {
         "Content-Type": "application/json",
-        "Authorization": authToken
+        "Authorization": authToken,
+        "Jazz-Service-ID": serviceId
       },
       method: "GET",
       rejectUnauthorized: false,
@@ -150,7 +161,7 @@ function getAssetsDetails(config, eventBody, authToken) {
     logger.info("asset_api_options :- " + JSON.stringify(asset_api_options));
     request(asset_api_options, (error, response, body) => {
       if (error) {
-        logger.error(error);
+        logger.error("error received in getting assets" + error);
         reject(error);
       } else {
         if (response.statusCode && response.statusCode === 200) {
@@ -164,6 +175,7 @@ function getAssetsDetails(config, eventBody, authToken) {
           var userStatistics = eventBody.statistics.toLowerCase();
           // Massaging data from assets api , to get required list of assets which contains type, asset_name and statistics.
           var assetsArray = utils.getAssetsObj(apiAssetsArray, userStatistics);
+          logger.debug("Assets got:" + JSON.stringify(assetsArray));
           resolve(assetsArray);
         } else {
           logger.info("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
@@ -338,6 +350,7 @@ function getMetricsDetails(newAssetArray, eventBody, config) {
       if (assetParam.nameSpace === 'aws') {
         exportable.cloudWatchDetails(assetParam)
           .then(res => {
+            logger.debug("Metrics got: " + JSON.stringify(res));
             metricsStatsArray.push(res);
             if (metricsStatsArray.length === newAssetArray.length) {
               resolve(metricsStatsArray);
@@ -425,7 +438,7 @@ function apigeeMetricDetails(assetParam, eventBody, config) {
 }
 
 function cloudWatchDetails(assetParam) {
-  logger.debug("Inside cloudWatchDetails");
+  logger.debug("Inside cloudWatchDetails : " + JSON.stringify(assetParam));
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
@@ -446,6 +459,7 @@ function cloudWatchDetails(assetParam) {
             });
           }
         } else {
+          logger.debug("Stats got:" + JSON.stringify(data));
           metricsStats.push(data);
           if (metricsStats.length === assetParam.actualParam.length) {
             resolve(utils.assetData(metricsStats, assetParam.userParam));

@@ -202,8 +202,9 @@ input[type="radio"] + label span {
     border: 1px solid #cccccc;
     &.background {
         position: absolute;
-        display: flex;
-        transform: translate(3px,3px);
+        left: 4px;
+        // top: 4px;
+        bottom: 4px;
         border: none;
         width: 11px;
         height: 11px;

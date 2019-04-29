@@ -7,8 +7,6 @@ import {DataService} from "../data-service/data.service";
 import {environment} from './../../../environments/environment';
 import {environment as env_internal} from './../../../environments/environment.internal';
 import {environment as env_oss} from './../../../environments/environment.oss';
-
-
 import {EnvDeploymentsSectionComponent} from './../environment-deployment/env-deployments-section.component';
 
 
@@ -55,6 +53,10 @@ export class EnvironmentDetailComponent implements OnInit {
   private subscription: any;
   public assets;
   isENVavailable:boolean = false;
+  isDeployAccess: boolean = false;
+  isAdminAccess: boolean =false;
+  currentUser: any = {};
+  isError403: boolean = false;
 
   constructor(
     private toasterService: ToasterService,
@@ -161,20 +163,33 @@ export class EnvironmentDetailComponent implements OnInit {
 
   fetchService(id: string) {
     this.isLoadingService = true;
-    this.subscription = this.http.get('/jazz/services/' + id).subscribe(
+    this.subscription = this.http.get('/jazz/services/' + id, null, this.serviceId).subscribe(
       response => {
         this.service.accounts = env_internal.urls.accounts;
         this.service.regions = env_internal.urls.regions;
         this.service = response.data.data;
         if (environment.envName == 'oss') this.service = response.data;
         this.isFunction = this.service.type === "function";
+        if (this.service.policies && this.service.policies.length) {
+          this.service.policies.forEach(policy => {
+            if(policy.category === "deploy" && policy.permission === "write") {
+              this.isDeployAccess = true;
+            } else if (policy.category === "manage" && policy.permission === "admin") {
+              this.isAdminAccess = true;
+            }
+          });
+        }
         this.getAssets();
         this.setTabs();
         this.cache.set(id, this.service);
         this.onDataFetched(this.service);
         this.envoverview.notify(this.service);
+
       },
       err => {
+        if(err.status === 403) {
+          this.isError403 = true;
+        }
         this.isLoadingService = false;
         let errorMessage = this.messageservice.errorMessage(err, "serviceDetail");
         this.toast_pop('error', 'Oops!', errorMessage)
@@ -199,8 +214,8 @@ export class EnvironmentDetailComponent implements OnInit {
       domain: this.service.domain,
       environment: this.envSelected,
       limit: undefined
-    }).subscribe((assetsResponse) => {
-      this.assets = assetsResponse.data.assets;  
+    },this.service.id).subscribe((assetsResponse) => {
+      this.assets = assetsResponse.data.assets;
       this.service.assets = this.assets;
     }, (err) => {
       this.toast_pop('error', 'Oops!', 'Failed to load Assets.');
@@ -244,6 +259,7 @@ export class EnvironmentDetailComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.currentUser = JSON.parse(localStorage.getItem('currentUser'));
     this.api_doc_name = env_oss.api_doc_name;
     this.sub = this.route.params.subscribe(params => {
       let id = params['id'];
