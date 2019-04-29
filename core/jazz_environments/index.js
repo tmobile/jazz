@@ -113,10 +113,8 @@ var handler = (event, context, cb) => {
                                 return cb(JSON.stringify(err));
                             } else {
                                 if (err.result === "inputError") {
-                                    console.log('log 12');
                                     return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
                                 }
-                                console.log('log 13');
                                 return cb(JSON.stringify(errorHandler.throwInternalServerError("Unexpected error occurred.")));
                             }
                         });
