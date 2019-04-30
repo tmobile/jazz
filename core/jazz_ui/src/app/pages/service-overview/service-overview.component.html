@@ -144,7 +144,7 @@
           <li>
             <div class="det-label">Description</div>
             <div *ngIf='!showGeneralField' class="det-value wrap" [ngClass]="{PlaceHolder:description_empty}">{{service.description || 'Provide a description of your service.'}}</div>
-            <textarea *ngIf='showGeneralField' [(ngModel)]="desc_temp" (ngModelChange)='descriptionChange()' class="det-value-input-txtarea"
+            <textarea *ngIf='showGeneralField' [(ngModel)]="desc_temp" (ngModelChange)='descriptionChange(desc_temp)' class="det-value-input-txtarea"
               placeholder="Provide a description of your service."></textarea>
           </li>
             <li>

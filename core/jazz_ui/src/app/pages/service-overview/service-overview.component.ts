@@ -473,8 +473,8 @@ export class ServiceOverviewComponent implements OnInit {
     if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
   }
 
-  descriptionChange(){
-    this.update_payload.description = this.desc_temp;
+  descriptionChange(desc_temp){
+    this.update_payload.description = desc_temp;
     this.shouldSaveEnable();
   }
 
@@ -927,7 +927,6 @@ export class ServiceOverviewComponent implements OnInit {
     }
     this.http.get('/jazz/environments?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
       response => {
-
         this.isenvLoading = false;
         this.environ_arr = response.data.environment;
         if (this.environ_arr != undefined)
