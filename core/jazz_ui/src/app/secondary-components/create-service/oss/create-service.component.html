@@ -46,7 +46,7 @@
 
                             <section class="service-box-section align-self">OR</section>
                             <section class="pad-left0 service-box-section">
-                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'custom'}" (keyup.enter)="changeServiceType('custom')" (click)="changeServiceType('sls-app')">
+                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'custom'}" (keyup.enter)="changeServiceType('sls-app')" (click)="changeServiceType('sls-app')">
                                     <div class="icon-icon-custom" [ngClass]="{'selected': typeOfService == 'custom'}">
                                         <img *ngIf="typeOfService == 'custom'" src="./../../../assets/images/icons/Build-custom.svg"/>
                                         <img *ngIf="typeOfService != 'custom'" src="./../../../assets/images/icons/Build-custom-gray.svg"/>
