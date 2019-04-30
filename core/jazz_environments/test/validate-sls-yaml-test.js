@@ -95,11 +95,14 @@ describe('validate-sls-yml', function () {
   });
 
   it("should throw an exception on an invalid yml", function () {
-    const invalidYml="greeting: hello\nname:world";
+    const invalidYml=
+    `
+    greeting:
+  - hello name: - world`;
     let errorFlag = false;
     try {
       slsYmlValidator.validateResources(invalidYml);
-    } catch(e) {
+    } catch(e) {      
       assert.equal('YAMLException', e.name);
       errorFlag = true;
     }
