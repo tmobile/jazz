@@ -44,7 +44,7 @@
             
         </section>
         <filter-tags-services #filtertags (OnCancel)='CancelFilters($event)'></filter-tags-services>
-        <table-template #tabletemplate class="table-container service-list-table" (onHere)='showService($event)' [isfromservice]= "fromService" [errcode]="errCode" [message]="errMessage" [state]="loadingState" (refreshData)="refreshData($event)" [header]="tableHeader2" [showFilters]="filterSelected" (onFilter)="onFilter($event)" (onSort)="onSort($event)" [showPaginationtable]="paginationSelected" (paginatePage)="paginatePage($event)" [currentlyActive]="pageSelected" [totalPageNum]="totalPagesTable"[load]="isload">
+        <table-template #tabletemplate class="table-container service-list-table" (onHere)='showService($event)' [isfromservice]= "fromService" [errcode]="errCode" [message]="errMessage" [state]="loadingState" (refreshData)="refreshData($event)" [header]="tableHeader2" [showFilters]="filterSelected" (onFilter)="onFilter($event)" (onSort)="onSort($event)" [showPaginationtable]="paginationSelected" (paginatePage)="paginatePage($event)" [currentlyActive]="pageSelected" [totalPageNum]="totalPagesTable" [load]="isload">
             <div class="table-row table-empty" [class.hide]="!serviceListEmpty">{{tableEmptyMessage}}</div>
             <div class="table-row pointer" [class.hide]="serviceListEmpty" *ngFor="let row of serviceList; let i = index" (click)="onRowClicked(row, i)" [class.deletingRow]="row.id==deletedServiceId || row.status=='deletion started'">
                 <div class="column">{{row.name}}</div>
