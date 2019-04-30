@@ -910,18 +910,15 @@ p.learn-more {
     fill: #ddd;
     transition: 0.5s ease;
   }
-  /deep/radio-checkbox{
+  radio-checkbox{
     input[type="radio"]+label {
       opacity: 0.3;
     }
   }
 }
 
-
 .close-create-service{
   &:hover{
-    // transform: rotate(30deg);
-    // transition: 0.3s all
     animation: rotate-close 0.2s
   }
 }

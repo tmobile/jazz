@@ -46,7 +46,7 @@
 
                             <section class="service-box-section align-self">OR</section>
                             <section class="pad-left0 service-box-section">
-                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'custom'}" (keyup.enter)="changeServiceType('custom')" (click)="changeServiceType('custom')">
+                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'custom'}" (keyup.enter)="changeServiceType('custom')" (click)="changeServiceType('sls-app')">
                                     <div class="icon-icon-custom" [ngClass]="{'selected': typeOfService == 'custom'}">
                                         <img *ngIf="typeOfService == 'custom'" src="./../../../assets/images/icons/Build-custom.svg"/>
                                         <img *ngIf="typeOfService != 'custom'" src="./../../../assets/images/icons/Build-custom-gray.svg"/>
@@ -59,40 +59,7 @@
                         
                     </div>
                     
-                    <section *ngIf="typeofserviceSelected" class="typeofservice-blur">
-                        
-                        <div class="col-lg-8 col-md-8">
-                            <div class="col-lg-12  pad-left0 input-field-container runtime-aln undisable-color">
-                                <section class="runtime-option disable-color">
-                                    <div class="radio-container">
-                                        <input type="radio" class='test-focus' name="serviceType" id="serviceTypes[0]" [value]="serviceTypes[0]" [checked]="typeOfService == serviceTypes[0]" (click)="changeServiceType('api')">
-                                        <label for="serviceTypes[0]"><span class='outer'></span><span class="background"></span>{{serviceTypesLabels[0]}}</label>
-                                    </div>
-                                </section>
-                                <section class="runtime-option disable-color">
-                                    <div class="radio-container">
-                                        <input type="radio" class='test-focus' name="serviceType" id="serviceTypes[1]" [value]="serviceTypes[1]" [checked]="typeOfService == serviceTypes[1]" (click)="changeServiceType('function')">
-                                        <label for="serviceTypes[1]"><span class='outer'></span><span class="background"></span>{{serviceTypesLabels[1]}}</label>
-                                    </div>
-                                </section>
-                                <section class="runtime-option disable-color">
-                                    <div class="radio-container">
-                                        <input type="radio" class='test-focus' name="serviceType" id="serviceTypes[2]" [value]="serviceTypes[2]" [checked]="typeOfService == serviceTypes[2]" (click)="changeServiceType('website')">
-                                        <label for="serviceTypes[2]"><span class='outer'></span><span class="background"></span>{{serviceTypesLabels[2]}}</label>
-                                    </div>
-                                </section>
-                                <section>Or</section>
-                                <section class="runtime-option disable-color buildcustom-radio">
-                                        <div class="radio-container">
-                                            <input type="radio" class='test-focus' name="serviceType" id="serviceTypes[3]" [value]="serviceTypes[3]" [checked]="typeOfService == serviceTypes[3]" (click)="changeServiceType('custom')"> 
-                                            <label for="serviceTypes[3]"><span class='outer'></span><span class="background"></span>{{serviceTypesLabels[3]}}</label>
-                                        </div>
-                                </section>
-                                
-                                
-                            </div>
-                        </div>
-                    </section>
+                   
                 </div>
             </section>
 
@@ -135,32 +102,6 @@
                         </section>
                     </div>
 
-                    <section  id="platform-type-radio" *ngIf="typeofplatformSelected" class="typeofservice-blur">                
-                        <div class="">
-                            <div class="col-lg-12  pad-left0 input-field-container runtime-aln">
-                                <section class="runtime-option disable-color">
-                                    <div class="radio-container">
-                                        <input type="radio" class='test-focus' name="platformType" id="platformTypes[0]" [value]="platformTypes[0]" [checked]="typeOfPlatform == platformTypes[0]" (click)="changePlatformType('aws')">
-                                        <label for="platformTypes[0]"><span class='outer'></span><span class="background"></span>{{platformTypesLabels[0]}}</label>
-                                    </div>
-                                </section>
-                                <section class="runtime-option disable-event">
-                                    <div class="radio-container">
-                                        <input type="radio" class='test-focus' name="platformType" id="platformTypes[1]" [value]="platformTypes[1]" [checked]="typeOfPlatform == platformTypes[1]" (click)="changePlatformType('azure')">
-                                        <label for="platformTypes[1]"><span class='outer'></span><span class="background"></span>{{platformTypesLabels[1]}}</label>
-                                    </div>
-                                </section>
-                                <section class="runtime-option disable-event">
-                                    <div class="radio-container">
-                                        <input type="radio" class='test-focus' name="platformType" id="platformTypes[2]" [value]="platformTypes[2]" [checked]="typeOfPlatform == platformTypes[2]" (click)="changePlatformType('gcloud')">
-                                        <label for="platformTypes[2]"><span class='outer'></span><span class="background"></span>{{platformTypesLabels[2]}}</label>
-                                    </div>
-                                </section>
-                                
-                                
-                            </div>
-                        </div>
-                    </section>
                 </div>
             </section>
             <section *ngIf="deploymentTargets[typeOfService.toUpperCase()].active && apigeeFeature" class="form-row deployment-targets" [class.disable-color]="deploymenttargetSelected">
@@ -199,48 +140,13 @@
                     </div>
                 </div>
             </section>
-            <section [class.disable-color]="typeofruntimeSelected" class="run-time" *ngIf="typeOfService != 'website' && typeOfService != 'custom'">
+            <section [class.disable-color]="typeofruntimeSelected" class="run-time" *ngIf="typeOfService != 'website'">
                 <p class="step-title">Choose your runtime<span>*</span></p>
 
                 <div  class="">
                     <div id="runtime-type-label" class="col-lg-4 col-md-4">
                         
                     </div>
-                    <div   id="runtime-type-radio" *ngIf="typeofruntimeSelected" class="col-lg-8 col-md-8">
-                        <div class="col-lg-12  pad-left0 input-field-container runtime-aln">
-                            <section class="runtime-option disable-color">
-                                <div class="radio-container">
-                                    <input type="radio" class='test-focus' name="runtime" id="runtimeKeys[0]" [value]="runtimeKeys[0]" [checked]="runtime == runtimeKeys[0]" (click)="onSelectionChange(runtimeKeys[0])">
-                                    <label for="runtimeKeys[0]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[0]]}}</label>
-                                </div>
-                            </section>
-                            <section class="runtime-option disable-color">
-                                <div class="radio-container">
-                                    <input type="radio" name="runtime" id="runtimeKeys[1]" [value]="runtimeKeys[1]" [checked]="runtime == runtimeKeys[1]" (change)="onSelectionChange(runtimeKeys[1])">
-                                    <label for="runtimeKeys[1]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[1]]}}</label>
-                                </div>
-                            </section>
-                            <section class="runtime-option disable-color">
-                                <div class="radio-container">
-                                    <input type="radio" name="runtime" id="runtimeKeys[2]" [value]="runtimeKeys[2]" [checked]="runtime == runtimeKeys[2]" (change)="onSelectionChange(runtimeKeys[2])">
-                                    <label for="runtimeKeys[2]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[2]]}}</label>
-                                </div>
-                            </section>
-                            <section class="runtime-option disable-color">
-                                <div class="radio-container">
-                                    <input type="radio" name="runtime" id="runtimeKeys[3]" [value]="runtimeKeys[3]" [checked]="runtime == runtimeKeys[3]" (click)="onSelectionChange(runtimeKeys[3])">
-                                    <label for="runtimeKeys[3]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[3]]}}</label>
-                                </div>
-                            </section>
-                            <section class="runtime-option disable-color">
-                                <div class="radio-container">
-                                    <input type="radio" name="runtime" id="runtimeKeys[4]" [value]="runtimeKeys[4]" [checked]="runtime == runtimeKeys[4]" (click)="onSelectionChange(runtimeKeys[4])">
-                                    <label for="runtimeKeys[4]"><span class='outer'></span><span class="background"></span>{{runtimeObject[runtimeKeys[4]]}}</label>
-                                </div>
-                            </section>
-                        </div>
-                    </div>
-
                     <div  id="runtime-type" *ngIf="!typeofruntimeSelected" class="">
                     
                         <div class="runtime-row1 service-type-width space-between">
@@ -408,6 +314,7 @@
                                         <!-- #deploymentDescriptorText='ngModel'  -->
                                     </div>
                                 </div>
+                                <div class="form-error" *ngIf="isyamlValid">Invalid Yaml Text</div>
                             </section>
                         </div>
                     </div>

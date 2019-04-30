@@ -28,7 +28,7 @@ import { environment } from "../../../../environments/environment";
 })
 
 
-export class CreateServiceComponent implements OnInit , AfterViewInit{
+export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
   slsFile;
@@ -40,21 +40,16 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
   typeofruntimeSelected:boolean = false;
   deploymenttargetSelected:boolean = false;
   typeOfRuntime:string = "nodejs";
-  serviceTypes = ["api","function","website","custom"];
-  serviceTypesLabels = ["API","Function","Website","Build Custom"]
-  platformTypes = ["aws","azure","gcloud"];
-  platformTypesLabels = ["AWS","Azure","Google Cloud"];
-  deploymentTargetsList=["aws_apigateway","gcp_apigee"];
-  deploymentTargetsLabels=["AWS API Gateway","GCP APIGEE"];
   ids=[
     "service-type-section",
     "deployment-type-section",
     "additional",
     "typeevents"
   ]
+  isyamlValid:boolean;
   typeform:boolean=false;
   typeevents:boolean=false;
-  deploymentDescriptorData = ["API Template","Function Template", "Website Template", "Start New"]
+  deploymentDescriptorData = ["API Template", "Function Template", "Website Template", "Start New"]
   selectedList:string='API Template';
   sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
   kinesisStreamString:string = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/";
@@ -174,11 +169,7 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
   }
 
  // function for opening and closing create service popup
-  closeCreateService(serviceRequest){
-    // this.typeofserviceSelected = false;
-    // this.typeofruntimeSelected = false;
-    // this.deploymenttargetSelected = false;
-    // this.typeofplatformSelected = false;
+  closeCreateService(serviceRequest){    
     if(serviceRequest){
       this.servicelist.serviceCall();
     }
@@ -189,26 +180,10 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
     this.onClose.emit(false);
   }
 
-  getFiles(event){
-    this.slsFile;
-    this.readThis(event.target);
-
-    
-  }
+  
   onFilterSelected(event){
   }
-  readThis(inputValue: any) : void {
-    var file:File = inputValue.files[0]; 
-    var myReader:FileReader = new FileReader();
-
-    myReader.onloadend = function(e){
-      // you can perform an action with readed data here
-
-    }
-
-    myReader.readAsText(file);
-  }
-
+  
   selectedApprovers = [];
 
   rateData = ['Minutes','Hours','Days'];
@@ -636,6 +611,10 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
     if(this.invalidEventName){
       return true
     }
+    if(this.isyamlValid){
+      return true
+    }
+
     return false;
   }
 
@@ -714,9 +693,11 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
   validateYAML(){
     const yamlLint = require('yaml-lint'); 
     yamlLint.lint(this.deploymentDescriptorText).then(() => {
-      console.log('Valid YAML file.');
+      this.isyamlValid=true;
     }).catch((error) => {
       console.error('Invalid YAML file.', error);
+      this.isyamlValid=false;
+
     });
   }
 
@@ -759,7 +740,6 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
         
         if(i!=0){
           
-          // if(rect.top < ((diff/2)-75) || rect.bottom > windowHeight-((diff/2)-75)){
           if(rect.top > windowHeight/2){
             ele.classList.add('in-active');  
             if(this.ids[i].includes('type')){
@@ -793,14 +773,12 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
     this.loadMaxLength();
     if(env_oss.slack_support) this.SlackEnabled=true;
   };
-    // cron validation related functions //
-  ngAfterViewInit(){
-
-  }
+  
   inputChanged(val){
     this.Currentinterval = val;
   }
-
+      
+  // cron validation related functions //
   private isCronObjValid(cronObj) {
     var cronValidity = this.cronParserService.validateCron(cronObj);
     this.cronFieldValidity = cronValidity;
@@ -883,6 +861,4 @@ export class CreateServiceComponent implements OnInit , AfterViewInit{
       return this.rateExpression.cronStr;
     }
   };
-  
-
 }
