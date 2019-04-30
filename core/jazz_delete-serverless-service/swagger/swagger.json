@@ -35,7 +35,7 @@
                 "application/json": "$input.json('$')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -88,6 +88,12 @@
             "schema": {
               "$ref": "#/definitions/DeleteServerlessServiceInput"
             }
+          },
+          {
+            "name": "Jazz-Service-ID",
+            "in": "header",
+            "required": true,
+            "type": "string"
           }
         ],
         "consumes": [
@@ -168,11 +174,11 @@
             }
           }
         },
-       "security": [
-            {
-              "{envPrefix}-{domain}-cognito-authorizer": []
-            }
-          ],
+        "security": [
+          {
+            "{envPrefix}-{domain}-cognito-authorizer": []
+          }
+        ],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -189,7 +195,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -200,7 +206,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -211,7 +217,7 @@
                 "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -222,7 +228,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -233,18 +239,18 @@
     }
   },
   "securityDefinitions": {
-      "{envPrefix}-{domain}-cognito-authorizer": {
-        "type": "apiKey",
-        "name": "Authorization",
-        "in": "header",
-        "x-amazon-apigateway-authtype": "custom",
-        "x-amazon-apigateway-authorizer": {
-          "authorizerCredentials": "{conf-role}",
-          "authorizerResultTtlInSeconds": 300,
-          "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
-          "type": "token"
-        }
+    "{envPrefix}-{domain}-cognito-authorizer": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header",
+      "x-amazon-apigateway-authtype": "custom",
+      "x-amazon-apigateway-authorizer": {
+        "authorizerCredentials": "{conf-role}",
+        "authorizerResultTtlInSeconds": 0,
+        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
+        "type": "request"
       }
+    }
   },
   "definitions": {
     "200SuccessResponse": {
@@ -311,7 +317,9 @@
     "DeleteServerlessServiceInput": {
       "type": "object",
       "description": "Service input payload format",
-	  "required": ["service_name"],
+      "required": [
+        "service_name"
+      ],
       "properties": {
         "service_name": {
           "type": "string",

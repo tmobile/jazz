@@ -35,7 +35,7 @@
                 "application/json": "$input.json('$')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -98,14 +98,21 @@
       "post": {
         "description": "Post method swagger for Node template",
         "parameters": [{
-          "name": "param",
-          "in": "body",
-          "description": "post body parameter.",
-          "required": true,
-          "schema": {
-            "$ref": "#/definitions/InputObj"
+            "name": "param",
+            "in": "body",
+            "description": "post body parameter.",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/InputObj"
+            }
+          },
+          {
+            "name": "Jazz-Service-ID",
+            "in": "header",
+            "required": true,
+            "type": "string"
           }
-        }],
+        ],
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -251,7 +258,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -262,7 +269,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -273,7 +280,7 @@
                 "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -284,7 +291,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -295,7 +302,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
@@ -306,7 +313,7 @@
                 "application/json": "$input.path('$.errorMessage')"
               },
               "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
                 "method.response.header.Access-Control-Allow-Methods": "'*'",
                 "method.response.header.Access-Control-Allow-Origin": "'*'"
               }
