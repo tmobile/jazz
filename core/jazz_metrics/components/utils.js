@@ -338,6 +338,7 @@ function updateS3Asset(newAssetObj, relativeId) {
   var bucketValue = parts[0];
   newAssetObj.asset_name.BucketName = bucketValue;
   newAssetObj.asset_name.StorageType = "StandardStorage";
+  newAssetObj.asset_name.FilterId = "EntireBucket";
   return newAssetObj;
 }
 

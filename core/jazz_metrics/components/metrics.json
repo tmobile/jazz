@@ -78,17 +78,60 @@
         "metrics": [{
             "MetricName": "BucketSizeBytes",
             "Unit": "Bytes",
-            "Statistics": "Average",
-            "Dimensions": ["StorageType", "BucketName", "FilterId"]
+            "Dimensions": ["StorageType", "BucketName"]
           },
           {
             "MetricName": "NumberOfObjects",
             "Unit": "Count",
-            "Statistics": "Average",
-            "Dimensions": ["StorageType", "BucketName", "FilterId"]
+            "Dimensions": ["StorageType", "BucketName"]
+          },
+          {
+            "MetricName": "AllRequests",
+            "Unit": "Count",
+            "Dimensions": ["BucketName", "FilterId"]
+          },
+          {
+            "MetricName": "4xxErrors",
+            "Unit": "Count",
+            "Dimensions": ["BucketName", "FilterId"]
+          },
+          {
+            "MetricName": "5xxErrors",
+            "Unit": "Count",
+            "Dimensions": ["BucketName", "FilterId"]
+          },
+          {
+            "MetricName": "ListRequests",
+            "Unit": "Count",
+            "Dimensions": ["BucketName", "FilterId"]
+          },
+          {
+            "MetricName": "GetRequests",
+            "Unit": "Count",
+            "Dimensions": ["BucketName", "FilterId"]
+          },
+          {
+            "MetricName": "FirstByteLatency",
+            "Unit": "Milliseconds",
+            "Dimensions": ["BucketName", "FilterId"]
+          },
+          {
+            "MetricName": "TotalRequestLatency",
+            "Unit": "Milliseconds",
+            "Dimensions": ["BucketName", "FilterId"]
+          },
+          {
+            "MetricName": "BytesDownloaded",
+            "Unit": "Bytes",
+            "Dimensions": ["BucketName", "FilterId"]
+          },
+          {
+            "MetricName": "BytesUploaded",
+            "Unit": "Bytes",
+            "Dimensions": ["BucketName", "FilterId"]
           }
         ],
-        "dimensions": ["BucketName", "StorageType"]
+        "dimensions": ["BucketName", "StorageType", "FilterId"]
       },
       "cloudfront": {
         "metrics": [{
