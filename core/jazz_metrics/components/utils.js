@@ -88,7 +88,9 @@ function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset, provider) {
       'aws/cloudfront': 'AWS/CloudFront',
       'aws/s3': 'AWS/S3',
       'aws/dynamodb': 'AWS/DynamoDB',
-      'aws/dynamodb_stream': 'AWS/DynamoDB'
+      'aws/dynamodb_stream': 'AWS/DynamoDB',
+      'aws/sqs': 'AWS/SQS',
+      'aws/kinesis_stream': 'AWS/Kinesis'
     };
 
     if (Object.keys(nameSpaceList).indexOf(awsAddedNameSpace) > -1) {
@@ -219,6 +221,9 @@ function updateAWSAsset(newAssetObj, asset) {
   var arnString = asset.provider_id, assetType = asset.asset_type, assetEnvironment = asset.environment;
   var arnParsedObj = parser(arnString);
   var relativeId = arnParsedObj.relativeId;
+  if (arnParsedObj["undefined"] && relativeId.indexOf("stream") !== 1) {
+    relativeId = arnString.substring(arnString.indexOf(relativeId), arnString.length);
+  }
 
   switch (assetType) {
     case "lambda":
@@ -239,8 +244,16 @@ function updateAWSAsset(newAssetObj, asset) {
       newAssetObj = updateDynamodbAsset(newAssetObj, relativeId);
       break;
 
-    case "updateDynamodbStreamAsset":
+    case "dynamodb_stream":
       newAssetObj = updateDynamodbStreamAsset(newAssetObj, relativeId);
+      break;
+
+    case "sqs":
+      newAssetObj = updateSqsAsset(newAssetObj, relativeId);
+      break;
+
+    case "kinesis_stream":
+      newAssetObj = updateKinesisAsset(newAssetObj, relativeId);
       break;
 
     default:
@@ -275,18 +288,28 @@ function updateLambdaAsset(newAssetObj, relativeId, arnString) {
 
 function updateDynamodbAsset(newAssetObj, relativeId) {
   let parts = relativeId.split("/");
-  let tableName = parts[1];
-  newAssetObj.asset_name.TableName = tableName;
+  newAssetObj.asset_name.TableName = parts[1];
   newAssetObj.asset_name.Operation = "PutItem";
   return newAssetObj;
 }
 
 function updateDynamodbStreamAsset(newAssetObj, relativeId) {
   let parts = relativeId.split("/");
-  let tableName = parts[1];
-  newAssetObj.asset_name.TableName = tableName;
-  newAssetObj.asset_name.Operation = "GetRecord";
+  newAssetObj.asset_name.TableName = parts[1];
+  newAssetObj.asset_name.Operation = "GetRecords";
   newAssetObj.asset_name.StreamLabel = parts[3];
+  return newAssetObj;
+}
+
+function updateSqsAsset(newAssetObj, relativeId) {
+  let parts = relativeId.split("/");
+  newAssetObj.asset_name.QueueName = parts[0];
+  return newAssetObj;
+}
+
+function updateKinesisAsset(newAssetObj, relativeId) {
+  let parts = relativeId.split("/");
+  newAssetObj.asset_name.StreamName = parts[1];
   return newAssetObj;
 }
 

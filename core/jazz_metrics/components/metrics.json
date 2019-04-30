@@ -176,6 +176,119 @@
           }
         ],
         "dimensions": ["Operation", "StreamLabel", "TableName"]
+      },
+      "sqs": {
+        "metrics": [{
+            "MetricName": "ApproximateAgeOfOldestMessage",
+            "Unit": "Seconds",
+            "Dimensions": ["QueueName"]
+          },
+          {
+            "MetricName": "ApproximateNumberOfMessagesDelayed",
+            "Unit": "Count",
+            "Dimensions": ["QueueName"]
+          },
+          {
+            "MetricName": "ApproximateNumberOfMessagesNotVisible",
+            "Unit": "Count",
+            "Dimensions": ["QueueName"]
+          },
+          {
+            "MetricName": "ApproximateNumberOfMessagesVisible",
+            "Unit": "Count",
+            "Dimensions": ["QueueName"]
+          },
+          {
+            "MetricName": "NumberOfEmptyReceives",
+            "Unit": "Count",
+            "Dimensions": ["QueueName"]
+          },
+          {
+            "MetricName": "NumberOfMessagesDeleted",
+            "Unit": "Count",
+            "Dimensions": ["QueueName"]
+          },
+          {
+            "MetricName": "NumberOfMessagesReceived",
+            "Unit": "Count",
+            "Dimensions": ["QueueName"]
+          },
+          {
+            "MetricName": "NumberOfMessagesSent",
+            "Unit": "Count",
+            "Dimensions": ["QueueName"]
+          },
+          {
+            "MetricName": "SentMessageSize",
+            "Unit": "Bytes",
+            "Dimensions": ["QueueName"]
+          }
+        ],
+        "dimensions": ["QueueName"]
+      },
+      "kinesis_stream": {
+        "metrics": [{
+            "MetricName": "GetRecords.Bytes",
+            "Unit": "Bytes",
+            "Dimensions": ["StreamName"]
+          },
+          {
+            "MetricName": "GetRecords.IteratorAgeMilliseconds",
+            "Unit": "Milliseconds",
+            "Dimensions": ["StreamName"]
+          },
+          {
+            "MetricName": "GetRecords.Latency",
+            "Unit": "Milliseconds",
+            "Dimensions": ["StreamName"]
+          },
+          {
+            "MetricName": "GetRecords.Records",
+            "Unit": "Count",
+            "Dimensions": ["StreamName"]
+          },
+          {
+            "MetricName": "GetRecords.Success",
+            "Unit": "Count",
+            "Dimensions": ["StreamName"]
+          },
+          {
+            "MetricName": "IncomingBytes",
+            "Unit": "Bytes",
+            "Dimensions": ["StreamName"]
+          },
+          {
+            "MetricName": "IncomingRecords",
+            "Unit": "Count",
+            "Dimensions": ["StreamName"]
+          },
+          {
+            "MetricName": "PutRecord.Bytes",
+            "Unit": "Bytes",
+            "Dimensions": ["StreamName"]
+          },
+          {
+            "MetricName": "PutRecord.Latency",
+            "Unit": "Milliseconds",
+            "Dimensions": ["StreamName"]
+          },
+          {
+            "MetricName": "PutRecord.Success",
+            "Unit": "Count",
+            "Dimensions": ["StreamName"]
+          },
+          {
+            "MetricName": "ReadProvisionedThroughputExceeded",
+            "Unit": "Count",
+            "Dimensions": ["StreamName"]
+          },
+          {
+            "MetricName": "WriteProvisionedThroughputExceeded",
+            "Unit": "Count",
+            "Dimensions": ["StreamName"]
+          }
+        ],
+        "dimensions": ["StreamName"]
       }
     },
     "gcp": {
