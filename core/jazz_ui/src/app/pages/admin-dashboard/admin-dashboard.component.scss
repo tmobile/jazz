@@ -10,6 +10,11 @@
     float: right;
   }
 }
+.container{
+  width: 100%;
+  padding: 0px;
+  margin: 0px;
+}
 
 section.json-viewer-container {
   position: relative;
@@ -18,7 +23,6 @@ section.json-viewer-container {
   padding: 20px;
   height: 65vh;
   width: 100%;
-  overflow-y: scroll;
 }
 
 .section-centered {
@@ -95,6 +99,16 @@ input:checked + .slider:before {
   -ms-transform: translateX(26px);
   transform: translateX(26px);
 }
+.row-item{
+  display:flex;
+  justify-content: space-between;
+}
+.row-item-user{
+  width:33.3%;
+}
+.row{
+  padding: 0 25px;
+}
 
 .slider.round {
   border-radius: 34px;
@@ -111,7 +125,15 @@ input:checked + .slider:before {
 // loading 
 
     .loading-circle {
-      top: calc(50% - 1.5rem);
+    position: absolute;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+    width: 100%;
+    z-index: 2;
+    }
+    .row-userstatus{
+      width: 33.3%;
     }
 
     // pagination

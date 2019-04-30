@@ -21,6 +21,7 @@ export class AdminDashboardComponent implements OnInit{
   private http: any;
   loadMore :boolean = false;
   paginationToken:any = '';
+  isLoading: boolean = false;
 
   constructor(private adminUtils: AdminUtilsService,private request: RequestService, private toasterService: ToasterService) {
     this.toasterService = toasterService;
@@ -39,6 +40,7 @@ export class AdminDashboardComponent implements OnInit{
         console.log(error);
         this.state = 'error';
       })
+      this.getUsers();
   }
 
   toggleCollapse() {
@@ -76,11 +78,12 @@ export class AdminDashboardComponent implements OnInit{
       payload['status'] = 1;
     }
     this.isPUTLoading = true;
+    this.isLoading = true;
     this.http.put('/jazz/usermanagement/' + name, payload)
       .subscribe(
         (Response) => {
-          // debugger
           this.isPUTLoading = false;
+          this.isLoading = false
           this.getAdminUsers();
           var tst = document.getElementById('toast-container');
           tst.classList.add('toaster-anim');
@@ -107,7 +110,7 @@ export class AdminDashboardComponent implements OnInit{
         this.loadMore = true;
         this.paginationToken = '';
         if (data.paginationtoken) {
-         
+
           this.paginationToken = encodeURIComponent(data.paginationtoken);
         }
         else {

@@ -49,23 +49,24 @@
         </section>
       </div>
       <div class="tab-pane" id="users">
-        <div *ngIf="state === 'loading'">
-          <div class="loading-circle"></div>
-        </div>
-        <section class="json-viewer-container">
+        
+        <section class="json-viewer-container" >
+            <div *ngIf="state === 'loading'">
+                <div class="loading-circle"></div>
+              </div>
           <div *ngIf="isPUTLoading">
             <div class="loading-circle"></div>
           </div>
-          <div class="json-viewer-list">
+          <div class="json-viewer-list" *ngIf="!isLoading">
             <div class="json-viewer-row">
               <div class="json-viewer-element primitive">
                 <div class="container">
                   <div class="row" *ngFor="let users of userData">
-                    <div *ngIf="users.Attributes.length>3">
-                      <div class="col-md-4">
+                    <div class="row-item" *ngIf="users.Attributes.length>3">
+                      <div class="row-item-user">
                         <span class="json-header">{{users.Attributes[3].Value}}</span>
                       </div>
-                      <div class="col-md-4">
+                      <div class="row-userstatus">
                         <span class="json-value">{{users.UserStatus}}</span>
                       </div>
                       <div class="col-md-4">
