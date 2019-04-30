@@ -221,9 +221,6 @@ function updateAWSAsset(newAssetObj, asset) {
   var arnString = asset.provider_id, assetType = asset.asset_type, assetEnvironment = asset.environment;
   var arnParsedObj = parser(arnString);
   var relativeId = arnParsedObj.relativeId;
-  if (arnParsedObj["undefined"] && relativeId.indexOf("stream") !== 1) {
-    relativeId = arnString.substring(arnString.indexOf(relativeId), arnString.length);
-  }
 
   switch (assetType) {
     case "lambda":
@@ -245,7 +242,7 @@ function updateAWSAsset(newAssetObj, asset) {
       break;
 
     case "dynamodb_stream":
-      newAssetObj = updateDynamodbStreamAsset(newAssetObj, relativeId);
+      newAssetObj = updateDynamodbStreamAsset(newAssetObj, relativeId, arnString);
       break;
 
     case "sqs":
@@ -293,11 +290,14 @@ function updateDynamodbAsset(newAssetObj, relativeId) {
   return newAssetObj;
 }
 
-function updateDynamodbStreamAsset(newAssetObj, relativeId) {
-  let parts = relativeId.split("/");
-  newAssetObj.asset_name.TableName = parts[1];
-  newAssetObj.asset_name.Operation = "GetRecords";
-  newAssetObj.asset_name.StreamLabel = parts[3];
+function updateDynamodbStreamAsset(newAssetObj, relativeId, arnString) {
+  if (relativeId.indexOf("stream") !== 1) {
+    relativeId = arnString.substring(arnString.indexOf(relativeId), arnString.length);
+    let parts = relativeId.split("/");
+    newAssetObj.asset_name.TableName = parts[1];
+    newAssetObj.asset_name.Operation = "GetRecords";
+    newAssetObj.asset_name.StreamLabel = parts[3];
+  }
   return newAssetObj;
 }
 
