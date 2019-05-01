@@ -45,9 +45,11 @@
                             </section>
 
                             <section class="service-box-section align-self">OR</section>
+
+
                             <section class="pad-left0 service-box-section">
-                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'custom'}" (keyup.enter)="changeServiceType('sls-app')" (click)="changeServiceType('sls-app')">
-                                    <div class="icon-icon-custom" [ngClass]="{'selected': typeOfService == 'custom'}">
+                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'custom'}" (keyup.enter)="changeServiceType('custom')" (click)="changeServiceType('custom')">
+                                    <div class="icon-icon-sls-app" [ngClass]="{'selected': typeOfService == 'custom'}">
                                         <img *ngIf="typeOfService == 'custom'" src="./../../../assets/images/icons/Build-custom.svg"/>
                                         <img *ngIf="typeOfService != 'custom'" src="./../../../assets/images/icons/Build-custom-gray.svg"/>
                                     </div>
@@ -140,7 +142,7 @@
                     </div>
                 </div>
             </section>
-            <section [class.disable-color]="typeofruntimeSelected" class="run-time" *ngIf="typeOfService != 'website'">
+            <section [class.disable-color]="typeofruntimeSelected" class="run-time" *ngIf="typeOfService != 'website' && typeOfService != 'sls-app'">
                 <p class="step-title">Choose your runtime<span>*</span></p>
 
                 <div  class="">
@@ -156,7 +158,7 @@
                                             <img *ngIf="runtime == runtimeKeys[0]" [class.selected-image]="runtime == runtimeKeys[0]" src="./../../../../assets/images/icons/nodejs.svg"/>
                                             <img *ngIf="runtime != runtimeKeys[0]" [class.selected-image]="runtime == runtimeKeys[0]" src="./../../../../assets/images/icons/greyscale-icons/icon-nodejs.svg"/>
                                     </div>
-                                            <p>{{runtimeKeys[0]}}</p>
+                                    <p>{{runtimeKeys[0]}}</p>
                                 </div>
                             </section>
                             <section class="pad-left0 service-box-section">
@@ -293,7 +295,7 @@
                     </div>
                 </section>
     
-                <section id="deployment-descriptor" class="each-step-wrap service-description" *ngIf="typeOfService == 'custom'">
+                <section id="deployment-descriptor" class="each-step-wrap service-description" *ngIf="typeOfService == 'sls-app'">
                     <div class="">
                         <div class="">
                             <p class="step-title">Deployment Descriptor</p>
@@ -405,35 +407,7 @@
                 Security Details
             </div>
         </div>
-        <div id="typeofservice" class="sec-content" [class.open-sec-content]="typeofservice">
-            <section class="each-step-wrap type-of-service">
-                <div class="row">
-                    <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Choose the type of service you want to create<span>*</span></p>
-                    </div>
-                    <div class="col-lg-8 col-md-8">
-                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
-                            <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')" (click)="changeServiceType('api')">
-                                <div class="icon-icon-api" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                                <p>API</p>
-                            </div>
-                        </section>
-                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
-                            <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
-                                <div class="icon-icon-function" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                                <p>LAMBDA</p>
-                            </div>
-                        </section>
-                        <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0 service-box-section">
-                            <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'website'}" (keyup.enter)="changeServiceType('website')" (click)="changeServiceType('website')">
-                                <div class="icon-icon-web" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                                <p>WEBSITE</p>
-                            </div>
-                        </section>
-                    </div>
-                </div>
-            </section>
-        </div>
+        
     </section>
 
     <section id="typeevents" [class.hide]='serviceRequested' class="type-section" *ngIf="typeOfService == 'function'" [class.disable-color]="">
