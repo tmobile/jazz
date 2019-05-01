@@ -1104,11 +1104,7 @@ describe('jazz_metrics', function () {
           expect(resObj).to.have.all.keys('isError', 'nameSpace', 'paramMetrics');
           expect(resObj.isError).to.be.false;
           resObj.paramMetrics.forEach(each => {
-            if (namespace === 's3') {
-              expect(each).to.have.all.keys('MetricName', 'Unit', 'Dimensions', 'Statistics');
-            } else {
-              expect(each).to.have.all.keys('MetricName', 'Unit', 'Dimensions');
-            }
+            expect(each).to.have.all.keys('MetricName', 'Unit', 'Dimensions');
           });
         });
       });
