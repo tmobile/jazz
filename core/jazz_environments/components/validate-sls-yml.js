@@ -53,21 +53,16 @@ const reducer = function(acc, curr) {
 
 /* Validates a given yml file's resources against whitelist yml */
 const validateResources = function validateResourcesAgaistWhitelist(deploymentDescriptor) {
-  try{
-    const deploymentDescriptorDoc = yaml.load(deploymentDescriptor);
-    if(deploymentDescriptorDoc.resources && deploymentDescriptorDoc.resources.Resources) {
-      const resourcesElem = deploymentDescriptorDoc.resources.Resources;  
-      // Extracting all elements of 'Type' from under resources.Resources
-      const allTargetResourceTypes = Object.keys(resourcesElem).map(name => resourcesElem[name].Type);  
-      // target minus all in whitelist should give us all oustanding resource types that a developer used outside the whitelist defined
-      const outstandingResources = allTargetResourceTypes.reduce(getReducerFunction(allowedResourceList), []);  
-      return outstandingResources;
-    } else {  
-      return []; // If the targetFileDoc.resources.Resources is not present there is nothing to worry about as we are not trying to create anything
-    }
-  }
-  catch(e){
-    console.log(e);
+  const deploymentDescriptorDoc = yaml.load(deploymentDescriptor);
+  if(deploymentDescriptorDoc.resources && deploymentDescriptorDoc.resources.Resources) {
+    const resourcesElem = deploymentDescriptorDoc.resources.Resources;  
+    // Extracting all elements of 'Type' from under resources.Resources
+    const allTargetResourceTypes = Object.keys(resourcesElem).map(name => resourcesElem[name].Type);  
+    // target minus all in whitelist should give us all oustanding resource types that a developer used outside the whitelist defined
+    const outstandingResources = allTargetResourceTypes.reduce(getReducerFunction(allowedResourceList), []);  
+    return outstandingResources;
+  } else {  
+    return []; // If the targetFileDoc.resources.Resources is not present there is nothing to worry about as we are not trying to create anything
   }  
 }
 
