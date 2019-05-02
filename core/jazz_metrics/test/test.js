@@ -219,9 +219,21 @@ describe('jazz_metrics', function () {
           expect(error).to.include({
             result: "inputError",
             message: "Invalid statistics type"
-          })
-        })
-    })
+          });
+        });
+    });
+
+    it("should indicate that asset_type value is invalid", () => {
+      let payload = Object.assign({}, event.body);
+      payload.asset_type = "iam_role";
+      validateUtils.validateGeneralFields(payload)
+      .catch(err => {
+        expect(err).to.include({
+          result: "inputError",
+          message: `${payload.asset_type} asset type is not supported.`
+        });
+      });
+    });
 
   });
 
