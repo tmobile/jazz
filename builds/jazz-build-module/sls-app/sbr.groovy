@@ -1,3 +1,13 @@
+import groovy.transform.Field
+
+echo "sbr.groovy is being loaded"
+
+@Field def sbrContent
+
+def initialize() {
+  sbrContent = readFile("./sls-app/serverless-build-rules.yml")
+}
+
 /** The function traverses through the original user application.yml file that is represented as a Map and applies the rules from the rules file for every clause found in the user input.
     It returns a resulting Map that can immediatelly be serialized into the yml file and written to disk. config and context are also needed to resolve some values from the application yml
     @origAppYmlFile - the file in serverless serverless.yml format () as defined by a user/developer and parsed by SnakeYml (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)
@@ -9,10 +19,10 @@
     To test please uncomment the comments at the bottom of the file and provide the good values to the simple serverless.yml file and to the serverless-build-rules.yml that you can locate inside jenkins-build-sls-app project
     You can run the application in any groovy enabled environment like groovyConsole for example
 */
-Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
-                                      Map<String, Object> rulesYmlFile,
-                                      Map<String, String> config,
-                                      Map<String, String> context) {
+def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
+                                          Map<String, Object> rulesYmlFile,
+                                                              config,
+                                          Map<String, String> context) {
 
  // Loading and parsing all the rules to be presented in easily discoverable and executable form as map like [path:rule] i.e. [/service/name:SBR_Rule@127eae33, /service/awsKmsKeyArn:SBR_Rule@7e71274c, /frameworkVersion:SBR_Rule@5413e09 ...
     Map<String, SBR_Rule> rules =  convertRuleForestIntoLinearMap(rulesYmlFile)
@@ -25,7 +35,7 @@ Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
 
 /* This class encapsulates config, context and rules so that they don't have to be carried over with every call of recursive function */
 class Transformer {
-  private Map<String, String> config;
+  private def config;
   private Map<String, String> context;
   private Map<String, SBR_Rule> path2RulesMap;
   private Map<String, SBR_Rule> templatedPath2RulesMap;
@@ -35,7 +45,6 @@ class Transformer {
     context = aContext;
     path2RulesMap = aPath2RulesMap;
     templatedPath2RulesMap = path2RulesMap.inject([:]){acc, item -> if(item.key.contains("*")) acc.put(item.key, item.value); return acc} // Copying all path-2-rule entries where a path contains '*' thus it is a template
-//     templatedPath2RulesMap  =
   }
 
   boolean pathMatcher(String templatedPath, String targetPath) {
@@ -47,22 +56,36 @@ class Transformer {
     return acc
   }
 
+  List<String> resolveAsterisks(String templatedPath, String targetPath) {
+    List<String> val2Ret = []
+    if(!templatedPath.contains("*")) return val2Ret
+
+    String[] templatedPathSegments = templatedPath.split("/")
+    String[] targetPathSegments = targetPath.split("/")
+
+    targetPathSegments.eachWithIndex{seg, idx -> if(templatedPathSegments[idx] == "*") val2Ret.add(targetPathSegments[idx])}
+
+    return val2Ret
+
+  }
+
+
   private SBR_Rule ruleMatcher(aPath) {
     SBR_Rule simpleMatch = path2RulesMap[aPath]
-    if(simpleMatch != null) { return simpleMatch; }
-    else {
-      return templatedPath2RulesMap.find{path2Rule -> pathMatcher(path2Rule.key, aPath)}.value
+    if(simpleMatch != null) {
+      return simpleMatch;
+    } else {
+      def path2rule = templatedPath2RulesMap.find{path2Rule -> pathMatcher(path2Rule.key, aPath)}
+      if(path2rule == null) return null
+      path2rule.value.asteriskValues = resolveAsterisks(path2rule.key, aPath)
+      return path2rule.value
     }
   }
 
   private def processor(aSubTree, currentPath) {
-    if(!(aSubTree instanceof List || aSubTree instanceof Map)) {
-      SBR_Rule theRule = ruleMatcher(currentPath);
-      if(theRule != null) {
-        return theRule.applyRule(aSubTree, currentPath, config, context)
-      } else {
-        return aSubTree
-      }
+    SBR_Rule theRule = ruleMatcher(currentPath);
+    if(theRule != null) {
+     return theRule.applyRule(aSubTree, currentPath, config, context)
     } else {
       if(aSubTree instanceof Map) return aSubTree.inject([:]){acc, item -> acc.put(item.key, processor(item.value, currentPath+"/"+item.key) ); return acc}
       else return aSubTree.collect{val -> processor(val, currentPath)}.flatten()
@@ -240,13 +263,35 @@ class ConfigOnlyResolver implements Resolver {
   }
 }
 
+class ConfigMerge implements Resolver {
+  public Object resolve(Object userVal, Object configVal) {
+    println "ConfigMerge called: $userVal, $configVal"
+    if(userVal instanceof List &&  configVal instanceof List) {
+      def out = []
+      out << userVal
+      out << configVal
+      return out
+    } else if(userVal instanceof Map &&  configVal instanceof Map) {
+      def out = [:]
+      out << userVal
+      out << configVal
+      return out
+    } else if(userVal instanceof String &&  configVal instanceof String) {
+      return userVal+"-"+configVal
+    } else {
+      throw new IllegalStateException("Type mismatch. UserVal Class = "+userVal.getClass().getName()+"; "+
+                                      "configVal Class= "+configVal.getClass().getName())
+    }
+  }
+}
+
 enum SBR_Render {
   USER_WINS("user-wins", new UserWinsResolver()),
   CONFIG_WINS("config-wins", new ConfigWinsResolver()),
   USER_ONLY("user-only", new UserOnlyResolver()),
   CONFIG_ONLY("config-only", new ConfigOnlyResolver()),
   EXCEPTION_ON_MISMATCH("exception-on-mismatch", null), // TODO: Write a resolver
-  MERGE("merge", null) // TODO: Write a resolver
+  MERGE("merge", new ConfigMerge()) // TODO: Write a resolver
 
   private String tagValue
   private Resolver resolver
@@ -351,7 +396,7 @@ class SBR_From_Constraint implements SBR_Constraint {
 
 // Encapsulates formulas and default values
 interface SBR_Value {
-  Object renderValue(config, context)
+  Object renderValue(config, context, asterisks)
 }
 
 class SBR_Example_Value implements SBR_Value {
@@ -361,7 +406,7 @@ class SBR_Example_Value implements SBR_Value {
     value = aValue;
   }
 
-  public renderValue(config, context) {
+  public renderValue(config, context, asterisks) {
     return value;
   }
 }
@@ -381,14 +426,25 @@ class SBR_Formula_Value implements SBR_Value {
     formula = aFormula
   }
 
-  public renderValue(aConfig, aContext) {
+  public def renderValue(aConfig, aContext, aAsteriskList) {
     def sharedData = new Binding()
     def shell = new GroovyShell(sharedData)
 
     sharedData.setProperty('config', aConfig)
-    sharedData.setProperty('configLoader', aContext)
+    sharedData.setProperty('context', aContext)
+    aAsteriskList.eachWithIndex{item, idx -> sharedData.setProperty("asterisk$idx", item)}
 
-    String result = shell.evaluate('"'+formula+'"') // TODO Investigate what to do with an exception here
+    def result
+
+    if(formula instanceof String) {
+      result = shell.evaluate('"'+formula+'"') // TODO Investigate what to do with an exception here
+    } else if(formula instanceof Map) {
+      result = formula.inject([:]){acc, item -> acc.put(item.key, shell.evaluate('"'+item.value+'"')); return acc}
+    } else if(formula instanceof List) {
+      resule = formula.collect{item -> shell.evaluate('"'+item.value+'"')}
+    } else {
+      throw new IllegalStateException("The formula is of unknown type "+formula.getClass().getName())
+    }
 
     return result;
   }
@@ -419,6 +475,7 @@ class SBR_PreRule {
 
 class SBR_Rule extends SBR_PreRule {
    SBR_Value value
+   List<String> asteriskValues = []
 
    public SBR_Rule(SBR_Type_Descriptor aType,
                    SBR_Render aRender,
@@ -429,7 +486,7 @@ class SBR_Rule extends SBR_PreRule {
    }
 
    public Object applyRule(userValue, path, config, context) {
-     def valueRendered = (value != null) ? value.renderValue(config, context) : userValue;
+     def valueRendered = (value != null) ? value.renderValue(config, context, asteriskValues) : userValue;
      def theValue = render.resolve(userValue, valueRendered)
      type.validate(theValue); // This will raise the exception if type is wrong but we shave to suppliment it with path so TODO is to catch the exceotion then add the path and the re-throw it
      if(constraint != null && !constraint.compliant(theValue)) {
@@ -526,7 +583,6 @@ def extractNonPrimary(Map<String, SBR_Rule> aPath2RuleMap) {
 
 Map<String, SBR_Rule> explodeNonPrimaryRule(aRule, String prefix) {
   return convertRuleForestIntoLinearMap(aRule.template).inject([:]){acc, item -> acc.put(prefix+"/"+"*"+item.key, item.value); return acc}
-
 }
 
 SBR_NonPrimaryRule resolveReferencedRule(SBR_PreRule aReferrerRule, Map<String, SBR_NonPrimaryRule> nonPrimaryRulesMap) {
@@ -565,14 +621,15 @@ Map<String, SBR_Rule> rulePostProcessor(Map<String, SBR_PreRule> aPath2RuleMap) 
 
   Map<String, SBR_PreRule> path2RuleMap2Ret = [:] << aPath2RuleMap // Copying the original map in order to avoid any possible side-effect on to the input data
   path2RuleMap2Ret.keySet().removeAll(path2NonPrimaryRuleMap.keySet()) // Removing all non-primary rules that are irrelevant now
-  path2RuleMap2Ret.keySet().removeAll(path2ReferrerRuleMapFinal.keySet()) // Removing all the referrers now because they are irrelevant either
+  path2RuleMap2Ret.keySet().removeAll(path2ReferrerRuleMap.keySet()) // Removing referrer rules
+  path2RuleMap2Ret.keySet().removeAll(path2ReferrerRuleMapFinal.keySet()) // Removing all the double-reference referrers now because they are irrelevant either
 
   path2RuleMap2Ret << path2ResolvedRuleMapFinal // Adding all resolved maps to the original input
 
   return path2RuleMap2Ret
 }
 
-
+return this
 
 
 //SBR_Type_Descriptor d = SBR_Type_Descriptor.parseTag(["sbr-type": "[int]"])
