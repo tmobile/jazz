@@ -142,7 +142,7 @@
                     </div>
                 </div>
             </section>
-            <section [class.disable-color]="typeofruntimeSelected" class="run-time" *ngIf="typeOfService != 'website' && typeOfService != 'sls-app'">
+            <section [class.disable-color]="typeofruntimeSelected" class="run-time" *ngIf="typeOfService != 'website'">
                 <p class="step-title">Choose your runtime<span>*</span></p>
 
                 <div  class="">
@@ -161,8 +161,8 @@
                                     <p>{{runtimeKeys[0]}}</p>
                                 </div>
                             </section>
-                            <section class="pad-left0 service-box-section">
-                                <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[1]}"(keyup.enter)="onSelectionChange(runtimeKeys[1])"  (click)="onSelectionChange(runtimeKeys[1])">
+                            <section class="pad-left0 service-box-section" [class.disable-event]="typeOfService == 'custom'">
+                                <div tabindex="0" class="service-box" [class.disabled-box]="typeOfService == 'custom'" [ngClass]="{'service-box-selected': runtime == runtimeKeys[1]}"(keyup.enter)="onSelectionChange(runtimeKeys[1])"  (click)="onSelectionChange(runtimeKeys[1])">
                                     <div class="icon-icon-python">
                                             <img *ngIf="runtime == runtimeKeys[1]" [class.selected-image]="runtime == runtimeKeys[1]" src="./../../../assets/images/icons/python.svg"/>
                                             <img *ngIf="runtime != runtimeKeys[1]" [class.selected-image]="runtime == runtimeKeys[1]" src="./../../../../assets/images/icons/greyscale-icons/icon-python.svg"/>
@@ -170,8 +170,8 @@
                                     <p>{{runtimeKeys[1]}}</p>
                                 </div>
                             </section>
-                            <section class="pad-left0 service-box-section">
-                                <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[2]}"(keyup.enter)="onSelectionChange(runtimeKeys[2])"  (click)="onSelectionChange(runtimeKeys[2])">
+                            <section class="pad-left0 service-box-section" [class.disable-event]="typeOfService == 'custom'">
+                                <div tabindex="0" class="service-box" [class.disabled-box]="typeOfService == 'custom'" [ngClass]="{'service-box-selected': runtime == runtimeKeys[2]}"(keyup.enter)="onSelectionChange(runtimeKeys[2])"  (click)="onSelectionChange(runtimeKeys[2])">
                                     <div class="icon-icon-python">
                                             <img *ngIf="runtime == runtimeKeys[2]" [class.selected-image]="runtime == runtimeKeys[2]" src="./../../../assets/images/icons/python.svg"/>
                                             <img *ngIf="runtime != runtimeKeys[2]" [class.selected-image]="runtime == runtimeKeys[2]" src="./../../../../assets/images/icons/greyscale-icons/icon-python.svg"/>
@@ -193,8 +193,8 @@
                             </section>
                             
                             
-                            <section class="pad-left0 service-box-section">                  
-                                    <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[4]}"(keyup.enter)="onSelectionChange(runtimeKeys[4])"  (click)="onSelectionChange(runtimeKeys[4])">
+                            <section class="pad-left0 service-box-section" [class.disable-event]="typeOfService == 'custom'">                  
+                                    <div tabindex="0" class="service-box" [class.disabled-box]="typeOfService == 'custom'" [ngClass]="{'service-box-selected': runtime == runtimeKeys[4]}"(keyup.enter)="onSelectionChange(runtimeKeys[4])"  (click)="onSelectionChange(runtimeKeys[4])">
                                     <div class="icon-icon-go">
                                             <img *ngIf="runtime == runtimeKeys[4]" [class.selected-image]="runtime == runtimeKeys[4]" src="./../../../assets/images/icons/Go.svg"/>
                                             <img *ngIf="runtime != runtimeKeys[4]" [class.selected-image]="runtime == runtimeKeys[4]" src="./../../../../assets/images/icons/greyscale-icons/icon-go.svg"/>
@@ -204,7 +204,7 @@
                             </section>
     
                             <section class="pad-left0 service-box-section disable-event">                  
-                                <div tabindex="0" class="service-box disabled-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[5]}" (keyup.enter)="onSelectionChange(runtimeKeys[5])" (click)="onSelectionChange(runtimeKeys[5])">
+                                <div tabindex="0" class="service-box disabled-box" [ngClass]="{'service-box-selected': runtime == runtimeKeys[5]}" (keyup.enter)="onSelectionChange(runtimeKeys[5])" (click)="onSelectionChange(runtimeKeys[5])">
                                     <div class="icon-icon-go">
                                             <img  *ngIf="runtime == runtimeKeys[5]" [class.selected-image]="runtime == runtimeKeys[5]" src="./../../../assets/images/icons/C.svg"/>
                                             <img  *ngIf="runtime != runtimeKeys[5]" [class.selected-image]="runtime == runtimeKeys[5]" src="./../../../../assets/images/icons/greyscale-icons/icon-c.svg"/>
@@ -267,7 +267,7 @@
                             <section class="pad-left0">
                                 <div class="input-field-container">
                                     <div class="input-wrapper" [ngClass]="{'unavailable' : !domainName.valid && (domainName.dirty || domainName.touched) || (domainName.valid && invalidDomainName) }">
-                                        <input name="domainName"  pattern="{{servicePatterns.domainName}}" maxlength="{{domainLimit}}" type="text" class="textForm" id="domainName" required placeholder="Enter namespace" [(ngModel)]="model.domainName" #domainName='ngModel' (blur)="validateName($event,'service-description')" (ngModelChange)="invalidDomainName=false" required>
+                                        <input name="domainName"  pattern="{{servicePatterns.domainName}}" maxlength="{{domainLimit}}" type="text" class="textForm" id="domainName" required placeholder="Enter namespace" [(ngModel)]="model.domainName" #domainName='ngModel' (blur)="validateName($event)" (ngModelChange)="invalidDomainName=false" required>
                                         <p class="termsConditions" *ngIf="!domainName.valid && (domainName.dirty || domainName.touched)">Namespace must contain only letters, numbers or hyphens (consecutive hyphens are not allowed)</p>
                                         <p class="termsConditions" *ngIf="domainName.valid && invalidDomainName">Namespace should not start or end with hyphens</p>
                                         <img *ngIf="serviceName.valid && domainName.valid && showLoader" class="input-loader" src="../assets/images/icons/loading.png">
@@ -287,7 +287,7 @@
                             <section class="pad-left0">
                                 <div class="input-field-container">
                                     <div class="input-wrapper">
-                                        <textarea  rows="2" cols="50" name="serviceDescription" type="text" class="textForm" placeholder="Service Description" id="serviceDescription" [(ngModel)]="model.serviceDescription"  #serviceDescription='ngModel' (blur)="typeevents = true"></textarea>
+                                        <textarea  rows="2" cols="50" name="serviceDescription" type="text" class="textForm" placeholder="Service Description" id="serviceDescription" [(ngModel)]="model.serviceDescription"  #serviceDescription='ngModel'></textarea>
                                     </div>
                                 </div>
                             </section>
@@ -295,7 +295,7 @@
                     </div>
                 </section>
     
-                <section id="deployment-descriptor" class="each-step-wrap service-description" *ngIf="typeOfService == 'sls-app'">
+                <section id="deployment-descriptor" class="each-step-wrap service-description" *ngIf="typeOfService == 'custom'">
                     <div class="">
                         <div class="">
                             <p class="step-title">Deployment Descriptor</p>
@@ -303,7 +303,7 @@
                         <div class="">
                             <section class="cpad-left0">
                                 <div class="slack-checkbox custom-cb" >
-                                    <input type="checkbox" id="checkbox-descriptor" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="descriptorSelected" (change)="descriptorSelected = !descriptorSelected">
+                                    <input type="checkbox" id="checkbox-descriptor" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="descriptorSelected" (change)="descriptorChanged()">
                                     <label for="checkbox-descriptor" ></label>
                                     <div class="cb-status-dets"> Yes, specify deployment details</div>
                                 </div>
@@ -311,9 +311,7 @@
 
                                 <div *ngIf="descriptorSelected" class="input-field-container">
                                     <div class="input-wrapper">
-                                        <!-- <input type="file" name="slsFile" id="slsFile" [(ngModel)]="slsFile"  (change)="getFiles($event)"> -->
-                                        <textarea rows="2" cols="50" name="deploymentDescriptorText" type="text" class="textForm descriptor" id="deploymentDescriptorText" [(ngModel)]="deploymentDescriptorText"  (blur)="validateYAML()"></textarea>
-                                        <!-- #deploymentDescriptorText='ngModel'  -->
+                                        <textarea rows="2" cols="50" name="deploymentDescriptorText" type="text" class="textForm descriptor" id="deploymentDescriptorText" [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
                                     </div>
                                 </div>
                                 <div class="form-error" *ngIf="isyamlValid">Invalid Yaml Text</div>
@@ -664,6 +662,7 @@
 
     <p  *ngIf='!serviceRequested' class="requiredInfo"><span>*</span>Indicates required fields</p>
     <section  *ngIf='!serviceRequested' class="submit-form">
+        <btn-jazz-secondary text='Cancel' (click)='closeCreateService(serviceRequestSuccess)' ></btn-jazz-secondary>
         <button type="submit" [disabled]="!serviceForm.valid || (disableForm())" class="btn btn-primary">SUBMIT</button>
     </section>
     </form>

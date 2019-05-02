@@ -31,8 +31,22 @@ import { environment } from "../../../../environments/environment";
 export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
-  slsFile;
-  deploymentDescriptorText = env_oss.deploymentDescriptorText;
+  deploymentDescriptorTextJava = 
+  `functions:
+    function1: function1
+      handler: com.slf.services.Function1
+    function2: function2
+      handler: com.slf.services.Function2
+  `;
+  deploymentDescriptorTextNodejs = 
+  `functions: 
+    function1: function1
+      handler: function1/index.handler
+    function2: function2
+      handler: function2/index.handler
+  `;
+  deploymentDescriptorText = this.deploymentDescriptorTextNodejs;
+
   typeofservice:boolean=true;
   typeofplatform:boolean=false;
   typeofserviceSelected:boolean = false;
@@ -224,8 +238,17 @@ export class CreateServiceComponent implements OnInit {
   onSelectionChange(val){
     this.runtime = val;
     this.typeform = true;
+    switch(this.runtime){
+      case 'java8' : this.deploymentDescriptorText = this.deploymentDescriptorTextJava;
+      case 'nodejs8.10' : this.deploymentDescriptorText = this.deploymentDescriptorTextNodejs;
+    }
+
     this.scrollTo('additional');
 
+  }
+
+  descriptorChanged(){
+    this.descriptorSelected = !this.descriptorSelected;    
   }
 
   // function called on event schedule change(radio)
@@ -371,6 +394,8 @@ export class CreateServiceComponent implements OnInit {
         approversPayload.push(this.selectedApprovers[i].userId);
     }
 
+    
+
     var payload = {
                 "service_type": this.typeOfService,
                 "service_name": this.model.serviceName,
@@ -427,6 +452,10 @@ export class CreateServiceComponent implements OnInit {
         "website": "aws_cloudfront"
       }
     }
+    else if(this.typeOfService == 'custom'){
+      payload["service_type"] = "sls-app";
+      payload["deployment_decriptor"] = this.deploymentDescriptorText;
+    }
     if(this.slackSelected){
         payload["slack_channel"] = this.model.slackName;
     }
@@ -436,40 +465,41 @@ export class CreateServiceComponent implements OnInit {
 
     this.isLoading = true;
     console.log(payload)
-    this.http.post('/jazz/create-serverless-service' , payload)
-        .subscribe(
-        (Response) => {
-          var output = Response;
-          console.log("res",output)
-          this.serviceRequested = true;
-          this.serviceRequestSuccess = true;
-          this.serviceRequestFailure = false;
-          this.isLoading = false;
-          var index = output.data.indexOf("https://");
-          this.serviceLink = output.data.slice(index, output.data.length);
-          this.resMessage=this.toastmessage.successMessage(Response,"createService");
-          console.log("res", this.resMessage)
-          this.resetEvents();
-       },
-        (error) => {
-          this.isLoading = false;
-          this.serviceRequested = true;
-          this.serviceRequestSuccess = false;
-          this.serviceRequestFailure = true;
-          this.errBody = error._body;
-          this.errMessage = this.toastmessage.errorMessage(error, 'createService');
-          this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
-          this.rateExpression.error = undefined;
-          try {
-            this.parsedErrBody = JSON.parse(this.errBody);
-            if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
-              this.errMessage = this.parsedErrBody.message;
-            }
-          } catch(e) {
-              console.log('JSON Parse Error', e);
-            }
-        }
-      );
+  
+    // this.http.post('/jazz/create-serverless-service' , payload)
+    //     .subscribe(
+    //     (Response) => {
+    //       var output = Response;
+    //       console.log("res",output)
+    //       this.serviceRequested = true;
+    //       this.serviceRequestSuccess = true;
+    //       this.serviceRequestFailure = false;
+    //       this.isLoading = false;
+    //       var index = output.data.indexOf("https://");
+    //       this.serviceLink = output.data.slice(index, output.data.length);
+    //       this.resMessage=this.toastmessage.successMessage(Response,"createService");
+    //       console.log("res", this.resMessage)
+    //       this.resetEvents();
+    //    },
+    //     (error) => {
+    //       this.isLoading = false;
+    //       this.serviceRequested = true;
+    //       this.serviceRequestSuccess = false;
+    //       this.serviceRequestFailure = true;
+    //       this.errBody = error._body;
+    //       this.errMessage = this.toastmessage.errorMessage(error, 'createService');
+    //       this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
+    //       this.rateExpression.error = undefined;
+    //       try {
+    //         this.parsedErrBody = JSON.parse(this.errBody);
+    //         if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
+    //           this.errMessage = this.parsedErrBody.message;
+    //         }
+    //       } catch(e) {
+    //           console.log('JSON Parse Error', e);
+    //         }
+    //     }
+    //   );
   }
 
   resetEvents(){
@@ -548,7 +578,7 @@ export class CreateServiceComponent implements OnInit {
     this.validateChannelName();
   }
 
-  validateName(event,id) {
+  validateName(event) {
     if(this.model.serviceName != null &&(this.model.serviceName[0] === '-' || this.model.serviceName[this.model.serviceName.length - 1] === '-')){
       this.invalidServiceName = true;
     }
@@ -559,7 +589,6 @@ export class CreateServiceComponent implements OnInit {
       this.serviceNameAvailability();
     }
 
-    this.scrollTo(id);
 }
   // function for service name avalability //
   serviceNameAvailability(){
@@ -691,6 +720,15 @@ export class CreateServiceComponent implements OnInit {
   }
 
   validateYAML(){
+    // var a = this.deploymentDescriptorText.split('\n');
+    // var b = '';
+    // for(let eachline of a){
+    //   eachline= eachline + '\\n\\n';            
+    // }
+    // a;
+    // b = a.join('\n');
+    // b;
+    // debugger
     const yamlLint = require('yaml-lint'); 
     yamlLint.lint(this.deploymentDescriptorText).then(() => {
       this.isyamlValid=true;

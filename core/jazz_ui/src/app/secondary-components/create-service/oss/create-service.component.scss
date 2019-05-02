@@ -3,7 +3,7 @@
   background-color: white;
   max-width: 700px;
   width: 100vw;
-  padding: 0 3.5rem;
+  padding: 0 2.5rem;
   height: 100%;
   overflow: auto;
   @media(max-width: 853px) {
@@ -18,7 +18,7 @@
 }
 
 .create-service-wrap .bold-title {
-  padding: 1.33rem 0;
+  padding: 1.33rem 1rem;
 }
 
 .service-box-section {
@@ -44,8 +44,15 @@
   min-height: 120px;
   width:11rem;
   height: 11rem;
+  &:hover{
+    transform: scale(1.04);
+    transition:0.3s transform;
+  }
   &.disabled-box {
     cursor: default;
+    &:hover{
+      transform: scale(1);
+    }
   }
   &.disabled-box:focus {
     border-color: #cccccc !important;
@@ -863,6 +870,7 @@ p.learn-more {
 .type-section{
   padding: 2rem 0;
   .sec-heading{
+    padding:0 1rem;
     margin-bottom: 1rem;
     .icon-icon-right{
       .icon-right{
@@ -878,6 +886,7 @@ p.learn-more {
   .sec-content{
     overflow: hidden;
     transition: 0.5s all;
+    padding: 0 1rem;
   }
 
   
