@@ -177,7 +177,7 @@ describe('jazz_metrics', function () {
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
-            message: 'Interval can only be 1, 60, 3600 seconds'
+            message: 'Interval can only be 1, 60, 3600, 86400, 604800, 2592000 seconds'
           });
         });
     });
@@ -302,9 +302,12 @@ describe('jazz_metrics', function () {
 
       var responseObj = {
         statusCode: 200,
-        body: JSON.stringify({
-          data: [assetsList]
-        })
+        body: {
+          data: {
+            assets:[assetsList],
+            count: 1
+          }
+        }
       };
       reqStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, responseObj, JSON.stringify(responseObj.body))
@@ -315,6 +318,7 @@ describe('jazz_metrics', function () {
         "statistics": "userStatistics"
       }
       const getAssetsObj = sinon.stub(utils, "getAssetsObj").returns(getAssetRes);
+      event.body["asset_type"] = "lambda";
       index.getAssetsDetails(config, event.body, authToken, "test-id")
         .then(res => {
           expect(res).to.have.all.keys('type', 'asset_name', 'statistics');
@@ -872,15 +876,15 @@ describe('jazz_metrics', function () {
       assetsArray = [{
         "nameSpace": "gcp",
         "actualParam": [{
-          "MetricName": "total_response_time",
-          "Statistics": ["Average"]
+          "MetricName": "message_count",
+          "Statistics": ["sum"]
         }],
         "userParam": {
           "type": "apigee",
           "asset_name": {
             "serviceName": "jazztest_test-service"
           },
-          "statistics": "Average"
+          "statistics": "sum"
         }
       }];
       var responseObj = {
@@ -888,9 +892,9 @@ describe('jazz_metrics', function () {
         "asset_name": {
           "serviceName": "jazztest_test-service"
         },
-        "statistics": "Sum",
+        "statistics": "sum",
         "metrics": [{
-          "metric_name": "sum(total_response_time)",
+          "metric_name": "sum(message_count)",
           "datapoints": [{
             "Timestamp": "2018-06-28T10:07:00.000Z",
             "sum": 29.78,
