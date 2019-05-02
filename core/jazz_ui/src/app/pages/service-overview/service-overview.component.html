@@ -143,9 +143,9 @@
           </li>
           <li>
             <div class="det-label">Description</div>
-            <div *ngIf='!showGeneralField' class="det-value wrap" [ngClass]="{PlaceHolder:description_empty}">{{service.description || 'Give details for your service'}}</div>
-            <textarea *ngIf='showGeneralField' [(ngModel)]="desc_temp" (ngModelChange)='descriptionChange()' class="det-value-input-txtarea"
-              placeholder="Give the details for your service"></textarea>
+            <div *ngIf='!showGeneralField' class="det-value wrap" [ngClass]="{PlaceHolder:description_empty}">{{service.description || 'Provide a description of your service.'}}</div>
+            <textarea *ngIf='showGeneralField' [(ngModel)]="desc_temp" (ngModelChange)='descriptionChange(desc_temp)' class="det-value-input-txtarea"
+              placeholder="Provide a description of your service."></textarea>
           </li>
             <li>
             <div class='det-label'>Creator</div>
@@ -157,10 +157,10 @@
           </li>
            <li>
             <div class='det-label'>Slack</div>
-            <div *ngIf='!showGeneralField' class='det-value' [class.PlaceHolder]="slackChannel_empty">{{service.slackChannel || 'Feeling collaborative? Add it to slack'}}</div>
+            <div *ngIf='!showGeneralField' class='det-value' [class.PlaceHolder]="slackChannel_empty">{{service.slackChannel || 'Feeling collaborative? Add it to Slack.'}}</div>
             <div *ngIf='showGeneralField' class='det-value slack-relative'>
                 <input [(ngModel)]="slackChannel_temp" type='text' (blur)="checkSlackNameAvailability()" (ngModelChange)='changeSlack()'
-                class="det-value-input" placeholder="Feeling collaborative? Add it to slack">
+                class="det-value-input" placeholder="Feeling collaborative? Add it to Slack.">
               <img *ngIf="show_loader" class="input-loader" src="../assets/images/icons/loading.png">
 
             </div>

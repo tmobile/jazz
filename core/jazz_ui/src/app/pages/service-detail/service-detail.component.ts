@@ -109,7 +109,7 @@ export class ServiceDetailComponent implements OnInit {
         serviceType: service.type,
         runtime: service.runtime,
         status: service.status.replace('_', ' '),
-        description: service.description,
+        description: service.description || '',
         approvers: service.approvers,
         domain: service.domain,
         email: service.email,

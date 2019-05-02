@@ -132,16 +132,11 @@ async function addOrRemovePolicy(serviceId, config, action, policies) {
 
         // remove (incase of add, remove first)
         if (action === 'remove' || action === 'add') {
-          removeResult = await getPolicies.map(async policies => {
-            return policies.map(async policy => {
-              await enforcer.removePolicy(policy[0], policy[1], policy[2]);
-            });
+          const promises = getPolicies.map(policies => {
+            return policies.map(policy => enforcer.removePolicy(policy[0], policy[1], policy[2]));
           });
-          if (removeResult.length === totalPolicies) {
-            if (action === 'remove') {
-              await enforcer.savePolicy();
-            }
-          } else {
+          removeResult = await Promise.all(promises);
+          if (removeResult.length !== totalPolicies) {
             result.error = `Rollback transaction - could delete ${removeResult.length} of ${totalPolicies} policies`;
           }
         }
@@ -178,14 +173,10 @@ async function addPolicy(serviceId, policies, enforcer) {
   let savedPolicies = policies.map(async policy => await enforcer.addPolicy(policy.userId, `${serviceId}_${policy.category}`, policy.permission));
   savedPolicies = await Promise.all(savedPolicies);
 
-  if (savedPolicies.length === policies.length) {
-    await enforcer.savePolicy();
-  } else if (!savedPolicies.length) { //rollback deletion
+  if (!savedPolicies.length) { //rollback deletion
     result.error = `Rollback transaction - could not add any policy`;
   } else if (savedPolicies.length !== policies.length) {
     result.error = `Rollback transaction - could add ${savedPolicies.length} of ${policies.length}`;
-  } else {
-    result.error = `Rollback transaction - failed to add/remove policies`;
   }
 
   return result;
