@@ -196,17 +196,17 @@ export const toastMessage = {
         "error500":"Something went wrong while we were fetching service metrics data!"
     },
     "getDeploymentsResponse": {
-        "dataNull":"Something went wrong while we were fetching service metrics data!",
-        "error400":"Something went wrong while we were fetching service metrics data!",
+        "dataNull":"Something went wrong while we were fetching service deployments data!",
+        "error400":"Something went wrong while we were fetching service deployments data!",
         "error401":"Token expired",
-        "error404":"Something went wrong while we were fetching service metrics data!",
-        "error500":"Something went wrong while we were fetching service metrics data!"
+        "error404":"Something went wrong while we were fetching service deployments data!",
+        "error500":"Something went wrong while we were fetching service deployments data!"
     },
     "getAssetResponse": {
-        "dataNull":"Something went wrong while we were fetching service metrics data!",
-        "error400":"Something went wrong while we were fetching service metrics data!",
+        "dataNull":"Something went wrong while we were fetching service assets data!",
+        "error400":"Something went wrong while we were fetching service assets data!",
         "error401":"Token expired",
-        "error404":"Something went wrong while we were fetching service metrics data!",
-        "error500":"Something went wrong while we were fetching service metrics data!"
+        "error404":"Something went wrong while we were fetching service assets data!",
+        "error500":"Something went wrong while we were fetching service assets data!"
     }
 };
