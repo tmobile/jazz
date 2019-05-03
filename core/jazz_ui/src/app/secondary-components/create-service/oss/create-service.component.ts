@@ -16,6 +16,7 @@ import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component";
 import { environment as env_oss } from './../../../../environments/environment.oss';
 import { environment } from "../../../../environments/environment";
+import { template as nodejsTemplate } from "../../../../config/templates/nodejs-yaml";
 
 // const YamlValidator = require('yaml-validator');
 
@@ -38,13 +39,7 @@ export class CreateServiceComponent implements OnInit {
     function2: function2
       handler: com.slf.services.Function2
   `;
-  deploymentDescriptorTextNodejs = 
-  `functions: 
-    function1: function1
-      handler: function1/index.handler
-    function2: function2
-      handler: function2/index.handler
-  `;
+  deploymentDescriptorTextNodejs = nodejsTemplate.template;
   deploymentDescriptorText = this.deploymentDescriptorTextNodejs;
 
   typeofservice:boolean=true;
@@ -60,10 +55,10 @@ export class CreateServiceComponent implements OnInit {
     "additional",
     "typeevents"
   ]
-  isyamlValid:boolean;
+  isyamlValid:boolean = true;
   typeform:boolean=false;
   typeevents:boolean=false;
-  deploymentDescriptorData = ["API Template", "Function Template", "Website Template", "Start New"]
+  deploymentDescriptorFilterData = ["Function Template", "Start New"];
   selectedList:string='API Template';
   sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
   kinesisStreamString:string = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/";
@@ -730,11 +725,16 @@ export class CreateServiceComponent implements OnInit {
     // b;
     // debugger
     const yamlLint = require('yaml-lint'); 
+    var a = require('./../../../../config/templates/nodejs.yml');
+    console.log('aaaaaa',a);
     yamlLint.lint(this.deploymentDescriptorText).then(() => {
       this.isyamlValid=true;
+      console.log('ttt isyamlValid', this.isyamlValid);
+
     }).catch((error) => {
       console.error('Invalid YAML file.', error);
       this.isyamlValid=false;
+      console.log('fff isyamlValid', this.isyamlValid);
 
     });
   }
@@ -807,6 +807,7 @@ export class CreateServiceComponent implements OnInit {
     
   }
   ngOnInit() {
+    console.log('nodejsTemplate',nodejsTemplate);
     this.getData();
     this.loadMaxLength();
     if(env_oss.slack_support) this.SlackEnabled=true;

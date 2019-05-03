@@ -307,14 +307,14 @@
                                     <label for="checkbox-descriptor" ></label>
                                     <div class="cb-status-dets"> Yes, specify deployment details</div>
                                 </div>
-                                <filters *ngIf="descriptorSelected" class="filters" [filtersList]="deploymentDescriptorData" [multiple]="false" [selectedList]="selectedList" (onSelected)="onFilterSelected($event)"></filters>
+                                <filters *ngIf="descriptorSelected" class="filters" [filtersList]="deploymentDescriptorFilterData" [multiple]="false" [selectedList]="selectedList" (onSelected)="onFilterSelected($event)"></filters>
 
                                 <div *ngIf="descriptorSelected" class="input-field-container">
                                     <div class="input-wrapper">
                                         <textarea rows="2" cols="50" name="deploymentDescriptorText" type="text" class="textForm descriptor" id="deploymentDescriptorText" [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
                                     </div>
                                 </div>
-                                <div class="form-error" *ngIf="isyamlValid">Invalid Yaml Text</div>
+                                <div class="form-error" *ngIf="!isyamlValid">Invalid Yaml Text</div>
                             </section>
                         </div>
                     </div>
