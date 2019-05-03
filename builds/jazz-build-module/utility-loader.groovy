@@ -132,6 +132,7 @@ def getAssets(assets_api, auth_token, service_config, env) {
       assets = sh (
       script: "curl GET  \
 			-H \"Content-Type: application/json\" \
+      -H \"Jazz-Service-ID: ${service_config['service_id']}\" \
 			-H \"Authorization: $auth_token\" \
 			\"${assets_api}?domain=${service_config['domain']}&service=${service_config['service']}&environment=${env}\"",
       returnStdout: true

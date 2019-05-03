@@ -60,13 +60,14 @@ function getDeploymentPayload(svcContext) {
   return deploymentPayload;
 };
 
-function getSvcPayload(method, payload, apiEndpoint, authToken) {
+function getSvcPayload(method, payload, apiEndpoint, authToken, serviceId) {
   let svcPayload = {
     'uri': apiEndpoint,
     'method': method,
     headers: {
       'content-type': "application/json",
-      'authorization': authToken
+      'authorization': authToken,
+      "Jazz-Service-ID": serviceId
     },
     rejectUnauthorized: false
   }

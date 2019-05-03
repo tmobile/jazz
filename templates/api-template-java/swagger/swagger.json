@@ -12,8 +12,8 @@
   ],
   "paths": {
     "/{service_name}": {
-      "operationId": "{operationId}",
       "options": {
+        "operationId": "{operationId}",
         "description": "CORS Support",
         "consumes": [
           "application/json"

@@ -1,0 +1,83 @@
+{
+  "POLICY": {
+    "MANAGE_ADMIN": [
+      {
+        "userId": "",
+        "permission": "write",
+        "category": "code"
+      },
+      {
+        "userId": "",
+        "permission": "admin",
+        "category": "manage"
+      },
+      {
+        "userId": "",
+        "permission": "write",
+        "category": "deploy"
+      }
+    ],
+    "MANAGE_READ": [
+      {
+        "userId": "",
+        "permission": "read",
+        "category": "code"
+      },
+      {
+        "userId": "",
+        "permission": "read",
+        "category": "deploy"
+      }
+    ],
+    "READ": [
+      {
+        "userId": "",
+        "permission": "read",
+        "category": "manage"
+      }
+    ]
+  },
+  "SCM_TYPE": "{scm_type}",
+  "SCM_CONFIG": {
+    "bitbucket": {
+      "HOSTNAME": "{scm_base_url}",
+      "USERNAME": "{bb_username}",
+      "PASSWORD": "{bb_password}",
+      "REPO_BASE_API": "/rest/api/1.0/projects/cas/repos/",
+      "REPO_USER_PERM_API": "/permissions/users?permission=",
+      "PERMISSION_CATEGORIES": [
+        "code"
+      ]
+    },
+    "gitlab": {
+      "HOSTNAME": "{scm_base_url}",
+      "PRIVATE_TOKEN": "{private_token}",
+      "REPO_BASE_API": "/api/v4/projects/",
+      "USER_API": "/api/v4/users?username=",
+      "PERMISSION_CATEGORIES": [
+        "code"
+      ],
+      "ACCESS_LEVEL": {
+        "READ": 20,
+        "WRITE": 30
+      }
+    }
+  },
+  "ADMIN_SERVICES_POLICIES": {
+    "serviceId": "",
+    "policies": [
+      {
+        "category": "manage",
+        "permission": "admin"
+      },
+      {
+        "category": "code",
+        "permission": "write"
+      },
+      {
+        "category": "deploy",
+        "permission": "write"
+      }
+    ]
+  }
+}

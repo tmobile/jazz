@@ -85,7 +85,7 @@ export class EnvOverviewSectionComponent implements OnInit, AfterViewInit {
   private subscription:any;
 
   @Input() service: any = {};
-  
+  @Input() isAdminAccess:boolean = false;
   temp_description:string;
   put_payload:any = {};
   services = {
@@ -243,7 +243,7 @@ popup(state){
     var errMsgBody;
     if(this.friendlyChanged){
       this.put_payload.friendly_name= this.tempFriendlyName;
-      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
+      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload, this.service.id)
             .subscribe(
                 (Response)=>{
                   let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
@@ -342,8 +342,7 @@ popup(state){
       this.subscription.unsubscribe();
     }
     this.onload.emit(this.environmnt.endpoint);
-
-    this.subscription = this.http.get('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name).subscribe(
+    this.subscription = this.http.get('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
       // this.http.get('/jazz/environments/prd?domain=jazz-testing&service=test-create').subscribe(
         (response) => {
 

@@ -1,14 +1,14 @@
 {
-    "DELETE_SERVICE_JOB_URL": "{conf-jenkins-host}/job/delete-service/buildWithParameters",
-    "JOB_TOKEN": "{job_token}",
-    "API_TOKEN": "{api_token}",
-    "SVC_USER": "{ci_user}",
-    "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
-    "EVENTS_API_RESOURCE": "/prod/jazz/events",
-    "EVENT_HANDLER": "DELETE_SERVICE_API",
-    "EVENT_NAME": {
-        "SERVICE": "CALL_DELETE_WORKFLOW",
-        "ENVIRONMENT": "CALL_DELETE_ENV_WORKFLOW"
-    },
-    "EVENT_TYPE": "SERVICE_DELETION"
+  "DELETE_SERVICE_JOB_URL": "{conf-jenkins-host}/job/delete-service/buildWithParameters",
+  "JOB_TOKEN": "{job_token}",
+  "API_TOKEN": "{api_token}",
+  "SVC_USER": "{ci_user}",
+  "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+  "EVENTS_API_RESOURCE": "/prod/jazz/events",
+  "EVENT_HANDLER": "DELETE_SERVICE_API",
+  "EVENT_NAME": {
+    "SERVICE": "CALL_DELETE_WORKFLOW",
+    "ENVIRONMENT": "CALL_DELETE_ENV_WORKFLOW"
+  },
+  "EVENT_TYPE": "SERVICE_DELETION"
 }

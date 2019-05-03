@@ -82,7 +82,7 @@
                 <div class="service-type-width">
                    
                     <div  id="platform-type" *ngIf="!typeofplatformSelected" class="space-between">
-                        <section class=" pad-left0 service-box-section">
+                        <section class="pad-left0 service-box-section">
                             <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}" (click)="changePlatformType('aws')">
                                     <div class="icon-icon-AWS">
                                             <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span>
@@ -90,13 +90,13 @@
                                 <p>AWS</p>
                             </div>
                         </section>
-                        <section class=" pad-left0 service-box-section">
+                        <section class="pad-left0 service-box-section">
                             <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
                                 <div class="icon-icon-azure"></div>
                                 <p>Azure</p>
                             </div>
                         </section>
-                        <section class=" pad-left0 service-box-section">
+                        <section class="pad-left0 service-box-section">
                             <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}" (click)="changePlatformType('gcloud')">
                                 <div class="icon-icon-googlecloud"></div>
                                 <p>Google Cloud</p>
@@ -239,7 +239,7 @@
                             <p class="step-details">Name of your API, Microservice or Website that you want to create.</p>
                         </div>
                         <div class="">
-                            <section class=" pad-left0">
+                            <section class="pad-left0">
                                 <div class="input-field-container">
                                     <div class="input-wrapper" [ngClass]="{'available': serviceAvailable && !invalidServiceName && !invalidDomainName, 'unavailable': serviceNotAvailable || !serviceName.valid && (serviceName.dirty || serviceName.touched) || (serviceName.valid && invalidServiceName)}">
                                         <input  name="serviceName" pattern="{{servicePatterns.serviceName}}" type="text" maxlength="{{serviceLimit}}" class="textForm" id="serviceName" required [(ngModel)]="model.serviceName" placeholder="Enter service name" (ngModelChange)="invalidServiceName = false;serviceAvailable=false" #serviceName='ngModel'  >
@@ -301,7 +301,7 @@
                             <p class="step-title">Deployment Descriptor</p>
                         </div>
                         <div class="">
-                            <section class="cpad-left0">
+                            <section class="pad-left0">
                                 <div class="slack-checkbox custom-cb" >
                                     <input type="checkbox" id="checkbox-descriptor" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="descriptorSelected" (change)="descriptorChanged()">
                                     <label for="checkbox-descriptor" ></label>

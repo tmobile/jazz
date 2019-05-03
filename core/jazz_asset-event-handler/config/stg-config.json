@@ -1,26 +1,26 @@
 {
-    "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
-    "ASSETS_API_RESOURCE": "/stg/jazz/assets",
-    "EVENTS": {
-        "EVENT_TYPE": [
-            "SERVICE_DEPLOYMENT",
-            "SERVICE_ONBOARDING",
-            "SERVICE_DELETION"
-        ],
-        "EVENT_NAMES": [
-            "CREATE_ASSET",
-            "UPDATE_ASSET"
-        ],
-        "EVENT_STATUS": [
-          "STARTED",
-          "COMPLETED"
-        ],
-        "CREATE_ASSET": "CREATE_ASSET",
-        "UPDATE_ASSET": "UPDATE_ASSET",
-        "CREATE_ASSET_COMPLETED": "ACTIVE",
-        "UPDATE_ASSET_COMPLETED": "ARCHIVED"
-    },
-    "TOKEN_URL": "/stg/jazz/login",
-    "SERVICE_USER": "{jazz_admin}",
-    "TOKEN_CREDS": "{jazz_admin_creds}"
+  "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+  "ASSETS_API_RESOURCE": "/stg/jazz/assets",
+  "EVENTS": {
+    "EVENT_TYPE": [
+      "SERVICE_DEPLOYMENT",
+      "SERVICE_ONBOARDING",
+      "SERVICE_DELETION"
+    ],
+    "EVENT_NAMES": [
+      "CREATE_ASSET",
+      "UPDATE_ASSET"
+    ],
+    "EVENT_STATUS": [
+      "STARTED",
+      "COMPLETED"
+    ],
+    "CREATE_ASSET": "CREATE_ASSET",
+    "UPDATE_ASSET": "UPDATE_ASSET",
+    "CREATE_ASSET_COMPLETED": "ACTIVE",
+    "UPDATE_ASSET_COMPLETED": "ARCHIVED"
+  },
+  "TOKEN_URL": "/stg/jazz/login",
+  "SERVICE_USER": "{jazz_admin}",
+  "TOKEN_CREDS": "{jazz_admin_creds}"
 }

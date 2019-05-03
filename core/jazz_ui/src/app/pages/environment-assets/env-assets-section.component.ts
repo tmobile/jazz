@@ -30,7 +30,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 	offset:number = 0;
 	offsetval:number = 0;
 	public assetList:any = [];
-  
+
 	private env:any;
 	private http:any;
 	private subscription:any;
@@ -45,7 +45,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 	componentFactoryResolver:ComponentFactoryResolver;
 	filterSelected: boolean = false;
 	fromassets:boolean = true;
-  
+
 	advanced_filter_input:any = {
 		time_range:{
 			show:false,
@@ -124,7 +124,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 	public assetSelected:any;
 	relativeUrl:string = '/jazz/assets';
 	payload:any = {}
-	
+
 	@Input() service: any = {};
 
   constructor(
@@ -254,7 +254,7 @@ ngOnInit()
         else
         {
           var pageCount = response.data.count;
-					
+
         if(pageCount){
           this.totalPageNum = Math.ceil(pageCount/this.limitValue);
         }
@@ -455,10 +455,10 @@ ngOnInit()
 		 window.open(url , '_blank');
 	 }
 
-	 
+
 	limitValue : number = 10;
 	prevActivePage: number = 0;
-	
+
 
 	paginatePage(currentlyActivePage){
     if(this.prevActivePage != currentlyActivePage){

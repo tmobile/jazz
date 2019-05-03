@@ -1,11 +1,11 @@
 {
-    "INVALID_FROM_DATE": "Invalid from date. Date should be in ISO_8601 format [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss]-[SSSS]",
-    "INVALID_TO_DATE": "Invalid to date. Date should be in ISO_8601 format [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss]-[SSSS]",
-    "TO_EARLIER_THAN_FROM": "From date should be earlier than To date.",
-    "MISSING_FIELDS": "Following field(s) are required - ",
-    "MISSING_METRICS": "Following metric(s) are invalid - ",
-    "INVALID_METRICS": "Invalid metrics provided - ",
-    "REPORT_METRICS_ERROR": "Unable to report metrics for the given input.",
-    "QUALITY_REPORT_ERROR": "Error getting quality report from provider.",
-    "SERVICE_INPUT_ERROR": "Service inputs not defined."
+  "INVALID_FROM_DATE": "Invalid from date. Date should be in ISO_8601 format [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss]-[SSSS]",
+  "INVALID_TO_DATE": "Invalid to date. Date should be in ISO_8601 format [YYYY]-[MM]-[DD]T[hh]:[mm]:[ss]-[SSSS]",
+  "TO_EARLIER_THAN_FROM": "From date should be earlier than To date.",
+  "MISSING_FIELDS": "Following field(s) are required - ",
+  "MISSING_METRICS": "Following metric(s) are invalid - ",
+  "INVALID_METRICS": "Invalid metrics provided - ",
+  "REPORT_METRICS_ERROR": "Unable to report metrics for the given input.",
+  "QUALITY_REPORT_ERROR": "Error getting quality report from provider.",
+  "SERVICE_INPUT_ERROR": "Service inputs not defined."
 }

@@ -97,12 +97,14 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [{
-          "name": "slack_channel",
-          "in": "query",
-          "required": false,
-          "type": "string"
-        }],
+        "parameters": [
+          {
+            "name": "slack_channel",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Execution",
@@ -207,9 +209,11 @@
             }
           }
         },
-        "security": [{
-          "{envPrefix}-{domain}-cognito-authorizer": []
-        }],
+        "security": [
+          {
+            "{envPrefix}-{domain}-token-authorizer": []
+          }
+        ],
         "x-amazon-apigateway-integration": {
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
           "passthroughBehavior": "when_no_templates",
@@ -294,15 +298,15 @@
     }
   },
   "securityDefinitions": {
-    "{envPrefix}-{domain}-cognito-authorizer": {
+    "{envPrefix}-{domain}-token-authorizer": {
       "type": "apiKey",
       "name": "Authorization",
       "in": "header",
       "x-amazon-apigateway-authtype": "custom",
       "x-amazon-apigateway-authorizer": {
         "authorizerCredentials": "{conf-role}",
-        "authorizerResultTtlInSeconds": 300,
-        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
+        "authorizerResultTtlInSeconds": 0,
+        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-token-authorizer-{envmnt}/invocations",
         "type": "token"
       }
     }

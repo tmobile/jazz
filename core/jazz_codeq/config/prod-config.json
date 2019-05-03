@@ -1,62 +1,74 @@
 {
-	"SONAR_USER": "{sonar_user}",
-	"SONAR_PASSWORD": "{sonar_creds}",
-	"SONAR_HOSTNAME": "{sonar_hostname}",
-	"SONAR_PROTOCOL": "http://",
-	"SONAR_PROJECT_KEY" : "{key_prefix}",
-	"SONAR_ENV_SERVICE": "/api/measures/search_history",
-	"ALLOWED_METRICS": ["security", "code-coverage", "code-smells", "lines-of-code", "files", "vulnerabilities"],
-	"METRIC_MAP": {
-		"security": "vulnerabilities",
-		"code-coverage": "coverage",
-		"code-smells": "code_smells",
-		"lines-of-code": "ncloc",
-		"files": "files",
-		"vulnerabilities": "high_severity_vulns"
-	},
-	"REQUIRED_PARAMS": ["domain", "service", "environment"],
-	"TOKEN_URL": "/prod/jazz/login",
-	"SERVICE_USER": "{jazz_admin}",
-	"TOKEN_CREDS": "{jazz_admin_creds}",
-	"SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
-	"ENV_SERVICE": "/prod/jazz/environments/",
-	"HELP_SERVICE" : "/prod/jazz/codeq/help",
-	"METRICS_HELP": {
-		"security": {
-			"description": "Number of security vulnerabilities",
-			"unit": "count",
-			"minValue": "0",
-			"maxValue": "NA"
-		},
-		"code-coverage": {
-			"description": "Coverage answers the following question: 'Has each boolean expression been evaluated both to true and false?'. This is the density of possible branches in flow control structures that have been followed during unit tests execution.",
-			"unit": "percentage",
-			"minValue": "0",
-			"maxValue": "100"
-		},
-		"code-smells": {
-			"description": "Certain structures in the code that indicate violation of fundamental design principles and negatively impact design quality",
-			"unit": "count",
-			"minValue": "0",
-			"maxValue": "NA"
-		},
-		"lines-of-code": {
-			"description": "Number of lines of code.",
-			"unit": "count",
-			"minValue": "0",
-			"maxValue": "NA"
-		},
-		"files": {
-			"description": "Number of files.",
-			"unit": "count",
-			"minValue": "0",
-			"maxValue": "NA"
-		},
-		"vulnerabilities": {
-			"description": "Number of high-severity security vulnerabilities",
-			"unit": "count",
-			"minValue": "0",
-			"maxValue": "NA"
-		}
-	}
+  "SONAR_USER": "{sonar_user}",
+  "SONAR_PASSWORD": "{sonar_creds}",
+  "SONAR_HOSTNAME": "{sonar_hostname}",
+  "SONAR_PROTOCOL": "http://",
+  "SONAR_PROJECT_KEY": "{key_prefix}",
+  "SONAR_ENV_SERVICE": "/api/measures/search_history",
+  "ALLOWED_METRICS": [
+    "security",
+    "code-coverage",
+    "code-smells",
+    "lines-of-code",
+    "files",
+    "vulnerabilities"
+  ],
+  "METRIC_MAP": {
+    "security": "vulnerabilities",
+    "code-coverage": "coverage",
+    "code-smells": "code_smells",
+    "lines-of-code": "ncloc",
+    "files": "files",
+    "vulnerabilities": "high_severity_vulns"
+  },
+  "SERVICE_ID_HEADER_KEY": "Jazz-Service-ID",
+  "REQUIRED_PARAMS": [
+    "domain",
+    "service",
+    "environment"
+  ],
+  "TOKEN_URL": "/prod/jazz/login",
+  "SERVICE_USER": "{jazz_admin}",
+  "TOKEN_CREDS": "{jazz_admin_creds}",
+  "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
+  "ENV_SERVICE": "/prod/jazz/environments/",
+  "HELP_SERVICE": "/prod/jazz/codeq/help",
+  "METRICS_HELP": {
+    "security": {
+      "description": "Number of security vulnerabilities",
+      "unit": "count",
+      "minValue": "0",
+      "maxValue": "NA"
+    },
+    "code-coverage": {
+      "description": "Coverage answers the following question: 'Has each boolean expression been evaluated both to true and false?'. This is the density of possible branches in flow control structures that have been followed during unit tests execution.",
+      "unit": "percentage",
+      "minValue": "0",
+      "maxValue": "100"
+    },
+    "code-smells": {
+      "description": "Certain structures in the code that indicate violation of fundamental design principles and negatively impact design quality",
+      "unit": "count",
+      "minValue": "0",
+      "maxValue": "NA"
+    },
+    "lines-of-code": {
+      "description": "Number of lines of code.",
+      "unit": "count",
+      "minValue": "0",
+      "maxValue": "NA"
+    },
+    "files": {
+      "description": "Number of files.",
+      "unit": "count",
+      "minValue": "0",
+      "maxValue": "NA"
+    },
+    "vulnerabilities": {
+      "description": "Number of high-severity security vulnerabilities",
+      "unit": "count",
+      "minValue": "0",
+      "maxValue": "NA"
+    }
+  }
 }

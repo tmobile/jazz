@@ -1,0 +1,24 @@
+@import './../../../main-styles';
+
+.error-wrp {
+  background-image: url("../../../assets/images/403_Forbidden@2x.png");
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-color: #f3f3f3;
+  color: #555555;
+  text-align: center;
+  margin: 0 auto;
+  height: 100vh;
+
+}
+
+.error-txt-wrp {
+  position: absolute;
+  width: 100%;
+  bottom: 10%;
+}
+
+.error-txt {
+  padding-bottom: 25px;
+  font-size: 1.5rem;
+}

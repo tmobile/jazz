@@ -61,7 +61,7 @@
 		<div   class='edit-service-overview-btn'>
 			<!-- <btn-jazz-secondary class='btn-edit-overview' *ngIf='showCancel'  text='CANCEL' (click)='onCancelClick()' ></btn-jazz-secondary> -->
 			<a  *ngIf='showCancel'  (click)='onCancelClick()'>CANCEL</a>
-			<btn-jazz-secondary  class='btn-edit-overview' [disablebtn]='(status_val > 4) || (status_val == 3) || branchname == "master" || !isAdminAccess' *ngIf="editBtn" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
+			<btn-jazz-secondary [disablebtn]='(status_val > 4) || (status_val == 3) || branchname == "master" || !isAdminAccess' class='btn-edit-overview'  *ngIf="editBtn" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
 			<btn-jazz-secondary  class='btn-edit-overview' *ngIf='saveBtn' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onSaveClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
 			<!-- [style.borders]="edit_save=='SAVE'? 'none':'1px solid'"  -->
 		</div>
@@ -86,7 +86,7 @@
 				<li class='hide' *ngIf='service.serviceType == "function"'>
 					<div class="det-label">Accounts</div>
 					<div class="det-value">
-						
+
                         {{selectedAccounts}}
 					</div>
 				</li>
@@ -101,11 +101,11 @@
 						</div>
 						<span class='view-all' (click)='openSidebar()'> View all</span>
 
-						<div id='popup-endp' class='popup-endp'>								
-							Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong> 
+						<div id='popup-endp' class='popup-endp'>
+							Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong>
 						</div>
-						
-                        
+
+
 					</div>
 				</li>
 			</ul>
@@ -130,7 +130,7 @@
 				</li>
 			</ul>
 		</div>
-		
+
 		<div class='overiew-edit' *ngIf="!editBtn">
 			<ul class="section-left col-md-6 col-sm-12">
 				<li>
@@ -161,7 +161,7 @@
                                                 <span (click)="removeAccount(i, selected)" class="icon-icon-close"></span>
                                             </li>
                                             <input (keydown)="keypressAccount($event)"  autocomplete="off" id="AccountInput" name="AccountInput" type="text" class="textForm" [(ngModel)]="AccountInput" (ngModelChange)="onAccountChange($event)">
-    
+
                                         </ul>
                                     </div>
                                     <div [hidden]="!showAccountList" class="approvers-list-wrap">
@@ -187,12 +187,12 @@
 						</div>
 						<span class='view-all' (click)='openSidebar()'> View all</span>
 
-						<div id='popup-endp' class='popup-endp'>								
-							Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong> 
-							
+						<div id='popup-endp' class='popup-endp'>
+							Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong>
+
 						</div>
-						
-						
+
+
 					</div>
 				</li>
 			</ul>
@@ -222,7 +222,7 @@
                                                 <span (click)="removeRegion(i, selected)" class="icon-icon-close"></span>
                                             </li>
                                             <input (keydown)="keypressRegion($event)"  autocomplete="off" id="regionInput" name="regionInput" type="text" class="textForm" [(ngModel)]="regionInput" (ngModelChange)="onRegionChange($event)">
-    
+
                                         </ul>
                                     </div>
                                     <div [hidden]="!showRegionList" class="approvers-list-wrap">
@@ -246,7 +246,7 @@
                 <div>Region , {{regions[0]}} :   <img class='copy-arn' src="./../../../assets/images/icons/icon-link.png"/></div>
                 <div>Account , {{accounts[1]}} :   </div>
 
-				 
+
             </div>
 		</div> -->
 	</div>
@@ -285,7 +285,7 @@
 					<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
 				  </div>
 		<textarea class="text-area" [disabled]="textarea"  (ngModelChange)="textChanged  && lineNumbers()"
-		 [(ngModel)]="yaml" id="yaml" name="yaml" (blur)='checkYaml()'></textarea>	
+		 [(ngModel)]="yaml" id="yaml" name="yaml" (blur)='checkYaml()'></textarea>
 	   </div>
 		<div *ngIf="isCancel">
 		<p class = "validation" *ngIf="isvalid">Valid Yaml file.</p>

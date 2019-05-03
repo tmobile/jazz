@@ -336,7 +336,7 @@ export class ServiceOverviewMultienvComponent implements OnInit {
     if (this.service == undefined) {
       return
     }
-    this.http.get('/jazz/environments?domain=' + this.service.domain + '&service=' + this.service.name).subscribe(
+    this.http.get('/jazz/environments?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
       response => {
 
         this.isenvLoading = false;

@@ -19,56 +19,56 @@ const DATE_FORMAT = 'YYYY-MM-DDTHH:mm:ss';
 const APPEND_ZEROES = '-0000';
 
 function validateMissingFields(requiredFields, query) {
-    let missingFields = requiredFields.map(v => v.toLowerCase()).filter(key => !query[key]);
+  let missingFields = requiredFields.map(v => v.toLowerCase()).filter(key => !query[key]);
 
-    return missingFields ? missingFields.join(', ') : missingFields;
+  return missingFields ? missingFields.join(', ') : missingFields;
 }
 
 function validateFromDate(from) {
-    //if from date is provided validate, else assign default dates
-    let fromDate;
-    if (from) {
-        if (!moment(from, moment.ISO_8601, true).isValid()) {
-            return null;
-        } else {
-            fromDate = moment(from).format(DATE_FORMAT) + APPEND_ZEROES;
-        }
+  //if from date is provided validate, else assign default dates
+  let fromDate;
+  if (from) {
+    if (!moment(from, moment.ISO_8601, true).isValid()) {
+      return null;
     } else {
-        fromDate = moment().subtract(1, "days").format(DATE_FORMAT) + APPEND_ZEROES;
+      fromDate = moment(from).format(DATE_FORMAT) + APPEND_ZEROES;
     }
+  } else {
+    fromDate = moment().subtract(1, "days").format(DATE_FORMAT) + APPEND_ZEROES;
+  }
 
-    return fromDate;
+  return fromDate;
 }
 
 function validateToDate(to) {
-    //if to date is provided validate, else assign default dates
-    let toDate;
-    if (to) {
-        if (!moment(to, moment.ISO_8601, true).isValid()) {
-            return null;
-        } else {
-            toDate = moment(to).format(DATE_FORMAT) + APPEND_ZEROES;
-        }
+  //if to date is provided validate, else assign default dates
+  let toDate;
+  if (to) {
+    if (!moment(to, moment.ISO_8601, true).isValid()) {
+      return null;
     } else {
-        toDate = moment().format(DATE_FORMAT) + APPEND_ZEROES;
+      toDate = moment(to).format(DATE_FORMAT) + APPEND_ZEROES;
     }
+  } else {
+    toDate = moment().format(DATE_FORMAT) + APPEND_ZEROES;
+  }
 
-    return toDate;
+  return toDate;
 }
 
 function validateFromAfterTo(fromDate, toDate) {
-    if (fromDate && toDate) {
-        if (moment(toDate).isAfter(fromDate)) {
-            return true;
-        }
+  if (fromDate && toDate) {
+    if (moment(toDate).isAfter(fromDate)) {
+      return true;
     }
+  }
 
-    return false;
+  return false;
 }
 
 module.exports = {
-    validateMissingFields,
-    validateFromDate,
-    validateToDate,
-    validateFromAfterTo
+  validateMissingFields,
+  validateFromDate,
+  validateToDate,
+  validateFromAfterTo
 };

@@ -1,87 +1,90 @@
 <!-- 404 and no data error messages changed -->
 <div class='feedback-overlay' *ngIf="openModal">
-    <div class='feedback-wrap relative'>
-       <div class='feedback-hdr relative'>Report an issue</div>
-       <div class="separator-row"></div>
-       <div class="loading-row" [class.show]="isLoading">
-          <div class="loading-circle"></div>
-       </div>
-       <div class='feedback-text-wrap' [class.invisible]="isLoading || feedbackRes">
-          <p>Found a problem with the site? Please use the form below to describe the issue and we will fix it soon.</p>
-          <textarea rows="5" cols="50" type="text" name='userFeedback' id="userFeedback" placeholder="Report your issue here" [(ngModel)]="model.userFeedback"  #userFeedback='ngModel'></textarea>
-       </div>
-       <div class="feedback-text-wrap feedbackRes" [class.show]="feedbackRes">
-          <div class="hide feedbackResSuccess" [class.show]="feedbackResSuccess">
-             <div>{{feedbackMsg}}</div>
-          </div>
-          <div class="hide feedbackResErr" [class.show]="feedbackResErr"> Oops! {{feedbackMsg}}
-             <span> or <a (click)="mailTo()"> contact us</a> via email.</span>
-          </div>
-       </div>
-       <div class='feedback-btn-wrap'>
-          <!-- <div class="includeError">
-             <input type="checkbox">
-             <span></span>
-             </div> -->
-          <div class="slack-checkbox custom-cb includeError" [class.invisible]="isLoading || feedbackRes">
-             <input type="checkbox" (click)="errorIncluded()"  id="checkbox-slack" [checked]="errorInclude">
-             <label for="checkbox-slack"></label>
-             <div class="cb-status-dets">Include error details</div>
-          </div>
-          <a (click)='openModal = !openModal;isLoading=false'  [class.invisible]="isLoading || feedbackRes">CANCEL</a>
-          <btn-jazz-primary text="{{buttonText}}" class="feedback-submit" [class.invisible]="isLoading" [disablePrimaryBtn]="!model.userFeedback && buttonText=='SUBMIT'" (click)='submitFeedback(buttonText)'></btn-jazz-primary>
-       </div>
-    </div>
- </div>
- <!-- TODO: Remove disclaimer after techtraining -->
- <!-- <div class="disclaimer-static-data"><i>This data is for representational purpose only and is not accurate</i></div> -->
- <!-- <div class='row hide'>
+  <div class='feedback-wrap relative'>
+      <div class='feedback-hdr relative'>Report an issue</div>
+      <div class="separator-row"></div>
+      <div class="loading-row" [class.show]="isLoading">
+        <div class="loading-circle"></div>
+      </div>
+      <div class='feedback-text-wrap' [class.invisible]="isLoading || feedbackRes">
+        <p>Found a problem with the site? Please use the form below to describe the issue and we will fix it soon.</p>
+        <textarea rows="5" cols="50" type="text" name='userFeedback' id="userFeedback"
+            placeholder="Report your issue here" [(ngModel)]="model.userFeedback" #userFeedback='ngModel'></textarea>
+      </div>
+      <div class="feedback-text-wrap feedbackRes" [class.show]="feedbackRes">
+        <div class="hide feedbackResSuccess" [class.show]="feedbackResSuccess">
+            <div>{{feedbackMsg}}</div>
+        </div>
+        <div class="hide feedbackResErr" [class.show]="feedbackResErr"> Oops! {{feedbackMsg}}
+            <span> or <a (click)="mailTo()"> contact us</a> via email.</span>
+        </div>
+      </div>
+      <div class='feedback-btn-wrap'>
+        <!-- <div class="includeError">
+            <input type="checkbox">
+            <span></span>
+            </div> -->
+        <div class="slack-checkbox custom-cb includeError" [class.invisible]="isLoading || feedbackRes">
+            <input type="checkbox" (click)="errorIncluded()" id="checkbox-slack" [checked]="errorInclude">
+            <label for="checkbox-slack"></label>
+            <div class="cb-status-dets">Include error details</div>
+        </div>
+        <a (click)='openModal = !openModal;isLoading=false' [class.invisible]="isLoading || feedbackRes">CANCEL</a>
+        <btn-jazz-primary text="{{buttonText}}" class="feedback-submit" [class.invisible]="isLoading"
+            [disablePrimaryBtn]="!model.userFeedback && buttonText=='SUBMIT'" (click)='submitFeedback(buttonText)'>
+        </btn-jazz-primary>
+      </div>
+  </div>
+</div>
+<!-- TODO: Remove disclaimer after techtraining -->
+<!-- <div class="disclaimer-static-data"><i>This data is for representational purpose only and is not accurate</i></div> -->
+<!-- <div class='row hide'>
     <div class='widget-cover-outer col-sm-12'>
         <div class='widget-header' (click)='widgetExpand();'>
             CURRENT DEPLOYMENTS <div [class.rot]='!rot_icon' [class.rot-rev]='rot_icon' class='icon-icon-down'></div>
         </div>
         <div id='slide-cover'>
         <div class='car-cvr' >
-            
+
             <div class='car-body' [class.move-right]='move_right' [class.move-left]='move_left'>
                 <ul class='widget-cover'   >
-                    
+
                     <li class='widget-box' *ngFor='let stages of stageObj'>
                         <div class='widget-stage'>
                             <div class='stage-label'>{{stages.stageNum}}</div>
                             <div class='stage-value'>{{stages.stage}}</div>
                         </div>
-    
+
                         <div class='prog-cover'>
                             <div id='prog1' class='progress-widget' [ngClass]="{'prog-green':stages.progress=='100%' }" [ngStyle]="{'width':stages.progress}"></div>
                         </div>
-    
+
                         <div class='widget-status'>
-                            {{stages.status}} 
-                        </div>  
-                        
+                            {{stages.status}}
+                        </div>
+
                     </li>  -->
- <!-- <li class='widget-box last-widget' >
+<!-- <li class='widget-box last-widget' >
     <div class='widget-stage'>
         <div class='stage-label'>Production Deployment</div>
-        
+
     </div>
-    <div class='widget-buttons'>
+      <div class='widget-buttons'>
         <btn-jazz-secondary newclass='btn' text='REJECT'></btn-jazz-secondary>
         <btn-jazz-primary newclass='btn' text='APPROVE'></btn-jazz-primary>
-        
+
     </div>
     </li> -->
- <!-- </ul>
+<!-- </ul>
     </div>
     <div *ngIf='show_icon' class='right-arrow' (click)='move("right")' [class.hide]='hide_both'>
             <div class='icon-icon-rigtArrow'></div>
-     </div>
+    </div>
     <div *ngIf='!show_icon' class='left-arrow' (click)='move("left")' [class.hide]='hide_both'>
             <div class='icon-icon-rigtArrow'></div>
     </div>
     </div>
-    
+
     <div class='widget-ft Deployed'>
     <div class='widget-buttons'>
         <btn-jazz-secondary newclass='btn' text='REJECT'></btn-jazz-secondary>
@@ -90,75 +93,86 @@
     <div class='hide'>Deployment Approved</div>
     </div>
     </div>
-    
-    </div> 
-    
-    </div> -->
- <!-- 
-    <div class="separator-row"></div> -->
- <div class='deployment-wrp'>
-    <div class='table-cover-outer col-sm-12 slid-table'>
-       <div class='widget-header-tb'  *ngIf="envResponseTrue">
-       <btn-jazz-primary class="rebuild" [disablePrimaryBtn]='disableBuild || (status_val > 5 && !deployedList.length)' text='Build now' (click)="rebuild()"></btn-jazz-primary>
 
     </div>
-    <div id='slid-table'>
-       <table-template *ngIf="envResponseTrue" class="table-container env-deployment-log"  [header]="tableHeader2"  (onSort)="onSort($event)" [showPaginationtable]="true"  (paginatePage)="paginatePage($event)" [totalPageNum]="totalPagesTable" >
-       <div class="table-row" [class.hide]="serviceListEmpty" *ngFor="let row of deployedList; let i = index"  ><!-- (click)="onRowClicked() -->
-       <div class="column primary-txt-color pointer" ><a (click)="openBuildUrl(buildurl[i])">{{buildNo[i]}}</a></div>
-       <div class="column"><a (click)="idClicked(commitDetails[i])">{{commitDetails[i]}}</a></div>
-       <!-- <div  class="column id">{{id[i]}}</div> -->
-       <div class="column">{{time[i]}}</div>
-       <div class="column status-col">
-          <div [class.red]='status[i] == "failed"' [class.green]='status[i] == "successful"'>{{status[i]}}
-       </div>
-    </div>
-    <div class="column retry hide">
-       <btn-jazz-primary [disablePrimaryBtn]='status[i] != "successful" && status[i] != "failed"' newclass='retry-btn' text='RETRY' (click)="rebuild($event,id[i])"></btn-jazz-primary>
-    </div>
- </div>
- </table-template>
- <div class="empty-row" *ngIf="envResponseError">
-    <div *ngIf='errstatus==404'>
-       <div class="icon-icon-nodata"></div>
-       <!-- <div class='oops'>Oops!</div> -->
-       <div class='hang-in'>
-          <b>Oops, looks like there are no deployments yet...</b>
-          <p>
-                Please check again after some time.
-          </p>
-       </div>
-    </div>
-    <div *ngIf='errstatus!=404'>
-       <div class="icon-icon-server-error">
-          <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span>
-       </div>
-       <div class='oops'>Oops!</div>
-       <div>Something went wrong while fetching your data<br><a (click)="refreshCostData($event)">REFRESH</a> to give it another try.</div>
-       <br>
-       <div class='ctc-us'>If the problem persists, <a (click)='reportIssue()'> contact us</a>.</div>
-    </div>
- </div> 
- <div class="empty-row" *ngIf="envResponseEmpty">
-    <div class="icon-icon-nodata"></div>
-    <div class='hang-in'>
-        <b>Oops, looks like there are no deployments yet...</b>
-        <p>
-                Please check again after some time.
-        </p>
-    </div>
- </div>
- <div class="loading-row" [class.show]="isLoading">
-    <div class="loading-circle"></div>
- </div>
- </div>
- </div>
- </div>
- <div *ngIf="rowclick" class="overlay" >
-    <div class='overlay-box'>
-       <img class='close-overlay' src='../../../assets/images/icons/icon-close.svg' (click)='rowclick=false;'>
-       <div class='overlay-header'>
-          Stage Logs (Pre-Build Validation)
-       </div>
-    </div>
- </div>
+
+    </div> -->
+<!--
+    <div class="separator-row"></div> -->
+<div class='deployment-wrp'>
+  <div class='table-cover-outer col-sm-12 slid-table'>
+      <div class='widget-header-tb' *ngIf="envResponseTrue">
+        <btn-jazz-primary class="rebuild"
+            [disablePrimaryBtn]='disableBuild || (status_val > 5 && !deployedList.length) || !isDeployAccess'
+            text='Build now' (click)="rebuild()"></btn-jazz-primary>
+
+      </div>
+      <div id='slid-table'>
+        <table-template *ngIf="envResponseTrue" class="table-container env-deployment-log" [header]="tableHeader2"
+            (onSort)="onSort($event)" [showPaginationtable]="true" (paginatePage)="paginatePage($event)"
+            [totalPageNum]="totalPagesTable">
+            <div class="table-row" [class.hide]="serviceListEmpty" *ngFor="let row of deployedList; let i = index">
+              <!-- (click)="onRowClicked() -->
+              <div class="column primary-txt-color pointer"><a (click)="openBuildUrl(buildurl[i])">{{buildNo[i]}}</a>
+              </div>
+              <div class="column"><a (click)="idClicked(commitDetails[i])">{{commitDetails[i]}}</a></div>
+              <!-- <div  class="column id">{{id[i]}}</div> -->
+              <div class="column">{{time[i] | date: 'yyyy-MM-dd HH:mm:ss'}}</div>
+              <div class="column status-col">
+                  <div [class.red]='status[i] == "failed"' [class.green]='status[i] == "successful"'>{{status[i]}}
+                  </div>
+              </div>
+              <div class="column retry hide">
+                  <btn-jazz-primary [disablePrimaryBtn]='status[i] != "successful" && status[i] != "failed"'
+                    newclass='retry-btn' text='RETRY' (click)="rebuild($event,id[i])"></btn-jazz-primary>
+              </div>
+            </div>
+        </table-template>
+        <div class="empty-row" *ngIf="envResponseError">
+            <div *ngIf='errstatus==404'>
+              <div class="icon-icon-nodata"></div>
+              <!-- <div class='oops'>Oops!</div> -->
+              <div class='hang-in'>
+                  <b>Oops, looks like there are no deployments yet...</b>
+                  <p>
+                    Please check again after some time.
+                  </p>
+              </div>
+            </div>
+            <div *ngIf='errstatus!=404'>
+              <div class="icon-icon-server-error">
+                  <span class="path1"></span><span class="path2"></span><span class="path3"></span><span
+                    class="path4"></span><span class="path5"></span><span class="path6"></span><span
+                    class="path7"></span><span class="path8"></span><span class="path9"></span><span
+                    class="path10"></span>
+              </div>
+              <div class='oops'>Oops!</div>
+              <div>Something went wrong while fetching your data<br><a (click)="refreshCostData($event)">REFRESH</a> to
+                  give it another try.</div>
+              <br>
+              <div class='ctc-us'>If the problem persists, <a (click)='reportIssue()'> contact us</a>.</div>
+            </div>
+        </div>
+        <div class="empty-row" *ngIf="envResponseEmpty">
+            <div class="icon-icon-nodata"></div>
+            <div class='hang-in'>
+              <b>Oops, looks like there are no deployments yet...</b>
+              <p>
+                  Please check again after some time.
+              </p>
+            </div>
+        </div>
+        <div class="loading-row" [class.show]="isLoading">
+            <div class="loading-circle"></div>
+        </div>
+      </div>
+  </div>
+</div>
+<div *ngIf="rowclick" class="overlay">
+  <div class='overlay-box'>
+      <img class='close-overlay' src='../../../assets/images/icons/icon-close.svg' (click)='rowclick=false;'>
+      <div class='overlay-header'>
+        Stage Logs (Pre-Build Validation)
+      </div>
+  </div>
+</div>

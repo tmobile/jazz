@@ -1,5 +1,11 @@
 {
-  "USER_POOL_ID":"{conf-user-pool-id}",
-  "REGION": "{conf-region}"
+  "USER_POOL_ID": "{conf-user-pool-id}",
+  "REGION": "{conf-region}",
+  "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev",
+  "ACL_SERVICE_API": "/jazz/acl/services",
+  "ACL_CHECKPERMISSION_API": "/jazz/acl/checkpermission",
+  "LOGIN_API": "/jazz/login",
+  "JAZZ_ADMIN_USERNAME": "{jazz_admin}",
+  "JAZZ_ADMIN_CREDS": "{jazz_admin_creds}",
+  "SERVICE_ID_HEADER_KEY": "Jazz-Service-ID"
 }
-

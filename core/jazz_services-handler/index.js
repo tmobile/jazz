@@ -92,7 +92,7 @@ var handleError = function (errorType, message) {
 var processRecords = function (event, configData, authToken) {
 	return new Promise((resolve, reject) => {
 		var processRecordPromises = [];
-		for (i = 0; i < event.Records.length; i++) {
+		for (let i = 0; i < event.Records.length; i++) {
 			processRecordPromises.push(processRecord(event.Records[i], configData, authToken));
 		}
 		Promise.all(processRecordPromises)
@@ -156,7 +156,7 @@ var processEvent = function (payload, configData, authToken) {
 		}
 		getServiceId(payload, configData, authToken)
 			.then(result => { return updateService(result, payload, configData, authToken); })
-			.then(result => { return resolve({ "message": "updated service " + serviceContext.service + " in service catalog." }); })
+			.then(result => { return resolve({ "message": "updated service " + payload.SERVICE_NAME.S + " in service catalog." }); })
 			.catch(err => {
 				logger.error("Error updating service in service catalog : " + JSON.stringify(err));
 				var error = handleError(failureCodes.PR_ERROR_2.code, "Error updating service in service catalog ");

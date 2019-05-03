@@ -39,8 +39,12 @@ def initialize(serviceConfig, configLoader, scmMdule, branch, buildUrl, buildId,
 
 def getEnvironmentLogicalId() {
 	if (g_environment_logical_id == null && g_service_config['domain'] != "jazz") {
-		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
-		def environmentOutput
+		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" \
+     -H \"Jazz-Service-ID: ${g_service_config['service_id']}\" \
+     -H \"Authorization: $g_login_token \" \
+     -X GET \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
+
+  	def environmentOutput
 		def environment_logical_id
 		if (getEnvironments != null) {
 			try {
@@ -68,8 +72,12 @@ def getEnvironmentLogicalId() {
 
 def getEnvironmentInfo() {
 	if (g_service_config['domain'] != "jazz") {
-		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
-		def environmentOutput
+		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" \
+     -H \"Jazz-Service-ID: ${g_service_config['service_id']}\" \
+     -H \"Authorization: $g_login_token \" \
+     -X GET  \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
+
+    def environmentOutput
 		def environment_logical_id
 		if (getEnvironments != null) {
 			try {
@@ -106,6 +114,7 @@ def createPromotedEnvironment(environment_logical_id, created_by) {
 			def payload = JsonOutput.toJson(params)
 			def res = sh(script: "curl -X POST \
 						${g_environment_api} \
+            -H \"Jazz-Service-ID: ${g_service_config['service_id']}\" \
 						-H 'authorization: $g_login_token' \
 						-H 'Content-type: application/json' \
 						-d '$payload'", returnStdout: true)
@@ -136,8 +145,12 @@ def checkIfEnvironmentAvailable(environment_logical_id) {
 	def isAvailable = false
 	try {
 		if (environment_logical_id && g_service_config['domain'] != "jazz") {
-			def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" -H \"Authorization:\"$g_login_token -X GET \"${g_environment_api}?service=$s{ervice_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
-			def environmentOutput
+			def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" \
+      -H \"Authorization:$g_login_token\" \
+      -H \"Jazz-Service-ID: ${g_service_config['service_id']}\" \
+      -X GET \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
+
+      def environmentOutput
 			if (getEnvironments) {
 				environmentOutput = parseJson(getEnvironments)
 				if (environmentOutput && environmentOutput.data && environmentOutput.data.environment) {
@@ -161,11 +174,13 @@ def getEnvironmentLogicalIds() {
 	def env_logical_ids = []
 	try {
 		if (g_service_config['domain'] != "jazz") {
-			def environment_data = sh(script: "curl GET  \
+			def environment_data = sh(script: "curl \
 			-H \"Content-Type: application/json\" \
+      -H \"Jazz-Service-ID: ${g_service_config['service_id']}\" \
 			-H \"Authorization: $g_login_token\" \
-			\"${g_environment_api}?domain=${g_service_config['domain']}&service=${g_service_config['service']}\"", returnStdout: true)
-			if (environment_data) {
+			GET \"${g_environment_api}?domain=${g_service_config['domain']}&service=${g_service_config['service']}\"", returnStdout: true)
+
+    	if (environment_data) {
 				def environment_dataObj = parseJson(environment_data)
 				if (environment_dataObj && environment_dataObj.data && environment_dataObj.data.environment) {
 					def env_collection = environment_dataObj.data.environment
@@ -193,9 +208,11 @@ def getEnvironmentBranchName(logical_id) {
 		if (g_service_config['domain'] != "jazz") {
 			def environment_data = sh(script: "curl GET  \
 			-H \"Content-Type: application/json\" \
+      -H \"Jazz-Service-ID: ${g_service_config['service_id']}\" \
 			-H \"Authorization: $g_login_token\" \
 			\"${g_environment_api}?domain=${g_service_config['domain']}&service=${g_service_config['service']}\"", returnStdout: true)
-			if (environment_data) {
+
+      if (environment_data) {
 				def environment_dataObj = parseJson(environment_data)
 				if (environment_dataObj && environment_dataObj.data && environment_dataObj.data.environment) {
 					def env_collection = environment_dataObj.data.environment
