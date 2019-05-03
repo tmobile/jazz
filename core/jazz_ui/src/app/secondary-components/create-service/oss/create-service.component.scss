@@ -358,7 +358,7 @@
 }
 
 .submit-form {
-  padding: 3rem 0 7rem 0;
+  padding: 3rem 0 2rem 0;
   text-align: center;
   @media(max-width: 853px) {
     position: fixed;
@@ -993,4 +993,9 @@ transform: rotate(0deg);
 }
 .margin-15{
   margin-bottom: 1.5rem;
+}
+
+.cancel-btn{
+  margin-bottom: 7rem;
+  font-size: 1.4rem;
 }

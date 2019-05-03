@@ -20,8 +20,7 @@ import { nodejsTemplate } from "../../../../config/templates/nodejs-yaml";
 import { javaTemplate } from "../../../../config/templates/java-yaml";
 import { goTemplate } from "../../../../config/templates/go-yaml";
 import { pythonTemplate } from "../../../../config/templates/python-yaml";
-
-// const YamlValidator = require('yaml-validator');
+const yamlLint = require('yaml-lint'); 
 
 
 @Component({
@@ -136,12 +135,12 @@ export class CreateServiceComponent implements OnInit {
     private cronParserService: CronParserService,
     private http: RequestService,
     private cache: DataCacheService,
-    private messageservice: MessageService,
-    private servicelist: ServicesListComponent,
-    private authenticationservice: AuthenticationService,
+    private messageService: MessageService,
+    private serviceList: ServicesListComponent,
+    private authenticationService: AuthenticationService,
     private elementRef:ElementRef
   ) {
-    this.toastmessage = messageservice;
+    this.toastmessage = messageService;
     this.runtimeObject = env_oss.envLists;
     this.runtimeKeys = Object.keys(this.runtimeObject);
   }
@@ -179,7 +178,7 @@ export class CreateServiceComponent implements OnInit {
  // function for opening and closing create service popup
   closeCreateService(serviceRequest){    
     if(serviceRequest){
-      this.servicelist.serviceCall();
+      this.serviceList.serviceCall();
     }
     this.cache.set("updateServiceList", true);
     this.serviceRequested = false;
@@ -190,7 +189,6 @@ export class CreateServiceComponent implements OnInit {
 
   
   onFilterSelected(event){
-    debugger
     if(event == "Function Template"){
       this.onSelectionChange(this.runtime);
     }
@@ -247,7 +245,6 @@ export class CreateServiceComponent implements OnInit {
       case 'python3.6' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
       case 'python2.7' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
     }
-    debugger
     this.scrollTo('additional');
 
   }
@@ -282,7 +279,7 @@ export class CreateServiceComponent implements OnInit {
 
   // function to get approvers list
   public getData() {
-    let currentUserId = this.authenticationservice.getUserId();
+    let currentUserId = this.authenticationService.getUserId();
   }
 
   //function to validate event source names
@@ -468,43 +465,41 @@ export class CreateServiceComponent implements OnInit {
         payload["cache_ttl"] = this.model.ttlValue;
     }
 
-    this.isLoading = true;
-    console.log(payload)
-  
-    // this.http.post('/jazz/create-serverless-service' , payload)
-    //     .subscribe(
-    //     (Response) => {
-    //       var output = Response;
-    //       console.log("res",output)
-    //       this.serviceRequested = true;
-    //       this.serviceRequestSuccess = true;
-    //       this.serviceRequestFailure = false;
-    //       this.isLoading = false;
-    //       var index = output.data.indexOf("https://");
-    //       this.serviceLink = output.data.slice(index, output.data.length);
-    //       this.resMessage=this.toastmessage.successMessage(Response,"createService");
-    //       console.log("res", this.resMessage)
-    //       this.resetEvents();
-    //    },
-    //     (error) => {
-    //       this.isLoading = false;
-    //       this.serviceRequested = true;
-    //       this.serviceRequestSuccess = false;
-    //       this.serviceRequestFailure = true;
-    //       this.errBody = error._body;
-    //       this.errMessage = this.toastmessage.errorMessage(error, 'createService');
-    //       this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
-    //       this.rateExpression.error = undefined;
-    //       try {
-    //         this.parsedErrBody = JSON.parse(this.errBody);
-    //         if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
-    //           this.errMessage = this.parsedErrBody.message;
-    //         }
-    //       } catch(e) {
-    //           console.log('JSON Parse Error', e);
-    //         }
-    //     }
-    //   );
+    this.isLoading = true;  
+    this.http.post('/jazz/create-serverless-service' , payload)
+        .subscribe(
+        (Response) => {
+          var output = Response;
+          console.log("res",output)
+          this.serviceRequested = true;
+          this.serviceRequestSuccess = true;
+          this.serviceRequestFailure = false;
+          this.isLoading = false;
+          var index = output.data.indexOf("https://");
+          this.serviceLink = output.data.slice(index, output.data.length);
+          this.resMessage=this.toastmessage.successMessage(Response,"createService");
+          console.log("res", this.resMessage)
+          this.resetEvents();
+       },
+        (error) => {
+          this.isLoading = false;
+          this.serviceRequested = true;
+          this.serviceRequestSuccess = false;
+          this.serviceRequestFailure = true;
+          this.errBody = error._body;
+          this.errMessage = this.toastmessage.errorMessage(error, 'createService');
+          this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
+          this.rateExpression.error = undefined;
+          try {
+            this.parsedErrBody = JSON.parse(this.errBody);
+            if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
+              this.errMessage = this.parsedErrBody.message;
+            }
+          } catch(e) {
+              console.log('JSON Parse Error', e);
+            }
+        }
+      );
   }
 
   resetEvents(){
@@ -725,25 +720,11 @@ export class CreateServiceComponent implements OnInit {
   }
 
   validateYAML(){
-    // var a = this.deploymentDescriptorText.split('\n');
-    // var b = '';
-    // for(let eachline of a){
-    //   eachline= eachline + '\\n\\n';            
-    // }
-    // a;
-    // b = a.join('\n');
-    // b;
-    // debugger
-    const yamlLint = require('yaml-lint'); 
     yamlLint.lint(this.deploymentDescriptorText).then(() => {
       this.isyamlValid=true;
-      console.log('ttt isyamlValid', this.isyamlValid);
-
     }).catch((error) => {
       console.error('Invalid YAML file.', error);
       this.isyamlValid=false;
-      console.log('fff isyamlValid', this.isyamlValid);
-
     });
   }
 

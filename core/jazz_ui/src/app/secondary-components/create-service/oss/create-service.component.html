@@ -662,8 +662,10 @@
 
     <p  *ngIf='!serviceRequested' class="requiredInfo"><span>*</span>Indicates required fields</p>
     <section  *ngIf='!serviceRequested' class="submit-form">
-        <btn-jazz-secondary text='Cancel' (click)='closeCreateService(serviceRequestSuccess)' ></btn-jazz-secondary>
         <button type="submit" [disabled]="!serviceForm.valid || (disableForm())" class="btn btn-primary">SUBMIT</button>
+    </section>
+    <section  *ngIf='!serviceRequested' class="justify-center cancel-btn">
+        <a class="pointer" (click)='closeCreateService(serviceRequestSuccess)'> Cancel </a>
     </section>
     </form>
 
