@@ -30,7 +30,17 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
 
     Transformer transformer = new Transformer(config, context, resolvedRules) // Encapsulating the config, context and rules into the class so that they do not have to be passed as an arguments with every call of recursive function
 
-    return transformer.transform(origAppYmlFile);
+    Map<String, Object> transformedYmlTreelet = transformer.transform(origAppYmlFile);
+    Map<String, SBR_Rule> path2MandatoryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value.isMandatory) acc.put(item.key, item.value); return acc}
+    println "path2MandatoryRuleMap => $path2MandatoryRuleMap"
+
+    Map<String, Object> mandatoryYmlTreelet = retrofitMandatoryFields(path2MandatoryRuleMap, config, context)
+
+
+    Map<String, Object> ymlOutput = merge(mandatoryYmlTreelet, transformedYmlTreelet) // Order of arguments is important here because in case of collision we want the user values to overwrite the default values
+
+    return ymlOutput
+
 }
 
 /* This class encapsulates config, context and rules so that they don't have to be carried over with every call of recursive function */
@@ -39,12 +49,15 @@ class Transformer {
   private Map<String, String> context;
   private Map<String, SBR_Rule> path2RulesMap;
   private Map<String, SBR_Rule> templatedPath2RulesMap;
+  private Map<String, SBR_Rule> path2MandatoryRuleMap;
 
   public Transformer(aConfig, aContext, aPath2RulesMap) {
     config = aConfig;
     context = aContext;
     path2RulesMap = aPath2RulesMap;
     templatedPath2RulesMap = path2RulesMap.inject([:]){acc, item -> if(item.key.contains("*")) acc.put(item.key, item.value); return acc} // Copying all path-2-rule entries where a path contains '*' thus it is a template
+
+    println "path2MandatoryRuleMap => $path2MandatoryRuleMap"
   }
 
   boolean pathMatcher(String templatedPath, String targetPath) {
@@ -88,12 +101,14 @@ class Transformer {
      return theRule.applyRule(aSubTree, currentPath, config, context)
     } else {
       if(aSubTree instanceof Map) return aSubTree.inject([:]){acc, item -> acc.put(item.key, processor(item.value, currentPath+"/"+item.key) ); return acc}
-      else return aSubTree.collect{val -> processor(val, currentPath)}.flatten()
+      else throw new IllegalStateException("Unknown path: $currentPath")
     }
-}
+  }
+
 
   public def transform(Map<String, Object> originalServerless) {
-    return processor(originalServerless, "")
+    Map<String, Object> ymlOutput = processor(originalServerless, "")
+    return ymlOutput
   }
 
 }
@@ -475,13 +490,16 @@ class SBR_PreRule {
 
 class SBR_Rule extends SBR_PreRule {
    SBR_Value value
+   boolean isMandatory
    List<String> asteriskValues = []
 
    public SBR_Rule(SBR_Type_Descriptor aType,
                    SBR_Render aRender,
                    SBR_Constraint aConstraint,
-                   SBR_Value aValue) {
+                   SBR_Value aValue,
+                   boolean aIsMandatory) {
       super(aType, aRender, aConstraint)
+      isMandatory = aIsMandatory
       value = aValue
    }
 
@@ -496,7 +514,7 @@ class SBR_Rule extends SBR_PreRule {
    }
 
    public String toString() {
-     return "SBR_Rule {type: $type, render: $render, value: $value}\n";
+     return "SBR_Rule {type: $type, render: $render, value: $value, isMandatory: $isMandatory}\n";
    }
 }
 
@@ -542,7 +560,9 @@ def extractLeaf(Map<String, Object> aTag) {
 
   boolean primary = (aTag["sbr-primary"] != null && !aTag["sbr-primary"]) ? false : true
 
-  SBR_PreRule retVal = primary ? new SBR_Rule(type, render, constraint, value) : new SBR_NonPrimaryRule(type, render, constraint, aTag["sbr-template"])
+  boolean isMandatory = (aTag["sbr-mandatory"] == true) ? true : false
+
+  SBR_PreRule retVal = primary ? new SBR_Rule(type, render, constraint, value, isMandatory) : new SBR_NonPrimaryRule(type, render, constraint, aTag["sbr-template"])
 
   return retVal;
 
@@ -562,7 +582,7 @@ def collector(ruleTree, currentPath) {
           ................
 ]
 */
-Map<String, SBR_Rule> convertRuleForestIntoLinearMap(/* Map<String, Object> */ruleForest) {
+Map<String, SBR_Rule> convertRuleForestIntoLinearMap(/* Map<String, Object> */  ruleForest) {
  // Loading and parsing all the rules to be presented in easily discoverable and executable form as map like [path:rule] i.e. [/service/name:SBR_Rule@127eae33, /service/awsKmsKeyArn:SBR_Rule@7e71274c, /frameworkVersion:SBR_Rule@5413e09 ...
     Map<String, SBR_Rule> path2RuleMap =  collector(ruleForest, "") // collector is the function that will return the map of enclosed map due to it rucursive nature
                                                                      .flatten() // so flatten is needed to convert this tree like structure into the map like [[/service/name:SBR_Rule@127eae33], [/service/awsKmsKeyArn:SBR_Rule@7e71274c], ...]
@@ -627,6 +647,62 @@ Map<String, SBR_Rule> rulePostProcessor(Map<String, SBR_PreRule> aPath2RuleMap) 
   path2RuleMap2Ret << path2ResolvedRuleMapFinal // Adding all resolved maps to the original input
 
   return path2RuleMap2Ret
+}
+
+/* Merges two maps nicely. In case of conflict the second (later) argument overwrites the first (early) one  */
+def Map merge(Map[] sources) {
+    if (sources.length == 0) return [:]
+    if (sources.length == 1) return sources[0]
+
+    sources.inject([:]) { result, source ->
+        source.each { k, v ->
+            result[k] = result[k] instanceof Map ? merge(result[k], v) : v
+        }
+        result
+    }
+}
+
+/* Converting Array to List that is a much nicer to work with */
+def toList(value) {
+    [value].flatten().findAll { it != null }
+}
+
+/* Creates a new map and adds it to the envelopeMap as the new entry under the given key */
+def enclose(Map envelopeMap, String key) {
+  if(key.isEmpty()) return envelopeMap
+  def Map enclosedContent = [:]
+  envelopeMap[key] = enclosedContent
+  return enclosedContent
+}
+
+/* Returns a new yml treelet with a single path which the rule result is placed under (at) */
+def retrofitMandatoryFields(String              aPath,
+                            SBR_Rule            rule,
+                                                config,
+                            Map<String, String> context) {
+  Map<String, Object> ymlTree = [:]
+  String[] segmentedPath = aPath.split("/")
+  List<String> pathAsList = toList(segmentedPath)
+  String lastName = pathAsList.removeLast()
+  def lastHandler =  pathAsList.inject(ymlTree){acc, item -> enclose(acc, item)}
+
+  def userDefaultValue = ""
+  if(rule.type.isMap()) userDefaultValue = [:]
+  if(rule.type.isList()) userDefaultValue = []
+  lastHandler[lastName] = rule.applyRule(userDefaultValue, aPath, config, context)
+
+  return ymlTree
+
+}
+
+/* Returning a new yml tree with paths enlisted inside the map and with associated rule result placed under */
+def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
+                                                  config,
+                            Map<String, String>   context) {
+  def accumulator = aPath2RuleMap.inject([:]){acc, item -> def ymlTreelet = retrofitMandatoryFields(item.key, item.value, config, context);
+                                                           def accCopy = [:]; accCopy << acc;
+                                                           acc  = merge(accCopy, ymlTreelet)}
+  return accumulator
 }
 
 return this

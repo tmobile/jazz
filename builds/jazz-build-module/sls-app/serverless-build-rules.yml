@@ -17,6 +17,8 @@
 #   sbr-example: is a child of sbr-value. It is designated to store the default value for tag
 #   sbr-formula:  is a child of sbr-value. It is designated to store the formula that derives the value from the set of config values and inline constants
 #   sbr-template: is used instead of value in non-primary rules and itself contains the sub-set of rules because it cannot be represented by a single value
+#   sbr-mandatory: indicates whether the field must be inserted inside the output file no matter whether it exists in the user's original file or not
+#                  only primary config-only, config-wins and merge rendered fields can have a mandatory status
 
 service:
   name:
@@ -24,6 +26,7 @@ service:
     sbr-render: config-only
     sbr-value:
       sbr-formula: ${context.INSTANCE_PREFIX}-${config.service}
+    sbr-mandatory: true
 
   awsKmsKeyArn:
     sbr-type: arn-kms
@@ -48,10 +51,11 @@ provider:
     sbr-value:
       sbr-formula: ${context.cloud_provider}
       sbr-example: aws
+    sbr-mandatory: true
 
   runtime:
     sbr-type: enum
-    sbr-render: user-wins
+    sbr-render: config-wins
     sbr-constraint:
       sbr-enum:
         - nodejs8.10
@@ -62,6 +66,8 @@ provider:
     sbr-value:
       sbr-formula: ${config.providerRuntime}
       sbr-example: nodejs8.10
+    sbr-mandatory: true
+
 
   stage: # It will be setup automagically so you may not want to touch it
     sbr-type: enum
@@ -185,6 +191,7 @@ provider:
         sbr-example:
           key1: value1
           key2: value2
+
 
   deploymentPrefix: # The S3 prefix under which deployed artifacts should be stored. Default is serverless
     sbr-type: aws-bucket-name
@@ -324,6 +331,7 @@ provider:
   stackTags: # Optional CF stack tags
     sbr-type: "[aws-var-name:aws-tag-value]"
     sbr-render: merge
+    sbr-mandatory: true
     sbr-value:
       sbr-formula:
         application: ${context.INSTANCE_PREFIX}
