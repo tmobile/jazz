@@ -39,7 +39,7 @@ export class CreateServiceComponent implements OnInit {
   deploymentDescriptorTextgo = goTemplate.template;
   deploymentDescriptorTextpython = pythonTemplate.template;
   deploymentDescriptorText = this.deploymentDescriptorTextNodejs;
-
+  startNew:boolean = false;
   typeofservice:boolean=true;
   typeofplatform:boolean=false;
   typeofserviceSelected:boolean = false;
@@ -190,9 +190,11 @@ export class CreateServiceComponent implements OnInit {
   
   onFilterSelected(event){
     if(event == "Function Template"){
+      this.startNew = false;
       this.onSelectionChange(this.runtime);
     }
     else if(event == "Start New"){
+      this.startNew = true;
       this.deploymentDescriptorText = "";
     }
   }
@@ -237,14 +239,17 @@ export class CreateServiceComponent implements OnInit {
   onSelectionChange(val){
     this.runtime = val;
     this.typeform = true;
-    switch(this.runtime){
+    if(!this.startNew){
+      switch(this.runtime){
 
-      case 'java8' : this.deploymentDescriptorText = this.deploymentDescriptorTextJava; break;
-      case 'nodejs8.10' : this.deploymentDescriptorText = this.deploymentDescriptorTextNodejs; break;
-      case 'go1.x' : this.deploymentDescriptorText = this.deploymentDescriptorTextgo; break;
-      case 'python3.6' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
-      case 'python2.7' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
+        case 'java8' : this.deploymentDescriptorText = this.deploymentDescriptorTextJava; break;
+        case 'nodejs8.10' : this.deploymentDescriptorText = this.deploymentDescriptorTextNodejs; break;
+        case 'go1.x' : this.deploymentDescriptorText = this.deploymentDescriptorTextgo; break;
+        case 'python3.6' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
+        case 'python2.7' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
+      }
     }
+    
     this.scrollTo('additional');
 
   }
@@ -454,9 +459,12 @@ export class CreateServiceComponent implements OnInit {
         "website": "aws_cloudfront"
       }
     }
-    else if(this.typeOfService == 'custom'){
+    else if(this.typeOfService == 'sls-app'){
       payload["service_type"] = "sls-app";
       payload["deployment_decriptor"] = this.deploymentDescriptorText;
+      payload["deployment_targets"]={"sls-app":"aws_sls-app"};
+      payload["runtime"] = this.runtime;
+      payload["require_internal_access"] = this.vpcSelected;
     }
     if(this.slackSelected){
         payload["slack_channel"] = this.model.slackName;

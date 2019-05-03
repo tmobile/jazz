@@ -48,10 +48,10 @@
 
 
                             <section class="pad-left0 service-box-section">
-                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'custom'}" (keyup.enter)="changeServiceType('custom')" (click)="changeServiceType('custom')">
-                                    <div class="icon-icon-sls-app" [ngClass]="{'selected': typeOfService == 'custom'}">
-                                        <img *ngIf="typeOfService == 'custom'" src="./../../../assets/images/icons/Build-custom.svg"/>
-                                        <img *ngIf="typeOfService != 'custom'" src="./../../../assets/images/icons/Build-custom-gray.svg"/>
+                                <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'sls-app'}" (keyup.enter)="changeServiceType('sls-app')" (click)="changeServiceType('sls-app')">
+                                    <div class="icon-icon-sls-app" [ngClass]="{'selected': typeOfService == 'sls-app'}">
+                                        <img *ngIf="typeOfService == 'sls-app'" src="./../../../assets/images/icons/Build-custom.svg"/>
+                                        <img *ngIf="typeOfService != 'sls-app'" src="./../../../assets/images/icons/Build-custom-gray.svg"/>
                                     </div>
                                     <p>BUILD CUSTOM</p>
                                 </div>
@@ -295,7 +295,7 @@
                     </div>
                 </section>
     
-                <section id="deployment-descriptor" class="each-step-wrap service-description" *ngIf="typeOfService == 'custom'">
+                <section id="deployment-descriptor" class="each-step-wrap service-description" *ngIf="typeOfService == 'sls-app'">
                     <div class="">
                         <div class="">
                             <p class="step-title">Deployment Descriptor</p>
