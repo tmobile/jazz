@@ -4,7 +4,7 @@
  </div>
 <header class="jazz-header">
     <div class="header-section left logo-wrp">
-        <img (click)="goToLanding()" src="assets/images/icons/Jazz_Logo@2x.png">
+        <img (click)="goToLanding()" src="assets/images/icons/Jazz-Logo.svg">
     </div>
     <div *ngIf="type == 'landing'" class="header-section right">
         <ul class="dashboardLinks">
@@ -55,10 +55,11 @@
       <div class="header-section left">
         <div class="header-tabs">
           <div class="header-tab"
+               *ngIf = "isLoggedIn && isAdmin"
                routerLink="/services"
                routerLinkActive="active">Services</div>
           <div class="header-tab"
-               *ngIf="isAdmin"
+               *ngIf="isAdmin && isLoggedIn"
                routerLink="/admin"
                routerLinkActive="active">Admin</div>
         </div>

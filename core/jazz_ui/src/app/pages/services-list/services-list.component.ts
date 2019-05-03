@@ -59,6 +59,7 @@ private intervalSubscription: Subscription;
   updateList: boolean=false;
   serviceListEmpty: boolean=false;
   updateinterval = 30000;
+  serviceCount: number = 0;
 
   deletedServiceId: string;
   selectedTab = 0;
@@ -139,6 +140,7 @@ private intervalSubscription: Subscription;
   filter:any;
   sort:any;
   loadingState: string = '';
+  isload:boolean =true;
   selectedListData:any;
   prevActivePage: number = 0;
   message;
@@ -170,7 +172,6 @@ private intervalSubscription: Subscription;
     return _serviceList;
   };
   serviceCall(){
-
     this.serviceList = [];
     this.loadingState = 'loading';
     if(this.relativeUrl.indexOf('status=') == -1)
@@ -196,15 +197,21 @@ private intervalSubscription: Subscription;
             } else{
               this.serviceListEmpty = false;
               var pageCount = response.data.count;
+              this.serviceCount = pageCount;
               if(pageCount){
                 this.totalPagesTable = Math.ceil(pageCount/this.limitValue);
+                if(this.totalPagesTable === 1){
+                  this.paginationSelected = false;
+                }
               }
               else{
                 this.totalPagesTable = 0;
               }
               this.serviceList = this.processServiceList(services);
               this.backupdata = this.serviceList;
+              setTimeout(() => this.toasterService.clear(), 10000);
               this.loadingState = 'default';
+              this.isload = false;
             }
 
           } else{
@@ -643,14 +650,19 @@ onFilterCancel(event) {
     // this.fetchServices();
     // this.paginatePage(1);
     // this.relativeUrl = '/jazz/services?limit=' + this.limitValue + '&offset=' + 0;
-    // this.serviceCall();
+    this.serviceCall();
     this.paginationInit();
     this.updateList = this.cache.get("updateServiceList");
     this.updateServices(this.updateList);
   }
   refreshData(event){
-		this.loadingState = 'default';
-		this.serviceCall();
+    this.loadingState = 'default';
+    this.updateList = this.cache.get("updateServiceList");
+    if (this.updateList) {
+      this.updateServices(this.updateList);
+    } else {
+      this.serviceCall();
+    }
 	}
   updateServices(isTrue){
 
@@ -673,7 +685,9 @@ onFilterCancel(event) {
           this.totalPagesTable = 0;
         }
           if (services !== undefined && services !== "" && services.length !== undefined) {
-            if (this.serviceList.length && pageCount > this.serviceList.length) {
+            this.serviceListEmpty = false;
+            if (this.serviceList.length && pageCount > this.serviceCount) {
+              this.serviceCount = pageCount;
               this.showToastSuccess(
                 'Your service is ready',
                 this.toastMessage.customMessage('successReady', 'createService'),
@@ -701,7 +715,7 @@ onFilterCancel(event) {
       body: body,
       closeHtml: '<button>Dismiss</button>',
       showCloseButton: true,
-      timeout: 0,
+      timeout: 5000,
       title: title,
       type: 'success',
     };
