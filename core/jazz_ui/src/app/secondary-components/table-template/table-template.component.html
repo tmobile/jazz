@@ -34,7 +34,7 @@
 	</div>
 </div>
 <!-- Table Header --> 
-<div class="table-header" *ngIf="!load">
+<div class="table-header">
   <div *ngFor="let column of header" class="column" [class.sortable]="column.sort" (click)="onSortColumn(column)">
     <span>{{column.label}}</span>
     <div class="arrow-wrap" [ngClass]="{'sort-down': column._reverse == true, 'sort-up': column._reverse == false}">
