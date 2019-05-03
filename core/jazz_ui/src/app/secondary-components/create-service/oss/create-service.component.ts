@@ -16,7 +16,10 @@ import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component";
 import { environment as env_oss } from './../../../../environments/environment.oss';
 import { environment } from "../../../../environments/environment";
-import { template as nodejsTemplate } from "../../../../config/templates/nodejs-yaml";
+import { nodejsTemplate } from "../../../../config/templates/nodejs-yaml";
+import { javaTemplate } from "../../../../config/templates/java-yaml";
+import { goTemplate } from "../../../../config/templates/go-yaml";
+import { pythonTemplate } from "../../../../config/templates/python-yaml";
 
 // const YamlValidator = require('yaml-validator');
 
@@ -32,14 +35,10 @@ import { template as nodejsTemplate } from "../../../../config/templates/nodejs-
 export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
-  deploymentDescriptorTextJava = 
-  `functions:
-    function1: function1
-      handler: com.slf.services.Function1
-    function2: function2
-      handler: com.slf.services.Function2
-  `;
+  deploymentDescriptorTextJava = javaTemplate.template;
   deploymentDescriptorTextNodejs = nodejsTemplate.template;
+  deploymentDescriptorTextgo = goTemplate.template;
+  deploymentDescriptorTextpython = pythonTemplate.template;
   deploymentDescriptorText = this.deploymentDescriptorTextNodejs;
 
   typeofservice:boolean=true;
@@ -59,7 +58,7 @@ export class CreateServiceComponent implements OnInit {
   typeform:boolean=false;
   typeevents:boolean=false;
   deploymentDescriptorFilterData = ["Function Template", "Start New"];
-  selectedList:string='API Template';
+  selectedList:string='Function Template';
   sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
   kinesisStreamString:string = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/";
   dynamoStreamString:string = "arn:aws:dynamo:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/";
@@ -191,6 +190,13 @@ export class CreateServiceComponent implements OnInit {
 
   
   onFilterSelected(event){
+    debugger
+    if(event == "Function Template"){
+      this.onSelectionChange(this.runtime);
+    }
+    else if(event == "Start New"){
+      this.deploymentDescriptorText = "";
+    }
   }
   
   selectedApprovers = [];
@@ -234,10 +240,14 @@ export class CreateServiceComponent implements OnInit {
     this.runtime = val;
     this.typeform = true;
     switch(this.runtime){
-      case 'java8' : this.deploymentDescriptorText = this.deploymentDescriptorTextJava;
-      case 'nodejs8.10' : this.deploymentDescriptorText = this.deploymentDescriptorTextNodejs;
-    }
 
+      case 'java8' : this.deploymentDescriptorText = this.deploymentDescriptorTextJava; break;
+      case 'nodejs8.10' : this.deploymentDescriptorText = this.deploymentDescriptorTextNodejs; break;
+      case 'go1.x' : this.deploymentDescriptorText = this.deploymentDescriptorTextgo; break;
+      case 'python3.6' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
+      case 'python2.7' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
+    }
+    debugger
     this.scrollTo('additional');
 
   }
@@ -725,8 +735,6 @@ export class CreateServiceComponent implements OnInit {
     // b;
     // debugger
     const yamlLint = require('yaml-lint'); 
-    var a = require('./../../../../config/templates/nodejs.yml');
-    console.log('aaaaaa',a);
     yamlLint.lint(this.deploymentDescriptorText).then(() => {
       this.isyamlValid=true;
       console.log('ttt isyamlValid', this.isyamlValid);

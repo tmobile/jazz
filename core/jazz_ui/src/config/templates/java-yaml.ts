@@ -1,9 +1,9 @@
-export const nodejsTemplate = {
+export const javaTemplate = {
     template:
 `functions: 
-    function1: nodejs
+    function1: java
         handler: function1/index.handler
-    function2: nodejs
+    function2: java
         handler: function2/index.handlers
 `    
 };

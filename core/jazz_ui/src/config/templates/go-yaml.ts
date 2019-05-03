@@ -1,9 +1,9 @@
-export const nodejsTemplate = {
+export const goTemplate = {
     template:
 `functions: 
-    function1: nodejs
+    function1: golang
         handler: function1/index.handler
-    function2: nodejs
+    function2: golang
         handler: function2/index.handlers
 `    
 };
