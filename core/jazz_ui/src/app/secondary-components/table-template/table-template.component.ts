@@ -13,7 +13,6 @@ import { environment as env_internal } from './../../../environments/environment
   styleUrls: ['./table-template.component.scss']
 })
 export class TableTemplateComponent implements OnInit {
-  @Input() load;
   @Input() type: string = '';
   @Input() message: string = '';
   @Input() errcode:number;
