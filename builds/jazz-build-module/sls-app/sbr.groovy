@@ -31,8 +31,7 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
     Transformer transformer = new Transformer(config, context, resolvedRules) // Encapsulating the config, context and rules into the class so that they do not have to be passed as an arguments with every call of recursive function
 
     Map<String, Object> transformedYmlTreelet = transformer.transform(origAppYmlFile);
-    Map<String, SBR_Rule> path2MandatoryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value.isMandatory) acc.put(item.key, item.value); return acc}
-    println "path2MandatoryRuleMap => $path2MandatoryRuleMap"
+    Map<String, SBR_Rule> path2MandatoryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value instanceof SBR_Rule && item.value.isMandatory) acc.put(item.key, item.value); return acc}
 
     Map<String, Object> mandatoryYmlTreelet = retrofitMandatoryFields(path2MandatoryRuleMap, config, context)
 
@@ -283,13 +282,13 @@ class ConfigMerge implements Resolver {
     println "ConfigMerge called: $userVal, $configVal"
     if(userVal instanceof List &&  configVal instanceof List) {
       def out = []
-      out << userVal
-      out << configVal
+      if(userVal != null) out << userVal
+      if(configVal != null) out << configVal
       return out
     } else if(userVal instanceof Map &&  configVal instanceof Map) {
       def out = [:]
-      out << userVal
-      out << configVal
+      if(userVal != null) out << userVal
+      if(configVal != null) out << configVal
       return out
     } else if(userVal instanceof String &&  configVal instanceof String) {
       return userVal+"-"+configVal
@@ -452,7 +451,7 @@ class SBR_Formula_Value implements SBR_Value {
     def result
 
     if(formula instanceof String) {
-      result = shell.evaluate('"'+formula+'"') // TODO Investigate what to do with an exception here
+      result = formula.startsWith("_") ? formula.replace("_", "") : shell.evaluate('"'+formula+'"') // TODO Investigate what to do with an exception here
     } else if(formula instanceof Map) {
       result = formula.inject([:]){acc, item -> acc.put(item.key, shell.evaluate('"'+item.value+'"')); return acc}
     } else if(formula instanceof List) {
@@ -637,14 +636,14 @@ Map<String, SBR_Rule> rulePostProcessor(Map<String, SBR_PreRule> aPath2RuleMap) 
   Map<String, SBR_Rule> path2ReferrerRuleMapFinal = extractRefs(path2ResolvedRuleMap, path2NonPrimaryRuleMap)
   Map<String, SBR_Rule> path2ResolvedRuleMapFinal = resolveReferences(path2ReferrerRuleMapFinal, path2NonPrimaryRuleMap)
 
-  path2ResolvedRuleMapFinal << path2ResolvedRuleMap // Concat two resulting maps
+  if(path2ResolvedRuleMap != null) path2ResolvedRuleMapFinal << path2ResolvedRuleMap // Concat two resulting maps
 
   Map<String, SBR_PreRule> path2RuleMap2Ret = [:] << aPath2RuleMap // Copying the original map in order to avoid any possible side-effect on to the input data
   path2RuleMap2Ret.keySet().removeAll(path2NonPrimaryRuleMap.keySet()) // Removing all non-primary rules that are irrelevant now
   path2RuleMap2Ret.keySet().removeAll(path2ReferrerRuleMap.keySet()) // Removing referrer rules
   path2RuleMap2Ret.keySet().removeAll(path2ReferrerRuleMapFinal.keySet()) // Removing all the double-reference referrers now because they are irrelevant either
 
-  path2RuleMap2Ret << path2ResolvedRuleMapFinal // Adding all resolved maps to the original input
+  if(path2ResolvedRuleMapFinal != null) path2RuleMap2Ret << path2ResolvedRuleMapFinal // Adding all resolved maps to the original input
 
   return path2RuleMap2Ret
 }
@@ -683,7 +682,9 @@ def retrofitMandatoryFields(String              aPath,
   Map<String, Object> ymlTree = [:]
   String[] segmentedPath = aPath.split("/")
   List<String> pathAsList = toList(segmentedPath)
-  String lastName = pathAsList.removeLast()
+// The Jenkins groovy does not support removeLast so I had to substitute it with two following lines
+  String lastName = pathAsList[pathAsList.size()-1]
+  pathAsList.removeAt(pathAsList.size()-1)
   def lastHandler =  pathAsList.inject(ymlTree){acc, item -> enclose(acc, item)}
 
   def userDefaultValue = ""
@@ -700,8 +701,9 @@ def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
                                                   config,
                             Map<String, String>   context) {
   def accumulator = aPath2RuleMap.inject([:]){acc, item -> def ymlTreelet = retrofitMandatoryFields(item.key, item.value, config, context);
-                                                           def accCopy = [:]; accCopy << acc;
-                                                           acc  = merge(accCopy, ymlTreelet)}
+                                                           def accCopy = [:]; if(acc != null) accCopy << acc;
+                                                           acc  = merge(accCopy, ymlTreelet);
+                                                           return acc;}
   return accumulator
 }
 
