@@ -31,7 +31,7 @@ describe('Overview', () => {
   beforeAll(() => {
     jazzServices_po = new Jazz();
     commonUtils = new Common();
-    browser.driver.sleep(Common.fivek);
+    browser.driver.sleep(Common.miniWait);
     //jazzServices_po.navigateToJazzGet();
     commonUtils.Login();
   });
@@ -45,7 +45,7 @@ describe('Overview', () => {
   afterAll(() => {
     jazzServices_po = new Jazz();
     commonUtils = new Common();
-    browser.driver.sleep(Common.fivek);
+    browser.driver.sleep(Common.miniWait);
     jazzServices_po.logoutIcon().click();
     jazzServices_po.logout().click();
   });
@@ -57,9 +57,9 @@ describe('Overview', () => {
   }
 
   function serviceapprover() {
-    browser.driver.sleep(Common.fivek);
+    browser.driver.sleep(Common.miniWait);
     jazzServices_po.getSubmit().click();
-    commonUtils.fluentwaittry(jazzServices_po.getDone(), Common.tenk);
+    commonUtils.fluentwaittry(jazzServices_po.getDone(), Common.shortWait);
     jazzServices_po.getDone().click();
   }
 
@@ -83,7 +83,7 @@ describe('Overview', () => {
 
   it('Create Lambda Service', () => {
     browser.driver.switchTo().activeElement();
-    browser.driver.sleep(Common.fivek);
+    browser.driver.sleep(Common.miniWait);
     browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), Common.timeOutHigh).then(null, function (err) {
       console.log(err);
       flag = 0;
@@ -92,7 +92,7 @@ describe('Overview', () => {
     browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), Common.timeOutHigh);
     jazzServices_po.getCreateService().click();
     browser.driver.switchTo().activeElement();
-    browser.driver.sleep(Common.fivek);
+    browser.driver.sleep(Common.miniWait);
     //Creating the Lambda
     jazzServices_po.getLambda().click();
     var min = 111;
@@ -102,29 +102,29 @@ describe('Overview', () => {
     createservice(servicename);
     jazzServices_po.getEventScheduleFixedRate().click();
     serviceapprover();
-    browser.driver.sleep(Common.fifteenk);
+    browser.driver.sleep(Common.mediumWait);
     //Verifying the Lambda is correct
     expect(jazzServices_po.getService(servicename).getText()).toEqual(servicename);
     expect(jazzServices_po.getFunctionType(servicename).getText()).toEqual('function');
     expect(jazzServices_po.getFunctionStatus(servicename).getText()).toEqual('creation started');
-    waitforskiptest(jazzServices_po.serviceStatus(servicename), Common.sixtyk);
+    waitforskiptest(jazzServices_po.serviceStatus(servicename), Common.xxlWait);
 
   });
 
   it('Verify Function', () => {
-    commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.fivek);
+    commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
     browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
     //To Navigate to the particular service and verifying the Page
     jazzServices_po.getService(servicename).click();
-    commonUtils.fluentwaittry(jazzServices_po.getOverviewStatus(), Common.fivek);
+    commonUtils.fluentwaittry(jazzServices_po.getOverviewStatus(), Common.miniWait);
     expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
-    commonUtils.fluentwaittry(jazzServices_po.getServiceNameHeader(), Common.fivek);
+    commonUtils.fluentwaittry(jazzServices_po.getServiceNameHeader(), Common.miniWait);
     //To get the corresponding environment[Prod]
-    waitforskiptest(jazzServices_po.getProdName(), Common.thirtyk);
+    waitforskiptest(jazzServices_po.getProdName(), Common.xlWait);
     jazzServices_po.getProdName().click();
     commonUtils.waitForSpinnerDisappear();
-    commonUtils.refreshbutton(jazzServices_po.getDeploymentStatus(), Common.fivek);
-    commonUtils.refreshbutton(jazzServices_po.getProdHeader(), Common.fivek);
+    commonUtils.refreshbutton(jazzServices_po.getDeploymentStatus(), Common.miniWait);
+    commonUtils.refreshbutton(jazzServices_po.getProdHeader(), Common.miniWait);
     //Verifying the browser id at the Deployment Tab
     expect(jazzServices_po.getDeploymentStatus().getText()).toEqual('DEPLOYMENTS');
     browser.driver.switchTo().activeElement();
@@ -132,28 +132,28 @@ describe('Overview', () => {
   });
 
   it('Verify METRICS Navigation for Lambda', () => {
-    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.fivek);
+    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
     jazzServices_po.getServiceHomePage().click();
-    browser.sleep(Common.twok);
+    browser.sleep(Common.microWait);
     browser.driver.switchTo().activeElement();
-    commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.fivek);
+    commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
     // // Navigation to services
     browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
     // //To Navigate to the particular service and verifying the Page
     jazzServices_po.getService(servicename).click();
-    commonUtils.fluentwaittry(jazzServices_po.getServiceNameHeader(), Common.fivek);
-    commonUtils.elementPresent(jazzServices_po.getProdName(), Common.tenk);
+    commonUtils.fluentwaittry(jazzServices_po.getServiceNameHeader(), Common.miniWait);
+    commonUtils.elementPresent(jazzServices_po.getProdName(), Common.shortWait);
     jazzServices_po.getProdName().click();
     commonUtils.waitForSpinnerDisappear();
-    commonUtils.refreshbutton(jazzServices_po.getProdHeader(), Common.fivek);
+    commonUtils.refreshbutton(jazzServices_po.getProdHeader(), Common.miniWait);
     browser.driver.switchTo().activeElement();
-    commonUtils.refreshbutton(jazzServices_po.getMetrices(), Common.fivek);
+    commonUtils.refreshbutton(jazzServices_po.getMetrices(), Common.miniWait);
     jazzServices_po.getMetrices().click();
     commonUtils.waitForMetricsSpinner();
-    commonUtils.refreshbutton(jazzServices_po.getDeploymentStatus(), Common.fivek);
+    commonUtils.refreshbutton(jazzServices_po.getDeploymentStatus(), Common.miniWait);
     jazzServices_po.getDeploymentStatus().click();
     commonUtils.waitForSpinnerDisappear();
-    commonUtils.fluentwaittry(jazzServices_po.getTestFunction(), Common.fivek);
+    commonUtils.fluentwaittry(jazzServices_po.getTestFunction(), Common.miniWait);
     expect(jazzServices_po.getTestFunction().getText()).toEqual('TEST FUNCTION');
     jazzServices_po.getTestFunction().click();
     browser.wait(EC.visibilityOf(jazzServices_po.getTestArea()), Common.timeOutHigh);
@@ -162,10 +162,10 @@ describe('Overview', () => {
     jazzServices_po.getTestArea().sendKeys('}');
     browser.wait(EC.visibilityOf(jazzServices_po.getTestButton()), Common.timeOutHigh);
     jazzServices_po.getTestButton().click();
-    browser.driver.sleep(Common.fivek);
+    browser.driver.sleep(Common.miniWait);
     browser.wait(EC.visibilityOf(jazzServices_po.getClose()), Common.timeOutHigh);
     jazzServices_po.getClose().click();
-    commonUtils.refreshbutton(jazzServices_po.getMetrices(), Common.fivek);
+    commonUtils.refreshbutton(jazzServices_po.getMetrices(), Common.miniWait);
     jazzServices_po.getMetrices().click();
     commonUtils.waitForSpinnerDisappear();
   });
@@ -184,36 +184,36 @@ describe('Overview', () => {
 
 
   it('Verify METRICS COUNT for Lambda', () => {
-    browser.sleep(Common.twok);
-    commonUtils.refreshbutton(jazzServices_po.getMetrices(), Common.fivek);
+    browser.sleep(Common.microWait);
+    commonUtils.refreshbutton(jazzServices_po.getMetrices(), Common.miniWait);
     jazzServices_po.getMetrices().click();
     commonUtils.waitForMetricsSpinner();
-    commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.fivek);
+    commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.miniWait);
     expect(jazzServices_po.getMetricesCount().getText()).not.toEqual('-');
-    browser.sleep(Common.twok);
-    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.fivek);
+    browser.sleep(Common.microWait);
+    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
     jazzServices_po.getServiceHomePage().click();
   });
 
   it('Identifying Environment and Navigation for Lambda', () => {
-    browser.driver.sleep(Common.twok);
-    commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.fivek);
+    browser.driver.sleep(Common.microWait);
+    commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
     browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
     //To Navigate to the particular service and verifying the Page
     jazzServices_po.getService(servicename).click();
     browser.wait(EC.visibilityOf(jazzServices_po.getRepository()), Common.timeOutHigh);
     jazzServices_po.getRepository().click();
-    browser.sleep(Common.fivek);
+    browser.sleep(Common.miniWait);
   });
   it('Create the Test Branch for Lambda', () => {
     browser.getAllWindowHandles().then(function (handles) {
-      browser.sleep(Common.twok);
+      browser.sleep(Common.microWait);
       var min = 11;
       var max = 99;
       var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
       test = 'test' + randomNum;
       browser.switchTo().window(handles[1]).then(function () {
-        browser.sleep(Common.tenk);
+        browser.sleep(Common.shortWait);
         browser.getTitle().then(function (webpagetitle) {
           if (webpagetitle === 'Sign in · GitLab') {
             jazzServices_po.gitUsername().sendKeys(Common.config.SCM_USERNAME).then(null, function (err) {
@@ -243,7 +243,7 @@ describe('Overview', () => {
             jazzServices_po.getGitLogout().click().then(null, function (err) {
               console.log(err.name);
               flag = 0;
-              browser.sleep(Common.twentyk);
+              browser.sleep(Common.longWait);
               browser.close();
             });
             browser.close();
@@ -253,66 +253,66 @@ describe('Overview', () => {
             jazzServices_po.bitUsername().sendKeys(Common.config.SCM_USERNAME).then(null, function (err) {
               console.log(err.name);
             });
-            browser.sleep(Common.twok);
+            browser.sleep(Common.microWait);
             jazzServices_po.bitPassword().sendKeys(Common.config.SCM_PASSWORD).then(null, function (err) {
               console.log(err.name);
             });
-            browser.sleep(Common.twok);
+            browser.sleep(Common.microWait);
             jazzServices_po.bitLogin().click().then(null, function (err) {
               console.log(err.name);
             });
-            browser.sleep(Common.twok);
+            browser.sleep(Common.microWait);
             jazzServices_po.createBranch().click().then(null, function (err) {
               console.log(err.name);
             });
-            browser.sleep(Common.twok);
+            browser.sleep(Common.microWait);
             jazzServices_po.drp_BranchType().click().then(null, function (err) {
               console.log(err.name);
             });
-            browser.sleep(Common.twok);
+            browser.sleep(Common.microWait);
             jazzServices_po.select_BranchType().click().then(null, function (err) {
               console.log(err.name);
             });
-            browser.sleep(Common.twok);
+            browser.sleep(Common.microWait);
             jazzServices_po.branchName().sendKeys(test).then(null, function (err) {
               console.log(err.name);
             });
-            browser.sleep(Common.twok);
+            browser.sleep(Common.microWait);
             jazzServices_po.btn_CreateBranch().click().then(null, function (err) {
               console.log(err.name);
             });
-            browser.sleep(Common.twok);
+            browser.sleep(Common.microWait);
             jazzServices_po.getBitLogoutIcon().click().then(null, function (err) {
               console.log(err.name);
             });
-            browser.sleep(Common.twok);
+            browser.sleep(Common.microWait);
             jazzServices_po.getBitLogout().click().then(null, function (err) {
               console.log(err.name);
               flag = 0;
-              browser.sleep(Common.twentyk);
+              browser.sleep(Common.longWait);
               browser.close();
             });
-            browser.sleep(Common.twok);
+            browser.sleep(Common.microWait);
             browser.close();
           }
         });
       });
 
       browser.switchTo().window(handles[0]).then(function () {
-        browser.sleep(Common.twok);
-        waitforskiptest(jazzServices_po.activeTestBranch(), Common.sixtyk);
+        browser.sleep(Common.microWait);
+        waitforskiptest(jazzServices_po.activeTestBranch(), Common.xxlWait);
         jazzServices_po.activeTestBranch().click().
           then(null, function (err) {
             console.log("the error occurred is : " + err.name);
           });
         commonUtils.waitForSpinnerDisappear();
-        browser.sleep(Common.fivek);
+        browser.sleep(Common.miniWait);
       });
     });
   });
   it('Verify METRICS Navigation for Lambda for Test Branch', () => {
-    browser.sleep(Common.twok);
-    commonUtils.fluentwaittry(jazzServices_po.getTestFunction(), Common.fifteenk);
+    browser.sleep(Common.microWait);
+    commonUtils.fluentwaittry(jazzServices_po.getTestFunction(), Common.mediumWait);
     expect(jazzServices_po.getTestFunction().getText()).toEqual('TEST FUNCTION');
     jazzServices_po.getTestFunction().click();
     browser.wait(EC.visibilityOf(jazzServices_po.getTestArea()), Common.timeOutHigh);
@@ -321,10 +321,10 @@ describe('Overview', () => {
     jazzServices_po.getTestArea().sendKeys('}');
     browser.wait(EC.visibilityOf(jazzServices_po.getTestButton()), Common.timeOutHigh);
     jazzServices_po.getTestButton().click();
-    browser.driver.sleep(Common.fivek);
+    browser.driver.sleep(Common.miniWait);
     browser.wait(EC.visibilityOf(jazzServices_po.getClose()), Common.timeOutHigh);
     jazzServices_po.getClose().click();
-    commonUtils.refreshbutton(jazzServices_po.getMetrices(), Common.fivek);
+    commonUtils.refreshbutton(jazzServices_po.getMetrices(), Common.miniWait);
     jazzServices_po.getMetrices().click();
     commonUtils.waitForSpinnerDisappear();
   });
@@ -341,14 +341,14 @@ describe('Overview', () => {
     commonUtils.verifyLogs();
   });
   it('Verify METRICS COUNT for Lambda in Test Branch', () => {
-    browser.sleep(Common.twok);
-    commonUtils.fluentwaittry(jazzServices_po.getMetrices(), Common.fifteenk);
+    browser.sleep(Common.microWait);
+    commonUtils.fluentwaittry(jazzServices_po.getMetrices(), Common.mediumWait);
     jazzServices_po.getMetrices().click();
     commonUtils.waitForMetricsSpinner();
-    commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.tenk);
+    commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.shortWait);
     expect(jazzServices_po.getMetricesCount().getText()).not.toEqual('-');
-    browser.sleep(Common.twok);
-    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.fivek);
+    browser.sleep(Common.microWait);
+    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
     jazzServices_po.getServiceHomePage().click();
   });
 });

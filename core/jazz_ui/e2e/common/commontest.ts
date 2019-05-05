@@ -32,22 +32,22 @@ export class Common {
   public static readonly config = CONFIGURATIONS.optional.general.e2e;
   public static readonly timeOutHigh = 180000;
   public static readonly EC = protractor.ExpectedConditions;
-  public static readonly twok = 2000;
-  public static readonly fivek = 5000;
-  public static readonly tenk = 10000;
-  public static readonly fifteenk = 15000;
-  public static readonly twentyk = 20000;
-  public static readonly thirtyk = 30000;
-  public static readonly sixtyk = 60000;
+  public static readonly microWait = 2000;
+  public static readonly miniWait = 5000;
+  public static readonly shortWait = 10000;
+  public static readonly mediumWait = 15000;
+  public static readonly longWait = 20000;
+  public static readonly xlWait = 30000;
+  public static readonly xxlWait = 60000;
 
   waitForSpinnerLogin() {
-    browser.wait(Common.EC.not(Common.EC.visibilityOf(jazzServices_po.getLoginSpinner())), 180000);
+    browser.wait(Common.EC.not(Common.EC.visibilityOf(jazzServices_po.getLoginSpinner())), Common.timeOutHigh);
   }
   waitForSpinnerDisappear() {
-    browser.wait(Common.EC.not(Common.EC.visibilityOf(jazzServices_po.getSpinner())), 180000);
+    browser.wait(Common.EC.not(Common.EC.visibilityOf(jazzServices_po.getSpinner())), Common.timeOutHigh);
   }
   waitForMetricsSpinner() {
-    browser.wait(Common.EC.not(Common.EC.visibilityOf(jazzServices_po.getMetricsSpinner())), 180000);
+    browser.wait(Common.EC.not(Common.EC.visibilityOf(jazzServices_po.getMetricsSpinner())), Common.timeOutHigh);
   }
 
   waitforservice(ele, t) {
@@ -87,7 +87,7 @@ export class Common {
 
   refreshbutton(ele, t) {
     browser.manage().timeouts().implicitlyWait(0);
-    if (!browser.wait(Common.EC.elementToBeClickable(jazzServices_po.getRefresh()), Common.fivek)) {
+    if (!browser.wait(Common.EC.elementToBeClickable(jazzServices_po.getRefresh()), Common.miniWait)) {
       console.log("Refresh button is disable");
       return false;
       
@@ -123,47 +123,47 @@ export class Common {
   }
 
   verifyDelpoyment() {
-    browser.driver.sleep(Common.twok);
+    browser.driver.sleep(Common.microWait);
     jazzServices_po.getDeploymentStatus();
     jazzServices_po.getDeploymentStatus().click();
     this.waitForSpinnerDisappear();
-    this.refreshbutton(jazzServices_po.getDeploymentStatusVerify(), Common.fivek);
+    this.refreshbutton(jazzServices_po.getDeploymentStatusVerify(), Common.miniWait);
     //Verifying the Deployment status
     expect(jazzServices_po.getDeploymentStatusVerify().getText()).toEqual('Successful');
   }
   verifyAsset() {
-    browser.driver.sleep(Common.twok);
-    this.refreshbutton(jazzServices_po.getAsset(), Common.fivek);
+    browser.driver.sleep(Common.microWait);
+    this.refreshbutton(jazzServices_po.getAsset(), Common.miniWait);
     //To get the Asset Tab
     jazzServices_po.getAsset().click();
     this.waitForSpinnerDisappear();
-    this.refreshbutton(jazzServices_po.getAssetStatusVerify(), Common.fivek);
+    this.refreshbutton(jazzServices_po.getAssetStatusVerify(), Common.miniWait);
     //Verifying the Assets are ACTIVE
     expect(jazzServices_po.getAssetStatusVerify().getText().then(function (text) { return text.toLowerCase() })).toEqual('active');
   }
   verifyLogs() {
-    this.refreshbutton(jazzServices_po.getLogs(), Common.fivek);
+    this.refreshbutton(jazzServices_po.getLogs(), Common.miniWait);
     jazzServices_po.getLogs().click();
-    this.refreshbutton(jazzServices_po.getFilterIcon(), Common.fivek);
+    this.refreshbutton(jazzServices_po.getFilterIcon(), Common.miniWait);
     browser.driver.switchTo().activeElement();
     jazzServices_po.getFilterIcon().click();
-    this.refreshbutton(jazzServices_po.getDropDown(), Common.fivek);
+    this.refreshbutton(jazzServices_po.getDropDown(), Common.miniWait);
     jazzServices_po.getDropDown().click();
     jazzServices_po.getDay().click();
-    browser.sleep(Common.twok);
+    browser.sleep(Common.microWait);
     jazzServices_po.getDropDown().click();
     jazzServices_po.getWeek().click();
-    browser.sleep(Common.twok);
+    browser.sleep(Common.microWait);
     expect(jazzServices_po.getWeekVerify().getText()).toEqual('WEEK');
     jazzServices_po.getDropDown().click();
     jazzServices_po.getMonth().click();
-    browser.sleep(Common.twok);
+    browser.sleep(Common.microWait);
     expect(jazzServices_po.getMonthVerify().getText()).toEqual('MONTH');
     jazzServices_po.getDropDown().click();
     jazzServices_po.getYear().click();
     expect(jazzServices_po.getYearVerify().getText()).toEqual('YEAR');
     // browser.refresh();
-    // this.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.fivek);
+    // this.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
     // jazzServices_po.getServiceHomePage().click();
   }
   Login()
