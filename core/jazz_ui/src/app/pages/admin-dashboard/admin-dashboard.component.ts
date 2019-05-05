@@ -1,7 +1,7 @@
 import {AfterViewChecked, AfterViewInit, Component, OnInit, ViewChild} from '@angular/core';
-import { ToasterService} from 'angular2-toaster';
+import {ToasterService} from 'angular2-toaster';
 import {AdminUtilsService} from '../../core/services/admin-utils.service';
-import { RequestService } from '../../core/services/index';
+import {RequestService} from '../../core/services/index';
 
 
 @Component({

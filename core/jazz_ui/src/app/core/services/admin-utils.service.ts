@@ -1,7 +1,7 @@
-import { Injectable } from '@angular/core';
-import { Http } from "@angular/http";
-import { Observable } from "rxjs/Observable";
-import { RequestService } from "./request.service";
+import {Injectable} from '@angular/core';
+import {Http} from "@angular/http";
+import {Observable} from "rxjs/Observable";
+import {RequestService} from "./request.service";
 
 @Injectable()
 export class AdminUtilsService {
