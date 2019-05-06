@@ -158,7 +158,9 @@ export class CreateServiceComponent implements OnInit {
 
   scrollTo(id) {
     const ele = document.getElementById(id);
-    ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
+    if(ele){
+      ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
+    }
   }
 
   chkDynamodb() {
@@ -690,7 +692,7 @@ export class CreateServiceComponent implements OnInit {
     if(this.invalidEventName){
       return true
     }
-    if(this.isyamlValid){
+    if(!this.isyamlValid){
       return true
     }
 
