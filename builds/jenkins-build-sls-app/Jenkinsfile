@@ -6,10 +6,10 @@ import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
 
-@Field def repo_credential_id
-@Field def repo_base
-@Field def repo_core
-@Field def scm_type
+@Field def repo_credential_id = "jazz_repocreds"
+@Field def repo_base = "slsapp19-gitlab-alb-1957372724.us-east-1.elb.amazonaws.com"
+@Field def repo_core = "slf"
+@Field def scm_type = "gitlab"
 
 @Field def configModule
 @Field def configLoader
@@ -22,6 +22,7 @@ import groovy.transform.Field
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
 @Field def whiteListModule
+@Field def slsBuildRules
 
 @Field def auth_token = ''
 @Field def config
@@ -137,14 +138,30 @@ node() {
   events.sendStartedEvent('CREATE_DEPLOYMENT', 'Serverless application deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
   dir(repo_name) {
-    try {
-      def dd = prepareServerlessYml(config, environment_logical_id) // Generating the deployment descriptor
-      echo "prepareServerlessYml = ${dd}"
-      writeYaml(file: './serverless.yml', data: dd)
-    } catch(FileAlreadyExistsException faee) {
-      echo 'The serverless.yml exists inside the source code thus disregarding the deployment descriptor content from the service catalog'
-      echoServerlessFile()
-    }
+  /* Writing the file from config */
+    def dd = prepareServerlessYml(config, environment_logical_id) // Generating the deployment descriptor
+    echo "prepareServerlessYml = ${dd}"
+    writeYaml(file: './serverless.yml', data: dd)
+
+    def ddd = config['deployment_descriptor']
+    def doc1= ddd ? readYaml(text: ddd) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
+
+    context =["environment_logical_id":environment_logical_id,
+              "INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
+              "REGION": configLoader.AWS.REGION,
+              "cloud_provider": "aws"]
+
+    def rules = readYaml(text: slsBuildRules.sbrContent)
+
+    echo "config => $config"
+
+    def result = slsBuildRules.processServerless(doc1,
+                                                 rules,
+                                                 config,
+                                                 context)
+
+    echo "!!! result => $result"
+
 
     if (domain && domain == "jazz") {
       stage('Update Service Template') {
@@ -387,62 +404,30 @@ def echoServerlessFile() {
   echo "serverless file data $serverlessyml"
 }
 
-def fillFunctionElem(elem, varName, config, env) {
-  if(!elem['name']) elem['name'] = "${config['domain']}-${config['service']}-${varName}-${env}".toString()
-  if(!elem['handler']) elem['handler'] = "${varName}/index.handler"
-/*  if(!elem['role']) elem['role'] = config['iamRoleARN'] */
-/*  if(!elem['description']) elem['description'] = "${config['domain']}-${config['service']} Lambda Function".toString() */
-/*  if(!elem['runtime']) elem['runtime'] = config['providerRuntime'] */
-/*  if(!elem['memorySize']) elem['memorySize'] = config['providerMemorySize'] */
-/*  if(!elem['timeout']) elem['timeout'] = config['providerTimeout'] */
-}
-
 def prepareServerlessYml(aConfig, env) {
   def dd = aConfig['deployment_descriptor']
-  echo "---------- dd -------------> $dd"
+  try {
+    def appContent = readFile('application.yml').trim()
+    if(!appContent.isEmpty()) dd = appContent
+  } catch(e) {
+    echo "Error occured while reading application.yml. The default value from config will be used. Exception is $e"
+  }
 
   def doc = dd ? readYaml(text: dd) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
-  if(!doc['service']) doc['service'] = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}".toString() // toString() is needed here because otherwise the de-serialization back to Yaml will be invalid
-  def providerElem = doc['provider']
-  if(!providerElem) {
-    providerElem = [:]
-    doc['provider'] = providerElem
-  }
-  if(!providerElem['name']) providerElem['name'] = "aws"
-  if(!providerElem['deploymentBucket']) providerElem['deploymentBucket'] = '${opt:bucket}'
-  if(!providerElem['region']) providerElem['region'] = config['region']
-  if(!providerElem['stage']) providerElem['stage'] = env
-  if(!providerElem['owner']) providerElem['owner'] = config['created_by']
-  /* 3 lines below */
-  if(!providerElem['domain']) providerElem['domain'] = config['domain']
-  if(!providerElem['role']) providerElem['role'] = config['iamRoleARN']
-  if(!providerElem['runtime']) providerElem['runtime'] = config['providerRuntime']
-  if(!doc['package'] && config['artifact'] && providerElem['runtime'].toUpperCase().contains("JAVA")) {
-    doc['package'] = ['artifact' : "target/${config['artifact']}"]
-  }
 
-  def stackTagsElem = providerElem['stackTags']
-  if(!stackTagsElem) {
-    stackTagsElem = [:]
-    providerElem['stackTags'] = stackTagsElem
-  }
-  if(!stackTagsElem['application']) stackTagsElem['application'] = configLoader.INSTANCE_PREFIX
-  if(!stackTagsElem['service']) stackTagsElem['service']="${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}".toString()
-  if(!stackTagsElem['domain']) stackTagsElem['domain'] = config['domain']
-  if(!stackTagsElem['owner']) stackTagsElem['owner'] = config['created_by']
-  if(!stackTagsElem['environment']) stackTagsElem['environment'] = env
+  context =["environment_logical_id": env,
+            "INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
+            "REGION": configLoader.AWS.REGION,
+            "cloud_provider": "aws"]
 
-  def functionsElem = doc['functions']
-  if(!functionsElem) {
-    functionsElem = ['handler':[:]]
-    doc['functions'] = functionsElem
-    fillFunctionElem(functionsElem['handler'], 0, config, env)
-  } else {
-    // Traversing through the list of functions and calling fillFunctionElem with index to help with the name creation
-    functionsElem.collect{key, val -> fillFunctionElem(val, key, config, env)}
-  }
+  def rules = readYaml(text: slsBuildRules.sbrContent)
+  def resultingDoc = slsBuildRules.processServerless(doc,
+                                                     rules,
+                                                     aConfig,
+                                                     context)
+
 // Supplying the Outputs element to render all arns for all 'resources/Resources that got listed'
-  def smallResourcesElem = doc['resources']
+  def smallResourcesElem = resultingDoc['resources']
   if(smallResourcesElem) {
     def bigResourcesElem = smallResourcesElem['Resources']
     if(bigResourcesElem) {
@@ -452,8 +437,6 @@ def prepareServerlessYml(aConfig, env) {
         smallResourcesElem['Outputs'] = bigOutputsElem
       }
       def resourceKeys = bigResourcesElem.collect{key, val -> key}
-
-      echo "resourceKeys => $resourceKeys"
       /* Forming a record that extracts the arn from resulting item for each of resource key extracted from resources:
       UsersTableArn:\n
         Value:\n
@@ -465,7 +448,7 @@ def prepareServerlessYml(aConfig, env) {
     }
   }
 
-  return doc
+  return resultingDoc
 
 }
 
@@ -900,6 +883,11 @@ def loadBuildModules(buildModuleUrl) {
 
     environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
     echo "Environment deployment data loader module loaded successfully."
+
+    slsBuildRules = load "sls-app/sbr.groovy"
+    slsBuildRules.initialize()
+    echo "sls-app/sbr.groovy has been loaded"
+
   }
 }
 
