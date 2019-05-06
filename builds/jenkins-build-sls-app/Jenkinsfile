@@ -143,26 +143,6 @@ node() {
     echo "prepareServerlessYml = ${dd}"
     writeYaml(file: './serverless.yml', data: dd)
 
-    def ddd = config['deployment_descriptor']
-    def doc1= ddd ? readYaml(text: ddd) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
-
-    context =["environment_logical_id":environment_logical_id,
-              "INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
-              "REGION": configLoader.AWS.REGION,
-              "cloud_provider": "aws"]
-
-    def rules = readYaml(text: slsBuildRules.sbrContent)
-
-    echo "config => $config"
-
-    def result = slsBuildRules.processServerless(doc1,
-                                                 rules,
-                                                 config,
-                                                 context)
-
-    echo "!!! result => $result"
-
-
     if (domain && domain == "jazz") {
       stage('Update Service Template') {
         echo "Inside Update service template"
