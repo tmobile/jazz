@@ -140,7 +140,6 @@ private intervalSubscription: Subscription;
   filter:any;
   sort:any;
   loadingState: string = '';
-  isload:boolean =true;
   selectedListData:any;
   prevActivePage: number = 0;
   message;
@@ -211,7 +210,6 @@ private intervalSubscription: Subscription;
               this.backupdata = this.serviceList;
               setTimeout(() => this.toasterService.clear(), 10000);
               this.loadingState = 'default';
-              this.isload = false;
             }
 
           } else{
