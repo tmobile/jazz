@@ -23,6 +23,7 @@ import { SharedModule } from './shared-module/shared.module';
 import { routes } from './app.route';
 import {UserJourneyComponent} from "./pages/user-journey/user-journey.component";
 import {UtilsService} from './core/services/utils.service';
+
 let environmentval = environment.envName;
 let loadedModule;
 if (environmentval == "oss") {
