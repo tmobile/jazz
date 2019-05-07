@@ -42,6 +42,17 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
 
 }
 
+def Map<String, String> allRules(Map<String, Object> origAppYmlFile,
+                                 Map<String, Object> rulesYmlFile,
+                                                     config,
+                                 Map<String, String> context) {
+ // Loading and parsing all the rules to be presented in easily discoverable and executable form as map like [path:rule] i.e. [/service/name:SBR_Rule@127eae33, /service/awsKmsKeyArn:SBR_Rule@7e71274c, /frameworkVersion:SBR_Rule@5413e09 ...
+    Map<String, SBR_Rule> rules =  convertRuleForestIntoLinearMap(rulesYmlFile)
+    Map<String, SBR_Rule> resolvedRules = rulePostProcessor(rules)
+
+    return  resolvedRules.inject([:]){acc, item -> acc.put(item.key, item.value.toString()); return acc;}
+}
+
 /* This class encapsulates config, context and rules so that they don't have to be carried over with every call of recursive function */
 class Transformer {
   private def config;
@@ -64,7 +75,7 @@ class Transformer {
     String[] targetPathSegments = targetPath.split("/")
     if(templatedPathSegments.length != targetPathSegments.length) return false
     boolean acc = true
-    targetPathSegments.eachWithIndex{seg, idx -> acc &= (seg == templatedPathSegments[idx] ||  templatedPathSegments[idx] == "*")}
+    targetPathSegments.eachWithIndex{seg, idx -> acc = (idx == 0 || seg.equals(templatedPathSegments[idx]) ||  templatedPathSegments[idx].contains("*")) & acc}
     return acc
   }
 
@@ -87,7 +98,7 @@ class Transformer {
     if(simpleMatch != null) {
       return simpleMatch;
     } else {
-      def path2rule = templatedPath2RulesMap.find{path2Rule -> pathMatcher(path2Rule.key, aPath)}
+      def path2rule = templatedPath2RulesMap.find{thePath2Rule -> pathMatcher(thePath2Rule.key, aPath)}
       if(path2rule == null) return null
       path2rule.value.asteriskValues = resolveAsterisks(path2rule.key, aPath)
       return path2rule.value
@@ -638,14 +649,18 @@ Map<String, SBR_Rule> rulePostProcessor(Map<String, SBR_PreRule> aPath2RuleMap) 
 
   if(path2ResolvedRuleMap != null) path2ResolvedRuleMapFinal << path2ResolvedRuleMap // Concat two resulting maps
 
-  Map<String, SBR_PreRule> path2RuleMap2Ret = [:] << aPath2RuleMap // Copying the original map in order to avoid any possible side-effect on to the input data
-  path2RuleMap2Ret.keySet().removeAll(path2NonPrimaryRuleMap.keySet()) // Removing all non-primary rules that are irrelevant now
-  path2RuleMap2Ret.keySet().removeAll(path2ReferrerRuleMap.keySet()) // Removing referrer rules
-  path2RuleMap2Ret.keySet().removeAll(path2ReferrerRuleMapFinal.keySet()) // Removing all the double-reference referrers now because they are irrelevant either
+  Map<String, SBR_PreRule> path2RuleMap2Ret = subtract(aPath2RuleMap,
+                                                       path2NonPrimaryRuleMap,
+                                                       path2ReferrerRuleMap,
+                                                       path2ReferrerRuleMapFinal) // aPath2RuleMap - path2NonPrimaryRuleMap - path2ReferrerRuleMap - path2ReferrerRuleMapFinal
 
   if(path2ResolvedRuleMapFinal != null) path2RuleMap2Ret << path2ResolvedRuleMapFinal // Adding all resolved maps to the original input
 
   return path2RuleMap2Ret
+}
+
+def subtract(target, arg1, arg2, arg3) {
+  return target.inject([:]){acc, item -> if(arg1[item.key] == null && arg2[item.key] == null && arg3[item.key] == null) acc.put(item.key, item.value); return acc}
 }
 
 /* Merges two maps nicely. In case of conflict the second (later) argument overwrites the first (early) one  */
@@ -657,7 +672,7 @@ def Map merge(Map[] sources) {
         source.each { k, v ->
             result[k] = result[k] instanceof Map ? merge(result[k], v) : v
         }
-        result
+        return result
     }
 }
 
