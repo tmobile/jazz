@@ -75,13 +75,46 @@ class IntValidator implements TypeValidator {
   }
 }
 
+class StringValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      if(!aValue instanceof String)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class BooleanValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      if(!aValue instanceof boolean)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class EnumValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      if(!aValue instanceof Enum)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
 /* Enum that must enlist all the types from serverless-build-rules.yml file. TODO: The lists and maps must be dealt with properly */
 enum SBR_Type {
 
    INT("int", new IntValidator()),
-   BOOL("bool", null), // TODO Must provide a validator
-   STR("str", null),  // TODO Must provide a validator
-   ENUM("enum", null),  // TODO Must provide a validator
+   BOOL("bool", new BooleanValidator()),
+   STR("str", new StringValidator()),
+   ENUM("enum", new EnumValidator()),
 
    ARN_KMS("arn-kms", null),  // TODO Must provide a validator
    ARN_IAM("arn-iam", null),  // TODO Must provide a validator
@@ -225,7 +258,7 @@ class SBR_Composite_Constraint implements SBR_Constraint {
         case "sbr-enum": cumulativeConstr.constraintList.add(new SBR_Enum_Constraint(value)); break;
         case "sbr-from": cumulativeConstr.constraintList.add(new SBR_From_Constraint(value)); break;
         case "sbr-to": cumulativeConstr.constraintList.add(new SBR_To_Constraint(value)); break;
-        case "sbr-whitelist": cumulativeConstr.constraintList.add(new SBR_To_Constraint([:], value)); break; // TODO real whitelist loaded needed here instead of an empty map
+        case "sbr-whitelist": cumulativeConstr.constraintList.add(new SBR_Whitelist_Constraint([:], value)); break; // TODO real whitelist loaded needed here instead of an empty map
         default: throw new IllegalStateException("sbr-constraint contains an unknown tag inside as follows: $key")
       }
     }
@@ -235,16 +268,17 @@ class SBR_Composite_Constraint implements SBR_Constraint {
   public boolean compliant(val) {
     return !constraintList.any{elem -> !elem.compliant(val)};
   }
-
-
 }
 
 class SBR_Enum_Constraint implements SBR_Constraint {
+  private def enumValue
+
   public SBR_Enum_Constraint(inputEnum) {
+    enumValue = inputEnum
   }
 
-  public boolean compliant(val) { // TODO: Write a good validator
-    return true;
+  public boolean compliant(val) {
+    return enumValue.contains(val)
   }
 }
 
@@ -258,7 +292,7 @@ class SBR_Whitelist_Constraint implements SBR_Constraint {
   }
 
   public boolean compliant(val) { // TODO: Write a good validator
-    return true;
+
   }
 }
 
@@ -276,11 +310,14 @@ class SBR_To_Constraint implements SBR_Constraint {
 }
 
 class SBR_From_Constraint implements SBR_Constraint {
-  public SBR_From_Constraint(int inputVal) {
+  private int fromValue
+
+  public SBR_From_Constraint(int aFromValue) {
+    fromValue = aFromValue
   }
 
-  public boolean compliant(val) { // TODO: Write a good validator
-    return true;
+  public boolean compliant(val) {
+     return val >= toValue;
   }
 }
 
@@ -401,7 +438,8 @@ def collector(arg, currentPath) {
   else return arg.collect{val -> collector(val, currentPath)}
 }
 
-/*
+//***********************************************************************************
+
 println ">>>>>>>>>>>>>>>>>>>>>>>>>"
 
 @Grab('org.yaml:snakeyaml:1.17')
@@ -418,11 +456,11 @@ config = ["service_id": "4a053679-cdd4-482a-a34b-1b83662f1e81",
 
 context =  ["INSTANCE_PREFIX": "slsapp19"]
 
-Map<String, Object> initialSmallServerless = parser.load(new File("/Users/olegfomin/verysmallserverless.yml").text) // Here provide a path to overly simplistic serverless.yml like
+Map<String, Object> initialSmallServerless = parser.load(new File("/Users/U44693/Documents/groovytest/test.yml").text) // Here provide a path to overly simplistic serverless.yml like
 //service:
 //  name: myService
 //  awsKmsKeyArn: arn:aws:kms:us-east-1:XXXXXX:key/some-hash
-Map<String, Object> sbrContent = parser.load(new File("/Users/olegfomin/rajeev/jenkins-build-sls-app/serverless-build-rules.yml").text) // Here provide a path to your serverless-build-rules.yml
+Map<String, Object> sbrContent = parser.load(new File("/Users/U44693/Documents/groovytest/build-rule.yml").text) // Here provide a path to your serverless-build-rules.yml
 
 Map<String, Object> resultingServerless = processServerless(initialSmallServerless, sbrContent, config, context)
-*/
+
