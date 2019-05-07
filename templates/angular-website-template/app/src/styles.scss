@@ -1,0 +1,38 @@
+/* You can add global styles to this file, and also import other style files */
+
+html, body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  align-items: center;
+  background: #444;
+  color: #fff;
+  display: flex;
+  font-family: 'Exo 2', sans-serif;
+  justify-content: center;
+  text-align: center;
+}
+
+a {
+  color: #dd0371;
+}
+
+ul {
+  list-style: none;
+  padding: 0;
+}
+
+h1, h2, h3, ul {
+  font-weight: 300;
+}
+
+h1 {
+  font-size: 3em;
+  margin: 0;
+}
+
+h2 {
+  font-size: 1.2em;
+}

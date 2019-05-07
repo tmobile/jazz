@@ -145,7 +145,7 @@ export class LoginComponent implements OnInit {
             this.error.password = 'Password cannot be empty';
             this.register=false;
         }
-        
+
         // ... other validations
 
         // if no validation errors try login
@@ -194,7 +194,7 @@ export class LoginComponent implements OnInit {
             this.model.username='';
             this.model.password='';
             this.model.usercode='';
-            
+
         }
 
         registerUser(e){
@@ -211,17 +211,20 @@ export class LoginComponent implements OnInit {
                             "userpassword":this.model.password,
                             "usercode":this.model.usercode
                         }
+                        this.loading = true;
             this.http.post('/jazz/usermanagement', payload).subscribe(
-                response => { 
+                response => {
+                    this.loading = false;
                     //Registration changes here
                     let message=this.toastmessage.successMessage("success","register");
-                    this.toast_pop('success', '', message + this.model.username);
+                    this.toast_pop('success', 'Verification email sent!', message + this.model.username);
                     this.clearRegForm();
                     // this.toggleReg('register');
                     this.register = false;
                     this.regist = 'Forgot Password';
                 },
                 err => {
+                    this.loading = false;
                     let error = JSON.parse(err._body);
                     let errorMessage=this.toastmessage.errorMessage(err,"register");
                     this.toast_pop('error', 'Oops!', error.message);

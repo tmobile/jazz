@@ -134,7 +134,13 @@ node()  {
 
 				echo "create_cloudfront_url====" + create_cloudfront_url
 				send_status_email('STARTED', '')
-				validateTemplate()
+				if(service_config['framework'] == 'angular') {
+					validateAngularTemplate();
+				} else if(service_config['framework'] == 'react') {
+					validateReactTemplate();
+				} else {
+					validateBasicTemplate();
+				}
 				validateDeploymentConfigurations()
 			} catch (ex) {
 				send_status_email('FAILED', '')
@@ -143,6 +149,20 @@ node()  {
 				error ex.getMessage()
 			}
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map)
+		}
+
+		stage("Build ${service_config['framework']}") {
+			if(service_config['framework'] == 'angular' || service_config['framework'] == 'react') {
+				events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
+				try {
+					buildWebsite(service_config['framework'])
+				} catch(ex) {
+					events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
+        			events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+        			error ex.getMessage()
+				}
+				events.sendCompletedEvent('BUILD', 'build completed', context_map, environment_logical_id)
+			}		
 		}
 
 		stage("Deployment to ${current_environment} Env"){
@@ -179,8 +199,16 @@ node()  {
 				}
 				events.sendStartedEvent(asset_event, "${asset_event_message} assets starts", utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config))
 				try {
-					sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
-					sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+					if(service_config['framework'] == 'angular') {
+						sh "aws s3 sync ./app/dist s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
+						sh "aws s3 sync ./app/dist s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+					} else if (service_config['framework'] == 'react') {
+						sh "aws s3 sync ./app/build s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
+						sh "aws s3 sync ./app/build s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+					} else {
+						sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\""
+						sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml"
+					}
 					events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config), environment);
 					def url
 					if (create_cloudfront_url == true) {
@@ -674,7 +702,7 @@ def validateDeploymentConfigurations() {
 /**
 	Validate template for all necessary files. Ex: index.html
 */
-def validateTemplate() {
+def validateBasicTemplate() {
 	if (fileExists('app/index.html')) {
 		echo "index.html is present"
 	} else {
@@ -881,4 +909,95 @@ def getBuildModuleUrl() {
 def jsonParse(jsonString) {
     def nonLazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
     return nonLazyMap
+}
+
+
+/**
+  *	VALIDATE ANGULAR TEMPLATE
+*/
+
+def validateAngularTemplate() {
+	if (fileExists('app/package.json')) {
+		echo "package.json is present"
+	} else {
+		error "package.json is not available."
+	}
+	
+	if (fileExists('deployment-env.yml')) {
+		echo "deployment-env.yml is present"
+	} else {
+		error "deployment-env.yml is not available."
+	}
+
+	if(fileExists('app/angular.json') || fileExists('app/angular-cli.json')) {
+		echo "Angular / Angular-cli json available"
+	} else {
+		error "angular / angular-cli json is not available."
+	}
+
+	try {
+		def packageString = readFile("app/package.json")
+		def angularVersionString = new groovy.json.JsonSlurperClassic().parseText(packageString).dependencies.'@angular/core'
+
+		def version = angularVersionString.substring(1, angularVersionString.indexOf('.'))
+		echo "Angular Project version $version"
+	} catch(ex) {
+		error "Error while checking version::"+ ex.getMessage();
+	}
+}
+
+/**
+  * VALIDATE REACT TEMPLATE
+ */
+def validateReactTemplate() {
+	if (fileExists('app/package.json')) {
+		echo "package.json is present"
+	} else {
+		error "package.json is not available."
+	}
+
+	if (fileExists('deployment-env.yml')) {
+		echo "deployment-env.yml is present"
+	} else {
+		error "deployment-env.yml is not available."
+	}
+
+	try {
+		def packageString = readFile("app/package.json")
+		def reactVersionString = new groovy.json.JsonSlurperClassic().parseText(packageString).dependencies.react;
+		def version = reactVersionString.substring(1, reactVersionString.indexOf('.'))
+
+		def reactDomVersionString = new groovy.json.JsonSlurperClassic().parseText(packageString).dependencies.'react-dom';
+		def domVersion = reactDomVersionString.substring(1, reactDomVersionString.indexOf('.'))
+		
+		echo "React Project version $version, Dom version $domVersion"
+	} catch(ex) {
+		error "Error while checking version::"+ ex.getMessage();
+	}
+}
+
+
+/**
+  * Function to do build of angular/react 
+*/
+def buildWebsite(framework) {
+	def websiteCodeFolder = "app/"
+	dir(websiteCodeFolder) {
+		switch(framework) {
+			case "angular":
+				sh "rm -rf dist"
+				sh "npm cache clean --force"
+				sh "npm install"
+				sh "ng build --prod --output-path=dist"
+			break
+			case "react":
+				sh "rm -rf build"
+				sh "npm cache clean --force"
+				sh "npm install"
+				sh "npm run build"
+			break
+			default:
+			break
+		}
+	}
 }

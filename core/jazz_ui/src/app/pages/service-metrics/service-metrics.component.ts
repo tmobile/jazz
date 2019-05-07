@@ -4,7 +4,7 @@ import {
 import * as moment from 'moment';
 import {UtilsService} from '../../core/services/utils.service';
 import {ActivatedRoute} from '@angular/router';
-import {RequestService} from '../../core/services';
+import { RequestService, MessageService } from '../../core/services';
 import {Observable} from 'rxjs/Observable';
 import * as _ from 'lodash';
 declare let Promise;
@@ -72,11 +72,14 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public graphData;
   private http;
 
-
+  errMessage: any;
+  private toastmessage: any = '';
   constructor(private request: RequestService,
               private utils: UtilsService,
+              private messageservice: MessageService,
               private activatedRoute: ActivatedRoute) {
     this.http = this.request;
+    this.toastmessage = messageservice;
   }
 
   ngAfterViewInit() {
@@ -87,6 +90,11 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       return this.getEnvironments()
         .then(() => {
           return this.applyFilter();
+        })
+        .catch(err => {
+          this.sectionStatus = 'error';
+          this.errorData['response'] = err;
+          this.errMessage = this.toastmessage.errorMessage(err, "metricsResponse");
         });
     } else {
       return this.applyFilter();
@@ -276,6 +284,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       (error) => {
         this.sectionStatus = 'error';
         this.errorData['response'] = error;
+        this.errMessage = this.toastmessage.errorMessage(error, "metricsResponse");
       });
 
   }
