@@ -569,6 +569,7 @@ def collector(arg, currentPath) {
 
 //***********************************************************************************
 
+/*
 println ">>>>>>>>>>>>>>>>>>>>>>>>>"
 
 @Grab('org.yaml:snakeyaml:1.17')
@@ -593,3 +594,4 @@ Map<String, Object> sbrContent = parser.load(new File("/Users/U44693/Documents/g
 
 Map<String, Object> resultingServerless = processServerless(initialSmallServerless, sbrContent, config, context)
 
+*/
