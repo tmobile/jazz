@@ -60,7 +60,7 @@ private intervalSubscription: Subscription;
   serviceListEmpty: boolean=false;
   updateinterval = 30000;
   serviceCount: number = 0;
-
+  isSort: boolean = true;
   deletedServiceId: string;
   selectedTab = 0;
   showAddService: boolean = false;
