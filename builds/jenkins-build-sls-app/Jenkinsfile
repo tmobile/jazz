@@ -169,6 +169,20 @@ node() {
       }
       events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
     }
+    stage('Install Plugins') {
+      events.sendStartedEvent('INSTALL_PLUGINS', 'Plugin Installation started', context_map, environment_logical_id)
+      try {
+        send_status_email(config, 'STARTED', "")
+        installplugins()
+      } catch (ex) {
+        send_status_email(config, 'FAILED', "")
+        events.sendFailureEvent('INSTALL_PLUGINS', ex.getMessage(), context_map, environment_logical_id)
+        events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+        error ex.getMessage()
+      }
+      events.sendCompletedEvent('INSTALL_PLUGINS', 'Plugin Installation completed', context_map, environment_logical_id)
+
+    }
 
     if (config['domain'] && config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
       stage('Code Quality Check') {
@@ -626,6 +640,22 @@ def validateDeploymentConfigurations(def prop) {
 		error "Wrong configuration. Key 'region' is missing in the configuration"
 	}
 
+}
+
+def installplugins(){
+  try {
+    def serverlessyml = readFile('./serverless.yml').trim()
+    def plugins = whiteListModule.getPluginsfromYaml(serverlessyml)
+    if( plugins ) {
+      for (plugin in plugins){
+        sh "npm install ${plugin}"
+      }
+    } else {
+      echo "No plugins listed..skipping"
+    }
+  } catch( ex ){
+    error "Plugin Installation Failed "+ ex.getMessage();
+  }
 }
 
 def echoServiceInfo(String env) {
