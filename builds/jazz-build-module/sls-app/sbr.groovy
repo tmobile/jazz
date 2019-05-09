@@ -1,3 +1,8 @@
+#!groovy?
+import groovy.transform.Field
+
+@Field def whilelistValidator
+
 /** The function traverses through the original user application.yml file that is represented as a Map and applies the rules from the rules file for every clause found in the user input.
     It returns a resulting Map that can immediatelly be serialized into the yml file and written to disk. config and context are also needed to resolve some values from the application yml
     @origAppYmlFile - the file in serverless serverless.yml format () as defined by a user/developer and parsed by SnakeYml (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)
@@ -9,6 +14,11 @@
     To test please uncomment the comments at the bottom of the file and provide the good values to the simple serverless.yml file and to the serverless-build-rules.yml that you can locate inside jenkins-build-sls-app project
     You can run the application in any groovy enabled environment like groovyConsole for example
 */
+
+def initialize (aWhilelistValidator) {
+  whilelistValidator = aWhilelistValidator
+}
+
 Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
                                       Map<String, Object> rulesYmlFile,
                                       Map<String, String> config,
@@ -108,6 +118,119 @@ class EnumValidator implements TypeValidator {
   }
 }
 
+class ListValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      if(!aValue instanceof Array)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class MapValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      if(!aValue instanceof Map)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class ArnIamValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^arn:aws:iam::\d{12}:(?:\/[A-Za-z0-9]+)$"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class ArnKmsValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^arn:aws:kms::\d{12}:key(\/[A-Za-z0-9]+)$"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class AwsIdValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^\d{12}$"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class FunctionValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "?!^[0-9]+$)([a-zA-Z0-9-_]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class ResourceValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^[a-zA-Z]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class EventValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^[a-zA-Z]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class AwsVariableNameValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^[a-zA-Z]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
 /* Enum that must enlist all the types from serverless-build-rules.yml file. TODO: The lists and maps must be dealt with properly */
 enum SBR_Type {
 
@@ -116,22 +239,23 @@ enum SBR_Type {
    STR("str", new StringValidator()),
    ENUM("enum", new EnumValidator()),
 
-   ARN_KMS("arn-kms", null),  // TODO Must provide a validator
-   ARN_IAM("arn-iam", null),  // TODO Must provide a validator
-   AWS_ID("aws-id", null),  // TODO Must provide a validator
+   ARN_KMS("arn-kms", new ArnKmsValidator()),
+   ARN_IAM("arn-iam", new ArnIamValidator()),
+   AWS_ID("aws-id", new AwsIdValidator()),
    AWS_ARTIFACT_NAME("aws-artifact-id", null),  // TODO Must provide a validator
    AWS_VAR_NAME("aws-var-name", null),  // TODO Must provide a validator
    AWS_BUCKET_NAME("aws-bucket-name", null),  // TODO Must provide a validator
    AWS_TAG_VAL("aws-tag-val", null),  // TODO Must provide a validator
    PATH("path", null),  // TODO Must provide a validator
-   AWS_VAR_VALUE("aws-var-value", null), // TODO Must provide a validator
-   FUNCTION("function", null),  // TODO Must provide a validator
-   EVENT("event", null),  // TODO Must provide a validator
-   RESOURCE("resource", null),  // TODO Must provide a validator
+   AWS_VAR_VALUE("aws-var-value", new AwsVariableNameValidator()),
+   FUNCTION("function", new FunctionValidator()),
+   EVENT("event", new EventValidator()),
+   RESOURCE("resource", new ResourceValidator()),
    AWS_POLICY("aws-policy", null),  // TODO Must provide a validator
-   MAP("[:]", null),  // TODO Must provide a validator
-   LIST("[]", null),  // TODO Must provide a validator
-   SEQUENCE("sequence", null)  // TODO Must provide a validator
+   MAP("[:]", new MapValidator()),
+   LIST("[]", new ListValidator()),
+   SEQUENCE("sequence", null),    // TODO Must provide a validator
+
 
    String tagValue
    TypeValidator typeValidator
@@ -291,8 +415,13 @@ class SBR_Whitelist_Constraint implements SBR_Constraint {
      elementPointer = anElementPointer
   }
 
-  public boolean compliant(val) { // TODO: Write a good validator
-
+  public boolean compliant(val) {
+      switch(anElementPointer) {
+        case "resources": whilelistValidator.validatePlugins(val); break;
+        case "provider": whilelistValidator.validateActionsInProvider(val); break;
+        case "pluginso": whilelistValidator.validatePlugins(val); break;
+        default: throw new IllegalStateException("SBR_Whitelist_Constraint contains an unknown tag inside as follows: $val")
+      }
   }
 }
 
