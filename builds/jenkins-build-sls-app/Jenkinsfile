@@ -172,7 +172,6 @@ node() {
     stage('Install Plugins') {
       events.sendStartedEvent('INSTALL_PLUGINS', 'Plugin Installation started', context_map, environment_logical_id)
       try {
-        send_status_email(config, 'STARTED', "")
         installplugins()
       } catch (ex) {
         send_status_email(config, 'FAILED', "")
