@@ -8,6 +8,11 @@
 /deep/ .table-wrap.fixed {
   position: fixed;
 }
+.create-service{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
 /deep/ .table-filter-wrap .tabs-wrap {
   ul {

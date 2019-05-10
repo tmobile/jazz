@@ -51,8 +51,9 @@ function handler(event, context, cb) {
 		 */
     var eventBody = event.body;
     var metricsResponse = [];
+    let headers = exportable.changeToLowerCase(event.headers);
     let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
-    var genValidation = exportable.genericValidation(event, header_key);
+    var genValidation = exportable.genericValidation(event, header_key, headers);
     var token = exportable.getToken(config);
     var valGenFields = validateUtils.validateGeneralFields(eventBody);
     Promise.all([genValidation, token, valGenFields])
@@ -63,7 +64,7 @@ function handler(event, context, cb) {
           exportable.getserviceMetaData(config, eventBody, authToken)
             .then((serviceMetaData) => {
               const serviceData = serviceMetaData;
-              exportable.getAssetsDetails(config, eventBody, authToken, event.headers[header_key])
+              exportable.getAssetsDetails(config, eventBody, authToken, headers[header_key])
                 .then((res) => exportable.validateAssets(res, eventBody))
                 .then((res) => {
                   const deploymentAccounts = serviceData.data.services[0].deployment_accounts
@@ -100,7 +101,7 @@ function handler(event, context, cb) {
 
 };
 
-function genericValidation(event, header_key) {
+function genericValidation(event, header_key, headers) {
   return new Promise((resolve, reject) => {
     if (!event && !event.body) {
       reject({
@@ -123,7 +124,7 @@ function genericValidation(event, header_key) {
       });
     }
 
-    if (!event.headers[header_key]) {
+    if (!headers[header_key]) {
       reject({
         result: "inputError",
         message: "No service id provided"
@@ -555,7 +556,13 @@ function cloudWatchDetails(assetParam, tempCreds, region) {
   });
 }
 
-
+function changeToLowerCase(data) {
+	let newArr = {};
+	for (let key in data) {
+		newArr[key.toLowerCase()] = data[key];
+	}
+	return newArr;
+}
 
 const exportable = {
   handler,
@@ -569,7 +576,8 @@ const exportable = {
   getApigeeParam,
   getMetricsDetails,
   cloudWatchDetails,
-  apigeeMetricDetails
+  apigeeMetricDetails,
+  changeToLowerCase
 }
 
 module.exports = exportable;

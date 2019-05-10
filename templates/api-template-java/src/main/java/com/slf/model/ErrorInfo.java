@@ -1,6 +1,8 @@
 package com.slf.model;
 
-public class ErrorInfo {
+import java.io.Serializable;
+
+public class ErrorInfo implements Serializable {
 	
 	private String errorType;
 	private String message;

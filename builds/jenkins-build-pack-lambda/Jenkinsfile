@@ -859,6 +859,12 @@ def writeServerlessFile(config, env, accountDetails) {
   } else {
       iamRoleArnValue = accountDetails.IAM.USERSERVICES_ROLEID;
   }
+def addVpcDetails(config) {
+	echo "addVpcdetails to serverless.yml file"
+	sh "sed -i -- 's/vpcDisabled/vpc/g' ./serverless.yml"
+  sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
+  sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
+}
 
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
@@ -872,8 +878,10 @@ def writeServerlessFile(config, env, accountDetails) {
   sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
   sh "sed -i -- 's|\${file(deployment-env.yml):eventScheduleRate}|${config['eventScheduleRate']}|g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${config['eventScheduleEnable']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
+
+  if ((config['service'] in configLoader.JAZZ.VPC_SERVICES.FUNCTIONS) && config['domain'] == 'jazz' && configLoader.JENKINS.DOCKERIZED == true) {
+    addVpcDetails(config)
+  }
 
   if (config['artifact']) {
     sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
@@ -1168,7 +1176,7 @@ def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId) {
 		} else {
 			error "Unable to find existing log groups"
 		}
-	} 
+	}
 	else {
 			error "Exception occured while serverless deployment to ${env} environment"
 	}
@@ -1194,4 +1202,3 @@ def removeLogGroup(groupName, credsId) {
 	sh "aws logs delete-log-group --log-group-name $groupName --profile ${credsId}"
 	echo "successfully removed log group $groupName"
 }
-

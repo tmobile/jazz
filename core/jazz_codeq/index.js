@@ -40,12 +40,13 @@ function handler(event, context, cb) {
         logger.debug(pathString);
         if (serviceContext && serviceContext.method && serviceContext.method === 'GET' && pathString === "codeq") {
           logger.debug(`code quality service called with pathstring - ${pathString}`);
+          let headers = exportable.changeToLowerCase(serviceContext.headers);
           let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
-          if (!serviceContext.headers[header_key]) {
+          if (!headers[header_key]) {
             logger.error('No service id provided in  headers');
             return cb(JSON.stringify(errorHandler.throwInputValidationError('No service id provided in  headers.')));
           }
-          serviceId = serviceContext.headers[header_key];
+          serviceId = headers[header_key];
           const result = getCodeqInputsUsingQuery(serviceContext, config);
 
           if (result.error) {
@@ -197,9 +198,18 @@ function getReportOnError(err, metrics, config, serviceContext) {
   }
 }
 
+function changeToLowerCase(data) {
+	let newArr = {};
+	for (let key in data) {
+		newArr[key.toLowerCase()] = data[key];
+	}
+	return newArr;
+}
+
 const exportable = {
   getReportOnError,
-  handler
+  handler,
+  changeToLowerCase
 };
 
 module.exports = exportable;

@@ -7,11 +7,11 @@ import com.slf.model.ErrorInfo;
 
 public class BaseException extends RuntimeException {
 
-	private ErrorInfo err = new ErrorInfo();
+	private final ErrorInfo errorInfo = new ErrorInfo();
 	
 	public BaseException(String errortype, String message) {
-		err.setErrorType(errortype);
-		err.setMessage(message);
+		errorInfo.setErrorType(errortype);
+		errorInfo.setMessage(message);
 	}
 	
 	@Override
@@ -20,10 +20,10 @@ public class BaseException extends RuntimeException {
 		
 		try {
 			ObjectMapper mapper = new ObjectMapper();
-			jsonInString = mapper.writeValueAsString(err);
+			jsonInString = mapper.writeValueAsString(errorInfo);
 
 		} catch (JsonProcessingException ex) {
-			throw new InternalServerErrorException("Parsor Error occured.");
+			throw new InternalServerErrorException("Parsor Error occured." + ex);
 		}
 		
 		return jsonInString; 
