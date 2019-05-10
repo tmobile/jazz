@@ -589,6 +589,7 @@ def echoServerlessFile() {
   echo "serverless file data $serverlessyml"
 }
 
+
 def LoadConfiguration() {
   def result = readFile('deployment-env.yml').trim()
   echo "result of yaml parsing....$result"
@@ -768,11 +769,12 @@ def writeServerlessFile(config, environment_logical_id, accountDetails){
   sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${config['providerRuntime']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${config['providerMemorySize']}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${config['providerTimeout']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
   sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
   sh "sed -i -- '/#Start:isScheduleEnabled/,/#End:isScheduleEnabled/d' ./serverless.yml"
 
+  if ((config['service'] in configLoader.JAZZ.VPC_SERVICES.APIS) && config['domain'] == 'jazz' && configLoader.JENKINS.DOCKERIZED == true) {
+  	addVpcDetails(config)
+  }
   if (config['artifact']) {
     sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
   }
@@ -873,9 +875,11 @@ def validateDeploymentConfigurations(def prop) {
 
 }
 
-def addVpcDetails() {
+def addVpcDetails(config) {
   echo "addVpcdetails to serverless.yml file"
   sh "sed -i -- 's/vpcDisabled/vpc/g' ./serverless.yml"
+  sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
+  sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
 }
 
 def loadServerlessConfig(config) {

@@ -860,7 +860,7 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
 			policyObjectUpdated.Id = policyObject.Id
 			def statements = []
 			for (items in policyObject.Statement) {
-				if ((items.Sid != "list-${assetInfo['asset_name']}")) {
+				if (items.Resource != "arn:aws:s3:::${assetInfo['asset_info']}/*") {
 					def copy = [:]
 					copy.putAll(items)
 					statements.add(copy)

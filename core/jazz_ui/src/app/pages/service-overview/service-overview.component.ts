@@ -374,6 +374,13 @@ export class ServiceOverviewComponent implements OnInit {
     this.cdnConfigSelected = this.cdnConfigInitial;
 
   }
+  outSidePopup(){
+    this.showGeneralField = false;
+    this.saveClicked = false;
+    this.advancedSaveClicked = false;
+    this.onCancelClick();
+
+  }
 
   onCompleteClick() {
     this.isPUTLoading = true;
@@ -464,11 +471,18 @@ export class ServiceOverviewComponent implements OnInit {
 
     }
     this.PutPayload = payload;
-    if (Object.keys(this.PutPayload).length > 0) this.isPayloadAvailable = true
+
+    if (Object.keys(this.PutPayload).length > 0) {
+      this.isPayloadAvailable = true
+    }
+    else {
+      this.isPayloadAvailable = false
+    }
+
   }
 
-  descriptionChange(){
-    this.update_payload.description = this.desc_temp;
+  descriptionChange(desc_temp){
+    this.update_payload.description = desc_temp;
     this.shouldSaveEnable();
   }
 
@@ -921,7 +935,6 @@ export class ServiceOverviewComponent implements OnInit {
     }
     this.http.get('/jazz/environments?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
       response => {
-
         this.isenvLoading = false;
         this.environ_arr = response.data.environment;
         if (this.environ_arr != undefined)
