@@ -157,5 +157,18 @@ def validatePlugins(deploymentDescriptor) {
   }
 }
 
+def getPluginsfromYaml(deploymentDescriptor){
+  def deploymentDescriptorDoc = readYaml(text: deploymentDescriptor)
+  def pluginsElem = deploymentDescriptorDoc['plugins']
+  if(pluginsElem) {
+    def outstandingPlugins = pluginsElem.clone()
+    return outstandingPlugins
+  } else {
+    return []
+  }
+
+  
+}
+
 
 return this
