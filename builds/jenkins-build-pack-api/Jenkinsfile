@@ -362,8 +362,6 @@ node() {
             def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
             send_status_email(config, 'COMPLETED', svc_status)
 
-            resetCredentials(credsId)
-
             if (domain && domain == "jazz") {
               serviceConfigdata.setLogStreamPermission(config)
             }
@@ -379,6 +377,9 @@ node() {
         events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
         error ex.getMessage()
+      } finally {
+        // reset Credentials
+        resetCredentials(credsId)
       }
       environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
       def serviceContext = [created_by : config['created_by'], deployed_by: gitCommitOwner]
@@ -422,9 +423,6 @@ def updateSwagger(){
 
                 sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --profile ${primaryCredsId} --region ${config.region} --recursive "
 				        echo "completed deployment........."                
-                
-                // reset Credentials
-                resetCredentials(primaryCredsId)
 
                 } catch(ex){
                 send_status_email(config, 'FAILED', '')
@@ -432,6 +430,9 @@ def updateSwagger(){
                 events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
                 events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
                 error ex.getMessage()
+                } finally {
+                  // reset Credentials
+                  resetCredentials(primaryCredsId)
                 }
             }
 }
@@ -1014,9 +1015,6 @@ def updatePolicy(env, destARN){
 
               def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${service_config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
               sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
-              
-              // reset Credentials
-              resetCredentials(primaryCredsId)
 
             } catch(ex){
               send_status_email(config, 'FAILED', '')
@@ -1024,6 +1022,9 @@ def updatePolicy(env, destARN){
               events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
               events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
               error ex.getMessage()
+            } finally {
+              // reset Credentials
+              resetCredentials(primaryCredsId)
             }
           }
 }

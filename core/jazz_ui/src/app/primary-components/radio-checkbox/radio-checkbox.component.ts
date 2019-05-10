@@ -7,6 +7,7 @@ import * as _ from 'lodash';
 })
 export class RadioCheckboxComponent implements OnInit {
   @Input() defaultIndex = 0;
+  @Output() onSelect: EventEmitter<boolean> = new EventEmitter<boolean>();
 
   private _options;
   @Input()
@@ -36,6 +37,7 @@ export class RadioCheckboxComponent implements OnInit {
 
   select(value) {
     this.selected = value;
+    this.onSelect.emit(value);
   }
 
 }

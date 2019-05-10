@@ -330,9 +330,6 @@ node() {
             addPermission(functionName, primaryAccountValue);
           } 
 
-          // reset Credentials
-          resetCredentials(credsId)
-
           if (domain && domain == "jazz") {
             serviceConfigdata.setLogStreamPermission(config)
             serviceConfigdata.setKinesisStream(config)
@@ -346,6 +343,9 @@ node() {
           events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
           events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
           error ex.getMessage()
+        } finally {
+          // reset Credentials
+          resetCredentials(credsId)
         }
         environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
         def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
@@ -836,9 +836,6 @@ def updatePolicy(env, destARN){
 
               def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${service_config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
               sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
-              
-              // reset Credentials
-              resetCredentials(primaryCredsId)
 
             } catch(ex){
               send_status_email(config, 'FAILED', '')
@@ -846,6 +843,9 @@ def updatePolicy(env, destARN){
               events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
               events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
               error ex.getMessage()
+            } finally {
+              // reset Credentials
+              resetCredentials(primaryCredsId)
             }
           }
 }
