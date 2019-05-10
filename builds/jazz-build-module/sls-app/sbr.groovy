@@ -200,10 +200,21 @@ class MapValidator implements TypeValidator {
   }
 }
 
+class JsonValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      if(!aValue instanceof Json)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
 class ArnIamValidator implements TypeValidator {
   public void isValid(def aValue) {
     try {
-      def pattern = "^arn:aws:iam::\d{12}:(?:\/[A-Za-z0-9]+)$"
+      def pattern = "^arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+"
       def match = aValue ==~ pattern
       if(!match)
       throw new IllegalArgumentException(aValue);
@@ -216,7 +227,7 @@ class ArnIamValidator implements TypeValidator {
 class ArnKmsValidator implements TypeValidator {
   public void isValid(def aValue) {
     try {
-      def pattern = "^arn:aws:kms::\d{12}:key(\/[A-Za-z0-9]+)$"
+      def pattern = "^arn:aws:kms::\\d{12}:key/?[a-zA-Z_0-9+=,.@\\-_/]+"
       def match = aValue ==~ pattern
       if(!match)
       throw new IllegalArgumentException(aValue);
@@ -229,7 +240,7 @@ class ArnKmsValidator implements TypeValidator {
 class AwsIdValidator implements TypeValidator {
   public void isValid(def aValue) {
     try {
-      def pattern = "^\d{12}$"
+      def pattern = "^\\d{12}$"
       def match = aValue ==~ pattern
       if(!match)
       throw new IllegalArgumentException(aValue);
@@ -291,15 +302,27 @@ class AwsVariableNameValidator implements TypeValidator {
   }
 }
 
+class GenericArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def elements = aValue.split(":")
+      if(elements.size() != 6)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
 /* Enum that must enlist all the types from serverless-build-rules.yml file. TODO: The lists and maps must be dealt with properly */
 enum SBR_Type {
 
    BOOL("bool", new BooleanValidator()),
    STR("str", new StringValidator()),
    ENUM("enum", new EnumValidator()),
-   JSON("json", null), // TODO Must provide a validator
+   JSON("json", new JsonValidator()), // TODO Must provide a validator
 
-   ARN("arn", null), // Generic ARN TODO Must provide a validator
+   ARN("arn", new GenericArnValidator()), // Generic ARN TODO Must provide a validator
    ARN_KMS("arn-kms", new ArnKmsValidator()),
    ARN_IAM("arn-iam", new ArnIamValidator()),
    AWS_ID("aws-id", new AwsIdValidator()),
