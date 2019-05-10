@@ -419,7 +419,7 @@ class SBR_Whitelist_Constraint implements SBR_Constraint {
       switch(anElementPointer) {
         case "resources": whilelistValidator.validatePlugins(val); break;
         case "provider": whilelistValidator.validateActionsInProvider(val); break;
-        case "pluginso": whilelistValidator.validatePlugins(val); break;
+        case "plugins": whilelistValidator.validatePlugins(val); break;
         default: throw new IllegalStateException("SBR_Whitelist_Constraint contains an unknown tag inside as follows: $val")
       }
   }
