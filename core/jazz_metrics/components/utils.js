@@ -86,7 +86,11 @@ function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset, provider) {
       'aws/apigateway': 'AWS/ApiGateway',
       'aws/lambda': 'AWS/Lambda',
       'aws/cloudfront': 'AWS/CloudFront',
-      'aws/s3': 'AWS/S3'
+      'aws/s3': 'AWS/S3',
+      'aws/dynamodb': 'AWS/DynamoDB',
+      'aws/dynamodb_stream': 'AWS/DynamoDB',
+      'aws/sqs': 'AWS/SQS',
+      'aws/kinesis_stream': 'AWS/Kinesis'
     };
 
     if (Object.keys(nameSpaceList).indexOf(awsAddedNameSpace) > -1) {
@@ -232,6 +236,23 @@ function updateAWSAsset(newAssetObj, asset) {
     case "cloudfront":
       newAssetObj = updateCloudfrontAsset(newAssetObj, relativeId);
       break;
+
+    case "dynamodb":
+      newAssetObj = updateDynamodbAsset(newAssetObj, relativeId);
+      break;
+
+    case "dynamodb_stream":
+      newAssetObj = updateDynamodbStreamAsset(newAssetObj, relativeId, arnString);
+      break;
+
+    case "sqs":
+      newAssetObj = updateSqsAsset(newAssetObj, relativeId);
+      break;
+
+    case "kinesis_stream":
+      newAssetObj = updateKinesisAsset(newAssetObj, relativeId);
+      break;
+
     default:
       newAssetObj = {
         "message": "Metric not supported for asset type " + assetType,
@@ -262,6 +283,36 @@ function updateLambdaAsset(newAssetObj, relativeId, arnString) {
   return newAssetObj;
 }
 
+function updateDynamodbAsset(newAssetObj, relativeId) {
+  let parts = relativeId.split("/");
+  newAssetObj.asset_name.TableName = parts[1];
+  newAssetObj.asset_name.Operation = "PutItem";
+  return newAssetObj;
+}
+
+function updateDynamodbStreamAsset(newAssetObj, relativeId, arnString) {
+  if (relativeId.indexOf("stream") !== 1) {
+    relativeId = arnString.substring(arnString.indexOf(relativeId), arnString.length);
+    let parts = relativeId.split("/");
+    newAssetObj.asset_name.TableName = parts[1];
+    newAssetObj.asset_name.Operation = "GetRecords";
+    newAssetObj.asset_name.StreamLabel = parts[3];
+  }
+  return newAssetObj;
+}
+
+function updateSqsAsset(newAssetObj, relativeId) {
+  let parts = relativeId.split("/");
+  newAssetObj.asset_name.QueueName = parts[0];
+  return newAssetObj;
+}
+
+function updateKinesisAsset(newAssetObj, relativeId) {
+  let parts = relativeId.split("/");
+  newAssetObj.asset_name.StreamName = parts[1];
+  return newAssetObj;
+}
+
 function updateApigatewayAsset(newAssetObj, relativeId, assetEnvironment) {
 
   var parts = relativeId.split("/");
@@ -287,6 +338,7 @@ function updateS3Asset(newAssetObj, relativeId) {
   var bucketValue = parts[0];
   newAssetObj.asset_name.BucketName = bucketValue;
   newAssetObj.asset_name.StorageType = "StandardStorage";
+  newAssetObj.asset_name.FilterId = "EntireBucket";
   return newAssetObj;
 }
 
