@@ -326,9 +326,9 @@ node() {
             def primaryAccountValue = primaryAccountData.ACCOUNTID;
             def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
             def functionName = "arn:aws:lambda:${service_config.region}:${service_config.accountId}:${lambdaFnNameValue}"
-            
+
             addPermission(functionName, primaryAccountValue);
-          } 
+          }
 
           // reset Credentials
           resetCredentials(credsId)
@@ -665,7 +665,7 @@ def validateDeploymentConfigurations(def prop) {
 	if (prop.containsKey("region")) {
 		if (prop['region'] == "") {
 			error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-		} 
+		}
 	} else {
 		error "Wrong configuration. Key 'region' is missing in the configuration"
 	}
@@ -825,7 +825,7 @@ def updatePolicy(env, destARN){
               // initialize aws credentials
               def randomStringPrimary = utilModule.generateRequestId();
               def primaryCredsId = "jazzprimary-${randomStringPrimary}";
-                            
+
               sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
               sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
               sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
@@ -836,7 +836,7 @@ def updatePolicy(env, destARN){
 
               def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${service_config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
               sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
-              
+
               // reset Credentials
               resetCredentials(primaryCredsId)
 
@@ -859,12 +859,6 @@ def writeServerlessFile(config, env, accountDetails) {
   } else {
       iamRoleArnValue = accountDetails.IAM.USERSERVICES_ROLEID;
   }
-def addVpcDetails(config) {
-	echo "addVpcdetails to serverless.yml file"
-	sh "sed -i -- 's/vpcDisabled/vpc/g' ./serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
-  sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
-}
 
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
@@ -927,6 +921,13 @@ def addVpcDetails(config) {
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${iamRoleArnValue}|g' serverless.yml"
   }
 
+}
+
+def addVpcDetails(config) {
+  echo "addVpcdetails to serverless.yml file"
+  sh "sed -i -- 's/vpcDisabled/vpc/g' ./serverless.yml"
+  sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${config['securityGroupIds']}/g' serverless.yml"
+  sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${config['subnetIds'] }/g' serverless.yml"
 }
 
 /**
