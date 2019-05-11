@@ -29,7 +29,7 @@ const utils = require('../components/utils.js')
 
 describe('jazz_metrics', function () {
 
-  var err, event, context, callback, callbackObj;
+  var err, event, context, callback, callbackObj, headers;
 
   beforeEach(function () {
     event = {
@@ -50,6 +50,7 @@ describe('jazz_metrics', function () {
       "principalId": "xswdxwscvff@test.com"
     };
     context = awsContext();
+    headers = event.headers;
     callback = (err, responseObj) => {
       if (err) {
         return err;
@@ -71,7 +72,7 @@ describe('jazz_metrics', function () {
     it("should indicate input error payload is missing", () => {
       event.body = {};
       let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
-      index.genericValidation(event, header_key)
+      index.genericValidation(event, header_key, headers)
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
@@ -85,7 +86,7 @@ describe('jazz_metrics', function () {
       for (var i in invalidArray) {
         event.method = invalidArray[i];
         let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
-        index.genericValidation(event, header_key)
+        index.genericValidation(event, header_key, headers)
           .catch(error => {
             expect(error).to.include({
               result: 'inputError',
@@ -98,7 +99,7 @@ describe('jazz_metrics', function () {
     it("should indicate unauthorized if principalId is null", () => {
       event.principalId = "";
       let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
-      index.genericValidation(event, header_key)
+      index.genericValidation(event, header_key, headers)
         .catch(error => {
           expect(error).to.include({
             result: 'unauthorized',
@@ -110,7 +111,7 @@ describe('jazz_metrics', function () {
     it("should indicate inputError if service id is not provided", () => {
       event.headers = {};
       let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
-      index.genericValidation(event, header_key)
+      index.genericValidation(event, header_key, event.headers)
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
@@ -177,7 +178,7 @@ describe('jazz_metrics', function () {
         .catch(error => {
           expect(error).to.include({
             result: 'inputError',
-            message: 'Interval can only be 1, 60, 3600 seconds'
+            message: 'Interval can only be 1, 60, 3600, 86400, 604800, 2592000 seconds'
           });
         });
     });
