@@ -79,7 +79,8 @@ export class Jazz {
     return element(by.xpath('//div[@class="page-title-wrap hide-for-mobile"]/h1[@class="page-hdr bold-title"]'));
   }
   getProdName() {
-    return element(by.xpath('//div[@class="stage-title stageDisp" and contains(text(),"prod")]'))
+    return element(by.xpath('//div[1]/span[@title="deployment completed"]'))
+      // '//div[@class="stage-title stageDisp" and contains(text(),"prod")]'))
   }
   getProdHeader() {
     return element(by.xpath('//div[@class="servie-details-container"]/h1[@class="page-hdr bold-title relative" and contains(text(),"prod")]'));
@@ -244,7 +245,7 @@ export class Jazz {
     return element(by.xpath('//button[@class="btnT-radial-in"]'));
   }
   testSuccessMessage() {
-    return element(by.xpath('//span[contains(text(),"Function got triggered successfully")]'));
+    return element(by.css('div.column-heading.success > span:nth-child(2)'));
   }
   websiteTemplete() {
     return element(by.xpath('//p[contains(text(),"Jazz Serverless Platform Website Template")]'));
@@ -340,6 +341,7 @@ export class Jazz {
     return element(by.xpath('//input[@value="Sign in"]'));
   }
 
+
   drpGitBranchType() {
     return element(by.xpath('//a[@class="btn dropdown-toggle has-tooltip"]//i[@class="fa fa-caret-down"]'));
   }
@@ -395,5 +397,17 @@ export class Jazz {
   getService(servicename) { 
     return element(by.xpath('(//table-template//div[@class="table-row pointer"]/div)[contains(text(),"'+servicename+'")]'));  
     }
+  SwaggerFailed(){
+    return element(by.xpath('//*[@class="errors__title"]'));  
+    }
+  logoutIcon() {
+    return element(by.xpath('//jazz-header/header/div[2]/div[2]/ul/li[2]/div/div/div[1]'));
+  }
+  logout() {
+    return element(by.xpath('//div[contains(text(),"Logout")]'));
+  }
+  testError() {
+    return element(by.xpath('//*[@id="main-message"]/h1/span'));  
+  }
 
 }
