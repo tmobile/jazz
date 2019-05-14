@@ -8,6 +8,8 @@ echo "whitelist-validator-module has been successfully loaded"
 @Field def underResources
 @Field def allowedResources
 @Field def allowedActions
+@Field def allowedEvents
+@Field def allowedPlugins
 
 def initialize() {
   whitelistContent = readFile("sls-app/whitelist.yml")
@@ -15,6 +17,8 @@ def initialize() {
   underResources = whiteList['resources'].collect{key, val -> val}
   allowedResources = underResources.collect{firstLevel -> firstLevel.collect{secondLevel -> secondLevel['Type']}}.flatten()
   allowedActions = whiteList['actions'].collect{key, val -> val.collect{action -> "$key:$action".toString()}}.flatten()
+  allowedEvents = whiteList['events'].keySet()
+  allowedPlugins = whiteList['plugins']
 }
 
 def validate(cftJson) {
@@ -155,6 +159,26 @@ def validatePlugins(deploymentDescriptor) {
   } else {
     return []
   }
+}
+
+def validateWhitelistResources(resourceName) {
+  def status = allowedResources.find{val -> val == resourceName}
+  return status ? true: false
+}
+
+def validateWhitelistEvents(eventName) {
+  def status = allowedEvents.find{val -> val == eventName}
+  return status ? true: false
+}
+
+def validateWhitelistPlugins(pluginName) {
+  def status = allowedPlugins.find{val -> val == pluginName}
+  return status ? true: false
+}
+
+def validateWhitelistActions(actionName) {
+  def status = allowedActions.find{val -> val == actionName}
+  return status ? true: false
 }
 
 

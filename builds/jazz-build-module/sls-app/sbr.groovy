@@ -1,16 +1,18 @@
 #!groovy?
 import groovy.transform.Field
+import org.json.*
+import org.apache.log4j.Logger;
 
-@Field def whilelistValidator
+@Field def whitelistValidator
 @Field def sbrContent
 
 echo "sbr.groovy is being loaded"
 
 
 
-def initialize(aWhilelistValidator) {
+def initialize(aWhitelistValidator) {
   sbrContent = readFile("./sls-app/serverless-build-rules.yml")
-  whilelistValidator = aWhilelistValidator
+  whitelistValidator = aWhitelistValidator
 }
 
 
@@ -72,8 +74,6 @@ class Transformer {
     context = aContext;
     path2RulesMap = aPath2RulesMap;
     templatedPath2RulesMap = path2RulesMap.inject([:]){acc, item -> if(item.key.contains("*")) acc.put(item.key, item.value); return acc} // Copying all path-2-rule entries where a path contains '*' thus it is a template
-
-    println "path2MandatoryRuleMap => $path2MandatoryRuleMap"
   }
 
   boolean pathMatcher(String templatedPath, String targetPath) {
@@ -131,12 +131,12 @@ class Transformer {
 
 /* The interface to generailize all type validations */
 interface TypeValidator {
-  void isValid(String aValue)
+  void isValid(def aValue)
 }
 
 /*The simples example of type validation all others must be repeated after this example */
 class IntValidator implements TypeValidator {
-  public void isValid(String aValue) {
+  public void isValid(def aValue) {
     try {
       Integer.parseInt(aValue)
     } catch(e) {
@@ -181,7 +181,7 @@ class EnumValidator implements TypeValidator {
 class ListValidator implements TypeValidator {
   public void isValid(def aValue) {
     try {
-      if(!aValue instanceof Array)
+      if(!aValue instanceof List)
       throw new IllegalArgumentException(aValue);
     } catch(e) {
       throw new IllegalArgumentException(aValue);
@@ -203,7 +203,7 @@ class MapValidator implements TypeValidator {
 class JsonValidator implements TypeValidator {
   public void isValid(def aValue) {
     try {
-      if(!aValue instanceof Json)
+      if(!aValue instanceof JSONObject)
       throw new IllegalArgumentException(aValue);
     } catch(e) {
       throw new IllegalArgumentException(aValue);
@@ -240,7 +240,7 @@ class ArnKmsValidator implements TypeValidator {
 class AwsIdValidator implements TypeValidator {
   public void isValid(def aValue) {
     try {
-      def pattern = "^\\d{12}$"
+      def pattern = "^\\d{12}"
       def match = aValue ==~ pattern
       if(!match)
       throw new IllegalArgumentException(aValue);
@@ -253,7 +253,7 @@ class AwsIdValidator implements TypeValidator {
 class FunctionValidator implements TypeValidator {
   public void isValid(def aValue) {
     try {
-      def pattern = "?!^[0-9]+$)([a-zA-Z0-9-_]+"
+      def pattern = "^[a-zA-Z_0-9+=,.@\\-_/]+"
       def match = aValue ==~ pattern
       if(!match)
       throw new IllegalArgumentException(aValue);
@@ -317,6 +317,7 @@ class GenericArnValidator implements TypeValidator {
 /* Enum that must enlist all the types from serverless-build-rules.yml file. TODO: The lists and maps must be dealt with properly */
 enum SBR_Type {
 
+   INT("int", new IntValidator()),
    BOOL("bool", new BooleanValidator()),
    STR("str", new StringValidator()),
    ENUM("enum", new EnumValidator()),
@@ -346,7 +347,7 @@ enum SBR_Type {
    AWS_POLICY("aws-policy", null),  // TODO Must provide a validator
    MAP("[:]", new MapValidator()),
    LIST("[]", new ListValidator()),
-   SEQUENCE("sequence", null),    // TODO Must provide a validator
+   SEQUENCE("sequence", null)    // TODO Must provide a validator
 
 
 
@@ -467,7 +468,7 @@ class ConfigOnlyResolver implements Resolver {
 
 class ConfigMerge implements Resolver {
   public Object resolve(Object userVal, Object configVal) {
-    println "ConfigMerge called: $userVal, $configVal"
+
     if(userVal instanceof List &&  configVal instanceof List) {
       def out = []
       if(userVal != null) out << userVal
@@ -530,17 +531,18 @@ interface SBR_Constraint {
 class SBR_Composite_Constraint implements SBR_Constraint {
   private List<SBR_Constraint> constraintList = new ArrayList<>();
 
-  static final SBR_Constraint parseTag(tag) {
+  static final SBR_Constraint parseTag(tag, aWhitelistValidator) {
     SBR_Constraint cumulativeConstr = new SBR_Composite_Constraint();
     tag.collect{key, value ->
       switch(key) {
         case "sbr-enum": cumulativeConstr.constraintList.add(new SBR_Enum_Constraint(value)); break;
         case "sbr-from": cumulativeConstr.constraintList.add(new SBR_From_Constraint(value)); break;
         case "sbr-to": cumulativeConstr.constraintList.add(new SBR_To_Constraint(value)); break;
-        case "sbr-whitelist": cumulativeConstr.constraintList.add(new SBR_Whitelist_Constraint([:], value)); break; // TODO real whitelist loaded needed here instead of an empty map
+        case "sbr-whitelist": cumulativeConstr.constraintList.add(new SBR_Whitelist_Constraint(aWhitelistValidator, value)); break; // TODO real whitelist loaded needed here instead of an empty map
         default: throw new IllegalStateException("sbr-constraint contains an unknown tag inside as follows: $key")
       }
     }
+
     return cumulativeConstr
   }
 
@@ -550,33 +552,36 @@ class SBR_Composite_Constraint implements SBR_Constraint {
 }
 
 class SBR_Enum_Constraint implements SBR_Constraint {
-  private def enumValue
+  private ArrayList<String> enumValue = new ArrayList<String>();
 
   public SBR_Enum_Constraint(inputEnum) {
-    enumValue = inputEnum
+    enumValue.addAll(inputEnum)
   }
 
-  public boolean compliant(val) {
-    return enumValue.contains(val)
+  public boolean compliant(aVal) {
+    def status = enumValue.find{val -> val == aVal}
+    return status ? true: false
   }
 }
 
 class SBR_Whitelist_Constraint implements SBR_Constraint {
   private def whitelist;
   private String elementPointer
+  private def whitelistValidator
 
-  public SBR_Whitelist_Constraint(aWhitelist, anElementPointer) {
-     whitelist = aWhitelist
+   public SBR_Whitelist_Constraint(aWhitelistValidator, anElementPointer) {
      elementPointer = anElementPointer
+     whitelistValidator = aWhitelistValidator
   }
 
   public boolean compliant(val) {
-      switch(anElementPointer) {
-        case "resources": whilelistValidator.validatePlugins(val); break;
-        case "provider": whilelistValidator.validateActionsInProvider(val); break;
-        case "plugins": whilelistValidator.validatePlugins(val); break;
-        default: throw new IllegalStateException("SBR_Whitelist_Constraint contains an unknown tag inside as follows: $val")
-      }
+    switch(elementPointer) {
+      case "resources": return whitelistValidator.validateWhitelistResources(val); break;
+      case "events": return whitelistValidator.validateWhitelistEvents(val); break;
+      case "plugins": return whitelistValidator.validateWhitelistPlugins(val); break;
+      case "actions": return whitelistValidator.validateWhitelistActions(val); break;
+      default: throw new IllegalStateException("SBR_Whitelist_Constraint contains an unknown $elementPointer inside as follows: $val")
+    }
   }
 }
 
@@ -700,9 +705,12 @@ class SBR_Rule extends SBR_PreRule {
    }
 
    public Object applyRule(userValue, path, config, context) {
+
      def valueRendered = (value != null) ? value.renderValue(config, context, asteriskValues) : userValue;
      def theValue = render.resolve(userValue, valueRendered)
+
      type.validate(theValue); // This will raise the exception if type is wrong but we shave to suppliment it with path so TODO is to catch the exceotion then add the path and the re-throw it
+
      if(constraint != null && !constraint.compliant(theValue)) {
        throw new IllegalStateException("Constraint violated at the path $path with the value: $theValue")
      }
@@ -746,8 +754,9 @@ def extractLeaf(Map<String, Object> aTag) {
   SBR_Constraint constraint = null;
   def constraintTag = aTag["sbr-constraint"]
   if(constraintTag != null) {
-    constraint = SBR_Composite_Constraint.parseTag(constraintTag)
+    constraint = SBR_Composite_Constraint.parseTag(constraintTag, whitelistValidator)
   }
+  echo "constraint : $constraint"
   SBR_Value value = null;
   def valueTag = aTag["sbr-value"]
   if(valueTag != null) {
@@ -780,6 +789,7 @@ def collector(ruleTree, currentPath) {
 */
 Map<String, SBR_Rule> convertRuleForestIntoLinearMap(/* Map<String, Object> */  ruleForest) {
  // Loading and parsing all the rules to be presented in easily discoverable and executable form as map like [path:rule] i.e. [/service/name:SBR_Rule@127eae33, /service/awsKmsKeyArn:SBR_Rule@7e71274c, /frameworkVersion:SBR_Rule@5413e09 ...
+
     Map<String, SBR_Rule> path2RuleMap =  collector(ruleForest, "") // collector is the function that will return the map of enclosed map due to it rucursive nature
                                                                      .flatten() // so flatten is needed to convert this tree like structure into the map like [[/service/name:SBR_Rule@127eae33], [/service/awsKmsKeyArn:SBR_Rule@7e71274c], ...]
                                                                      .inject([:]){acc, item -> item.each{entry -> acc.put(entry.key, entry.value)};  return acc} // Now the reduce step is needed to convert all the sub-maplets into one big convenient map
