@@ -22,6 +22,7 @@ import groovy.transform.Field
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
 @Field def whiteListModule
+@Field def slsBuildRules
 
 @Field def auth_token = ''
 @Field def config
@@ -137,14 +138,10 @@ node() {
   events.sendStartedEvent('CREATE_DEPLOYMENT', 'Serverless application deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
   dir(repo_name) {
-    try {
-      def dd = prepareServerlessYml(config, environment_logical_id) // Generating the deployment descriptor
-      echo "prepareServerlessYml = ${dd}"
-      writeYaml(file: './serverless.yml', data: dd)
-    } catch(FileAlreadyExistsException faee) {
-      echo 'The serverless.yml exists inside the source code thus disregarding the deployment descriptor content from the service catalog'
-      echoServerlessFile()
-    }
+  /* Writing the file from config */
+    def deploymentDescriptor = prepareServerlessYml(config, environment_logical_id) // Generating the deployment descriptor
+    echo "prepareServerlessYml = ${deploymentDescriptor}"
+    writeYaml(file: './serverless.yml', data: deploymentDescriptor)
 
     if (domain && domain == "jazz") {
       stage('Update Service Template') {
@@ -168,6 +165,19 @@ node() {
         error ex.getMessage()
       }
       events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
+    }
+    stage('Install Plugins') {
+      events.sendStartedEvent('INSTALL_PLUGINS', 'Plugin Installation started', context_map, environment_logical_id)
+      try {
+        installplugins()
+      } catch (ex) {
+        send_status_email(config, 'FAILED', "")
+        events.sendFailureEvent('INSTALL_PLUGINS', ex.getMessage(), context_map, environment_logical_id)
+        events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+        error ex.getMessage()
+      }
+      events.sendCompletedEvent('INSTALL_PLUGINS', 'Plugin Installation completed', context_map, environment_logical_id)
+
     }
 
     if (config['domain'] && config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
@@ -387,62 +397,30 @@ def echoServerlessFile() {
   echo "serverless file data $serverlessyml"
 }
 
-def fillFunctionElem(elem, varName, config, env) {
-  if(!elem['name']) elem['name'] = "${config['domain']}-${config['service']}-${varName}-${env}".toString()
-  if(!elem['handler']) elem['handler'] = "${varName}/index.handler"
-/*  if(!elem['role']) elem['role'] = config['iamRoleARN'] */
-/*  if(!elem['description']) elem['description'] = "${config['domain']}-${config['service']} Lambda Function".toString() */
-/*  if(!elem['runtime']) elem['runtime'] = config['providerRuntime'] */
-/*  if(!elem['memorySize']) elem['memorySize'] = config['providerMemorySize'] */
-/*  if(!elem['timeout']) elem['timeout'] = config['providerTimeout'] */
-}
-
 def prepareServerlessYml(aConfig, env) {
-  def dd = aConfig['deployment_descriptor']
-  echo "---------- dd -------------> $dd"
-
-  def doc = dd ? readYaml(text: dd) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
-  if(!doc['service']) doc['service'] = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}".toString() // toString() is needed here because otherwise the de-serialization back to Yaml will be invalid
-  def providerElem = doc['provider']
-  if(!providerElem) {
-    providerElem = [:]
-    doc['provider'] = providerElem
-  }
-  if(!providerElem['name']) providerElem['name'] = "aws"
-  if(!providerElem['deploymentBucket']) providerElem['deploymentBucket'] = '${opt:bucket}'
-  if(!providerElem['region']) providerElem['region'] = config['region']
-  if(!providerElem['stage']) providerElem['stage'] = env
-  if(!providerElem['owner']) providerElem['owner'] = config['created_by']
-  /* 3 lines below */
-  if(!providerElem['domain']) providerElem['domain'] = config['domain']
-  if(!providerElem['role']) providerElem['role'] = config['iamRoleARN']
-  if(!providerElem['runtime']) providerElem['runtime'] = config['providerRuntime']
-  if(!doc['package'] && config['artifact'] && providerElem['runtime'].toUpperCase().contains("JAVA")) {
-    doc['package'] = ['artifact' : "target/${config['artifact']}"]
+  def deploymentDescriptor = aConfig['deployment_descriptor']
+  try {
+    def appContent = readFile('application.yml').trim()
+    if(!appContent.isEmpty()) deploymentDescriptor = appContent
+  } catch(e) {
+    echo "Error occured while reading application.yml. The default value from config will be used. Exception is $e"
   }
 
-  def stackTagsElem = providerElem['stackTags']
-  if(!stackTagsElem) {
-    stackTagsElem = [:]
-    providerElem['stackTags'] = stackTagsElem
-  }
-  if(!stackTagsElem['application']) stackTagsElem['application'] = configLoader.INSTANCE_PREFIX
-  if(!stackTagsElem['service']) stackTagsElem['service']="${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}".toString()
-  if(!stackTagsElem['domain']) stackTagsElem['domain'] = config['domain']
-  if(!stackTagsElem['owner']) stackTagsElem['owner'] = config['created_by']
-  if(!stackTagsElem['environment']) stackTagsElem['environment'] = env
+  def doc = deploymentDescriptor  ? readYaml(text: deploymentDescriptor ) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
 
-  def functionsElem = doc['functions']
-  if(!functionsElem) {
-    functionsElem = ['handler':[:]]
-    doc['functions'] = functionsElem
-    fillFunctionElem(functionsElem['handler'], 0, config, env)
-  } else {
-    // Traversing through the list of functions and calling fillFunctionElem with index to help with the name creation
-    functionsElem.collect{key, val -> fillFunctionElem(val, key, config, env)}
-  }
+  context =["environment_logical_id": env,
+            "INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
+            "REGION": configLoader.AWS.REGION,
+            "cloud_provider": "aws"]
+
+  def rules = readYaml(text: slsBuildRules.sbrContent)
+  def resultingDoc = slsBuildRules.processServerless(doc,
+                                                     rules,
+                                                     aConfig,
+                                                     context)
+
 // Supplying the Outputs element to render all arns for all 'resources/Resources that got listed'
-  def smallResourcesElem = doc['resources']
+  def smallResourcesElem = resultingDoc['resources']
   if(smallResourcesElem) {
     def bigResourcesElem = smallResourcesElem['Resources']
     if(bigResourcesElem) {
@@ -452,8 +430,6 @@ def prepareServerlessYml(aConfig, env) {
         smallResourcesElem['Outputs'] = bigOutputsElem
       }
       def resourceKeys = bigResourcesElem.collect{key, val -> key}
-
-      echo "resourceKeys => $resourceKeys"
       /* Forming a record that extracts the arn from resulting item for each of resource key extracted from resources:
       UsersTableArn:\n
         Value:\n
@@ -465,7 +441,7 @@ def prepareServerlessYml(aConfig, env) {
     }
   }
 
-  return doc
+  return resultingDoc
 
 }
 
@@ -628,6 +604,22 @@ def validateDeploymentConfigurations(def prop) {
 
 }
 
+def installplugins(){
+  try {
+    def serverlessyml = readFile('./serverless.yml').trim()
+    def plugins = whiteListModule.getPluginsfromYaml(serverlessyml)
+    if( plugins ) {
+      for (plugin in plugins){
+        sh "npm install ${plugin}"
+      }
+    } else {
+      echo "No plugins listed..skipping"
+    }
+  } catch( ex ){
+    error "Plugin Installation Failed "+ ex.getMessage();
+  }
+}
+
 def echoServiceInfo(String env) {
   try {
     echo "Deployment info:"
@@ -663,8 +655,8 @@ def echoServiceInfo(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(config, region, roleId) {
-  def dd = config['deployment_descriptor']
-  def doc = dd ? readYaml(text: dd) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
+  def deploymentDescriptor = config['deployment_descriptor']
+  def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
   def functionsElem = doc['functions']
   functionsElem.each{funcName, funcConfig ->
     def name = funcConfig['name'] ? funcConfig['name'] : funcName
@@ -900,6 +892,11 @@ def loadBuildModules(buildModuleUrl) {
 
     environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
     echo "Environment deployment data loader module loaded successfully."
+
+    slsBuildRules = load "sls-app/sbr.groovy"
+    slsBuildRules.initialize()
+    echo "sls-app/sbr.groovy has been loaded"
+
   }
 }
 
