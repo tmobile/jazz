@@ -37,9 +37,7 @@ node() {
   def jazzBuildModuleURL = getBuildModuleUrl()
   loadBuildModules(jazzBuildModuleURL)
 
-  def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
-  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
-  g_base_url_for_swagger = "http://${configLoader.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.REGION}.amazonaws.com/"
+  g_base_url_for_swagger = "http://${configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/"
 
   echo "Build triggered via branch: " + params.scm_branch
 
@@ -104,6 +102,9 @@ node() {
   if(!config.provider) {
     config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
   }
+
+  def jazz_prod_api_id = utilModule.getAPIIdForCore(getApiHostName('PROD', config, accountDetails))
+  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
   dir(repo_name)
   {
@@ -253,7 +254,7 @@ node() {
           writeServerlessFile(config, environment_logical_id, accountDetails)
 
           def iamRoleValue;
-          if(config['domain'] == 'jazz'){
+          if(config['iamRoleARN'] != null && !config['iamRoleARN'].equals("")){
             iamRoleValue = config['iamRoleARN']
           } else {
             iamRoleValue = accountDetails.IAM.USERSERVICES_ROLEID;
@@ -272,7 +273,7 @@ node() {
           def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, s3BucketNameValue, credsId);
           if(deployOutput != 'success'){
-            handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId)
+            handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId, accountDetails, config)
           }
 
           def lambdaARN = getLambdaARN(stackName, credsId);
@@ -292,7 +293,7 @@ node() {
               case 'aws_apigateway':
                 events.sendStartedEvent('DEPLOY_TO_AWS_APIGATEWAY', 'Deployment started for API Gateway', context_map, environment_logical_id)
                 if (aws_api_id == null) {
-                  aws_api_id = utilModule.getAPIId(configLoader.AWS.API[env_key], config)
+                  aws_api_id = utilModule.getAPIId(getApiHostName(env_key, config, accountDetails), config)
                 }
 
                 apiHostName = "${aws_api_id}.execute-api.${config.region}.amazonaws.com"
@@ -302,7 +303,7 @@ node() {
 
                 def awsRegion;
                 if(config['domain'] == 'jazz'){
-                    awsRegion = configLoader.AWS.REGION;
+                    awsRegion = configLoader.AWS.DEFAULTS.REGION;
                 } else {
                     awsRegion = config.region
                 }
@@ -352,7 +353,7 @@ node() {
             }
 
             if (domain != "jazz") {
-              createSubscriptionFilters(stackName, configLoader.AWS.REGION, roleId, accountDetails, env_key, credsId);
+              createSubscriptionFilters(stackName, configLoader.AWS.DEFAULTS.REGION, roleId, accountDetails, env_key, credsId);
             }
 
             updateSwagger();
@@ -421,7 +422,7 @@ def updateSwagger(){
                 sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
                 sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
 
-                sh "aws s3 cp swagger/ s3://${configLoader.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --profile ${primaryCredsId} --region ${config.region} --recursive "
+                sh "aws s3 cp swagger/ s3://${configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --profile ${primaryCredsId} --region ${config.region} --recursive "
 				        echo "completed deployment........."                
 
                 } catch(ex){
@@ -469,6 +470,10 @@ def getLambdaARN(stackName, credsId) {
     ARN = ARN.substring(0, ARN.lastIndexOf(':'));
   }
   return [arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias]
+}
+
+def getApiHostName(stage, service_config, accountDetails) {
+	return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, "DNS_HOSTNAME", service_config)
 }
 
 /**
@@ -547,8 +552,8 @@ def createSwaggerResourceArn(apiId, deployStg, method, path, basePath, deploymen
   def _region;
   def _account;
   if(config['domain'] == 'jazz'){
-      _region = configLoader.AWS.REGION;
-      _account = configLoader.AWS.ACCOUNTID;
+      _region = configLoader.AWS.DEFAULTS.REGION;
+      _account = configLoader.AWS.DEFAULTS.ACCOUNTID;
   } else {
       _region = config.region
       _account = config.accountId
@@ -681,8 +686,8 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config, accountDetails)
   def regionValue;
   if(config['domain'] == 'jazz'){
         iamRoleArnData = config['iamRoleARN'];
-        platformRoleValue = configLoader.AWS.PLATFORMSERVICES_ROLEID;
-        regionValue = configLoader.AWS.REGION;
+        platformRoleValue = accountDetails.IAM.PLATFORMSERVICES_ROLEID;
+        regionValue = configLoader.AWS.DEFAULTS.REGION;
   } else {
         iamRoleArnData = accountDetails.IAM.USERSERVICES_ROLEID;
         platformRoleValue = accountDetails.IAM.PLATFORMSERVICES_ROLEID;
@@ -949,7 +954,7 @@ def updateApiDocUrl(String env) {
 **/
 def createSubscriptionFilters(stackName, region, roleId, accountDetails, env_key, credsId) {
   def lambda = "/aws/lambda/${stackName}"
-  def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
+  def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
   try {
     sh "aws logs create-log-group --log-group-name ${lambda} --region ${config.region}"
@@ -982,7 +987,7 @@ def createSubscriptionFilters(stackName, region, roleId, accountDetails, env_key
                 updatePolicy(env_key, destARN);
                 sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${config.region} --profile ${credsId}"
             } else {
-                sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${configLoader.AWS.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
+                sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
             }
         }
     }
@@ -1259,18 +1264,18 @@ def removeLogGroup(groupName, credsId) {
 	echo "successfully removed log group $groupName"
 }
 
-def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId) {
+def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId, accountDetails, config) {
   def rollbackErrorMessage = "ROLLBACK_COMPLETE state and can not be updated"
   def logGroupErrorMessage = "CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"
 	if(deployOutput.contains(rollbackErrorMessage)){
-		deleteAndRedeployService(env, envBucketKey)
+		deleteAndRedeployService(env, envBucketKey, accountDetails, config)
 	}
 	else if (deployOutput.contains(logGroupErrorMessage))
 	{
 		def lambda = "/aws/lambda/${envBucketKey}-${env}"
 		if (isExistingLogGroup(lambda, credsId)){
 			removeLogGroup(lambda, credsId)
-			deleteAndRedeployService(env, envBucketKey);
+			deleteAndRedeployService(env, envBucketKey, accountDetails, config);
 		} else {
 			error "Unable to find existing log groups"
 		}
@@ -1283,9 +1288,15 @@ def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId) {
 /**
 Redeploying Service
 */
-def deleteAndRedeployService(environment_logical_id, envBucketKey){
+def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, config){
   echoServerlessFile()
-  sh "serverless remove --stage $environment_logical_id -v --bucket ${configLoader.AWS.S3[envBucketKey]}"
+  def s3bucketName
+  for (item in accountDetails.REGIONS) {
+      if(item.REGION == config.region){
+        s3bucketName = item.S3[envBucketKey]
+      }
+  }
+  sh "serverless remove --stage $environment_logical_id -v --bucket ${s3bucketName}"
   def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
   if (redeployOutput != 'success') {
     echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"

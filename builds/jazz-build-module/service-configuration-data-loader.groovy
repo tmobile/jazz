@@ -196,8 +196,8 @@ def loadServiceConfigurationData() {
     }
 
     if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer") || (service_name.trim() == "jazz_cognito-admin-authorizer") || (service_name.trim() == "jazz_token-authorizer")) {
-      updateConfigValue("{conf-user-pool-id}", config_loader.AWS.COGNITO.USER_POOL_ID)
-      updateConfigValue("{conf-client-id}", config_loader.AWS.COGNITO.CLIENT_ID)
+      updateConfigValue("{conf-user-pool-id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.USER_POOL_ID)
+      updateConfigValue("{conf-client-id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.CLIENT_ID)
       updateConfigValue("{conf-region}", region)
       updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
     }
@@ -234,7 +234,7 @@ def loadServiceConfigurationData() {
     }
 
     if ((service_name.trim() == "jazz_logs") || (service_name.trim() == "jazz_cloud-logs-streamer") || (service_name.trim() == "jazz_es-kinesis-log-streamer")) {
-      updateConfigValue("{inst_elastic_search_hostname}", config_loader.AWS.ES_HOSTNAME)
+      updateConfigValue("{inst_elastic_search_hostname}", config_loader.JAZZ.ES_HOSTNAME)
 
       if (service_name.trim() == "jazz_logs") {
         updateConfigValue("{env-prefix}", config_loader.INSTANCE_PREFIX)
@@ -258,8 +258,8 @@ def loadServiceConfigurationData() {
     }
 
     if (service_name.trim() == "jazz_usermanagement") {
-      updateConfigValue("{user_pool_id}", config_loader.AWS.COGNITO.USER_POOL_ID)
-      updateConfigValue("{user_client_id}", config_loader.AWS.COGNITO.CLIENT_ID)
+      updateConfigValue("{user_pool_id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.USER_POOL_ID)
+      updateConfigValue("{user_client_id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.CLIENT_ID)
       updateConfigValue("{region}", region)
     }
 
@@ -285,9 +285,7 @@ def loadServiceConfigurationData() {
     if (service_name.trim() == "jazz_admin") {
       updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
       updateConfigValue("{conf-region}", region)
-      sh "sed -i -- 's/{config_table}/${config_loader.INSTANCE_PREFIX}_JazzConfig/g' ./config/dev-config.json"
-      sh "sed -i -- 's/{config_table}/${config_loader.INSTANCE_PREFIX}_JazzConfig/g' ./config/stg-config.json"
-      sh "sed -i -- 's/{config_table}/${config_loader.INSTANCE_PREFIX}_JazzConfig/g' ./config/prod-config.json"
+      updateConfigValue("{config_table}", config_loader.INSTANCE_PREFIX + '_JazzConfig')
     }
 
     if (service_name.trim() == "jazz_email") {
@@ -390,7 +388,7 @@ def setKinesisStream(config){
         def kinesisArn = "arn:aws:kinesis:$region:$accountId:stream/${config_loader.INSTANCE_PREFIX}-events-hub-${current_environment}"
         setEventSourceMapping(kinesisArn, config)
     } else if ((config['service'].trim() == "es-kinesis-log-streamer") || (config['service'].trim() == "splunk-kinesis-log-streamer")) {
-      def kinesisArn = config_loader.AWS.KINESIS_LOGS_STREAM.PROD
+      def kinesisArn = config_loader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
       setEventSourceMapping(kinesisArn, config)
     }
 }

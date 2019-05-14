@@ -85,7 +85,7 @@ var handler = (event, context, cb) => {
 
     if (Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts) {
       for (let eachDeploymentAccount of service_creation_data.deployment_accounts) {
-        if (eachDeploymentAccount.primary) {
+        if ((typeof eachDeploymentAccount.primary == "boolean") && eachDeploymentAccount.primary) {
           primaryAccountCount++
           let deploymentAccount = {
             'accountId': eachDeploymentAccount.accountId || config.PRIMARY_DEPLOYMENT_ACCOUNT.accountId,
