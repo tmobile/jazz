@@ -79,7 +79,7 @@ node {
           processS3Buckets(s3Buckets)
           deletePrimaryAccountPolicy(accountID, finalAccounts);
           deleteUserServices(regionAws);
-          deleteStackCloudFrontDists(regionAws)
+          deleteStackCloudFrontDists(cloudFront)
         }
       }
       if ( !isPrimaryAccount ) {
@@ -411,14 +411,15 @@ def deleteStack(stackName, regionAws) {
 /**
 * Process CloudFront Deletion
 **/
-def deleteStackCloudFrontDists(regionAws) {
+def deleteStackCloudFrontDists(cloudFront) {
   try {
     def output = sh(script:"aws cloudfront list-distributions --region ${regionAws}", returnStdout: true)
     def stacks = parseJson(output)
     if(stacks.size() > 0 ){
       for(distribution in stacks['DistributionList']['Items']){
         def id = distribution['Origins']['Items'][0]['Id']
-        if(id.startsWith(instance_prefix)){
+        def originAccess_identity = distribution['Origins']['Items'][0]['S3OriginConfig']['OriginAccessIdentity']
+        if(cloudFront.CLOUDFRONT_ORIGIN_ID == originAccess_identity  && id.startsWith(instance_prefix)){
             echo "Processing Deletion of CloudFront Distribution Id ${id}"
             checkAndDeleteCloudFront(distribution['Id'])
         }
