@@ -595,7 +595,6 @@ class SBR_To_Constraint implements SBR_Constraint {
   public boolean compliant(val) {
     return val <= toValue;
   }
-
 }
 
 class SBR_From_Constraint implements SBR_Constraint {
