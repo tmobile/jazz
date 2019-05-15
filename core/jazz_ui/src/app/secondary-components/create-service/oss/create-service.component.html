@@ -72,7 +72,7 @@
             </div>
             <radio-checkbox
               [options]="deploymentTargets[typeOfService.toUpperCase()].options"
-            [(selected)]="selectedDeploymentTarget"></radio-checkbox>
+            [(selected)]="selectedDeploymentTarget" (onSelect)="getSelectedData($event)"></radio-checkbox>
           </div>
         </section>
 
@@ -233,8 +233,8 @@
                                 Account
                               </div>
                               <div class="accReg-dropdown">
-                                <dropdown class='dropdown'  [dropdwnContent]="accountList" title="accountSelected" [selected]="accountSelected" (onSelected)="onaccountSelected($event)"></dropdown>
-
+                                <dropdown *ngIf="deploymentTargetSelected !== 'gcp_apigee'" class='dropdown'  [dropdwnContent]="accountList" title="accountDetails" [selected]="accountDetails" (onSelected)="onaccountSelected($event)"></dropdown>
+                                <div *ngIf="deploymentTargetSelected === 'gcp_apigee'" class="defaultDropdown">302890901340 (tmodevops)</div>
                               </div>
                             </div>
                             <div class="">
@@ -242,8 +242,8 @@
                                 Region
                               </div>
                               <div class="accReg-dropdown">
-                                <dropdown class='dropdown'  [dropdwnContent]="regionList" title="regionSelected" [selected]="regionSelected" (onSelected)="onregionSelected($event)"></dropdown>
-
+                                <dropdown *ngIf="deploymentTargetSelected !== 'gcp_apigee'" class='dropdown'  [dropdwnContent]="regionList" title="regionSelected" [selected]="regionSelected" (onSelected)="onregionSelected($event)"></dropdown>
+                                <div *ngIf="deploymentTargetSelected === 'gcp_apigee'" class="defaultDropdown">us-west-2</div>
                               </div>
                             </div>
 

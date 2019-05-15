@@ -58,11 +58,11 @@ def generateBucketNameForService(domain, service) {
  */
 def getBucket(stage) {
 	if (stage == 'dev') {
-		return config_loader.JAZZ.S3.WEBSITE_DEV_BUCKET
+		return config_loader.JAZZ.PLATFORM.AWS.S3.WEBSITE_DEV_BUCKET
 	} else if (stage == 'stg') {
-		return config_loader.JAZZ.S3.WEBSITE_STG_BUCKET
+		return config_loader.JAZZ.PLATFORM.AWS.S3.WEBSITE_STG_BUCKET
 	} else if (stage == 'prod') {
-		return config_loader.JAZZ.S3.WEBSITE_PROD_BUCKET
+		return config_loader.JAZZ.PLATFORM.AWS.S3.WEBSITE_PROD_BUCKET
 	}
 }
 

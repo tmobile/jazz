@@ -29,7 +29,7 @@ def loadServiceMetadata(service_id){
 
 		def table_name = "${configLoader.INSTANCE_PREFIX}_services_prod"
 		def service_Object = sh (
-				script: "aws --region ${configLoader.AWS.REGION} dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
+				script: "aws --region ${configLoader.AWS.DEFAULTS.REGION} dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
 				returnStdout: true
 			).trim()
 

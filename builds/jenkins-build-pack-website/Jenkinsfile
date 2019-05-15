@@ -17,6 +17,7 @@ import groovy.transform.Field
 @Field def scmModule
 @Field def events
 @Field def serviceMetadataLoader
+@Field def awsAPIGatewayModule
 @Field def utilModule
 @Field def environmentDeploymentMetadata
 
@@ -35,9 +36,6 @@ node()  {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
 
-	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
-	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
-
 	echo "Build Pack website params: " + params
 
 	def branch = params.scm_branch
@@ -48,12 +46,11 @@ node()  {
 	def gitCommitOwner
 	def gitCommitHash
 	def accountDetails
+	def accountDetailsPrimary
 
 	if (domain && domain != "") {
 		repo_name = params.domain + "_" + params.service_name
 	}
-
-	auth_token = setCredentials()
 
 	def current_environment
 	stage('Checkout code base') {
@@ -90,10 +87,17 @@ node()  {
    		service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
  	}
 
+	accountDetails = utilModule.getAccountInfo(service_config);
+	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
+
+	def jazz_prod_api_id = getApiIDName('PROD', service_config, accountDetailsPrimary)
+    g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
+
+		auth_token = setCredentials()
+
 	environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
 	def environment_logical_id
-	accountDetails = utilModule.getAccountInfo(service_config);
 	if (params.scm_branch == 'master') {
 		environment_logical_id = 'prod'
 		current_environment = 'PROD'
@@ -189,7 +193,7 @@ node()  {
 				events.sendCompletedEvent('BUILD', 'build completed', context_map, environment_logical_id)
 			}		
 		}
-
+	
 		stage("Deployment to ${current_environment} Env"){
 			def randomString = utilModule.generateRequestId();
 			def credsId = "jazz-${randomString}";
@@ -279,11 +283,12 @@ node()  {
 					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment, null), environment)
 					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
 					error "Deployment Failed. "+ ex.getMessage()
+				} finally {
+					// reset Credentials
+					resetCredentials(credsId)
 				}
 
 			}
-			// reset Credentials
-			resetCredentials(credsId)
 		}
 	}
 }
@@ -296,6 +301,10 @@ def generateAssetUrl(){
 		url = "http://${s3Bucket}.s3-website-${service_config.region}.amazonaws.com/${service_config['domain']}-${service_config['service']}/${environment}/index.html"
 	}
 	return url
+}
+
+def getApiIDName(stage, service_config, accountDetails) {
+	return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, service_config)
 }
 
 def generateAssetInfo(){
@@ -858,7 +867,7 @@ def send_status_email (build_status, email_content) {
    	if (email_content != '') {
 		body_text = body_text + '\n\n' + email_content
 	}
-	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
+	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>'
 	body = JsonOutput.toJson([
 		from : fromStr,
 		to : service_config['created_by'],
@@ -902,6 +911,9 @@ def loadBuildModules(buildModuleUrl){
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
 		echo "config loader loaded successfully."
+
+		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
+    	awsAPIGatewayModule.initialize()
 
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)

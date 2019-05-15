@@ -75,4 +75,34 @@ def injectLambdaIntegration(method, filePath) {
   }
 }
 
+def getApigatewayInfo(stage, domain, service, accountDetails, config) {
+	def gatewayValue
+	for (item in accountDetails.REGIONS) {
+		if(item.REGION == config.region){
+			gatewayValue = item.API_GATEWAY
+		}
+	}
+	if(stage && (stage.endsWith('DEV')) || (stage.endsWith('dev'))) {
+		return getAPIIdNameMapping(gatewayValue.DEV, domain, service)
+	} else if (stage && (stage == 'STG') || (stage == 'stg')) {
+		return getAPIIdNameMapping(gatewayValue.STG, domain, service)
+	} else if (stage && (stage == 'PROD') || (stage == 'prod')) {
+		return getAPIIdNameMapping(gatewayValue.PROD, domain, service)
+	}
+}
+
+def getAPIIdNameMapping(apiIdMapping, namespace, service) {
+	if (!apiIdMapping) {
+		error "No mapping document provided to lookup API !"
+	}
+
+	if (apiIdMapping["${namespace}_${service}"]) {
+		return apiIdMapping["${namespace}_${service}"];
+	} else if (apiIdMapping["${namespace}_*"]) {
+		return apiIdMapping["${namespace}_*"];
+	} else {
+		apiIdMapping["*"];
+	}
+}
+
 return this;

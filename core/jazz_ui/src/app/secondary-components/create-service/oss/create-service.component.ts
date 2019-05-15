@@ -98,10 +98,12 @@ export class CreateServiceComponent implements OnInit {
   accountList = [];
   regionList = [];
   accountSelected;
+  accountDetails;
   regionSelected;
   accountMap: any;
   webObject : any;
   webKeys : any;
+  deploymentTargetSelected: any;
 
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
@@ -134,9 +136,10 @@ export class CreateServiceComponent implements OnInit {
     this.accountList = [];
     this.regionList = [];
     this.accountMap.map((item)=>{
-      this.accountList.push(item.account)
+      this.accountList.push(item.account + ' (' + item.accountName + ')' )
       if(item.primary){
         this.accountSelected = item.account
+        this.accountDetails = item.account + ' (' + item.accountName + ')' 
       }
     })
     this.regionList = this.accountMap[0].regions;
@@ -170,6 +173,14 @@ export class CreateServiceComponent implements OnInit {
     return this.eventExpression.type === 's3';
   }
 
+  getSelectedData(data){
+    this.deploymentTargetSelected = data;
+    if(this.deploymentTargetSelected === 'gcp_apigee'){
+      this.accountSelected = this.buildEnvironment.defaults.account_id,
+      this.regionSelected = this.buildEnvironment.defaults.region
+    }
+  }
+
  // function for opening and closing create service popup
   closeCreateService(serviceRequest){
     if(serviceRequest){
@@ -188,8 +199,9 @@ export class CreateServiceComponent implements OnInit {
 
   onaccountSelected(event){
     this.accountMap.map((item,index)=>{
-      if(item.account === event){
+      if((item.account + ' (' + item.accountName + ')') === event){
         this.accountSelected = item.account
+        this.accountDetails = item.account + ' (' + item.accountName + ')' 
         this.regionList = item.regions;
         this.regionSelected = this.regionList[0];
       }
