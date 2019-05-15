@@ -75,7 +75,7 @@ def injectLambdaIntegration(method, filePath) {
   }
 }
 
-def getApigatewayInfo(stage, domain, service, accountDetails, key, config) {
+def getApigatewayInfo(stage, domain, service, accountDetails, config) {
 	def gatewayValue
 	for (item in accountDetails.REGIONS) {
 		if(item.REGION == config.region){
@@ -83,25 +83,25 @@ def getApigatewayInfo(stage, domain, service, accountDetails, key, config) {
 		}
 	}
 	if(stage && (stage.endsWith('DEV')) || (stage.endsWith('dev'))) {
-		return getAPIIdNameMapping(gatewayValue.DEV, domain, service, key)
+		return getAPIIdNameMapping(gatewayValue.DEV, domain, service)
 	} else if (stage && (stage == 'STG') || (stage == 'stg')) {
-		return getAPIIdNameMapping(gatewayValue.STG, domain, service, key)
+		return getAPIIdNameMapping(gatewayValue.STG, domain, service)
 	} else if (stage && (stage == 'PROD') || (stage == 'prod')) {
-		return getAPIIdNameMapping(gatewayValue.PROD, domain, service, key)
+		return getAPIIdNameMapping(gatewayValue.PROD, domain, service)
 	}
 }
 
-def getAPIIdNameMapping(apiIdMapping, namespace, service, key) {
+def getAPIIdNameMapping(apiIdMapping, namespace, service) {
 	if (!apiIdMapping) {
-		error "No mapping document provided to lookup API ${key} !"
+		error "No mapping document provided to lookup API !"
 	}
 
 	if (apiIdMapping["${namespace}_${service}"]) {
-		return apiIdMapping["${namespace}_${service}"][key];
+		return apiIdMapping["${namespace}_${service}"];
 	} else if (apiIdMapping["${namespace}_*"]) {
-		return apiIdMapping["${namespace}_*"][key];
+		return apiIdMapping["${namespace}_*"];
 	} else {
-		apiIdMapping["*"][key];
+		apiIdMapping["*"];
 	}
 }
 

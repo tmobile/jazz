@@ -493,7 +493,7 @@ def servelessDeploy(env, envBucketKey, credsId, env_key, accountDetails){
 }
 
 def getApiHostName(stage, service_config, accountDetails) {
-	return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, "DNS_HOSTNAME", service_config)
+	return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, service_config)
 }
 
 def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isSQSEventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
