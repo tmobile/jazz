@@ -654,11 +654,6 @@ onFilterCancel(event) {
     this.updateServices(this.updateList);
   }
   refreshData(event){
-<<<<<<< HEAD
-    this.loadingState = 'default';
-    this.serviceCall();
-  }
-=======
     this.loadingState = 'default';
     this.updateList = this.cache.get("updateServiceList");
     if (this.updateList) {
@@ -667,7 +662,6 @@ onFilterCancel(event) {
       this.serviceCall();
     }
 	}
->>>>>>> develop
   updateServices(isTrue){
 
     if(isTrue){
