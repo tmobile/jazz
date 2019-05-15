@@ -92,7 +92,7 @@ node()  {
 	accountDetails = utilModule.getAccountInfo(service_config);
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
-	def jazz_prod_api_id = getApiIDName('PROD', config, accountDetailsPrimary)
+	def jazz_prod_api_id = getApiIDName('PROD', service_config, accountDetailsPrimary)
     g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
 	environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
