@@ -49,6 +49,7 @@ node() {
   def context_map
   def environment_logical_id
   def accountDetails
+  def accountDetailsPrimary
 
   if (domain && domain != "") {
     repo_name = params.domain + "_" + params.service_name
@@ -90,6 +91,7 @@ node() {
   }
 
   accountDetails = utilModule.getAccountInfo(config);
+  accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
   if (!config) {
     error "Failed to fetch service metadata from catalog"
@@ -107,7 +109,7 @@ node() {
     config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
   }
 
-  def jazz_prod_api_id = utilModule.getAPIIdForCore(getApiHostName('PROD', config, accountDetails))
+  def jazz_prod_api_id = getApiIDName('PROD', config, accountDetailsPrimary)
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
   dir(repo_name) {
@@ -492,7 +494,7 @@ def servelessDeploy(env, envBucketKey, credsId, env_key, accountDetails){
   return outputLog
 }
 
-def getApiHostName(stage, service_config, accountDetails) {
+def getApiIDName(stage, service_config, accountDetails) {
 	return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, service_config)
 }
 

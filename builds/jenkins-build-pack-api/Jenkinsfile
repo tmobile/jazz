@@ -48,6 +48,7 @@ node() {
   def gitCommitHash
   def context_map
   def accountDetails
+  def accountDetailsPrimary
 
   if (domain && domain != "") {
     repo_name = params.domain + "_" + params.service_name
@@ -86,6 +87,7 @@ node() {
   }
 
   accountDetails = utilModule.getAccountInfo(config);
+  accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
   if (!config) {
     error "Failed to fetch service metadata from catalog"
@@ -103,7 +105,7 @@ node() {
     config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
   }
 
-  def jazz_prod_api_id = utilModule.getAPIIdForCore(getApiHostName('PROD', config, accountDetails))
+  def jazz_prod_api_id = getApiHostName('PROD', config, accountDetailsPrimary)
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
   dir(repo_name)
