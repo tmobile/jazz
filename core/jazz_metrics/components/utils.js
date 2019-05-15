@@ -26,12 +26,13 @@ const metricConfig = require("./metrics.json");
 const global_config = require("../config/global-config.json");
 const logger = require("../components/logger.js")();
 const AWS = require("aws-sdk");
+const Uuid = require("uuid/v4");
 
 function massageData(assetResults, eventBody, account) {
   var output_obj = {};
   output_obj = {
-    "accountId" : account.accountId,
-    "region" : account.region,
+    "accountId": account.accountId,
+    "region": account.region,
     "domain": eventBody.domain,
     "service": eventBody.service,
     "environment": eventBody.environment,
@@ -56,7 +57,7 @@ function assetData(results, assetItem) {
   };
 
   var metricsArr = results.map(key => {
-      return {
+    return {
       "metric_name": key.Label,
       "datapoints": key.Datapoints
     }
@@ -72,7 +73,7 @@ function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset, provider) {
   var nameSpace = nameSpaceFrmAsset.toLowerCase();
   var namespacesList = metricConfig.namespaces;
 
-  if(!namespacesList[provider]) {
+  if (!namespacesList[provider]) {
     output_obj["isError"] = true;
     output_obj["message"] = `Provider not defined for namespace: ${nameSpace}`
     output_obj["nameSpace"] = `Invalid`;
@@ -146,7 +147,7 @@ function getAssetsObj(assetsArray, userStatistics) {
   assetsArray.forEach((asset) => {
 
     var assetType = asset.asset_type;
-    if(!namespaces[asset.provider]) {
+    if (!namespaces[asset.provider]) {
       newAssetArr.push({
         "message": `Provider not defined for the asset: ${asset.asset_type}`,
         "isError": true
@@ -239,8 +240,8 @@ function updateAWSAsset(newAssetObj, asset) {
         "message": "Metric not supported for asset type " + assetType,
         "isError": true
       }
-    }
-    return newAssetObj;
+  }
+  return newAssetObj;
 }
 
 function updateApigeeAsset(newAssetObj, asset) {
@@ -249,7 +250,7 @@ function updateApigeeAsset(newAssetObj, asset) {
   newAssetObj.asset_name.Method = providerArr[2];
   let resourceValue = "/" + providerArr[3];
   if (providerArr[4]) {
-      resourceValue += "/" + providerArr[4];
+    resourceValue += "/" + providerArr[4];
   }
   newAssetObj.asset_name.Resource = resourceValue;
   newAssetObj.asset_name.apiproxy = `${asset.domain}-${asset.service}-${asset.environment}`;
@@ -313,36 +314,36 @@ function getCloudfrontCloudWatch(tempcreds) {
   var cloudwatch = new AWS.CloudWatch(tempcreds);
   return cloudwatch;
 }
-function checkIsPrimary(accountId, jsonConfig){
+function checkIsPrimary(accountId, jsonConfig) {
   var data = jsonConfig.config.AWS.ACCOUNTS;
-  var index = data.findIndex(x => x.ACCOUNTID==accountId);
-  if(data[index].PRIMARY){
+  var index = data.findIndex(x => x.ACCOUNTID == accountId);
+  if (data[index].PRIMARY) {
     return data[index].PRIMARY;
-  }else{
+  } else {
     return false;
   }
 }
 
-function getRolePlatformService(accountId, jsonConfig){
+function getRolePlatformService(accountId, jsonConfig) {
   var data = jsonConfig.config.AWS.ACCOUNTS;
-  var index = data.findIndex(x => x.ACCOUNTID==accountId);
+  var index = data.findIndex(x => x.ACCOUNTID == accountId);
   return data[index].IAM.PLATFORMSERVICES_ROLEID;
 }
 
 function AssumeRole(accountID, configJson) {
-  var isPrimary = checkIsPrimary(accountID , configJson);
+  var isPrimary = checkIsPrimary(accountID, configJson);
   var roleArn = getRolePlatformService(accountID, configJson);
   var accessparams;
   return new Promise((resolve, reject) => {
-    if (isPrimary){
+    if (isPrimary) {
       accessparams = {};
       resolve(accessparams)
     } else {
       const sts = new AWS.STS({ region: process.env.REGION });
+      const roleSessionName = Uuid();
       const params = {
         RoleArn: roleArn,
-        RoleSessionName: 'CrossAccountCredentials',
-        ExternalId: '1234567-1234-1234-1234-123456789012',
+        RoleSessionName: roleSessionName,
         DurationSeconds: 3600,
       };
       sts.assumeRole(params, (err, data) => {

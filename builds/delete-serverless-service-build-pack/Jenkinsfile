@@ -101,7 +101,7 @@ node {
 		accountInfo = utilModule.getAccountInfo(service_config)
 
     if(!service_config.region) {
-      service_config.region = configLoader.AWS.DEFAULTS.REGION
+			service_config.region = configLoader.AWS.DEFAULTS.REGION
     }
 
     if(!service_config.accountId) {
@@ -112,9 +112,7 @@ node {
       service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
     }
 
-		if(!service_config.credentialId){
-			service_config.credentialId = accountInfo.CREDENTIAL_ID
-		}
+		service_config.credentialId = accountInfo.CREDENTIAL_ID
 
     lambdaEvents.setServiceConfig(service_config)
 		environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)

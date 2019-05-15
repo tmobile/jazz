@@ -27,13 +27,13 @@ const AWS = require('aws-sdk');
 
 // initialize document CLient for dynamodb
 const initDocClient = () => {
-  AWS.config.update({ region: global.config.region });
+  AWS.config.update({ region: global.config.REGION });
   let docClient = new AWS.DynamoDB.DocumentClient();
   return docClient;
 };
 
 const initDynamodb = () => {
-  AWS.config.update({ region: global.config.region });
+  AWS.config.update({ region: global.config.REGION });
   let dynamodb = new AWS.DynamoDB();
 
   return dynamodb;
