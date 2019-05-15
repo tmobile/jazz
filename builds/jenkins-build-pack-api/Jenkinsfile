@@ -105,7 +105,7 @@ node() {
     config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
   }
 
-  def jazz_prod_api_id = getApiHostName('PROD', config, accountDetailsPrimary)
+  def jazz_prod_api_id = getApiIDName('PROD', config, accountDetailsPrimary)
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
   dir(repo_name)
@@ -295,7 +295,7 @@ node() {
               case 'aws_apigateway':
                 events.sendStartedEvent('DEPLOY_TO_AWS_APIGATEWAY', 'Deployment started for API Gateway', context_map, environment_logical_id)
                 if (aws_api_id == null) {
-                  aws_api_id = utilModule.getAPIId(getApiHostName(env_key, config, accountDetails), config)
+                  aws_api_id = getApiIDName(env_key, config, accountDetailsPrimary)
                 }
 
                 apiHostName = "${aws_api_id}.execute-api.${config.region}.amazonaws.com"
@@ -474,7 +474,7 @@ def getLambdaARN(stackName, credsId) {
   return [arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias]
 }
 
-def getApiHostName(stage, service_config, accountDetails) {
+def getApiIDName(stage, service_config, accountDetails) {
 	return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, "DNS_HOSTNAME", service_config)
 }
 
