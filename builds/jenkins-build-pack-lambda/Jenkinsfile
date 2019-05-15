@@ -779,7 +779,7 @@ def echoServiceInfo(String env) {
 **/
 def createSubscriptionFilters(stackName, env_key, credsId, accountDetails) {
   def lambda = "/aws/lambda/${stackName}"
-  def logStreamer = configLoader.JAZZ.AWS.PLATFORM.KINESIS_LOGS_STREAM.PROD
+  def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
   try {
     sh "aws logs create-log-group --log-group-name ${lambda} --region ${config['region']}"
