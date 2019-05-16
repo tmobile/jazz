@@ -47,6 +47,7 @@ node  {
 	def admin_group = "admin_group"
 	def repo_name
 	def service_template
+	def accountDetails;
 
 	echo "Onboarding Started with Params: $params"
 
@@ -58,6 +59,8 @@ node  {
 		} else {
 			error "Service Id is not available."
 		}
+
+		accountDetails = utilModule.getAccountInfo(service_config);
 
 		def jazz_prod_api_id = getApiIDName('PROD', service_config, accountDetailsPrimary)
   		g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
@@ -147,16 +150,30 @@ node  {
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getTemplateUrl(service_template)]]])
 				def config = LoadConfiguration()
 				def roleARN
+				def securityGroup
+				def subnetValue
 
 				if (service_config['domain'] && service_config['domain'] == "jazz") {
-					roleARN = configLoader.AWS.PLATFORMSERVICES_ROLEID
+					roleARN = accountDetailsPrimary.IAM.PLATFORMSERVICES_ROLEID
+					for (item in accountDetailsPrimary.REGIONS) {
+						if(item.PRIMARY){
+							securityGroup = item.SECURITY_GROUP_IDS
+							subnetValue = item.SUBNET_IDS
+						}
+					}
 				} else {
-					roleARN = configLoader.AWS.USERSERVICES_ROLEID
+					roleARN = accountDetails.IAM.USERSERVICES_ROLEID
+					for (item in accountDetails.REGIONS) {
+						if(item.REGION == service_config.region){
+							securityGroup = item.SECURITY_GROUP_IDS
+							subnetValue = item.SUBNET_IDS
+						}
+					}
 				}
 
 				def serviceMetadataJson = [
-					"securityGroupIds": configLoader.AWS.SECURITY_GROUP_IDS,
-					"subnetIds": configLoader.AWS.SUBNET_IDS,
+					"securityGroupIds": securityGroup,
+					"subnetIds": subnetValue,
 					"iamRoleARN": roleARN
 				]
 				for (item in config) {

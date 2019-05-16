@@ -67,7 +67,6 @@ node() {
     if (domain && domain == "jazz") {
       repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
     } else {
-      auth_token = setCredentials()
       repocloneUrl = scmModule.getRepoCloneUrl(repo_name)
     }
 
@@ -111,6 +110,9 @@ node() {
 
   def jazz_prod_api_id = getApiIDName('PROD', config, accountDetailsPrimary)
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
+  if(domain && domain != "jazz"){
+    auth_token = setCredentials()
+  }
 
   dir(repo_name) {
     scmModule.setServiceConfig(config)
