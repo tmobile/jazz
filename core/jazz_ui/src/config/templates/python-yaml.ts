@@ -2,7 +2,7 @@ export const pythonTemplate = {
     template:
 `functions: 
     function1: 
-      handler: index.handler
+      handler: function1/index.handler
     function2: 
-      handler: index.handler`   
+      handler: function2/index.handler`   
 };

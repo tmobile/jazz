@@ -2,7 +2,7 @@ export const javaTemplate = {
     template:
 `functions:
     function1:
-      handler: com.slf.services.Handler
+      handler: function1/com.slf.services.Handler
     function2:
-      handler: com.slf.services.Handler`
+      handler: function2/com.slf.services.Handler`
 };
