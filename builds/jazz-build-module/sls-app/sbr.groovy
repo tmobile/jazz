@@ -211,7 +211,18 @@ class JsonValidator implements TypeValidator {
   }
 }
 
-class ArnIamValidator implements TypeValidator {
+class SequenceValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      if(!aValue instanceof List)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class IamArnValidator implements TypeValidator {
   public void isValid(def aValue) {
     try {
       def pattern = "^arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+"
@@ -224,7 +235,7 @@ class ArnIamValidator implements TypeValidator {
   }
 }
 
-class ArnKmsValidator implements TypeValidator {
+class KmsArnValidator implements TypeValidator {
   public void isValid(def aValue) {
     try {
       def pattern = "^arn:aws:kms::\\d{12}:key/?[a-zA-Z_0-9+=,.@\\-_/]+"
@@ -276,6 +287,19 @@ class ResourceValidator implements TypeValidator {
   }
 }
 
+class PolicyValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^[a-zA-Z]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
 class EventValidator implements TypeValidator {
   public void isValid(def aValue) {
     try {
@@ -314,6 +338,162 @@ class GenericArnValidator implements TypeValidator {
   }
 }
 
+class SnsArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^arn:aws:sns::\\d{12}:?[a-zA-Z_0-9+=,.@\\-_/]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class LayerArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^arn:aws:opsworks::\\d{12}:layer/?[a-zA-Z_0-9+=,.@\\-_/]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class SqsArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^arn:aws:sqs::\\d{12}:?[a-zA-Z0-9-_]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class IamPolicyArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^arn:aws:iam::\\d{12}:([user|group]+)\\/\\*"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class KinesisArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^arn:aws:kinesis::\\d{12}:stream/?^[a-zA-Z0-9_.-]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class AwsArtifactNameValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "[a-zA-Z0-9_\\-]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class AwsS3BucketNameValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "(?=^.{3,63})(?!^(\\d+\\.)+\\d+)(^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9]))"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class AwsTagNameValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^[a-zA-Z_0-9+=,.@\\-_/+-=._:/ ]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class AwsScheduleRateValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "(cron|rate)?([()\\d\\?*, ]+)"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class AwsPathValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^[a-zA-Z_0-9+.\\-_/. ]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class AwsPrincipleValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^[a-zA-Z_0-9+.\\-_/.*? ]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
+class AwsDescriptionValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      def pattern = "^[a-zA-Z_0-9+=,.@\\-_/+-=._:/ ]+"
+      def match = aValue ==~ pattern
+      if(!match)
+      throw new IllegalArgumentException(aValue);
+    } catch(e) {
+      throw new IllegalArgumentException(aValue);
+    }
+  }
+}
+
 /* Enum that must enlist all the types from serverless-build-rules.yml file. TODO: The lists and maps must be dealt with properly */
 enum SBR_Type {
 
@@ -321,33 +501,32 @@ enum SBR_Type {
    BOOL("bool", new BooleanValidator()),
    STR("str", new StringValidator()),
    ENUM("enum", new EnumValidator()),
-   JSON("json", new JsonValidator()), // TODO Must provide a validator
+   JSON("json", new JsonValidator()),
 
-   ARN("arn", new GenericArnValidator()), // Generic ARN TODO Must provide a validator
-   ARN_KMS("arn-kms", new ArnKmsValidator()),
-   ARN_IAM("arn-iam", new ArnIamValidator()),
+   ARN("arn", new GenericArnValidator()),
+   ARN_KMS("arn-kms", new KmsArnValidator()),
+   ARN_IAM("arn-iam", new IamArnValidator()),
    AWS_ID("aws-id", new AwsIdValidator()),
-   ARN_SNS("arn-sns", null), // TODO Must provide a validator
-   ARN_LAYER("arn-layer", null), // TODO Must provide a validator
-   ARN_SQS("arn-sqs", null), // TODO Must provide a validator
-   ARN_IAM_POLICY("arn-iam-policy", null), // TODO Must provide a validator
-   ARN_KINESIS("arn-kinesis", null), // TODO Must provide a validator
-   AWS_ARTIFACT_NAME("aws-artifact-name", null),  // TODO Must provide a validator
-   AWS_VAR_NAME("aws-var-name", null),  // TODO Must provide a validator
-   AWS_BUCKET_NAME("aws-bucket-name", null),  // TODO Must provide a validator
-   AWS_TAG_VAL("aws-tag-value", null),  // TODO Must provide a validator
-   AWS_SCHEDULE_RATE("aws-schedule-rate", null), // TODO Must provide a validator
-   PATH("path", null),  // TODO Must provide a validator
-   AWS_PRINCIPAL("aws-principal", null),  // TODO Must provide a validator
-   AWS_DESCRIPTION("aws-description", null), // TODO Must provide a validator
+   ARN_SNS("arn-sns", new SnsArnValidator()),
+   ARN_LAYER("arn-layer", new LayerArnValidator()),
+   ARN_SQS("arn-sqs", new SqsArnValidator()),
+   ARN_IAM_POLICY("arn-iam-policy", new IamPolicyArnValidator()), // TODO Must provide a validator
+   ARN_KINESIS("arn-kinesis", new KinesisArnValidator()),
+   AWS_ARTIFACT_NAME("aws-artifact-name", new AwsArtifactNameValidator()),
+   AWS_BUCKET_NAME("aws-bucket-name", new AwsS3BucketNameValidator()),
+   AWS_TAG_VAL("aws-tag-value", new AwsTagNameValidator()),
+   AWS_SCHEDULE_RATE("aws-schedule-rate", new AwsScheduleRateValidator()),
+   PATH("path", new AwsPathValidator()),
+   AWS_PRINCIPAL("aws-principal", new AwsPrincipleValidator()),
+   AWS_DESCRIPTION("aws-description", new AwsDescriptionValidator()),
    AWS_VAR_VALUE("aws-var-value", new AwsVariableNameValidator()),
    FUNCTION("function", new FunctionValidator()),
    EVENT("event", new EventValidator()),
    RESOURCE("resource", new ResourceValidator()),
-   AWS_POLICY("aws-policy", null),  // TODO Must provide a validator
+   AWS_POLICY("aws-policy",  new PolicyValidator()), // TODO Must provide a validator
    MAP("[:]", new MapValidator()),
    LIST("[]", new ListValidator()),
-   SEQUENCE("sequence", null)    // TODO Must provide a validator
+   SEQUENCE("sequence", new SequenceValidator())    // TODO Must provide a validator
 
 
 
@@ -430,9 +609,9 @@ class SBR_Type_Descriptor {
     return "SBR_Type_Descriptor{type:"+type+"; underlyingTypeList="+underlyingTypeList+"}"
   }
 
-   public void validate(aValue) { // TODO: This method needs to be implemented
-   }
-
+  public void validate(aValue) {
+   return underlyingTypeList.contains(aValue)
+  }
 }
 
 /* Resolves value in accordance with render policy. */
@@ -755,7 +934,6 @@ def extractLeaf(Map<String, Object> aTag) {
   if(constraintTag != null) {
     constraint = SBR_Composite_Constraint.parseTag(constraintTag, whitelistValidator)
   }
-  echo "constraint : $constraint"
   SBR_Value value = null;
   def valueTag = aTag["sbr-value"]
   if(valueTag != null) {
