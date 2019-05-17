@@ -159,8 +159,7 @@ class StringValidator implements TypeValidator {
 class BooleanValidator implements TypeValidator {
   public void isValid(def aValue) {
     try {
-      if(!aValue instanceof boolean)
-      throw new IllegalArgumentException(aValue);
+      Boolean.parseBoolean(aValue)
     } catch(e) {
       throw new IllegalArgumentException(aValue);
     }
