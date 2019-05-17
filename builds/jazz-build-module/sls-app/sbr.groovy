@@ -147,12 +147,8 @@ class IntValidator implements TypeValidator {
 
 class StringValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      if(!aValue instanceof String)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    if(!aValue instanceof String)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
@@ -168,328 +164,224 @@ class BooleanValidator implements TypeValidator {
 
 class EnumValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      if(!aValue instanceof Enum)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    if(!aValue instanceof Enum)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class ListValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      if(!aValue instanceof List)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    if(!aValue instanceof List)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class MapValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      if(!aValue instanceof Map)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    if(!aValue instanceof Map)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class JsonValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      if(!aValue instanceof JSONObject)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    if(!aValue instanceof JSONObject)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class SequenceValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      if(!aValue instanceof List)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    if(!aValue instanceof List)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class IamArnValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class KmsArnValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^arn:aws:kms::\\d{12}:key/?[a-zA-Z_0-9+=,.@\\-_/]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^arn:aws:kms::\\d{12}:key/?[a-zA-Z_0-9+=,.@\\-_/]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class AwsIdValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^\\d{12}"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^\\d{12}"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class FunctionValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^[a-zA-Z_0-9+=,.@\\-_/]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^[a-zA-Z_0-9+=,.@\\-_/]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class ResourceValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^[a-zA-Z]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^[a-zA-Z]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class PolicyValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^[a-zA-Z]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^[a-zA-Z]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class EventValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^[a-zA-Z]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^[a-zA-Z]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class AwsVariableNameValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^[a-zA-Z]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^[a-zA-Z]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class GenericArnValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def elements = aValue.split(":")
-      if(elements.size() != 6)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def elements = aValue.split(":")
+    if(elements.size() != 6)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class SnsArnValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^arn:aws:sns::\\d{12}:?[a-zA-Z_0-9+=,.@\\-_/]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^arn:aws:sns::\\d{12}:?[a-zA-Z_0-9+=,.@\\-_/]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class LayerArnValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^arn:aws:opsworks::\\d{12}:layer/?[a-zA-Z_0-9+=,.@\\-_/]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^arn:aws:opsworks::\\d{12}:layer/?[a-zA-Z_0-9+=,.@\\-_/]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class SqsArnValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^arn:aws:sqs::\\d{12}:?[a-zA-Z0-9-_]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^arn:aws:sqs::\\d{12}:?[a-zA-Z0-9-_]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class IamPolicyArnValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^arn:aws:iam::\\d{12}:([user|group]+)\\/\\*"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^arn:aws:iam::\\d{12}:([user|group]+)\\/\\*"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class KinesisArnValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^arn:aws:kinesis::\\d{12}:stream/?^[a-zA-Z0-9_.-]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^arn:aws:kinesis::\\d{12}:stream/?^[a-zA-Z0-9_.-]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class AwsArtifactNameValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "[a-zA-Z0-9_\\-]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "[a-zA-Z0-9_\\-]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class AwsS3BucketNameValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "(?=^.{3,63})(?!^(\\d+\\.)+\\d+)(^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9]))"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "(?=^.{3,63})(?!^(\\d+\\.)+\\d+)(^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9]))"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class AwsTagNameValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^[a-zA-Z_0-9+=,.@\\-_/+-=._:/ ]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^[a-zA-Z_0-9+=,.@\\-_/+-=._:/ ]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class AwsScheduleRateValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "(cron|rate)?([()\\d\\?*, ]+)"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "(cron|rate)?([()\\d\\?*, ]+)"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class AwsPathValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^[a-zA-Z_0-9+.\\-_/. ]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^[a-zA-Z_0-9+.\\-_/. ]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class AwsPrincipleValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^[a-zA-Z_0-9+.\\-_/.*? ]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^[a-zA-Z_0-9+.\\-_/.*? ]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
 class AwsDescriptionValidator implements TypeValidator {
   public void isValid(def aValue) {
-    try {
-      def pattern = "^[a-zA-Z_0-9+=,.@\\-_/+-=._:/ ]+"
-      def match = aValue ==~ pattern
-      if(!match)
-      throw new IllegalArgumentException(aValue);
-    } catch(e) {
-      throw new IllegalArgumentException(aValue);
-    }
+    def pattern = "^[a-zA-Z_0-9+=,.@\\-_/+-=._:/ ]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException(aValue);
   }
 }
 
