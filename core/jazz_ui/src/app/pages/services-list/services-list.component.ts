@@ -348,7 +348,7 @@ private intervalSubscription: Subscription;
     // code...
 
 
-    } else if (col.filter['type'] == 'dropdown' || (event.filter['type'] === 'input' && (event.keyCode === 13))) {
+    } else if ((col.filter['type'] == 'dropdown'  && (event.filter['type'] !== 'input')) || (event.filter['type'] === 'input' && (event.keyCode === 13))) {
 
 
     var queryParamKey = 'offset=';
@@ -465,12 +465,12 @@ onFilterCancel(event) {
   for (var i = 0; i < this.tableHeader2.length; i++) {
 
   var col = this.tableHeader2[i];
-  if (col.filter['type'] === 'dropdown' && col.filter['_value'] != undefined) {
+  if (col.filter['type'] === 'dropdown' && col.filter['_value'] != undefined  && event.filterType !== 'input') {
   var colFilterVal = event.filterValue.toLowerCase().replace(' ', '_');
   if (colFilterVal != undefined) {
   this.FilterTags.notifyServices(this.tableHeader2[i].key, colFilterVal);
   }
-  } else if (col.filter['type'] === 'input') {
+  } else if (col.filter['type'] === 'input' && (event.key === col.key)) {
   var colFilterVal = event.filterValue;
   if (event.keyCode == 13 && colFilterVal != undefined) {
   this.FilterTags.notifyServices(this.tableHeader2[i].key, colFilterVal);
