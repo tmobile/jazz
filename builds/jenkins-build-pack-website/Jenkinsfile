@@ -155,7 +155,7 @@ node()  {
 			if(service_config['framework'] == 'angular' || service_config['framework'] == 'react') {
 				events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
 				try {
-					buildWebsite(service_config['framework'])
+					buildWebsite(service_config['framework'], environment_logical_id)
 				} catch(ex) {
 					events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
         			events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -981,6 +981,11 @@ def validateReactTemplate() {
   * Function to do build of angular/react 
 */
 def buildWebsite(framework) {
+	if (env === "prod" || env === "stg") {
+		env = "production"
+	} else { 
+		env = "dev"
+	}
 	def websiteCodeFolder = "app/"
 	dir(websiteCodeFolder) {
 		switch(framework) {
@@ -988,7 +993,7 @@ def buildWebsite(framework) {
 				sh "rm -rf dist"
 				sh "npm cache clean --force"
 				sh "npm install"
-				sh "ng build --prod --output-path=dist"
+				sh "ng build --configuration=${env} --output-path=dist"
 			break
 			case "react":
 				sh "rm -rf build"
