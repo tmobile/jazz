@@ -197,7 +197,7 @@ export class EnvAssetsSectionComponent implements OnInit {
     this.subscription = this.http.get(this.relativeUrl, payload, this.service.id).subscribe(
       (response) => {
 
-        if((response.data == undefined) || (response.data.length == 0)){
+        if((response.data == undefined) || (response.data.count == 0)){
           this.envResponseEmpty = true;
           this.isLoading = false;
         }
