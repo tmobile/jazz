@@ -980,7 +980,7 @@ def validateReactTemplate() {
 /**
   * Function to do build of angular/react 
 */
-def buildWebsite(framework) {
+def buildWebsite(framework, env) {
 	if (env === "prod" || env === "stg") {
 		env = "production"
 	} else { 
