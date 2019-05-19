@@ -253,7 +253,7 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
         }
 
         //Adding providerRuntime key in service catalog
-        if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
+        if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function" || service_creation_data.service_type === "sls-app") {
             serviceMetadataObj.providerRuntime = service_creation_data.runtime;
         }
 
