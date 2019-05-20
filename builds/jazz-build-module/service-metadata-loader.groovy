@@ -29,7 +29,7 @@ def loadServiceMetadata(service_id){
 
 		def table_name = "${configLoader.INSTANCE_PREFIX}_services_prod"
 		def service_Object = sh (
-				script: "aws --region ${configLoader.AWS.REGION} dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
+				script: "aws --region ${configLoader.AWS.DEFAULTS.REGION} dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
 				returnStdout: true
 			).trim()
 
@@ -55,7 +55,13 @@ def loadServiceMetadata(service_id){
 			metadata['created_by'] = service_data.Item.SERVICE_CREATED_BY.S
 			metadata['type'] = service_data.Item.SERVICE_TYPE.S
 			metadata['runtime'] = service_data.Item.SERVICE_RUNTIME.S
-			metadata['region'] = configLoader.AWS.REGION
+			if(service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS){
+				metadata['accountId'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.accountId.S
+        metadata['region'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.region.S
+			} else {
+			  metadata['accountId'] = configLoader.AWS.DEFAULTS.ACCOUNTID
+        metadata['region'] = configLoader.AWS.DEFAULTS.REGION
+			}
 			metadata['catalog_metadata'] = catalog_metadata
 			metadata['deployment_targets'] = deployment_targets_metadata
 			if(service_data.Item.SERVICE_SLACK_CHANNEL)

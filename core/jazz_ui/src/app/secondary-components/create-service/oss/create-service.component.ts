@@ -28,9 +28,9 @@ import {environment} from "../../../../environments/environment";
 export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
-  sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
-  kinesisStreamString:string = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/";
-  dynamoStreamString:string = "arn:aws:dynamo:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/";
+  sqsStreamString:string;
+  kinesisStreamString:string;
+  dynamoStreamString:string;
   SlackEnabled:boolean = false;
   docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
@@ -95,8 +95,15 @@ export class CreateServiceComponent implements OnInit {
   invalidEventName:boolean = false;
   runtimeKeys : any;
   runtimeObject : any;
+  accountList = [];
+  regionList = [];
+  accountSelected;
+  accountDetails;
+  regionSelected;
+  accountMap: any;
   webObject : any;
   webKeys : any;
+  deploymentTargetSelected: any;
 
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
@@ -124,6 +131,28 @@ export class CreateServiceComponent implements OnInit {
   public focusS3 = new EventEmitter<boolean>();
   public focusSQS = new EventEmitter<boolean>();
 
+  selectAccountsRegions(){
+    this.accountMap = env_oss.accountMap;
+    this.accountList = [];
+    this.regionList = [];
+    this.accountMap.map((item)=>{
+      this.accountList.push(item.account + ' (' + item.accountName + ')' )
+      if(item.primary){
+        this.accountSelected = item.account
+        this.accountDetails = item.account + ' (' + item.accountName + ')' 
+      }
+    })
+    this.regionList = this.accountMap[0].regions;
+    this.regionSelected = this.regionList[0];
+    this.setAccountandRegion();
+  }
+
+  setAccountandRegion(){
+    this.sqsStreamString = "arn:aws:sqs:" + this.regionSelected + ":" + this.accountSelected + ":";
+    this.kinesisStreamString = "arn:aws:kinesis:" + this.regionSelected + ":" + this.accountSelected + ":stream/";
+    this.dynamoStreamString = "arn:aws:dynamo:" + this.regionSelected + ":" + this.accountSelected + ":table/";
+  }
+
   chkDynamodb() {
     this.focusDynamo.emit(true);
     return this.eventExpression.type === 'dynamodb';
@@ -144,6 +173,14 @@ export class CreateServiceComponent implements OnInit {
     return this.eventExpression.type === 's3';
   }
 
+  getSelectedData(data){
+    this.deploymentTargetSelected = data;
+    if(this.deploymentTargetSelected === 'gcp_apigee'){
+      this.accountSelected = this.buildEnvironment.defaults.account_id,
+      this.regionSelected = this.buildEnvironment.defaults.region
+    }
+  }
+
  // function for opening and closing create service popup
   closeCreateService(serviceRequest){
     if(serviceRequest){
@@ -158,6 +195,22 @@ export class CreateServiceComponent implements OnInit {
     this.serviceRequestFailure = false;
     this.serviceRequestSuccess = false;
     this.onClose.emit(false);
+  }
+
+  onaccountSelected(event){
+    this.accountMap.map((item,index)=>{
+      if((item.account + ' (' + item.accountName + ')') === event){
+        this.accountSelected = item.account
+        this.accountDetails = item.account + ' (' + item.accountName + ')' 
+        this.regionList = item.regions;
+        this.regionSelected = this.regionList[0];
+      }
+    })
+    this.setAccountandRegion()    ;
+  }
+  onregionSelected(event){
+    this.regionSelected = event;
+    this.setAccountandRegion();
   }
 
 
@@ -392,16 +445,16 @@ export class CreateServiceComponent implements OnInit {
         var event = {};
         event["type"] = this.eventExpression.type;
         if(this.eventExpression.type === "dynamodb") {
-          event["source"] = "arn:aws:dynamodb:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":table/" + this.eventExpression.dynamoTable;
+          event["source"] = "arn:aws:dynamodb:" + this.regionSelected + ":"+this.accountSelected+":table/" + this.eventExpression.dynamoTable;
           event["action"] = "PutItem";
         } else if(this.eventExpression.type === "kinesis") {
-          event["source"] = "arn:aws:kinesis:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":stream/" + this.eventExpression.streamARN;
+          event["source"] = "arn:aws:kinesis:" + this.regionSelected + ":"+this.accountSelected+":stream/" + this.eventExpression.streamARN;
           event["action"] = "PutRecord";
         } else if(this.eventExpression.type === "s3") {
           event["source"] = this.eventExpression.S3BucketName;
           event["action"] = "s3:ObjectCreated:*";
         } else if (this.eventExpression.type === "sqs") {
-          event["source"] = "arn:aws:sqs:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":"+ this.eventExpression.SQSstreamARN;
+          event["source"] = "arn:aws:sqs:" + this.regionSelected + ":"+this.accountSelected+":"+ this.eventExpression.SQSstreamARN;
         }
         payload["events"] = [];
         payload["events"].push(event);
@@ -421,6 +474,17 @@ export class CreateServiceComponent implements OnInit {
     if(this.typeOfService == 'api' && this.ttlSelected){
         payload["cache_ttl"] = this.model.ttlValue;
     }
+    
+    /* Including deployment_accounts in the payload */
+    let deployment_accounts = [
+      {
+        "accountId": this.accountSelected,
+        "region": this.regionSelected,
+        "provider":"aws",
+        "primary":true
+      }
+    ]
+    payload['deployment_accounts'] = deployment_accounts
 
     this.isLoading = true;
     this.http.post('/jazz/create-serverless-service' , payload)
@@ -435,6 +499,7 @@ export class CreateServiceComponent implements OnInit {
           this.serviceLink = output.data.slice(index, output.data.length);
           this.resMessage=this.toastmessage.successMessage(Response,"createService");
           this.resetEvents();
+          this.selectAccountsRegions();
        },
         (error) => {
           this.isLoading = false;
@@ -445,6 +510,7 @@ export class CreateServiceComponent implements OnInit {
           this.errMessage = this.toastmessage.errorMessage(error, 'createService');
           this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
           this.rateExpression.error = undefined;
+          this.selectAccountsRegions();
           try {
             this.parsedErrBody = JSON.parse(this.errBody);
             if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
@@ -469,6 +535,7 @@ export class CreateServiceComponent implements OnInit {
     this.eventExpression.type = 'awsEventsNone';
     this.runtime = this.runtimeKeys[0];
   }
+
 
   // function to navigate from success or error screen to create service screen
   backToCreateService(){
@@ -670,6 +737,7 @@ export class CreateServiceComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.selectAccountsRegions();
     this.getData();
     this.loadMaxLength();
     if(env_oss.slack_support) this.SlackEnabled=true;

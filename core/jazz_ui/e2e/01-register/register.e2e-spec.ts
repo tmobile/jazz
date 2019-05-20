@@ -33,7 +33,7 @@ describe('register', () => {
   
     it('backtologin', () => {
       JazzServices_po.navigateToJazzGet();
-      register_po.getRegister().isPresent().
+      register_po.getLoginButton().isPresent().
       then(function() { 
         browser.driver.switchTo().activeElement();
         register_po.getLoginButton().click();
@@ -54,7 +54,6 @@ describe('register', () => {
     });
 
     it('register', () => {
-      console.log("registered entered")
       browser.refresh();
       browser.driver.switchTo().activeElement();
       register_po.getLoginButton().click();

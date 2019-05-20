@@ -22,7 +22,7 @@ import com.slf.util.EnvironmentConfig;
 
 public abstract class BaseRequestHandler implements RequestHandler<Map<String, Object>, Response> {
 
-	static final Logger logger = Logger.getLogger(BaseRequestHandler.class);
+	private static final Logger LOGGER = Logger.getLogger(BaseRequestHandler.class);
 
 	protected Map<String, Object> body = null;
 	protected EnvironmentConfig configObject = null;
@@ -40,7 +40,7 @@ public abstract class BaseRequestHandler implements RequestHandler<Map<String, O
 		try {
           configObject = new EnvironmentConfig(context);
         } catch (Exception ex) {
-            throw new InternalServerErrorException("Could not load env properties file: " + ex.getMessage());
+            throw new InternalServerErrorException("Could not load env properties file: " + ex);
         }
 
 		 return execute(input, context);
