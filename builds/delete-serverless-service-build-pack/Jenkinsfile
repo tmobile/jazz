@@ -117,7 +117,6 @@ node {
 
 		dir(repo_name){
 			echo "loadServerlessConfig......."
-			sh "ls -la"
 
 			if (fileExists('build.api')) {
 				flowType = "API"
@@ -232,37 +231,35 @@ node {
 
 			case "SLSAPP":
 				stage('Undeploy Service') {
-						current_environment_id = _envId
-						loadServerlessYml(service_config, env)
-
-            try {
-							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
-							if (branch && branch != 'NA') {
-								events.setBranch(branch)
-								sonarModule.setBranch(branch)
-								branch = 'NA'
-							}
-							events.setEnvironment(_envId)
-							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-							
-							echo 'undeploying function for environment: ' + _envId
-
-              cleanupEventSourceMapping(_envId)
-              unDeployService(_envId)
-
-							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
-								cleanupCodeQualityReports()
-							}
-              archiveAssetDetails(_envId)
-							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
-						} catch (ex) {
-							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
-							error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
+					current_environment_id = _envId
+					loadServerlessYml(service_config, env)
+					try {
+						def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+						if (branch && branch != 'NA') {
+							events.setBranch(branch)
+							sonarModule.setBranch(branch)
+							branch = 'NA'
 						}
+						events.setEnvironment(_envId)
+						events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+							
+						echo 'undeploying function for environment: ' + _envId
+
+          	cleanupEventSourceMapping(_envId)
+            unDeployService(_envId)
+
+						if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
+							cleanupCodeQualityReports()
+						}
+            archiveAssetDetails(_envId)
+						events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
+					} catch (ex) {
+						events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+						error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
 					}
 				}
-				break
-
+			}
+			break
 
 			case "WEBSITE":
 				stage('Undeploy Website') {
