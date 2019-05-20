@@ -155,7 +155,7 @@ node()  {
 			if(service_config['framework'] == 'angular' || service_config['framework'] == 'react') {
 				events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
 				try {
-					buildWebsite(service_config['framework'], environment_logical_id)
+					buildWebsite(service_config['framework'])
 				} catch(ex) {
 					events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
         			events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -190,6 +190,7 @@ node()  {
 				def isBucketwithEnvExists = checkIfBucketExists(asset_info)
 				def asset_event
 				def asset_event_message
+				buildApp(service_config['framework'], environment_logical_id)
 				if (isBucketwithEnvExists) {
 					asset_event = 'UPDATE_ASSET'
 					asset_event_message = 'update'
@@ -980,12 +981,7 @@ def validateReactTemplate() {
 /**
   * Function to do build of angular/react 
 */
-def buildWebsite(framework, env) {
-	if (env === "prod" || env === "stg") {
-		env = "production"
-	} else { 
-		env = "dev"
-	}
+def buildWebsite(framework) {
 	def websiteCodeFolder = "app/"
 	dir(websiteCodeFolder) {
 		switch(framework) {
@@ -993,16 +989,33 @@ def buildWebsite(framework, env) {
 				sh "rm -rf dist"
 				sh "npm cache clean --force"
 				sh "npm install"
-				sh "ng build --configuration=${env} --output-path=dist"
 			break
 			case "react":
 				sh "rm -rf build"
 				sh "npm cache clean --force"
 				sh "npm install"
-				sh "npm run build"
 			break
 			default:
 			break
+		}
+	}
+}
+def buildApp(framework, env) {
+	if(env.contains("-dev")){
+		env = "dev"
+	}
+	def websiteCodeFolder = "app/"
+	dir(websiteCodeFolder) {
+		switch(framework) {
+			case "angular":
+				sh "ng build --configuration=${env} --output-path=dist"
+				break
+			case "react":
+				sh "npm run build"
+				break
+			default:
+				echo "Not executing any build commands.."
+				break
 		}
 	}
 }
