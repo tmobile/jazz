@@ -15,6 +15,9 @@ import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
 @Field def repo_credential_id
+@Field def aws_credential_id
+@Field def region
+@Field def instance_prefix
 @Field def repo_base
 @Field def repo_core
 @Field def scm_type
@@ -23,6 +26,7 @@ import groovy.transform.Field
 @Field def configLoader
 @Field def scmModule
 @Field def events
+@Field def awsAPIGatewayModule
 @Field def serviceMetadataLoader
 @Field def service_config
 @Field def utilModule
@@ -34,18 +38,16 @@ import groovy.transform.Field
 @Field def context_map = [:]
 
 node  {
+	def accountDetailsPrimary
 	jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
-
-	def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
-	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
-
-	auth_token = getAuthToken()
+	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
 	def service_id = params.service_id
 	def admin_group = "admin_group"
 	def repo_name
 	def service_template
+	def accountDetails;
 
 	echo "Onboarding Started with Params: $params"
 
@@ -57,6 +59,13 @@ node  {
 		} else {
 			error "Service Id is not available."
 		}
+
+		accountDetails = utilModule.getAccountInfo(service_config);
+
+		def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
+  		g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
+
+		auth_token = getAuthToken()
 
 		scmModule.setServiceConfig(service_config)
 		if (!events) { error "Can't load events module"	} //Fail here
@@ -74,7 +83,7 @@ node  {
 							service_template = "api-template-nodejs"
 						}
 						else if (service_config['runtime'].startsWith("python")){
-							service_template = 'api-template-python'	
+							service_template = 'api-template-python'
 						}
 						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'api-template-java'
@@ -89,7 +98,7 @@ node  {
 							service_template = "lambda-template-nodejs"
 						}
 						else if (service_config['runtime'].startsWith("python")){
-							service_template = 'lambda-template-python'	
+							service_template = 'lambda-template-python'
 						}
 						else if (service_config['runtime'].startsWith("java")) {
 							service_template = 'lambda-template-java'
@@ -141,16 +150,30 @@ node  {
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getTemplateUrl(service_template)]]])
 				def config = LoadConfiguration()
 				def roleARN
+				def securityGroup
+				def subnetValue
 
 				if (service_config['domain'] && service_config['domain'] == "jazz") {
-					roleARN = configLoader.AWS.PLATFORMSERVICES_ROLEID
+					roleARN = accountDetailsPrimary.IAM.PLATFORMSERVICES_ROLEID
+					for (item in accountDetailsPrimary.REGIONS) {
+						if(item.PRIMARY){
+							securityGroup = item.SECURITY_GROUP_IDS
+							subnetValue = item.SUBNET_IDS
+						}
+					}
 				} else {
-					roleARN = configLoader.AWS.USERSERVICES_ROLEID
+					roleARN = accountDetails.IAM.USERSERVICES_ROLEID
+					for (item in accountDetails.REGIONS) {
+						if(item.REGION == service_config.region){
+							securityGroup = item.SECURITY_GROUP_IDS
+							subnetValue = item.SUBNET_IDS
+						}
+					}
 				}
 
 				def serviceMetadataJson = [
-					"securityGroupIds": configLoader.AWS.SECURITY_GROUP_IDS,
-					"subnetIds": configLoader.AWS.SUBNET_IDS,
+					"securityGroupIds": securityGroup,
+					"subnetIds": subnetValue,
 					"iamRoleARN": roleARN
 				]
 				for (item in config) {
@@ -216,7 +239,7 @@ node  {
 			def repo_clone_base_url = scmModule.getRepoCloneBaseUrl(repo_name)
 			def repo_protocol = scmModule.getRepoProtocol()
 
-			sh "git config --global user.email \"" + configLoader.JAZZ.ADMIN + "\""
+			sh "git config --global user.email \"" + configLoader.JAZZ.STACK_ADMIN + "\""
 			sh "git config --global user.name $UNAME"
 			sh "git clone ${repo_protocol}$UNAME:$encoded_password@${repo_clone_base_url}"
 		}
@@ -300,7 +323,7 @@ def getAuthToken() {
 			'password': PWD
 		]
 		def payload = JsonOutput.toJson(login_json)
-		
+
 		try {
 			def token = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
@@ -350,6 +373,10 @@ def LoadConfiguration() {
 	return prop
 }
 
+def getApiIDName(accountDetails) {
+	return awsAPIGatewayModule.getApiGatewayCore(accountDetails)
+}
+
 /**
 * Send email to the recipient with the build status and any additional text content
 * Supported build status values = STARTED, FAILED & COMPLETED
@@ -381,7 +408,7 @@ def send_status_email (build_status) {
 		body_text = "${body_text} \n\n For Service: ${service_config['service']}  in Domain:  ${service_config['domain']}"
 	}
 
-	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
+	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>'
 	body = JsonOutput.toJson([
 		from : fromStr,
 		to : service_config['created_by'],
@@ -431,10 +458,12 @@ def loadBuildModules(buildModuleUrl){
 				[credentialsId: repo_credential_id, url: buildModuleUrl]
 			]])
 
-		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
-		configLoader = configModule.initialize(resultJsonString)
+		configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
 		echo "config loader loaded successfully."
+
+		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
+    	awsAPIGatewayModule.initialize()
 
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
