@@ -140,7 +140,7 @@ class IntValidator implements TypeValidator {
     try {
       Integer.parseInt(aValue)
     } catch(e) {
-      throw new IllegalArgumentException(aValue, e);
+      throw new IllegalArgumentException("Invalid Integer: " + aValue + " is of type: " + aValue?.class);
     }
   }
 }
@@ -148,7 +148,7 @@ class IntValidator implements TypeValidator {
 class StringValidator implements TypeValidator {
   public void isValid(def aValue) {
     if(!aValue instanceof String)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid String: " + aValue + " is of type: " + aValue?.class);
   }
 }
 
@@ -157,7 +157,7 @@ class BooleanValidator implements TypeValidator {
     try {
       Boolean.parseBoolean(aValue)
     } catch(e) {
-      throw new IllegalArgumentException(aValue);
+      throw new IllegalArgumentException("Invalid Boolean: " + aValue + " is of type: " + aValue?.class);
     }
   }
 }
@@ -165,35 +165,35 @@ class BooleanValidator implements TypeValidator {
 class EnumValidator implements TypeValidator {
   public void isValid(def aValue) {
     if(!aValue instanceof Enum)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid Enum: " + aValue );
   }
 }
 
 class ListValidator implements TypeValidator {
   public void isValid(def aValue) {
     if(!aValue instanceof List)
-    throw new IllegalArgumentException(aValue);
+     throw new IllegalArgumentException("Invalid List: " + aValue + " is of type: " + aValue?.class);
   }
 }
 
 class MapValidator implements TypeValidator {
   public void isValid(def aValue) {
     if(!aValue instanceof Map)
-    throw new IllegalArgumentException(aValue);
+     throw new IllegalArgumentException("Invalid Map: " + aValue + " is of type: " + aValue?.class);
   }
 }
 
 class JsonValidator implements TypeValidator {
   public void isValid(def aValue) {
     if(!aValue instanceof JSONObject)
-    throw new IllegalArgumentException(aValue);
+     throw new IllegalArgumentException("Invalid Json: " + aValue + " is of type: " + aValue?.class);
   }
 }
 
 class SequenceValidator implements TypeValidator {
   public void isValid(def aValue) {
     if(!aValue instanceof List)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid Sequence: " + aValue + " is of type: " + aValue?.class);
   }
 }
 
@@ -202,7 +202,7 @@ class IamArnValidator implements TypeValidator {
     def pattern = "^arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+     throw new IllegalArgumentException("Invalid IAM Arn: " + aValue );
   }
 }
 
@@ -211,7 +211,7 @@ class KmsArnValidator implements TypeValidator {
     def pattern = "^arn:aws:kms::\\d{12}:key/?[a-zA-Z_0-9+=,.@\\-_/]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid KMS Arn: " + aValue );
   }
 }
 
@@ -220,7 +220,7 @@ class AwsIdValidator implements TypeValidator {
     def pattern = "^\\d{12}"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid AWS ID: " + aValue );
   }
 }
 
@@ -229,7 +229,7 @@ class FunctionValidator implements TypeValidator {
     def pattern = "^[a-zA-Z_0-9+=,.@\\-_/]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid Function: " + aValue );
   }
 }
 
@@ -238,7 +238,7 @@ class ResourceValidator implements TypeValidator {
     def pattern = "^[a-zA-Z]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid Resource: " + aValue );
   }
 }
 
@@ -247,7 +247,7 @@ class PolicyValidator implements TypeValidator {
     def pattern = "^[a-zA-Z]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid Policy Arn: " + aValue );
   }
 }
 
@@ -256,7 +256,7 @@ class EventValidator implements TypeValidator {
     def pattern = "^[a-zA-Z]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid Event: " + aValue );
   }
 }
 
@@ -265,7 +265,7 @@ class AwsVariableNameValidator implements TypeValidator {
     def pattern = "^[a-zA-Z]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid Aws variable: " + aValue );
   }
 }
 
@@ -273,7 +273,7 @@ class GenericArnValidator implements TypeValidator {
   public void isValid(def aValue) {
     def elements = aValue.split(":")
     if(elements.size() != 6)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid Arn: " + aValue );
   }
 }
 
@@ -282,7 +282,7 @@ class SnsArnValidator implements TypeValidator {
     def pattern = "^arn:aws:sns::\\d{12}:?[a-zA-Z_0-9+=,.@\\-_/]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid SNS Arn: " + aValue );
   }
 }
 
@@ -291,7 +291,7 @@ class LayerArnValidator implements TypeValidator {
     def pattern = "^arn:aws:opsworks::\\d{12}:layer/?[a-zA-Z_0-9+=,.@\\-_/]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid Layer Arn: " + aValue );
   }
 }
 
@@ -300,7 +300,7 @@ class SqsArnValidator implements TypeValidator {
     def pattern = "^arn:aws:sqs::\\d{12}:?[a-zA-Z0-9-_]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid SQS Arn: " + aValue );
   }
 }
 
@@ -309,7 +309,7 @@ class IamPolicyArnValidator implements TypeValidator {
     def pattern = "^arn:aws:iam::\\d{12}:([user|group]+)\\/\\*"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid Iam policy Arn: " + aValue );
   }
 }
 
@@ -318,7 +318,7 @@ class KinesisArnValidator implements TypeValidator {
     def pattern = "^arn:aws:kinesis::\\d{12}:stream/?^[a-zA-Z0-9_.-]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid Kinesis Arn: " + aValue );
   }
 }
 
@@ -327,7 +327,7 @@ class AwsArtifactNameValidator implements TypeValidator {
     def pattern = "[a-zA-Z0-9_\\-]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid artifact name: " + aValue );
   }
 }
 
@@ -336,7 +336,7 @@ class AwsS3BucketNameValidator implements TypeValidator {
     def pattern = "(?=^.{3,63})(?!^(\\d+\\.)+\\d+)(^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9]))"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid S3 Bucket name: " + aValue );
   }
 }
 
@@ -345,7 +345,7 @@ class AwsTagNameValidator implements TypeValidator {
     def pattern = "^[a-zA-Z_0-9+=,.@\\-_/+-=._:/ ]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid Tag name: " + aValue );
   }
 }
 
@@ -354,7 +354,7 @@ class AwsScheduleRateValidator implements TypeValidator {
     def pattern = "(cron|rate)?([()\\d\\?*, ]+)"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid schedule rate expression: " + aValue );
   }
 }
 
@@ -363,7 +363,7 @@ class AwsPathValidator implements TypeValidator {
     def pattern = "^[a-zA-Z_0-9+.\\-_/. ]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid AWS path: " + aValue );
   }
 }
 
@@ -372,7 +372,7 @@ class AwsPrincipleValidator implements TypeValidator {
     def pattern = "^[a-zA-Z_0-9+.\\-_/.*? ]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid AWS principle: " + aValue );
   }
 }
 
@@ -381,7 +381,7 @@ class AwsDescriptionValidator implements TypeValidator {
     def pattern = "^[a-zA-Z_0-9+=,.@\\-_/+-=._:/ ]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException(aValue);
+    throw new IllegalArgumentException("Invalid AWS description: " + aValue );
   }
 }
 
@@ -987,63 +987,3 @@ def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
 }
 
 return this
-
-
-//SBR_Type_Descriptor d = SBR_Type_Descriptor.parseTag(["sbr-type": "[int]"])
-//println d.isList()
-
-
-//println SBR_Type.getByTagValue("none")
-//println ">>>>>>>>>>>>>>>>>>>>>>>>>"
-
-/*  boolean pathMatcher(String templatedPath, String targetPath) {
-    String[] templatedPathSegments = templatedPath.split("/")
-    String[] targetPathSegments = targetPath.split("/")
-    if(templatedPathSegments.length != targetPathSegments.length) return false
-    println targetPathSegments
-    boolean acc = true
-    targetPathSegments.eachWithIndex{seg, idx -> acc &= (seg == templatedPathSegments[idx] ||  templatedPathSegments[idx] == "*")}
-    return acc
-  }
-
-
-lll = pathMatcher("/f/", "/f/")
-println "lll="+lll */
-
-// (seg.isEmpty() && templatedPath[idx].isEmpty()) || (seg.equals(templatedPath[idx]) || templatedPath[idx].equals("*"))
-// /* && templatedPath[idx].isEmpty()*/) || (segment == templatedPath[idx] || templatedPath[idx] == "*")
-/*
-@Grab('org.yaml:snakeyaml:1.17')
-import org.yaml.snakeyaml.Yaml
-parser = new Yaml()
-
-config = ["service_id": "4a053679-cdd4-482a-a34b-1b83662f1e81",
-          "service": "olegservice28",
-          "domain": "olegdomain28",
-          "created_by": "admin",
-          "type":"sls-app",
-          "runtime":"nodejs8.10",
-          "region":"us-west-2b",
-          "cloud_provider": "aws"]
-
-context =  ["INSTANCE_PREFIX": "slsapp19",
-            "asterisk": "yyy",
-            "environment_logical_id": "dev"]
-
-Map<String, Object> initialSmallServerless = parser.load(new File("/Users/U44693/Documents/groovytest/test.yml").text) // Here provide a path to overly simplistic serverless.yml like
-//service:
-//  name: myService
-//  awsKmsKeyArn: arn:aws:kms:us-east-1:XXXXXX:key/some-hash
-Map<String, Object> sbrContent = parser.load(new File("/Users/U44693/Documents/groovytest/build-rule.yml").text) // Here provide a path to your serverless-build-rules.yml
-
-Map<String, SBR_Rule> rules = convertRuleForestIntoLinearMap(sbrContent)
-
-Map<String, SBR_Rule> after = rulePostProcessor(rules)
-
-// println after
-
-
-// println explodeNonPrimaryRule(rules["/function"], "/functions")
-
-Map<String, Object> resultingServerless = processServerless(initialSmallServerless, sbrContent, config, context)
-println resultingServerless */
