@@ -541,7 +541,6 @@ def buildSlsApp(String runtime, String repo_name) {
       if( size > 0) {
         for(item in dirs) {
           def functionpath = "$GOPATH/src/${repo_name}/functions/${item}"
-          sh "sed -i -- 's/sls-api-template-go/${repo_name}/g' ${functionpath}/main.go"
           sh "env GOOS=linux GOARCH=amd64 go build -o functions/${item}/main ${functionpath}/main.go"
         }   
       } else {
@@ -845,7 +844,6 @@ def runValidation(String runtime) {
 @NonCPS
 def readDir(dirPath) {
   def  dirsl = [] 
-  echo "Directory Path is ${dirPath}"
   new File(dirPath).eachDir() {
     dirs -> println dirs.getName() 
     dirsl.add(dirs.getName())
