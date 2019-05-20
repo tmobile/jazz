@@ -14,7 +14,6 @@ import groovy.transform.Field
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
-@Field def serviceConfigdata
 @Field def events
 @Field def lambdaEvents
 @Field def serviceMetadataLoader
@@ -143,16 +142,6 @@ node() {
     echo "prepareServerlessYml = ${deploymentDescriptor}"
     writeYaml(file: './serverless.yml', data: deploymentDescriptor)
 
-    if (domain && domain == "jazz") {
-      stage('Update Service Template') {
-        echo "Inside Update service template"
-        try {
-          updatePlatformServiceTemplate(config, config['iamRoleARN'], roleId, current_environment, repo_name)
-        } catch (error) {
-          error "Error occured while updating service template."
-        }
-      }
-    }
     stage('Pre-Build Validation') {
       events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation started', context_map, environment_logical_id)
       try {
@@ -839,13 +828,6 @@ def parseJson(jsonString) {
   m.putAll(lazyMap)
   return m
 }
-
-def updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name) {
-  echo "loadServerlessConfig......."
-  def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-  serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, current_environment, repo_name, utilModule)
-  serviceConfigdata.loadServiceConfigurationData()
-}
 /*
  * Load build modules
  */
@@ -865,9 +847,6 @@ def loadBuildModules(buildModuleUrl) {
     scmModule = load "scm-module.groovy"
     scmModule.initialize(configLoader)
     echo "SCM module loaded successfully."
-
-    serviceConfigdata = load "service-configuration-data-loader.groovy"
-    echo "Service configuration module loaded successfully."
 
     events = load "events-module.groovy"
     echo "Event module loaded successfully."
