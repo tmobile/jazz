@@ -167,6 +167,7 @@ enum SBR_Type {
    AWS_PRINCIPAL("aws-principal", null),  // TODO Must provide a validator
    AWS_DESCRIPTION("aws-description", null), // TODO Must provide a validator
    FUNCTION("function", null),  // TODO Must provide a validator
+   PLUGIN("plugin", null), // TODO Must provide a validator
    EVENT("event", null),  // TODO Must provide a validator
    RESOURCE("resource", null),  // TODO Must provide a validator
    AWS_POLICY("aws-policy", null),  // TODO Must provide a validator
