@@ -199,17 +199,20 @@ node  {
 				sh "echo -n > ./deployment-env.yml"
 				// Add service_id  in deployment-env.yml
 				sh "echo 'service_id: $service_id' >> ./deployment-env.yml"
-				if (service_config['type'] == "sls-app" && service_config['runtime'].startsWith("go")) {
-					def dirPath = pwd()
+				
+        // Replacing template specific keys in the code
+        if (service_config['type'] == "sls-app" && service_config['runtime'].startsWith("go")) {
+					echo "Updating go template in the serveless app"
+          def dirPath = pwd()
 					dirs = readDir("${dirPath}/functions")
       		def size = dirs.size()
-      		if( size > 0) {
-        		for(item in dirs) {
+      		if (size > 0) {
+        		for (item in dirs) {
           	def functionpath = "./functions/${item}"
           		sh "sed -i -- 's/sls-api-template-go/${repo_name}/g' ${functionpath}/main.go"
         		}   
       		} else {
-        		error "No Functions Found..skipping build"
+        		echo "No functions found.. Skipping code updates to the template!"
      			}
 				}
 			}
