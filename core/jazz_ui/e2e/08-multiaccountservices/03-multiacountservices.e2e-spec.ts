@@ -18,8 +18,7 @@ import { Timeouts, Browser } from 'selenium-webdriver';
 import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG, SSL_OP_TLS_BLOCK_PADDING_BUG } from 'constants';
 import { Common } from '../common/commontest';
 
-
-xdescribe('Overview', () => {
+describe('Overview', () => {
   let jazzServices_po: Jazz;
   let commonUtils: Common;
   let found = 1;
@@ -31,14 +30,16 @@ xdescribe('Overview', () => {
   beforeAll(() => {
     jazzServices_po = new Jazz();
     commonUtils = new Common();
+    browser.driver.sleep(Common.miniWait);
+    commonUtils.Login();
+    
   });
   beforeEach(() => {
     if (flag == 0) {
       pending();
     }
-    if (found == 0) {
-      commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.shortWait);
-      jazzServices_po.getServiceHomePage().click();
+    if (found == 0){
+        pending();
     }
   });
   afterAll(() => {
@@ -47,8 +48,8 @@ xdescribe('Overview', () => {
     browser.driver.sleep(Common.miniWait);
     jazzServices_po.logoutIcon().click();
     jazzServices_po.logout().click();
+    browser.close();
   });
-
 
   function createservice(servicename) {
     jazzServices_po.getServiceName().sendKeys(servicename);
@@ -83,7 +84,7 @@ xdescribe('Overview', () => {
     }, 240 * 1000);
   }
 
-  it('Create API Service', function () {
+  it('Create second account west region Service', function () {
     browser.driver.sleep(Common.miniWait);
     browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), Common.timeOutHigh).then(null, function (err) {
       console.log(err);
@@ -91,13 +92,19 @@ xdescribe('Overview', () => {
       browser.refresh();
     });
     browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), Common.timeOutHigh);
-    //To create Service-API
     jazzServices_po.getCreateService().click();
+    browser.driver.switchTo().activeElement();
+    browser.driver.sleep(Common.miniWait);
     var min = 111111111;
     var max = 999999999;
     var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
     servicename = 'servicename' + randomNum;
+    // First Account with east Region
     createservice(servicename);
+    jazzServices_po.accountSelect().click();
+    jazzServices_po.secountAccount().click();
+    jazzServices_po.regionSelect().click();
+    jazzServices_po.westRegion().click();
     serviceapprover();
     browser.driver.sleep(Common.mediumWait);
     //Assert-Verifying the created service,Type and Status of the API
@@ -108,7 +115,7 @@ xdescribe('Overview', () => {
     waitforskiptest(jazzServices_po.serviceStatus(servicename), Common.xxlWait);
   });
 
-  it('Verify API Service and Navigation', () => {
+  it('Verify 1st account with us-east-1 Service and Navigation', () => {
     browser.driver.sleep(Common.microWait);
     commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
     browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
@@ -127,7 +134,7 @@ xdescribe('Overview', () => {
     browser.driver.switchTo().activeElement();
   });
 
-  it('Verify METRICS Navigation for API', () => {
+  it('Verify METRICS Navigation for 1st account with us-east-1', () => {
     browser.sleep(Common.microWait);
     jazzServices_po.getTestAPI().click().then(null, function (err) {
       console.log("the error occurred is : " + err.name);
@@ -194,21 +201,21 @@ xdescribe('Overview', () => {
     });
   });
 
-  it('Verify API Deployments', () => {
+  it('Verify 1st account with us-east-1 Deployments', () => {
     commonUtils.verifyDelpoyment();
   });
 
-  it('Verify API Asset', () => {
+  it('Verify 1st account with us-east-1 Asset', () => {
     commonUtils.verifyAsset();
 
   });
 
-  it('Verify API Logs', () => {
+  it('Verify 1st account with us-east-1 Logs', () => {
     commonUtils.verifyLogs();
 
   });
 
-  it('Verify METRICS COUNT for API', () => {
+  it('Verify METRICS COUNT for 1st account with us-east-1', () => {
     browser.sleep(Common.miniWait);
     commonUtils.fluentwaittry(jazzServices_po.getMetrices(), Common.shortWait);
     jazzServices_po.getMetrices().click();
@@ -219,7 +226,7 @@ xdescribe('Overview', () => {
     
   });
 
-  it('Identifying Environment and Navigation for API', () => {
+  it('Identifying Environment and Navigation for 1st account with us-east-1', () => {
     browser.driver.sleep(Common.microWait);
     commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.mediumWait);
     jazzServices_po.getServiceHomePage().click();
@@ -234,7 +241,7 @@ xdescribe('Overview', () => {
     browser.sleep(Common.miniWait);
   });
 
-  it('Create the Test Branch for API', () => {
+  it('Create the Test Branch for 1st account with us-east-1', () => {
     browser.getAllWindowHandles().then(function (handles) {
       browser.sleep(Common.microWait);
       var min = 11;
@@ -350,7 +357,7 @@ xdescribe('Overview', () => {
     });
   });
 
-  it('Verify METRICS Navigation for API Test Branch', () => {
+  it('Verify METRICS Navigation for 1st account with us-east-1 Test Branch', () => {
     commonUtils.fluentwaittry(jazzServices_po.getTestAPI(), Common.mediumWait);
     expect(jazzServices_po.getTestAPI().getText()).toEqual('TEST API');
     browser.wait(EC.elementToBeClickable(jazzServices_po.getTestAPI()), Common.timeOutHigh);
@@ -413,19 +420,19 @@ xdescribe('Overview', () => {
       });
     });
   });
-  it('Verify API Deployments for Test Branch', () => {
+  it('Verify 1st account with us-east-1 Deployments for Test Branch', () => {
     commonUtils.verifyDelpoyment();
   });
 
-  it('Verify API Asset for Test Branch', () => {
+  it('Verify 1st account with us-east-1 Asset for Test Branch', () => {
     commonUtils.verifyAsset();
   });
 
-  it('Verify API Logs for Test Branch', () => {
+  it('Verify 1st account with us-east-1 Logs for Test Branch', () => {
     commonUtils.verifyLogs();
   });
 
-  it('Verify METRICS COUNT for API for Test Branch', () => {
+  it('Verify METRICS COUNT for 1st account with us-east-1 for Test Branch', () => {
     browser.driver.sleep(Common.microWait);
     commonUtils.fluentwaittry(jazzServices_po.getMetrices(), Common.mediumWait);
     jazzServices_po.getMetrices().click();

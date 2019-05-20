@@ -19,7 +19,7 @@ import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 import { Common } from '../common/commontest';
 
 
-describe('Overview', () => {
+xdescribe('Overview', () => {
   let jazzServices_po: Jazz;
   let commonUtils: Common;
 
@@ -39,6 +39,10 @@ describe('Overview', () => {
     if (flag == 0) {
       pending();
     }
+  });
+
+  afterAll(() => {
+    browser.close();
   });
 
   function createservice(servicename) {

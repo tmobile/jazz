@@ -409,5 +409,27 @@ export class Jazz {
   testError() {
     return element(by.xpath('//*[@id="main-message"]/h1/span'));  
   }
+  getBuildCustom() { 
+    return element(by.xpath('//div[@class="icon-icon-sls-app"]//img'));  
+    }
+
+  accountSelect() { 
+    return element(by.xpath('//div[contains(@class,"each-section-accReg")]//button[contains(@class,"btn dropdown-btn dropdown-toggle")]'));  
+    }
+  regionSelect() { 
+    return element(by.xpath('//div[contains(@class,"col-lg-8 col-md-8")]//div[2]//div[2]//dropdown[1]//div[1]//button[1]//span[2]'));  
+    }
+  firstAccount() { 
+    return element(by.xpath('//section[4]/div/div[2]/section/div/div[1]/div[2]/dropdown/div/ul/li[1]/a'));  
+    }
+  secountAccount() { 
+    return element(by.xpath('//section[4]/div[1]/div[2]/section[1]/div[1]/div[1]/div[2]/dropdown[1]/div[1]/ul[1]/li[2]/a[1]'));  
+    }
+  eastRegion() { 
+    return element(by.xpath('//a[contains(text(),"us-east-1")]'));  
+    }
+  westRegion() { 
+    return element(by.xpath('//a[contains(text(),"us-west-2")]'));  
+    }
 
 }
