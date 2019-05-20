@@ -412,6 +412,7 @@ enum SBR_Type {
    AWS_DESCRIPTION("aws-description", new AwsDescriptionValidator()),
    AWS_VAR_VALUE("aws-var-value", new AwsVariableNameValidator()),
    FUNCTION("function", new FunctionValidator()),
+   PLUGIN("plugin", null), 
    EVENT("event", new EventValidator()),
    RESOURCE("resource", new ResourceValidator()),
    AWS_POLICY("aws-policy",  new PolicyValidator()), // TODO Must provide a validator
