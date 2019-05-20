@@ -161,8 +161,8 @@ node ()  {
   stage('Copying generated NPM build files to Jazz-Web S3 bucket') {
     sh """
     aws s3 ls ${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB} --profile cloud-api
-    aws s3 cp jazz_ui/dist s3://${config_loader.PLATFORM.AWS.S3.BUCKET_WEB} --recursive --include "*" --profile cloud-api
-    aws s3 ls ${config_loader.PLATFORM.AWS.S3.BUCKET_WEB} --profile cloud-api
+    aws s3 cp jazz_ui/dist s3://${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB} --recursive --include "*" --profile cloud-api
+    aws s3 ls ${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB} --profile cloud-api
     """
   }
   stage('Invalidating CloudFront') {
