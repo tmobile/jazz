@@ -524,7 +524,16 @@ def buildSlsApp(String runtime, String repo_name) {
       sh "mkdir -p $GOPATH/src"
       sh "rsync -a --exclude='.*' $GOPATH/" + repo_name + " $GOPATH/src"
       sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
-      sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/" + repo_name + "/main.go"
+      dirs = readDir("${env.WORKSPACE}/src/${repo_name}/functions")
+      def size = dirs.size()
+      if( size > 0) {
+        for(item in dirs) {
+          def functionpath = "$GOPATH/src/${repo_name}/functions/${item}"
+          sh "env GOOS=linux GOARCH=amd64 go build -o functions/${item}/main ${functionpath}/main.go"
+        }   
+      } else {
+        error "No Functions Found..skipping build"
+      }
     }
   }
 }
@@ -553,7 +562,7 @@ def validateDeploymentConfigurations(def prop) {
 		if (_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "java8", "go1.x"]
+			def validRuntimes = ["nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x"]
 			def flag = false
 
 			for (int i = 0; i < validRuntimes.size(); i++) {
@@ -819,6 +828,17 @@ def runValidation(String runtime) {
     // placeholder for adding runtime specific validations
   }
 }
+
+@NonCPS
+def readDir(dirPath) {
+  def  dirsl = [] 
+  new File(dirPath).eachDir() {
+    dirs -> println dirs.getName() 
+    dirsl.add(dirs.getName())
+  }
+  dirsl
+}
+
 
 @NonCPS
 def parseJson(jsonString) {
