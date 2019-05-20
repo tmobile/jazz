@@ -90,7 +90,7 @@ node()  {
 	accountDetails = utilModule.getAccountInfo(service_config);
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
-	def jazz_prod_api_id = getApiIDName('PROD', service_config, accountDetailsPrimary)
+	def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
     g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
 		auth_token = setCredentials()
@@ -303,8 +303,8 @@ def generateAssetUrl(){
 	return url
 }
 
-def getApiIDName(stage, service_config, accountDetails) {
-	return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, service_config)
+def getApiIDName(accountDetails) {
+	return awsAPIGatewayModule.getApiGatewayCore(accountDetails)
 }
 
 def generateAssetInfo(){

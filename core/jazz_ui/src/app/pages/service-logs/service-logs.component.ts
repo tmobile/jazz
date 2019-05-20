@@ -621,34 +621,33 @@ export class ServiceLogsComponent implements OnInit {
 			this.logs[i].message=this.logs[i].message.replace(reg,'');
 			this.logs[i].request_id=this.logs[i].request_id.substring(0,this.logs[i].request_id.length-1);
 			this.logs[i].message=this.logs[i].message.replace(this.logs[i].request_id,'')
-
-			
 		}
 
 	}
 
 	getenvData() {
 		let self=this;
-    if (this.service == undefined) {
-      return
-    }
-    this.http.get('/jazz/environments?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
-      response => {
-        response.data.environment.map((item)=>{
-          if(item.physical_id !== "master" && item.status === "deployment_completed"){
+		if (this.service == undefined) {
+			return
+		}
+		this.http.get('/jazz/environments?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
+			response => {
+				response.data.environment.map((item) => {
+					if(item.physical_id !== "master" && item.status === "deployment_completed"){
 						self.logsData = item.logical_id;
 						self.getFilter(self.advancedFilters)
 						if(this.filterSelectedValue){
 							self.instance_yes.filterSelected = true;
 						}
 						self.instance_yes.showEnvironment = true;
-          }
-        })
-      },
-      err => {
-        console.log("error here: ", err);
-      })
-  };
+					}
+				})
+			},
+			err => {
+				console.log("error here: ", err);
+			}
+		)
+	};
 
 	fetchEnvlist(){
 		var env_list=this.cache.get('envList');
@@ -661,8 +660,8 @@ export class ServiceLogsComponent implements OnInit {
 			if(x.service.currentValue.domain){
 				this.getenvData();
 			}
-		  this.fetchEnvlist();
-	  }
+			this.fetchEnvlist();
+		}
 	ngOnInit() {
 		var todayDate = new Date();
 		this.payload= {

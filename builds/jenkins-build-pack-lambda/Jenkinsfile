@@ -108,7 +108,7 @@ node() {
     config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
   }
 
-  def jazz_prod_api_id = getApiIDName('PROD', config, accountDetailsPrimary)
+  def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
   if(domain && domain != "jazz"){
     auth_token = setCredentials()
@@ -332,7 +332,7 @@ node() {
             def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
             def functionName = "arn:aws:lambda:${service_config.region}:${service_config.accountId}:${lambdaFnNameValue}"
 
-            addPermission(functionName, primaryAccountValue);
+            addPermission(lambdaFnNameValue, primaryAccountValue, credsId, config);
           }
 
           if (domain && domain == "jazz") {
@@ -364,9 +364,14 @@ node() {
   }
 }
 
-def addPermission(functionName, primaryAccountValue){
+def addPermission(functionName, primaryAccountValue, credsId, service_config){
+  try {
+		sh "aws lambda remove-permission --function-name ${functionName} --region ${service_config.region} --statement-id ${functionName}_invoke --profile ${credsId}"
+	} catch(Exception ex) {
+		// ignore if the policy is not there
+	} 
   /* Adding permission to invoke the function created in secondary account*/
-  sh "aws lambda add-permission --function-name ${functionName} --region ${service_config.region} --statement-id Id-123 --action 'lambda:InvokeFunction' --principal ${primaryAccountValue}"
+  sh "aws lambda add-permission --function-name ${functionName} --region ${service_config.region} --statement-id ${functionName}_invoke --action 'lambda:InvokeFunction' --principal ${primaryAccountValue} --profile ${credsId}"
 }
 
 def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld, credsId, accountDetails, config) {
@@ -496,8 +501,8 @@ def servelessDeploy(env, envBucketKey, credsId, env_key, accountDetails){
   return outputLog
 }
 
-def getApiIDName(stage, service_config, accountDetails) {
-	return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, service_config)
+def getApiIDName(accountDetails) {
+	return awsAPIGatewayModule.getApiGatewayCore(accountDetails)
 }
 
 def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isSQSEventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {

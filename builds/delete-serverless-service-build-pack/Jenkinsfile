@@ -68,7 +68,7 @@ node {
 	}
 
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
-	def jazz_prod_api_id = getApiIDName('PROD', service_config, accountDetailsPrimary)
+	def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
   		g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
 	auth_token = getAuthToken()
@@ -305,8 +305,8 @@ def deletePolicies(serviceId, authToken, aclUrl) {
 	}
 }
 
-def getApiIDName(stage, service_config, accountDetails) {
-	return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, service_config)
+def getApiIDName(accountDetails) {
+	return awsAPIGatewayModule.getApiGatewayCore(accountDetails)
 }
 
 def cleanupEventSourceMapping(env) {
@@ -645,6 +645,7 @@ def getApiId(stage) {
 
 	def envInfo = environmentMetadataLoader.getEnvironmentInfo()
 	def envMetadata = [:]
+	def apiIdMapping = null;
 
 	if (envInfo && envInfo["metadata"]) {
 		envMetadata = envInfo["metadata"]
@@ -655,11 +656,22 @@ def getApiId(stage) {
 	}
 	def accountAPIGateway = utilModule.getApiId(service_config)
 	if (stage.endsWith('-dev')) {
-		return accountAPIGateway["DEV"]
+		apiIdMapping = accountAPIGateway["DEV"]
 	} else if (stage == 'stg') {
-		return accountAPIGateway["STG"]
+		apiIdMapping = accountAPIGateway["STG"]
 	} else if (stage == 'prod') {
-		return accountAPIGateway["PROD"]
+		apiIdMapping = accountAPIGateway["PROD"]
+	}
+
+	def namespace = service_config['domain']
+	def service = service_config['service']
+
+	if (apiIdMapping["${namespace}_${service}"]) {
+		return apiIdMapping["${namespace}_${service}"];
+	} else if (apiIdMapping["${namespace}_*"]) {
+		return apiIdMapping["${namespace}_*"];
+	} else {
+		return apiIdMapping["*"];
 	}
 }
 
@@ -688,7 +700,7 @@ def cleanUpApiDocs(stage) {
  * @return  folder name
  */
 def getApiDocsFolder(stage) {
-	return configLoader.AWS.S3.API_DOC
+	return configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC
 }
 
 /**
