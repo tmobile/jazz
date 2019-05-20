@@ -15,7 +15,6 @@ import groovy.transform.Field
 @Field def configLoader
 @Field def scmModule
 @Field def events
-@Field def lambdaEvents
 @Field def serviceMetadataLoader
 @Field def utilModule
 @Field def environmentDeploymentMetadata
@@ -857,10 +856,6 @@ def loadBuildModules(buildModuleUrl) {
 
     utilModule = load "utility-loader.groovy"
     echo "Util module loaded successfully."
-
-    lambdaEvents = load "aws-lambda-events-module.groovy"
-    lambdaEvents.initialize(configLoader, utilModule)
-    echo "Lambda event module loaded successfully."
 
     sonarModule = load "sonar-module.groovy"
     echo "Sonar module loaded successfully."
