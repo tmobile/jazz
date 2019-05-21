@@ -503,7 +503,7 @@ def deleteEventSourceMapping (lambda_arn, assets_api, auth_token, service_config
       }
       //Deleting dynamodb stream, which is created by jazz using aws cli
       if(service_config['event_source_dynamodb']) {
-        checkAndDeleteDynamoDbStream(assets_api, auth_token, service_config, env)
+        checkAndDeleteDynamoDbStream(assets_api, auth_token, service_config, env, credsId)
       }
       //Deleting s3 event notification configuration, which is created by jazz using aws cli
       if(service_config['event_source_s3']) {
