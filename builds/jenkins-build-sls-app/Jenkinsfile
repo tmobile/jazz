@@ -137,7 +137,7 @@ node() {
 
   dir(repo_name) {
   /* Writing the file from config */
-    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, environment_logical_id) // Generating the deployment descriptor
+    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, environment_logical_id, configLoader) // Generating the deployment descriptor
     echo "prepareServerlessYml = ${deploymentDescriptor}"
     writeYaml(file: './serverless.yml', data: deploymentDescriptor)
 

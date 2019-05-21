@@ -1115,7 +1115,7 @@ def LoadConfiguration() {
 **/
 
 def loadServerlessYml(config, env){
-	def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env) // Generating the deployment descriptor
+	def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader) // Generating the deployment descriptor
 	echo "prepareServerlessYml = ${deploymentDescriptor}"
 	writeYaml(file: './serverless.yml', data: deploymentDescriptor)
 }
