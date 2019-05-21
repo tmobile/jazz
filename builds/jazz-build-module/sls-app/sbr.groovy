@@ -233,6 +233,15 @@ class FunctionValidator implements TypeValidator {
   }
 }
 
+class PluginValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z0-9]*"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Plugin :" + aValue)
+  }
+}
+
 class ResourceValidator implements TypeValidator {
   public void isValid(def aValue) {
     def pattern = "^[a-zA-Z]+"
@@ -412,7 +421,7 @@ enum SBR_Type {
    AWS_DESCRIPTION("aws-description", new AwsDescriptionValidator()),
    AWS_VAR_VALUE("aws-var-value", new AwsVariableNameValidator()),
    FUNCTION("function", new FunctionValidator()),
-   PLUGIN("plugin", null), 
+   PLUGIN("plugin", new PluginValidator()), 
    EVENT("event", new EventValidator()),
    RESOURCE("resource", new ResourceValidator()),
    AWS_POLICY("aws-policy",  new PolicyValidator()), // TODO Must provide a validator
