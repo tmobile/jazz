@@ -151,6 +151,7 @@ export class ServiceOverviewComponent implements OnInit {
   editEvents: boolean = false;
   generalAdvanceDisable: boolean = true;
   eventDisable  : boolean = true;
+  accountName: any
 
   constructor(
     private router: Router,
@@ -1159,6 +1160,14 @@ export class ServiceOverviewComponent implements OnInit {
     if(this.service){
       if(this.service.eventScheduleEnable !== undefined){
         this.service['eventScheduleEnablePresent'] = true
+      }
+      if(this.service.accountID){
+        let accountValue = this.service.accountID
+        env_oss.accountMap.map((item)=>{
+          if(item.account === accountValue){
+            this.accountName = item.accountName
+          }
+        })
       }
     }
     if(this.rateExpression && this.rateExpression.interval){

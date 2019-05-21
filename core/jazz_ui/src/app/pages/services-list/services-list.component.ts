@@ -35,7 +35,7 @@ export class ServicesListComponent implements OnInit {
   private toastMessage:any;
   private subscription:any;
   errBody: any;
-	parsedErrBody: any;
+  parsedErrBody: any;
   errMessage: any;
   selectedList:string='all';
   // @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -638,7 +638,7 @@ onFilterCancel(event) {
   backupdata = [];
   ngOnInit() {
     this.backupdata = this.serviceList;
-  	this.filter = new Filter(this.serviceList);
+    this.filter = new Filter(this.serviceList);
     this.sort = new Sort(this.serviceList);
     setTimeout(() => {
       this.closeDetelePopup();
@@ -738,4 +738,5 @@ onFilterCancel(event) {
 
 
 }
+
 

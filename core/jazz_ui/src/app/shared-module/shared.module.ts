@@ -11,6 +11,10 @@ import {JazzTableComponent} from '../secondary-components/jazz-table/jazz-table.
 import {TableTemplateComponent} from '../secondary-components/table-template/table-template.component';
 import {MobileSecondaryTabComponent} from '../secondary-components/mobile-secondary-tab/mobile-secondary-tab.component';
 import {DropdownComponent} from '../primary-components/dropdown/dropdown.component';
+import {RadioGroupComponent} from '../primary-components/radio-group/radio-group.component';
+import {CheckboxGroupComponent} from '../primary-components/checkbox-group/checkbox-group.component';
+import {CheckboxGroupRegionComponent} from '../primary-components/checkbox-group-region/checkbox-group-region.component';
+import {FilterTagComponent} from '../primary-components/filter-tag/filter-tag.component';
 import {InputComponent} from '../primary-components/input/input.component';
 import {BtnJazzPrimaryComponent} from '../primary-components/btn-jazz-primary/btn-jazz-primary.component';
 import {SidebarComponent} from '../secondary-components/sidebar/sidebar.component';
@@ -131,6 +135,10 @@ for (let i in specificComponents) {
     ChartjsLinegraphComponent,
     FilterModalComponent,
     ServiceMetricsComponent,
+    RadioGroupComponent,
+    CheckboxGroupComponent,
+    CheckboxGroupRegionComponent,
+    FilterTagComponent,
     Error403Component,
     RadioCheckboxComponent,
     ...declarationsArray,
@@ -143,6 +151,10 @@ for (let i in specificComponents) {
     JazzHeaderComponent,
     JazzTableComponent,
     DropdownComponent,
+    RadioGroupComponent,
+    CheckboxGroupComponent,
+    CheckboxGroupRegionComponent,
+    FilterTagComponent,
     TabsComponent,
     SidebarComponent,
     InputComponent,
