@@ -1115,60 +1115,9 @@ def LoadConfiguration() {
 **/
 
 def loadServerlessYml(config, env){
-	def deploymentDescriptor = prepareServerlessYml(config, env) // Generating the deployment descriptor
+	def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env) // Generating the deployment descriptor
 	echo "prepareServerlessYml = ${deploymentDescriptor}"
 	writeYaml(file: './serverless.yml', data: deploymentDescriptor)
-}
-
-/**
-* Json representations of 
-* serverless.yml
-**/
-def prepareServerlessYml(aConfig, env) {
-	def deploymentDescriptor = aConfig['deployment_descriptor']
-	try {
-		def appContent = readFile('application.yml').trim()
-		if(!appContent.isEmpty()) deploymentDescriptor = appContent
-		} catch(e) {
-			echo "Error occured while reading application.yml. The default value from config will be used. Exception is $e"
-		}
-			
-		def doc = deploymentDescriptor  ? readYaml(text: deploymentDescriptor ) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
-		
-		context =["environment_logical_id": env,
-						"INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
-						"REGION": configLoader.AWS.REGION,
-						"cloud_provider": "aws"]
-						
-		def rules = readYaml(text: slsBuildRules.sbrContent)
-		def resultingDoc = slsBuildRules.processServerless(doc,
-																										 rules,
-																										 aConfig,
-																										 context)
-
-// Supplying the Outputs element to render all arns for all 'resources/Resources that got listed'
-		def smallResourcesElem = resultingDoc['resources']
-		if(smallResourcesElem) {
-			def bigResourcesElem = smallResourcesElem['Resources']
-			if(bigResourcesElem) {
-				def bigOutputsElem = smallResourcesElem['Outputs']
-				if(!bigOutputsElem) {
-					bigOutputsElem = [:]
-					smallResourcesElem['Outputs'] = bigOutputsElem
-				}
-				def resourceKeys = bigResourcesElem.collect{key, val -> key}
-				/* Forming a record that extracts the arn from resulting item for each of resource key extracted from resources:
-				UsersTableArn:\n
-				Value:\n
-				\"Fn::GetAtt\": [ usersTable, Arn ]\n
-				*/
-				resourceKeys.collect{name ->
-				bigOutputsElem[name+'Arn']=["Value":["Fn::GetAtt":[name, "Arn"]]]
-			}
-		}
-	}
-	
-	return resultingDoc
 }
 
 def loadServerlessConfig() {
