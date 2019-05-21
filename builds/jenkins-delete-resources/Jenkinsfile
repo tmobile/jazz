@@ -129,7 +129,8 @@ def processApiGateway(apigateway, regionAws) {
   k,
   v ->
   echo "Processing API Gateway  of ${k}"
-  deleteAPIGateway(v, regionAws)
+  def apiId = v["*"]
+  deleteAPIGateway(apiId, regionAws)
  }
 }
 
