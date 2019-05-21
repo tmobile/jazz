@@ -235,7 +235,7 @@ class FunctionValidator implements TypeValidator {
 
 class PluginValidator implements TypeValidator {
   public void isValid(def aValue) {
-    def pattern = "^[a-zA-Z0-9]*"
+    def pattern = "^[a-zA-Z0-9_.-]+"
     def match = aValue ==~ pattern
     if(!match)
     throw new IllegalArgumentException("Invalid Plugin :" + aValue)
