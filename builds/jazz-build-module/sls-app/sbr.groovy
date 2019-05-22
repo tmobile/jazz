@@ -260,14 +260,24 @@ class EventValidator implements TypeValidator {
   }
 }
 
+class AwsVariableValueValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Aws variable value: " + aValue );
+  }
+}
+
 class AwsVariableNameValidator implements TypeValidator {
   public void isValid(def aValue) {
     def pattern = "^[a-zA-Z]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException("Invalid Aws variable: " + aValue );
+    throw new IllegalArgumentException("Invalid Aws variable name: " + aValue );
   }
 }
+
 
 class GenericArnValidator implements TypeValidator {
   public void isValid(def aValue) {
@@ -410,7 +420,8 @@ enum SBR_Type {
    PATH("path", new AwsPathValidator()),
    AWS_PRINCIPAL("aws-principal", new AwsPrincipleValidator()),
    AWS_DESCRIPTION("aws-description", new AwsDescriptionValidator()),
-   AWS_VAR_VALUE("aws-var-value", new AwsVariableNameValidator()),
+   AWS_VAR_VALUE("aws-var-value", new AwsVariableValueValidator()),
+   AWS_VAR_NAME("aws-var-name", AwsVariableNameValidator()),
    FUNCTION("function", new FunctionValidator()),
    EVENT("event", new EventValidator()),
    RESOURCE("resource", new ResourceValidator()),
@@ -580,15 +591,24 @@ enum SBR_Render {
   }
 
   static final SBR_Render getByTagValue(aTagValue) {
-    switch(aTagValue) {
-      case "user-wins": return USER_WINS;
-      case "config-wins": return CONFIG_WINS;
-      case "user-only": return USER_ONLY;
-      case "config-only": return CONFIG_ONLY;
-      case "exception-on-mismatch": return EXCEPTION_ON_MISMATCH;
-      case "merge": return MERGE;
-      default: throw new IllegalArgumentException("[SBR_Render] Unknown tagValue: "+aTagValue)
-    }
+    // switch(aTagValue) {
+    //   case "user-wins": return USER_WINS;
+    //   case "config-wins": return CONFIG_WINS;
+    //   case "user-only": return USER_ONLY;
+    //   case "config-only": return CONFIG_ONLY;
+    //   case "exception-on-mismatch": return EXCEPTION_ON_MISMATCH;
+    //   case "merge": return MERGE;
+    //   default: throw new IllegalArgumentException("[SBR_Render] Unknown tagValue: "+aTagValue)
+    // }
+
+    Map<String, SBR_Render> tagVal2RenderMap =  SBR_Render.values()
+                                                     .collect{aType -> [(aType.tagValue) : aType]}
+                                                     .inject([:]){acc, item -> item.each{entry -> acc.put(entry.key, entry.value)}; return acc}
+
+     SBR_Render theRender = tagVal2RenderMap[aTagValue]
+     if(theRender == null) throw new IllegalArgumentException("[SBR_Render] Unknown tagValue: "+aTagValue)
+
+     return theRender
   }
 
 }
