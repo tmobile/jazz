@@ -21,6 +21,7 @@ import groovy.transform.Field
 @Field def sonarModule
 @Field def whiteListModule
 @Field def slsBuildRules
+@Field def awsAPIGatewayModule
 
 @Field def auth_token = ''
 @Field def config
@@ -33,8 +34,9 @@ node() {
   def jazzBuildModuleURL = getBuildModuleUrl()
   loadBuildModules(jazzBuildModuleURL)
 
-  def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
-  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+  def accountDetailsPrimary = utilModule.getAccountInfoPrimary();
+	def jazz_prod_api_id = awsAPIGatewayModule.getApiGatewayCore(accountDetailsPrimary);
+  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
   echo "Build triggered via branch: " + params.scm_branch + " with params " + params
   def _event = ""
@@ -847,6 +849,10 @@ def loadBuildModules(buildModuleUrl) {
     slsBuildRules = load "sls-app/sbr.groovy"
     slsBuildRules.initialize(whiteListModule)
     echo "sls-app/sbr.groovy has been loaded"
+
+    awsAPIGatewayModule = load "aws-apigateway-module.groovy"
+    awsAPIGatewayModule.initialize()
+    echo "aws-apigateway-module has been loaded"
 
   }
 }

@@ -68,14 +68,13 @@ node {
 	}
 
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
-	def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
-  		g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
+	def jazz_prod_api_id = awsAPIGatewayModule.getApiGatewayCore(accountDetailsPrimary);
+  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
 	auth_token = getAuthToken()
 
 	stage("Initialization") {
-
-		if (params.domain && params.domain != "") {
+    if (params.domain && params.domain != "") {
 			repo_name = params.domain + "_" + params.service_name
 		}
 		sh 'rm -rf ' + repo_name
@@ -112,8 +111,7 @@ node {
       service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
     }
 
-		service_config.credentialId = accountInfo.CREDENTIAL_ID
-
+		service_config.credentialId = accountInfo.CREDENTIAL_ID;
     lambdaEvents.setServiceConfig(service_config)
 		environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 		def environmentList = environmentMetadataLoader.getEnvironmentLogicalIds()
@@ -161,7 +159,6 @@ node {
 				flowType = "SLSAPP"
 			} else {
 				error "Invalid project configuration"
-
 			}
 		}
 	}
@@ -339,15 +336,11 @@ def deletePolicies(serviceId, authToken, aclUrl) {
 	}
 }
 
-def getApiIDName(accountDetails) {
-	return awsAPIGatewayModule.getApiGatewayCore(accountDetails)
-}
-
 def cleanupEventSourceMapping(env) {
-		withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: service_config.credentialId, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
-	]) {
-		def credsId = null
+  withCredentials([
+    [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: service_config.credentialId, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+	]){
+    def credsId = null
 		try {
 			def randomString = utilModule.generateRequestId();
 			credsId = "jazz-${randomString}";
@@ -613,7 +606,7 @@ def cleanUpApiGatewayResources(stage, path) {
 				current_environment = 'prod'
 			}
 			echo "Resource search key for ApiGateway : $resource_search_key"
-			def aws_api_id = getApiId(stage)
+			def aws_api_id = awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountInfo, service_config)
 
 			echo "API Gateway Id is : ${aws_api_id}"
 
@@ -665,47 +658,6 @@ def getServiceBucket(stage) {
 		return configLoader.JAZZ.PLATFORM.AWS.S3.WEBSITE_STG_BUCKET;
 	} else if (stage == 'prod') {
 		return configLoader.JAZZ.PLATFORM.AWS.S3.WEBSITE_PROD_BUCKET;
-	}
-}
-
-
-/**
- * Get the API Id of the gateway specific to an environment. The value will be retrieved from environments table and if not available will try to retrieve it from config
- * @param  stage the environment
- * @return  api Id
- */
-def getApiId(stage) {
-	echo "stage: $stage"
-
-	def envInfo = environmentMetadataLoader.getEnvironmentInfo()
-	def envMetadata = [:]
-	def apiIdMapping = null;
-
-	if (envInfo && envInfo["metadata"]) {
-		envMetadata = envInfo["metadata"]
-	}
-
-	if (envMetadata["AWS_API_ID"] != null) {
-		return envMetadata["AWS_API_ID"]
-	}
-	def accountAPIGateway = utilModule.getApiId(service_config)
-	if (stage.endsWith('-dev')) {
-		apiIdMapping = accountAPIGateway["DEV"]
-	} else if (stage == 'stg') {
-		apiIdMapping = accountAPIGateway["STG"]
-	} else if (stage == 'prod') {
-		apiIdMapping = accountAPIGateway["PROD"]
-	}
-
-	def namespace = service_config['domain']
-	def service = service_config['service']
-
-	if (apiIdMapping["${namespace}_${service}"]) {
-		return apiIdMapping["${namespace}_${service}"];
-	} else if (apiIdMapping["${namespace}_*"]) {
-		return apiIdMapping["${namespace}_*"];
-	} else {
-		return apiIdMapping["*"];
 	}
 }
 
@@ -1285,7 +1237,7 @@ def loadBuildModules(buildModuleUrl){
 		echo "SCM module loaded successfully."
 
 		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
-    	awsAPIGatewayModule.initialize()
+    awsAPIGatewayModule.initialize()
 
 		events = load "events-module.groovy"
 		echo "Event module loaded successfully."

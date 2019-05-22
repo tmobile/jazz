@@ -90,10 +90,10 @@ node()  {
 	accountDetails = utilModule.getAccountInfo(service_config);
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
-	def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
-    g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
+	def jazz_prod_api_id = awsAPIGatewayModule.getApiGatewayCore(accountDetails);
+  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
-		auth_token = setCredentials()
+	auth_token = setCredentials()
 
 	environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
@@ -301,10 +301,6 @@ def generateAssetUrl(){
 		url = "http://${s3Bucket}.s3-website-${service_config.region}.amazonaws.com/${service_config['domain']}-${service_config['service']}/${environment}/index.html"
 	}
 	return url
-}
-
-def getApiIDName(accountDetails) {
-	return awsAPIGatewayModule.getApiGatewayCore(accountDetails)
 }
 
 def generateAssetInfo(){

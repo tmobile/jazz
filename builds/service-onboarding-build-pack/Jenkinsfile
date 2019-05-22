@@ -62,8 +62,8 @@ node  {
 
 		accountDetails = utilModule.getAccountInfo(service_config);
 
-		def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
-  		g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
+		def jazz_prod_api_id = awsAPIGatewayModule.getApiGatewayCore(accountDetails);
+  	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
 		auth_token = getAuthToken()
 
@@ -402,10 +402,6 @@ def LoadConfiguration() {
     }
 	echo "Loaded configurations....$prop"
 	return prop
-}
-
-def getApiIDName(accountDetails) {
-	return awsAPIGatewayModule.getApiGatewayCore(accountDetails)
 }
 
 /**
