@@ -409,39 +409,13 @@ addgroup(category){
    if (this.isAddOrDelete) {
      let policiesList = Object.keys(this.access).map(eachcat => (this.access[eachcat]))
      let list = [].concat.apply([], policiesList);
-     let checkLen = [], isAdminOrWrite = false, diffValue=false, validObject={};
+     let checkLen = [], validObject={};
 
      this.categoryArray.forEach(eachCat=> {
        if (this.access[eachCat].length === 1 && this.access[eachCat][0].permission === 'read') {
          checkLen.push(this.access[eachCat][0]);
-       } else if (this.access[eachCat].length > 1) {
-         this.access[eachCat].forEach(eachObj => {
-           if (eachObj.permission === "admin" || eachObj.permission === "write") {
-             isAdminOrWrite = true;
-             return;
-           }
-         })
        }
      });
-
-     if(this.originalAccessDetails.length > list.length){
-       this.categoryArray.map((item)=>{
-         this.access[item].map((eachObj)=>{
-           if (eachObj.permission === "admin" || eachObj.permission === "write") {
-             isAdminOrWrite = true;
-             return;
-           }
-         })
-       })
-     }
-
-     if(this.originalAccessDetails.length === list.length){
-       this.originalAccessDetails.map((item,index)=>{
-         if(item.permission !== list[index].permission){
-           diffValue = true;
-         }
-       })
-     }
 
      this.categoryArray.map((item)=>{
        this.access[item].map((eachObj)=>{
@@ -453,6 +427,10 @@ addgroup(category){
        })
      })
      let validLength = Object.keys(validObject).length;
+     if(validLength === 1 && this.access['manage'][0].permission === "admin") {
+       validLength = 3;
+       checkLen = [];
+      }
 
      let check = list.filter(each => {
        if (!each.userId) {
@@ -462,7 +440,7 @@ addgroup(category){
        }
 
      });
-     if (!check.length && !checkLen.length && isAdminOrWrite && validLength === 3) return false;
+     if (!check.length && !checkLen.length && validLength === 3) return false;
      else return true;
    }
  }

@@ -468,6 +468,9 @@ export class EnvLogsSectionComponent implements OnInit {
 					var pageCount = response.data.count;
 					if (pageCount) {
 						this.totalPagesTable = Math.ceil(pageCount / this.limitValue);
+						if(this.totalPagesTable === 1){
+						   this.paginationSelected = false;
+						}
 					}
 					else {
 						this.totalPagesTable = 0;
@@ -490,7 +493,7 @@ export class EnvLogsSectionComponent implements OnInit {
 				try {
 					this.parsedErrBody = JSON.parse(this.errBody);
 					if (this.parsedErrBody.message != undefined && this.parsedErrBody.message != '') {
-						this.errMessage = this.parsedErrBody.message;
+						this.errMessage = this.errMessage || this.parsedErrBody.message;
 					}
 				} catch (e) {
 				}
