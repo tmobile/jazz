@@ -477,6 +477,10 @@ functions:
     sbr-type: "[aws-var-name:function]"
     sbr-render: user-only
 
+plugins:
+    sbr-type: "[aws-var-name:plugin]"
+    sbr-render: user-only
+
 # The "Resources" your "Functions" use.  Raw AWS CloudFormation goes in here.
 resources:
   Resources:

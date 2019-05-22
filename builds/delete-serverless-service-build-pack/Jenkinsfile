@@ -132,6 +132,8 @@ node {
 				} else {
 					cloudfrontEnabled = "false"
 				}
+			} else if(fileExists('build.sls-app')) {
+				flowType = "SLSAPP"
 			} else {
 				error "Invalid project configuration"
 
@@ -226,6 +228,38 @@ node {
 					}
 				}
 				break
+
+			case "SLSAPP":
+				stage('Undeploy Service') {
+					current_environment_id = _envId
+					loadServerlessYml(service_config, env)
+					try {
+						def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+						if (branch && branch != 'NA') {
+							events.setBranch(branch)
+							sonarModule.setBranch(branch)
+							branch = 'NA'
+						}
+						events.setEnvironment(_envId)
+						events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+							
+						echo 'undeploying function for environment: ' + _envId
+						
+						cleanupEventSourceMapping(_envId)
+						unDeployService(_envId)
+
+						if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
+							cleanupCodeQualityReports()
+						}
+						archiveAssetDetails(_envId)
+						events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
+					} catch (ex) {
+						events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+						error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
+					}
+				}
+			}
+			break
 
 			case "WEBSITE":
 				stage('Undeploy Website') {
@@ -1076,6 +1110,16 @@ def LoadConfiguration() {
 	return prop
 }
 
+/** 
+** Create Serverless.yml from config
+**/
+
+def loadServerlessYml(config, env){
+	def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader) // Generating the deployment descriptor
+	echo "prepareServerlessYml = ${deploymentDescriptor}"
+	writeYaml(file: './serverless.yml', data: deploymentDescriptor)
+}
+
 def loadServerlessConfig() {
 
 	def configPackURL = scmModule.getCoreRepoCloneUrl("serverless-config-pack")
@@ -1246,6 +1290,10 @@ def loadBuildModules(buildModuleUrl){
 
 		aclModule = load "acl-module.groovy"
 		echo "ACL module loaded successfully."
+
+		slsBuildRules = load "sls-app/sbr.groovy"
+		slsBuildRules.initialize()
+		echo "sls-app/sbr.groovy has been loaded"
 	}
 }
 
