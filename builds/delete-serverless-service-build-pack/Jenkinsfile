@@ -24,6 +24,7 @@ import groovy.json.JsonSlurperClassic
 @Field def apigeeModule
 @Field def lambdaEvents
 @Field def aclModule
+@Field def whiteListModule
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -231,37 +232,38 @@ node {
 
 			case "SLSAPP":
 				stage('Undeploy Service') {
-					current_environment_id = _envId
-					loadServerlessYml(service_config, env)
-					try {
-						def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
-						if (branch && branch != 'NA') {
-							events.setBranch(branch)
-							sonarModule.setBranch(branch)
-							branch = 'NA'
-						}
-						events.setEnvironment(_envId)
-						events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+					for (_envId in environmentIds) {
+						current_environment_id = _envId
+						loadServerlessYml(service_config, _envId)
+						try {
+							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+							if (branch && branch != 'NA') {
+								events.setBranch(branch)
+								sonarModule.setBranch(branch)
+								branch = 'NA'
+							}
+							events.setEnvironment(_envId)
+							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
 							
-						echo 'undeploying function for environment: ' + _envId
+							echo 'undeploying function for environment: ' + _envId
 						
-						cleanupEventSourceMapping(_envId)
-						unDeployService(_envId)
+							cleanupEventSourceMapping(_envId)
+							unDeployService(_envId)
 
-						if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
-							cleanupCodeQualityReports()
+							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
+								cleanupCodeQualityReports()
+							}
+							archiveAssetDetails(_envId)
+							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
+						} catch (ex) {
+							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+							error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
 						}
-						archiveAssetDetails(_envId)
-						events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
-					} catch (ex) {
-						events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
-						error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
 					}
 				}
-			}
-			break
+				break
 
-			case "WEBSITE":
+		  case "WEBSITE":
 				stage('Undeploy Website') {
 					for (_envId in environmentIds) {
 						current_environment_id = _envId
@@ -1115,6 +1117,7 @@ def LoadConfiguration() {
 **/
 
 def loadServerlessYml(config, env){
+	sh "rm -f ./serverless.yml" // remove if exists
 	def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader) // Generating the deployment descriptor
 	echo "prepareServerlessYml = ${deploymentDescriptor}"
 	writeYaml(file: './serverless.yml', data: deploymentDescriptor)
@@ -1291,8 +1294,12 @@ def loadBuildModules(buildModuleUrl){
 		aclModule = load "acl-module.groovy"
 		echo "ACL module loaded successfully."
 
+		whiteListModule = load "whitelist-validator-module.groovy"
+    whiteListModule.initialize()
+    echo "whitelist-validator-module module loaded successfully"
+
 		slsBuildRules = load "sls-app/sbr.groovy"
-		slsBuildRules.initialize()
+		slsBuildRules.initialize(whiteListModule)
 		echo "sls-app/sbr.groovy has been loaded"
 	}
 }
