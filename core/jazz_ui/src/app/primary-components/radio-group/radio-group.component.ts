@@ -1,4 +1,11 @@
-import { Component, OnInit ,Input, Output, EventEmitter} from '@angular/core';
+/**
+  * @type Component
+  * @desc Generic Radio group element
+  * @author Sughosh
+*/
+
+import { Component, OnInit, Input, Output, EventEmitter  } from '@angular/core';
+
 
 @Component({
   selector: 'radio-group',
@@ -6,16 +13,30 @@ import { Component, OnInit ,Input, Output, EventEmitter} from '@angular/core';
   styleUrls: ['./radio-group.component.scss']
 })
 export class RadioGroupComponent implements OnInit {
+
   @Input() radioContent;
+  @Input() IsEnvList:boolean=false;
+
   @Input() selected;
-  @Output() onSelected:EventEmitter<boolean> = new EventEmitter<boolean>();
+  @Input() public statusFilter: Function;
+  @Output() onRadioSelected:EventEmitter<boolean> = new EventEmitter<boolean>();
+
+  itemselected = "All";
+  onSelectionChange(value){
+    this.selected = value;
+    this.onRadioSelected.emit(value)
+  }
+
+  clearRadioFilter(){
+    this.onSelectionChange("All");
+  }
+
   constructor() { }
+
   ngOnInit() {
+
   }
-  
-  onRadioClick(selected){
-    this.onSelected.emit(selected)
-    this.selected = selected;
-  }
+
+
 
 }

@@ -1,65 +1,57 @@
 package com.slf.util;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Properties;
-
-import org.apache.log4j.Logger;
-
-import com.amazonaws.services.lambda.runtime.RequestHandler;
+import com.amazonaws.services.lambda.runtime.Context;
 import com.slf.exceptions.BadRequestException;
-import com.slf.model.Request;
 
 /**
- * The environment configuration reader class. Environment configurations can be specified in a properties file. 
- * Each environment will be having a separate properties file. For ex. dev.properties for 'DEV' 
- * 
+ * The environment configuration reader class. Environment configurations can be specified in a properties file.
+ * Each environment will be having a separate properties file. For ex. dev.properties for 'DEV'
+ *
  * Usage:
- * EnvironmentConfig configObject = new EnvironmentConfig(stage);
+ * EnvironmentConfig configObject = new EnvironmentConfig(stage, context);
  * String restUri = configObject.getConfig("ES_URL");
 
- * @author 
- * @version 
+ * @version
  *
  */
 public class EnvironmentConfig {
-	
-	static final Logger logger = Logger.getLogger(EnvironmentConfig.class);
-	
-	private Properties props = new Properties();
-	private String stage = null; 
 
-	public EnvironmentConfig(Request input) throws Exception {
-		super();
-		
-		if(null != input.getStage()) {
-			stage = input.getStage().toLowerCase();
-		}
+	private static Properties props = new Properties();
+	private String stage = null;
 
-		if(stage.isEmpty()) {
-			throw new BadRequestException("Invalid Stage. Can't load ENV configurations");
-		}
-		
+    public EnvironmentConfig(Map<String, Object> input, Context context) throws IOException {
+        super();
+
+        if(null != input.get("stage")) {
+            stage = ((String) input.get("stage")).toLowerCase();
+        } else {
+            String fnName = context.getFunctionName();
+            if(null != fnName) {
+                int lastIndx = fnName.lastIndexOf('-');
+                stage = fnName.substring(lastIndx+1);
+            }
+        }
+
+        if(stage.isEmpty()) {
+            throw new BadRequestException("Invalid Stage. Can't load ENV configurations");
+        }
+
 		String configFile = "/"+stage+".properties";
-		logger.info("Loading configuration file for env..:"+configFile);
 		props.load(this.getClass().getResourceAsStream(configFile));
 	}
-	
-	
-	public String getConfig(String key) {
-		if(props != null) {
-			String value = props.getProperty(key);
-			return value;
-		}
-		return null;
-	}
 
+    public String getConfig(String key) {
+        if(props != null) {
+            return props.getProperty(key);
+        }
+        return null;
+    }
 
 	@Override
 	public String toString() {
 		return "Loaded config for "+stage;
 	}
-	
-	
 }
-
-

@@ -8,6 +8,7 @@ import groovy.transform.Field
 */
 
 @Field def config_loader
+@Field def service_config
 @Field def utilModule
 
 def initialize(configLoader, util){
@@ -15,16 +16,20 @@ def initialize(configLoader, util){
   utilModule = util
 }
 
-def checkKinesisStreamExists(stream_name) {
+def setServiceConfig(serviceConfig){
+	service_config = serviceConfig
+}
+
+def checkKinesisStreamExists(stream_name, credsId) {
   try {
-    sh "aws kinesis describe-stream --stream-name ${stream_name} --profile cloud-api --output json"
+    sh "aws kinesis describe-stream --stream-name ${stream_name} --profile ${credsId} --output json"
     echo "Stream exists and have access"
     return true
   } catch (ex) {
     def response
     try {
       response = sh(
-        script: "aws kinesis describe-stream --stream-name ${stream_name} --profile cloud-api --output json 2<&1 | grep -c 'ResourceNotFoundException'",
+        script: "aws kinesis describe-stream --stream-name ${stream_name} --profile ${credsId} --output json 2<&1 | grep -c 'ResourceNotFoundException'",
         returnStdout: true
       ).trim()
     } catch (e) {
@@ -50,11 +55,11 @@ def updateKinesisResourceServerless(event_stream_arn){
   sh  "sed -i -- 's/#ResourceKinesisDisabled/Resource/g' ./policyFile.yml"
 }
 
-def getRoleArn(role_name) {
+def getRoleArn(role_name, credsId) {
   def role_arn
   try {
     def response = sh(
-      script: "aws iam get-role --role-name ${role_name} --profile cloud-api --output json",
+      script: "aws iam get-role --role-name ${role_name} --profile ${credsId} --output json",
       returnStdout: true
     ).trim()
     def mappings = parseJson(response)
@@ -68,16 +73,16 @@ def getRoleArn(role_name) {
   }
 }
 
-def checkSqsQueueExists(queueName) {
+def checkSqsQueueExists(queueName, credsId) {
   try {
-    sh "aws sqs get-queue-url --queue-name $queueName --profile cloud-api --output json"
+    sh "aws sqs get-queue-url --queue-name $queueName --profile ${credsId} --output json"
     echo "Queue exists and have access"
     return true
   } catch (ex) {
     def response
     try {
       response = sh(
-        script: "aws sqs get-queue-url --queue-name $queueName --profile cloud-api --output json 2<&1 | grep -c 'NonExistentQueue'",
+        script: "aws sqs get-queue-url --queue-name $queueName --profile ${credsId} --output json 2<&1 | grep -c 'NonExistentQueue'",
         returnStdout: true
       ).trim()
     } catch (e) {
@@ -91,9 +96,9 @@ def checkSqsQueueExists(queueName) {
   }
 }
 
-def checkIfDifferentFunctionTriggerAttached(event_source_arn, lambda_arn){
+def checkIfDifferentFunctionTriggerAttached(event_source_arn, lambda_arn, credsId){
    try {
-      def response = listEventSourceMapping (event_source_arn)
+      def response = listEventSourceMapping (event_source_arn, credsId)
       def mapping_details = parseJson(response)
       def isDifferentLambdaAttached  = false
       if(mapping_details.EventSourceMappings.size() > 0) {
@@ -113,11 +118,11 @@ def checkIfDifferentFunctionTriggerAttached(event_source_arn, lambda_arn){
    }
 }
 
-def listEventSourceMapping (event_source_arn) {
+def listEventSourceMapping (event_source_arn, credsId) {
   def response
   try {
     response = sh(
-      script: "aws lambda list-event-source-mappings --event-source-arn  ${event_source_arn} --profile cloud-api --output json",
+      script: "aws lambda list-event-source-mappings --event-source-arn  ${event_source_arn} --profile ${credsId} --output json",
       returnStdout: true
     ).trim()
     echo "mapping_details : $response"
@@ -139,15 +144,15 @@ def removeS3EventsFromServerless(isEventSchdld){
   }
 }
 
-def checkS3BucketExists(s3BucketName){
+def checkS3BucketExists(s3BucketName, credsId){
   try {
-    sh "aws s3api head-bucket --bucket $s3BucketName --profile cloud-api --output json"
+    sh "aws s3api head-bucket --bucket $s3BucketName --profile ${credsId} --output json"
     echo "Bucket exists and have access"
     return true
   } catch (ex) {//bucket exists but with no access
     def res
     try {
-      res = sh(script: "aws s3api head-bucket --bucket $s3BucketName --profile cloud-api --output json 2<&1 | grep -c 'Forbidden'", returnStdout: true).trim()
+      res = sh(script: "aws s3api head-bucket --bucket $s3BucketName --profile ${credsId} --output json 2<&1 | grep -c 'Forbidden'", returnStdout: true).trim()
     } catch (e) {
       echo "Bucket does not exist "
       return false
@@ -159,24 +164,24 @@ def checkS3BucketExists(s3BucketName){
   }
 }
 
-def updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action) {
+def updateLambdaPermissionAndNotification(lambdaARN, s3BucketName, action, credsId) {
   try {
     echo "update lambda config using cli"
     UUID uuid = UUID.randomUUID();
     def statementId = uuid.toString();
-    sh "aws lambda --region ${config_loader.AWS.REGION} add-permission --function-name $lambdaARN --statement-id $statementId --action lambda:InvokeFunction --principal s3.amazonaws.com --source-arn arn:aws:s3:::$s3BucketName --output json"
-    def existing_notifications = getbucketNotificationConfiguration(s3BucketName)
-    checkAndUpdateS3BucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action)
+    sh "aws lambda --region ${service_config['region']} add-permission --function-name $lambdaARN --statement-id $statementId --action lambda:InvokeFunction --principal s3.amazonaws.com --source-arn arn:aws:s3:::$s3BucketName --output json"
+    def existing_notifications = getbucketNotificationConfiguration(s3BucketName, credsId)
+    checkAndUpdateS3BucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action, credsId)
   } catch (ex) {
     echo "Error while updating permission and lambda configuration"
     error ex.getMessage()
   }
 }
 
-def getbucketNotificationConfiguration(s3BucketName){
+def getbucketNotificationConfiguration(s3BucketName, credsId){
   def existing_notifications = [:]
   try {
-    def existing_notificationsObj = sh(returnStdout: true, script: "aws s3api get-bucket-notification-configuration --bucket $s3BucketName --profile cloud-api --output json")
+    def existing_notificationsObj = sh(returnStdout: true, script: "aws s3api get-bucket-notification-configuration --bucket $s3BucketName --profile ${credsId} --output json")
     echo "existing_notificationsObj: $existing_notificationsObj"
     existing_notifications = parseJson(existing_notificationsObj)
     return existing_notifications
@@ -185,7 +190,7 @@ def getbucketNotificationConfiguration(s3BucketName){
   }
 }
 
-def checkAndUpdateS3BucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action){
+def checkAndUpdateS3BucketNotificationConfiguration(existing_notifications, lambdaARN, s3BucketName, action, credsId){
   def new_lambda_configuration = [:]
   def new_s3_event_configuration = [:]
   def events = action.split(",")
@@ -207,18 +212,18 @@ def checkAndUpdateS3BucketNotificationConfiguration(existing_notifications, lamb
 
   echo "new notification configuration : $new_s3_event_configuration"
   if (new_s3_event_configuration != null && new_s3_event_configuration.size() > 0) {
-    putbucketNotificationConfiguration(s3BucketName, new_s3_event_configuration)
+    putbucketNotificationConfiguration(s3BucketName, new_s3_event_configuration, credsId)
   }
 }
 
-def putbucketNotificationConfiguration(s3BucketName, new_s3_event_configuration) {
+def putbucketNotificationConfiguration(s3BucketName, new_s3_event_configuration, credsId) {
   try{
     def newNotificationJson = "{}"
     if (new_s3_event_configuration != null && new_s3_event_configuration.size() > 0) {
       newNotificationJson = JsonOutput.toJson(new_s3_event_configuration)
     }
     def response = sh(
-          script: "aws s3api put-bucket-notification-configuration --bucket $s3BucketName --notification-configuration \'${newNotificationJson}\' --profile cloud-api --output json",
+          script: "aws s3api put-bucket-notification-configuration --bucket $s3BucketName --notification-configuration \'${newNotificationJson}\' --profile ${credsId} --output json",
           returnStdout: true
         ).trim()
   } catch(ex) {
@@ -387,14 +392,14 @@ def checkAndConvertEvents(events){
 
 def checkDynamoDbTableExists (event_source_dynamodb) {
   try {
-    sh "aws dynamodb describe-table --table-name ${event_source_dynamodb} --region ${config_loader.AWS.REGION} --output json"
+    sh "aws dynamodb describe-table --table-name ${event_source_dynamodb} --region ${service_config['region']} --output json"
     echo "${event_source_dynamodb} exist."
     return true
    } catch (ex) {
     def response
     try {
       response = sh(
-        script: "aws dynamodb describe-table --table-name ${event_source_dynamodb} --region ${config_loader.AWS.REGION} --output json 2<&1 | grep -c 'ResourceNotFoundException'",
+        script: "aws dynamodb describe-table --table-name ${event_source_dynamodb} --region ${service_config['region']} --output json 2<&1 | grep -c 'ResourceNotFoundException'",
         returnStdout: true
       ).trim()
     } catch (e) {
@@ -423,7 +428,7 @@ def getDynamoDbStreamDetails(event_source_dynamodb) {
   def stream_details
   try {
      def streamList = sh(
-      script: "aws dynamodbstreams list-streams --table-name ${event_source_dynamodb} --region ${config_loader.AWS.REGION} --output json",
+      script: "aws dynamodbstreams list-streams --table-name ${event_source_dynamodb} --region ${service_config['region']} --output json",
       returnStdout: true
     ).trim()
     echo "dynamodb table stream details : $streamList"
@@ -449,7 +454,7 @@ def checkDynamoDbTableHasEnabledStream (Streams) {
   ]
   for (stream in Streams) {
       def streamDetails = sh(
-        script: "aws dynamodbstreams describe-stream --stream-arn ${stream.StreamArn} --region ${config_loader.AWS.REGION} --output json",
+        script: "aws dynamodbstreams describe-stream --stream-arn ${stream.StreamArn} --region ${service_config['region']} --output json",
         returnStdout: true
       ).trim()
       def streamDetailsJson = parseJson(streamDetails)
@@ -471,7 +476,7 @@ def createDynamodbStream(tableName) {
 
   try {
     def tableDetails = sh(
-      script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=true,StreamViewType=NEW_AND_OLD_IMAGES --region ${config_loader.AWS.REGION} --output json",
+      script: "aws dynamodb update-table --table-name ${tableName} --stream-specification StreamEnabled=true,StreamViewType=NEW_AND_OLD_IMAGES --region ${service_config['region']} --output json",
       returnStdout: true
     ).trim()
     def tableDetailsJson = parseJson(tableDetails)
@@ -482,38 +487,38 @@ def createDynamodbStream(tableName) {
   return stream_details
 }
 
-def deleteEventSourceMapping (lambda_arn, assets_api, auth_token, service_config, env) {
-  try {
-    def response = listEventFunctionMapping(lambda_arn)
-    def mapping_details = parseJson(response)
+def deleteEventSourceMapping (lambda_arn, assets_api, auth_token, service_config, env, credsId) {
+    try {
+      def response = listEventFunctionMapping(lambda_arn, credsId)
+      def mapping_details = parseJson(response)
 
-    if(mapping_details.EventSourceMappings.size() > 0) {
-      for (details in mapping_details.EventSourceMappings) {
-        def delResponse = sh(
-          script: "aws lambda delete-event-source-mapping --uuid  ${details.UUID} --profile cloud-api --output json",
-          returnStdout: true
-        ).trim()
-        echo "delete event source mapping: $delResponse"
+      if(mapping_details.EventSourceMappings.size() > 0) {
+        for (details in mapping_details.EventSourceMappings) {
+          def delResponse = sh(
+            script: "aws lambda delete-event-source-mapping --uuid  ${details.UUID} --profile ${credsId} --output json",
+            returnStdout: true
+          ).trim()
+          echo "delete event source mapping: $delResponse"
+        }
       }
-    }
-    //Deleting dynamodb stream, which is created by jazz using aws cli
-    if(service_config['event_source_dynamodb']) {
-      checkAndDeleteDynamoDbStream(assets_api, auth_token, service_config, env)
-    }
-    //Deleting s3 event notification configuration, which is created by jazz using aws cli
-    if(service_config['event_source_s3']) {
-      def s3BucketName = getEventResourceNamePerEnvironment(service_config['event_source_s3'], env, "-")
-      if(checkS3BucketExists(s3BucketName)) {
-        deleteS3EventNotificationConfiguration(lambda_arn, s3BucketName, env)
+      //Deleting dynamodb stream, which is created by jazz using aws cli
+      if(service_config['event_source_dynamodb']) {
+        checkAndDeleteDynamoDbStream(assets_api, auth_token, service_config, env, credsId)
       }
+      //Deleting s3 event notification configuration, which is created by jazz using aws cli
+      if(service_config['event_source_s3']) {
+        def s3BucketName = getEventResourceNamePerEnvironment(service_config['event_source_s3'], env, "-")
+        if(checkS3BucketExists(s3BucketName, credsId)) {
+          deleteS3EventNotificationConfiguration(lambda_arn, s3BucketName, env, credsId)
+        }
+      }
+    } catch (ex){
+      echo "Exception occured while deleting event source mapping." + ex.getMessage()
     }
-  } catch (ex){
-    echo "Exception occured while deleting event source mapping." + ex.getMessage()
-  }
 }
 
-def deleteS3EventNotificationConfiguration(lambdaARN, s3BucketName, env) {
-  def existing_notifications = getbucketNotificationConfiguration(s3BucketName)
+def deleteS3EventNotificationConfiguration(lambdaARN, s3BucketName, env, credsId) {
+  def existing_notifications = getbucketNotificationConfiguration(s3BucketName, credsId)
   def existing_event_configs = [:]
   def existing_event_configs_copy = [:]
   def cleanupIndex = -1
@@ -544,18 +549,18 @@ def deleteS3EventNotificationConfiguration(lambdaARN, s3BucketName, env) {
     }
 
     existing_event_configs_copy.values().remove(null)
-    putbucketNotificationConfiguration(s3BucketName, existing_event_configs_copy)
+    putbucketNotificationConfiguration(s3BucketName, existing_event_configs_copy, credsId)
   } catch(ex) {
     echo "Exception occured while deleting the event notification configuration." + ex.getMessage()
   }
 
 }
 
-def listEventFunctionMapping (lambda_arn) {
+def listEventFunctionMapping (lambda_arn, credsId) {
   def response
   try {
     response = sh(
-      script: "aws lambda list-event-source-mappings --function-name  ${lambda_arn} --profile cloud-api --output json",
+      script: "aws lambda list-event-source-mappings --function-name  ${lambda_arn} --profile ${credsId} --output json",
       returnStdout: true
     ).trim()
     echo "mapping_details : $response"
@@ -565,7 +570,7 @@ def listEventFunctionMapping (lambda_arn) {
   return response
 }
 
-def checkAndDeleteDynamoDbStream(assets_api, auth_token, service_config, env) {
+def checkAndDeleteDynamoDbStream(assets_api, auth_token, service_config, env, credsId) {
   def assets = utilModule.getAssets(assets_api, auth_token, service_config, env)
   def assetList = parseJson(assets)
   def isNewStream = false
@@ -576,15 +581,15 @@ def checkAndDeleteDynamoDbStream(assets_api, auth_token, service_config, env) {
     }
     if (isNewStream) {
       def table_name = splitAndGetResourceName(service_config['event_source_dynamodb'], env)
-      deleteDynamoDbStream(table_name)
+      deleteDynamoDbStream(table_name, credsId)
     }
   }
 }
 
-def deleteDynamoDbStream(table_name) {
+def deleteDynamoDbStream(table_name, credsId) {
   try {
     def response = sh(
-      script: "aws dynamodb update-table --table-name ${table_name} --stream-specification StreamEnabled=false --profile cloud-api --output json",
+      script: "aws dynamodb update-table --table-name ${table_name} --stream-specification StreamEnabled=false --profile ${credsId} --output json",
       returnStdout: true
     ).trim()
     echo "Dynamodb stream details updated successfully. $response"

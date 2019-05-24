@@ -58,11 +58,11 @@ def generateBucketNameForService(domain, service) {
  */
 def getBucket(stage) {
 	if (stage == 'dev') {
-		return config_loader.JAZZ.S3.WEBSITE_DEV_BUCKET
+		return config_loader.JAZZ.PLATFORM.AWS.S3.WEBSITE_DEV_BUCKET
 	} else if (stage == 'stg') {
-		return config_loader.JAZZ.S3.WEBSITE_STG_BUCKET
+		return config_loader.JAZZ.PLATFORM.AWS.S3.WEBSITE_STG_BUCKET
 	} else if (stage == 'prod') {
-		return config_loader.JAZZ.S3.WEBSITE_PROD_BUCKET
+		return config_loader.JAZZ.PLATFORM.AWS.S3.WEBSITE_PROD_BUCKET
 	}
 }
 
@@ -89,28 +89,6 @@ def generateRequestId() {
 @NonCPS
 def parseJson(def json) {
     new groovy.json.JsonSlurperClassic().parseText(json)
-}
-
-/**
-getAPIId takes api Id mapping document and a config object to return an API Id
-*/
-
-def getAPIId(apiIdMapping, config) {
-	return getAPIId(apiIdMapping, config['domain'], config['service'])
-}
-
-def getAPIId(apiIdMapping, namespace, service) {
-	if (!apiIdMapping) {
-		error "No mapping document provided to lookup API Id!!"
-	}
-
-	if (apiIdMapping["${namespace}_${service}"]) {
-		return apiIdMapping["${namespace}_${service}"];
-	} else if (apiIdMapping["${namespace}_*"]) {
-		return apiIdMapping["${namespace}_*"];
-	} else {
-		apiIdMapping["*"];
-	}
 }
 
 @NonCPS
@@ -143,12 +121,6 @@ def getAssets(assets_api, auth_token, service_config, env) {
   }
   return assets
 }
-/**
-getAPIIdForCore is a helper method to get apiId for jazz core services
-*/
-def getAPIIdForCore(apiIdMapping) {
-	return getAPIId(apiIdMapping, "jazz", "*")
-}
 
 /**
  * Set config_loader
@@ -170,6 +142,50 @@ def getApiToken(){
 def isReplayedBuild() {
   def replayClassName = "org.jenkinsci.plugins.workflow.cps.replay.ReplayCause"
   currentBuild.rawBuild.getCauses().any{ cause -> cause.toString().contains(replayClassName) }
+}
+
+/*
+* Get the required account
+*/
+def getAccountInfo(service_config){
+	def dataObj = {};
+	for (item in configLoader.AWS.ACCOUNTS) {
+		if(item.ACCOUNTID == service_config.accountId){
+			dataObj = item
+		}
+	}
+	return dataObj;
+}
+
+/*
+* Get the primary account
+*/
+def getAccountInfoPrimary(){
+  def dataObjPrimary = {};
+	for (item in configLoader.AWS.ACCOUNTS) {
+		if(item.PRIMARY){
+			dataObjPrimary = item
+		}
+	}
+	return dataObjPrimary;
+}
+
+/**
+*  Get Account Specific S3
+*/
+
+def getAccountBucketName(service_config) {
+	def s3Object = {}
+	def accountObject = getAccountInfo(service_config);
+	if( accountObject.size() > 0){
+		def regions = accountObject['REGIONS'];
+		for (region in regions ){
+			if( region['REGION'] == service_config.region) { 
+				s3Object = region['S3'];
+			}
+		}
+	}
+	return s3Object;
 }
 
 return this
