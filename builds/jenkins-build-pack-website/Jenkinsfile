@@ -79,7 +79,7 @@ node()  {
    		service_config.region = configLoader.AWS.DEFAULTS.REGION
 	}
 
- 	if(!service_config.accountId) {	
+ 	if(!service_config.accountId) {
    		service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
  	}
 
@@ -191,9 +191,9 @@ node()  {
         			error ex.getMessage()
 				}
 				events.sendCompletedEvent('BUILD', 'build completed', context_map, environment_logical_id)
-			}		
+			}
 		}
-	
+
 		stage("Deployment to ${current_environment} Env"){
 			def randomString = utilModule.generateRequestId();
 			def credsId = "jazz-${randomString}";
@@ -966,7 +966,7 @@ def validateAngularTemplate() {
 	} else {
 		error "package.json is not available."
 	}
-	
+
 	if (fileExists('deployment-env.yml')) {
 		echo "deployment-env.yml is present"
 	} else {
@@ -1013,7 +1013,7 @@ def validateReactTemplate() {
 
 		def reactDomVersionString = new groovy.json.JsonSlurperClassic().parseText(packageString).dependencies.'react-dom';
 		def domVersion = reactDomVersionString.substring(1, reactDomVersionString.indexOf('.'))
-		
+
 		echo "React Project version $version, Dom version $domVersion"
 	} catch(ex) {
 		error "Error while checking version::"+ ex.getMessage();
@@ -1022,7 +1022,7 @@ def validateReactTemplate() {
 
 
 /**
-  * Function to do build of angular/react 
+  * Function to do build of angular/react
 */
 def buildWebsite(framework) {
 	def websiteCodeFolder = "app/"

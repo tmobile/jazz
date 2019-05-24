@@ -437,7 +437,7 @@ def setLogStreamPermission(config){
 
 def getApigatewayInfoCore(domain, stage){
   def accountDetailsPrimary = utilModule.getAccountInfoPrimary();
-  return awsAPIGatewayModule.getApigatewayInfoCore(stage, domain, accountDetailsPrimary);	
+   return awsAPIGatewayModule.getApigatewayInfoCore(stage, domain, accountDetailsPrimary);
 }
 
 return this

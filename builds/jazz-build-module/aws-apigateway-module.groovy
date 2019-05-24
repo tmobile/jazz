@@ -101,11 +101,11 @@ def getApigatewayInfoCore(stage, domain, accountDetails) {
     }
   }
 	if(stage && (stage.endsWith('DEV')) || (stage.endsWith('dev'))) {
-		return getAPIIdNameMapping(gatewayValue.DEV, domain, '*')
+		return getAPIIdNameMapping(gatewayValueInfo.DEV, domain, '*')
 	} else if (stage && (stage == 'STG') || (stage == 'stg')) {
-		return getAPIIdNameMapping(gatewayValue.STG, domain, '*')
+		return getAPIIdNameMapping(gatewayValueInfo.STG, domain, '*')
 	} else if (stage && (stage == 'PROD') || (stage == 'prod')) {
-		return getAPIIdNameMapping(gatewayValue.PROD, domain, '*')
+		return getAPIIdNameMapping(gatewayValueInfo.PROD, domain, '*')
 	}
 }
 

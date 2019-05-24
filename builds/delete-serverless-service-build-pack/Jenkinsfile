@@ -94,7 +94,7 @@ node {
 		} else {
 			error "Service Id is not available."
 		}
-		
+
 		if (!service_config) {
 			error "Failed to fetch service metadata from catalog"
 		}
@@ -267,9 +267,9 @@ node {
 							}
 							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-							
+
 							echo 'undeploying function for environment: ' + _envId
-						
+
 							cleanupEventSourceMapping(_envId)
 							unDeployService(_envId)
 
@@ -1088,7 +1088,7 @@ def LoadConfiguration() {
 	return prop
 }
 
-/** 
+/**
 ** Create Serverless.yml from config
 **/
 

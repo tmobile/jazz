@@ -36,7 +36,7 @@ node() {
 
   def accountDetailsPrimary = utilModule.getAccountInfoPrimary();
   def coreDomain = "jazz";
-  def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
+  def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfo('PROD', coreDomain, "*", accountDetailsPrimary);
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
   echo "Build triggered via branch: " + params.scm_branch + " with params " + params
@@ -59,7 +59,7 @@ node() {
 
     sh 'rm -rf ' + repo_name
     sh 'mkdir ' + repo_name
-    sh 'pwd'    
+    sh 'pwd'
 
     def repocloneUrl
     if (domain && domain == "jazz") {
@@ -485,7 +485,7 @@ def buildSlsApp(String runtime, String repo_name) {
         for(item in dirs) {
           def functionpath = "$GOPATH/src/${repo_name}/functions/${item}"
           sh "env GOOS=linux GOARCH=amd64 go build -o functions/${item}/main ${functionpath}/main.go"
-        }   
+        }
       } else {
         error "No Functions Found..skipping build"
       }
@@ -791,9 +791,9 @@ def runValidation(String runtime) {
 
 @NonCPS
 def readDir(dirPath) {
-  def  dirsl = [] 
+  def  dirsl = []
   new File(dirPath).eachDir() {
-    dirs -> println dirs.getName() 
+    dirs -> println dirs.getName()
     dirsl.add(dirs.getName())
   }
   dirsl
