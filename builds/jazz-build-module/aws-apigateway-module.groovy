@@ -75,17 +75,6 @@ def injectLambdaIntegration(method, filePath) {
   }
 }
 
-def getApiGatewayCore(accountDetailsPrimary){
-  def gatewayValueInfo
-  for (item in accountDetailsPrimary.REGIONS) {
-    if(item.PRIMARY){
-      gatewayValueInfo = item.API_GATEWAY
-      break
-    }
-  }
-  return getAPIIdNameMapping(gatewayValueInfo.PROD, 'jazz', '*')
-}
-
 def getApigatewayInfo(stage, domain, service, accountDetails, config) {
 	def gatewayValue
 	for (item in accountDetails.REGIONS) {

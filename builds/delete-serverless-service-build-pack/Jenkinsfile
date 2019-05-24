@@ -68,10 +68,6 @@ node {
 	}
 
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
-	def jazz_prod_api_id = awsAPIGatewayModule.getApiGatewayCore(accountDetailsPrimary);
-  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
-
-	auth_token = getAuthToken()
 
 	stage("Initialization") {
     if (params.domain && params.domain != "") {
@@ -92,6 +88,11 @@ node {
 		} else {
 			error "Service Id is not available."
 		}
+
+		def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', service_config.domain, accountDetailsPrimary);
+		g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
+
+		auth_token = getAuthToken()
 
 		if (!service_config) {
 			error "Failed to fetch service metadata from catalog"
