@@ -35,6 +35,9 @@ node() {
   loadBuildModules(jazzBuildModuleURL)
 
   def accountDetailsPrimary = utilModule.getAccountInfoPrimary();
+  def coreDomain = "jazz";
+  def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
+  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
   echo "Build triggered via branch: " + params.scm_branch + " with params " + params
   def _event = ""
@@ -56,19 +59,7 @@ node() {
 
     sh 'rm -rf ' + repo_name
     sh 'mkdir ' + repo_name
-    sh 'pwd'
-
-    def configObj = dir(repo_name) {
-      LoadConfiguration()
-    }
-
-    if (configObj.service_id) {
-      config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
-    } else {
-      error "Service Id is not available."
-    }
-    def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', config.domain, accountDetailsPrimary);
-    g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
+    sh 'pwd'    
 
     def repocloneUrl
     if (domain && domain == "jazz") {
@@ -84,6 +75,16 @@ node() {
       ], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
           [credentialsId: repo_credential_id, url: repocloneUrl]
         ]])
+    }
+
+    def configObj = dir(repo_name) {
+      LoadConfiguration()
+    }
+
+    if (configObj.service_id) {
+      config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
+    } else {
+      error "Service Id is not available."
     }
   }
 

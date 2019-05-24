@@ -61,8 +61,8 @@ node  {
 		}
 
 		accountDetails = utilModule.getAccountInfo(service_config);
-
-		def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', service_config.domain, accountDetailsPrimary);
+		def coreDomain = "jazz";
+		def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
   	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
 		auth_token = getAuthToken()

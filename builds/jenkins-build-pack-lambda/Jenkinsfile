@@ -108,7 +108,8 @@ node() {
     config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
   }
 
-  def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', config.domain, accountDetailsPrimary);
+  def coreDomain = "jazz";
+  def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
   if(domain && domain != "jazz"){
     auth_token = setCredentials()
