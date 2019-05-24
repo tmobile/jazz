@@ -18,7 +18,7 @@
         </div>
       </div>
       <div *ngSwitchCase="'error'" class="jz-height-full">
-        <report-issue [response]="errorData.response" [request]="errorData.request" (onRefresh)="refresh()"></report-issue>
+        <report-issue [displayMassage]="errMessage" [response]="errorData.response" [request]="errorData.request" (onRefresh)="refresh()"></report-issue>
       </div>
       <div *ngSwitchCase="'empty'" class="jz-height-full jz-flex-centered">
         <div class="jz-text-center">
