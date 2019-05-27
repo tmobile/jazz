@@ -287,7 +287,7 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
     }
 
     //Adding providerRuntime key in service catalog
-    if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
+    if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function" || service_creation_data.service_type === "sls-app") {
       serviceMetadataObj.providerRuntime = service_creation_data.runtime;
     }
 
@@ -366,6 +366,33 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
             }
             reject({ result: 'inputError', message: isEventNameValid.message });
           }
+        }
+      }
+    }
+
+    if (service_creation_data.service_type === "sls-app") { // application with a deployment descriptor
+      inputs.DEPLOYMENT_TARGETS = deploymentTargets; // This part was missing on Apr-5 and we received: 'deployment_targets missing' error
+      const deployDescrValidator = require('./components/validate-sls-yml');
+      if (service_creation_data.deployment_descriptor) { // If deployment descriptor is present then validate
+        try {
+          const outstandingResources = deployDescrValidator.validateResources(service_creation_data.deployment_descriptor);
+          if (outstandingResources.length) { // some resources that are not allowed were found this is bad
+            reject({ result: 'inputError', message: `Invalid deployment_descriptor. The resource types not allowed ${outstandingResources}` });
+          } else {
+            const outstandingEvents = deployDescrValidator.validateEvents(service_creation_data.deployment_descriptor);
+            if (outstandingEvents.length) { // some events that are not allowed were found so let's reject the request
+              reject({ result: 'inputError', message: `Invalid deployment_descriptor. The event types not allowed ${outstandingEvents}` });
+            } else {
+              const outstandingActions = deployDescrValidator.validateActions(service_creation_data.deployment_descriptor);
+              if (outstandingActions.length) {
+                reject({ result: 'inputError', message: `Invalid deployment_descriptor. The action types not allowed ${outstandingActions}` });
+              } else {
+                inputs.DEPLOYMENT_DESCRIPTOR = service_creation_data.deployment_descriptor;
+              }
+            }
+          }
+        } catch (e) {
+          reject({ result: 'inputError', message: `Invalid deployment_descriptor format. Nested exception is ${e}` });
         }
       }
     }

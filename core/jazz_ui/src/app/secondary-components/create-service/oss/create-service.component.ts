@@ -4,7 +4,7 @@
   * @author
 */
 import { Http, Headers, Response } from '@angular/http';
-import { Component, Input, OnInit, Output, EventEmitter, NgModule } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter, NgModule, AfterViewInit,ElementRef } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { ServiceFormData, RateExpression, CronObject, EventExpression } from '../service-form-data';
 import { FocusDirective } from '../focus.directive';
@@ -15,7 +15,13 @@ import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component";
 import { environment as env_oss } from './../../../../environments/environment.oss';
-import {environment} from "../../../../environments/environment";
+import { environment } from "../../../../environments/environment";
+import { nodejsTemplate } from "../../../../config/templates/nodejs-yaml";
+import { javaTemplate } from "../../../../config/templates/java-yaml";
+import { goTemplate } from "../../../../config/templates/go-yaml";
+import { pythonTemplate } from "../../../../config/templates/python-yaml";
+const yamlLint = require('yaml-lint'); 
+
 
 @Component({
   selector: 'create-service',
@@ -28,6 +34,33 @@ import {environment} from "../../../../environments/environment";
 export class CreateServiceComponent implements OnInit {
 
   @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
+  deploymentDescriptorTextJava = javaTemplate.template;
+  deploymentDescriptorTextNodejs = nodejsTemplate.template;
+  deploymentDescriptorTextgo = goTemplate.template;
+  deploymentDescriptorTextpython = pythonTemplate.template;
+  deploymentDescriptorText = this.deploymentDescriptorTextNodejs;
+  startNew:boolean = false;
+  typeofservice:boolean=true;
+  typeofplatform:boolean=false;
+  typeofserviceSelected:boolean = false;
+  typeofplatformSelected:boolean = false;
+  typeofruntimeSelected:boolean = false;
+  deploymenttargetSelected:boolean = false;
+  typeOfRuntime:string = "nodejs";
+  ids=[
+    "service-type-section",
+    "deployment-type-section",
+    "additional",
+    "typeevents"
+  ]
+  isyamlValid:boolean = true;
+  typeform:boolean=false;
+  typeevents:boolean=false;
+  deploymentDescriptorFilterData = ["Function Template", "Start New"];
+  selectedList:string='Function Template';
+  sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
+  kinesisStreamString:string = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/";
+  dynamoStreamString:string = "arn:aws:dynamo:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/";
   sqsStreamString:string;
   kinesisStreamString:string;
   dynamoStreamString:string;
@@ -68,6 +101,7 @@ export class CreateServiceComponent implements OnInit {
   vpcSelected: boolean = false;
   resMessage:string='';
   cdnConfigSelected:boolean = false;
+  descriptorSelected:boolean = false;
   focusindex:any = -1;
   scrollList:any = '';
   toast : any;
@@ -108,18 +142,19 @@ export class CreateServiceComponent implements OnInit {
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
   public apigeeFeature = this.buildEnvironment.INSTALLER_VARS.feature.apigee && this.buildEnvironment.INSTALLER_VARS.feature.apigee.toString() === "true" ? true : false;
-  public selectedDeploymentTarget = "";
+  public selectedDeploymentTarget = "aws_apigateway";
 
   constructor (
     private toasterService: ToasterService,
     private cronParserService: CronParserService,
     private http: RequestService,
     private cache: DataCacheService,
-    private messageservice: MessageService,
-    private servicelist: ServicesListComponent,
-    private authenticationservice: AuthenticationService
+    private messageService: MessageService,
+    private serviceList: ServicesListComponent,
+    private authenticationService: AuthenticationService,
+    private elementRef:ElementRef
   ) {
-    this.toastmessage = messageservice;
+    this.toastmessage = messageService;
     this.runtimeObject = env_oss.envLists;
     this.runtimeKeys = Object.keys(this.runtimeObject);
     this.webObject = env_oss.webLists;
@@ -131,6 +166,11 @@ export class CreateServiceComponent implements OnInit {
   public focusS3 = new EventEmitter<boolean>();
   public focusSQS = new EventEmitter<boolean>();
 
+  scrollTo(id) {
+    const ele = document.getElementById(id);
+    if(ele){
+      ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
+    }
   selectAccountsRegions(){
     this.accountMap = env_oss.accountMap;
     this.accountList = [];
@@ -182,9 +222,9 @@ export class CreateServiceComponent implements OnInit {
   }
 
  // function for opening and closing create service popup
-  closeCreateService(serviceRequest){
+  closeCreateService(serviceRequest){    
     if(serviceRequest){
-      this.servicelist.serviceCall();
+      this.serviceList.serviceCall();
       this.showToastPending(
         'Service is getting ready',
         this.toastmessage.customMessage('successPending', 'createService'),
@@ -197,6 +237,18 @@ export class CreateServiceComponent implements OnInit {
     this.onClose.emit(false);
   }
 
+  
+  onFilterSelected(event){
+    if(event == "Function Template"){
+      this.startNew = false;
+      this.onSelectionChange(this.runtime);
+    }
+    else if(event == "Start New"){
+      this.startNew = true;
+      this.deploymentDescriptorText = "";
+    }
+  }
+  
   onaccountSelected(event){
     this.accountMap.map((item,index)=>{
       if((item.account + ' (' + item.accountName + ')') === event){
@@ -245,18 +297,56 @@ export class CreateServiceComponent implements OnInit {
   // function for changing service type
   changeServiceType(serviceType){
     this.typeOfService = serviceType;
+    this.scrollTo('platform-type');
   }
+
+
+
+  changeDeploymentTarget(deploymentTarget){
+    this.selectedDeploymentTarget =  deploymentTarget;
+    this.scrollTo('runtime-type');
+  }
+
+  changeRuntimeType(runtimeType){
+    this.typeOfRuntime=runtimeType;   
+  }
+
 
   // function for changing platform type
   changePlatformType(platformType){
     if(!this.disablePlatform){
       this.typeOfPlatform = platformType;
     }
+    if(document.getElementById('deployment-type')){
+      this.scrollTo('deployment-type');
+    }     
+    else{
+      this.scrollTo('runtime-type');
+    }
+
   }
 
   // function called on runtime change(radio)
   onSelectionChange(val){
     this.runtime = val;
+    this.typeform = true;
+    if(!this.startNew){
+      switch(this.runtime){
+
+        case 'java8' : this.deploymentDescriptorText = this.deploymentDescriptorTextJava; break;
+        case 'nodejs8.10' : this.deploymentDescriptorText = this.deploymentDescriptorTextNodejs; break;
+        case 'go1.x' : this.deploymentDescriptorText = this.deploymentDescriptorTextgo; break;
+        case 'python3.6' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
+        case 'python2.7' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
+      }
+    }
+    
+    this.scrollTo('additional');
+
+  }
+
+  descriptorChanged(){
+    this.descriptorSelected = !this.descriptorSelected;    
   }
 
   onWebSelectionChange(val){
@@ -289,9 +379,7 @@ export class CreateServiceComponent implements OnInit {
 
   // function to get approvers list
   public getData() {
-    let currentUserId = this.authenticationservice.getUserId();
-
-
+    let currentUserId = this.authenticationService.getUserId();
   }
 
   //function to validate event source names
@@ -410,6 +498,8 @@ export class CreateServiceComponent implements OnInit {
         approversPayload.push(this.selectedApprovers[i].userId);
     }
 
+    
+
     var payload = {
                 "service_type": this.typeOfService,
                 "service_name": this.model.serviceName,
@@ -467,7 +557,13 @@ export class CreateServiceComponent implements OnInit {
         "website": "aws_cloudfront"
       }
     }
-
+    else if(this.typeOfService == 'sls-app'){
+      payload["service_type"] = "sls-app";
+      payload["deployment_descriptor"] = this.deploymentDescriptorText;
+      payload["deployment_targets"]={"sls-app":"aws_sls-app"};
+      payload["runtime"] = this.runtime;
+      payload["require_internal_access"] = this.vpcSelected;
+    }
     if(this.slackSelected){
         payload["slack_channel"] = this.model.slackName;
     }
@@ -486,11 +582,12 @@ export class CreateServiceComponent implements OnInit {
     ]
     payload['deployment_accounts'] = deployment_accounts
 
-    this.isLoading = true;
+    this.isLoading = true;  
     this.http.post('/jazz/create-serverless-service' , payload)
         .subscribe(
         (Response) => {
           var output = Response;
+          console.log("res",output)
           this.serviceRequested = true;
           this.serviceRequestSuccess = true;
           this.serviceRequestFailure = false;
@@ -498,6 +595,7 @@ export class CreateServiceComponent implements OnInit {
           var index = output.data.indexOf("https://");
           this.serviceLink = output.data.slice(index, output.data.length);
           this.resMessage=this.toastmessage.successMessage(Response,"createService");
+          console.log("res", this.resMessage)
           this.resetEvents();
           this.selectAccountsRegions();
        },
@@ -610,6 +708,7 @@ export class CreateServiceComponent implements OnInit {
     if(this.invalidServiceName == false && this.invalidDomainName==false){
       this.serviceNameAvailability();
     }
+
 }
   // function for service name avalability //
   serviceNameAvailability(){
@@ -661,6 +760,10 @@ export class CreateServiceComponent implements OnInit {
     if(this.invalidEventName){
       return true
     }
+    if(!this.isyamlValid){
+      return true
+    }
+
     return false;
   }
 
@@ -736,18 +839,95 @@ export class CreateServiceComponent implements OnInit {
     this.servicePatterns = env_oss.servicePatterns;
   }
 
+  validateYAML(){
+    yamlLint.lint(this.deploymentDescriptorText).then(() => {
+      this.isyamlValid=true;
+    }).catch((error) => {
+      console.error('Invalid YAML file.', error);
+      this.isyamlValid=false;
+    });
+  }
+
+ 
+  onScroll(event){
+    let el = document.getElementById('crs');
+    for(let i=0;i<this.ids.length;i++){
+      let ele = document.getElementById(this.ids[i]);
+      if(el.offsetHeight + el.scrollTop == el.scrollHeight)
+      {
+        
+        if(ele){
+          ele.classList.remove('in-active');
+        }
+        continue;
+      }
+      let windowHeight = window.innerHeight;
+
+      if(this.ids[i]=="additional"){
+
+        if(rect.top < windowHeight/2){
+          if(ele){
+            ele.classList.add('ac-tive');
+          }
+        }
+        let eventEle = document.getElementById('typeevents');
+        if(eventEle){
+          if (!eventEle.classList.contains('in-active')){
+            if(ele){
+              ele.classList.remove('ac-tive');
+            }
+          }
+        }
+        
+      }
+      
+      if(ele){
+        var rect = ele.getBoundingClientRect();       
+        let diff = windowHeight - ele.offsetHeight;
+        
+        if(i!=0){
+          
+          if(rect.top > windowHeight/2){
+            ele.classList.add('in-active');  
+            if(this.ids[i].includes('type')){
+              let newId = this.ids[i]+'-label';
+              let element = document.getElementById(newId);
+              if(element){
+                element.classList.add('in-active');
+
+              }
+            } 
+          }
+          
+          else{
+            ele.classList.remove('in-active');   
+            if(this.ids[i].includes('type')){
+              let element = document.getElementById(this.ids[i]+'-label');
+              if(element){
+                element.classList.remove('in-active');
+              }
+            } 
+          }
+        }
+        
+      }
+    }
+    
+    
+  }
   ngOnInit() {
+    console.log('nodejsTemplate',nodejsTemplate);
     this.selectAccountsRegions();
     this.getData();
     this.loadMaxLength();
     if(env_oss.slack_support) this.SlackEnabled=true;
   };
-    // cron validation related functions //
-
+  
   inputChanged(val){
     this.Currentinterval = val;
   }
-
+      
+  // cron validation related functions //
   private isCronObjValid(cronObj) {
     var cronValidity = this.cronParserService.validateCron(cronObj);
     this.cronFieldValidity = cronValidity;
@@ -756,6 +936,30 @@ export class CreateServiceComponent implements OnInit {
     }
     return false;
   };
+
+  hasClass(el, cls) {
+    if (el.className.match('(?:^|\\s)'+cls+'(?!\\S)')) { return true; } 
+    }
+  addClass(el, cls) {
+    if (!el.className.match('(?:^|\\s)'+cls+'(?!\\S)')){ el.className += ' '+cls; } 
+    }
+  delClass(el, cls) {
+    el.className = el.className.replace(new RegExp('(?:^|\\s)'+cls+'(?!\\S)'),'');
+    }
+
+  elementFromTop(elem, classToAdd, distanceFromTop, unit) {
+    var winY = window.innerHeight || document.documentElement.clientHeight,
+        distTop = elem.getBoundingClientRect().top,
+        distPercent = Math.round((distTop / winY) * 100),
+        distPixels = Math.round(distTop),
+        distUnit;
+    distUnit = unit == 'percent' ? distPercent : distPixels;
+    if (distUnit <= distanceFromTop) {
+      if (!this.hasClass(elem, classToAdd)) { this.addClass(elem, classToAdd); }
+      } else {
+      this.delClass(elem, classToAdd);
+      }
+    }
 
 
   generateExpression(rateExpression){
@@ -806,5 +1010,4 @@ export class CreateServiceComponent implements OnInit {
       return this.rateExpression.cronStr;
     }
   };
-
 }

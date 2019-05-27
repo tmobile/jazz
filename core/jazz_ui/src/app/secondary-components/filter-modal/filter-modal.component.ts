@@ -5,6 +5,7 @@ import { CheckboxGroupRegionComponent } from './../../primary-components/checkbo
 
 import * as _ from "lodash";
 
+
 @Component({
   selector: 'filter-modal',
   templateUrl: './filter-modal.component.html',
@@ -14,6 +15,7 @@ export class FilterModalComponent implements OnInit {
   @Output() formChange = new EventEmitter();
   @Input() fields;
   @Input() options;
+  @Input() assetList;
   // @ViewChild('sliderElement') sliderElement: IonRangeSliderModule;
   @ViewChild('checkboxGroup') checkboxGroup: CheckboxGroupComponent;
   @ViewChild('checkboxGroupRegion') checkboxGroupRegion: CheckboxGroupRegionComponent;
@@ -28,6 +30,7 @@ export class FilterModalComponent implements OnInit {
     columns: []
   };
   public opened = false;
+  public data: any;
 
   constructor() {
   }
@@ -98,6 +101,20 @@ export class FilterModalComponent implements OnInit {
 
   }
 
+  setFields(value) {
+    this.fields = value;
+    let columns = _(this.fields)
+      .groupBy('column')
+      .map((column, key, array) => {
+        return {
+          label: key,
+          fields: column
+        }
+      })
+      .value();
+    this.form.columns = columns;
+  }
+
   changeFilter(filterSelected, filterField) {
     filterField.selected = filterSelected;
     this.formChange.emit(filterField);
@@ -112,6 +129,7 @@ export class FilterModalComponent implements OnInit {
   getFieldValueOfLabel(fieldLabel) {
     try {
       let foundField = this.getAllFields().find((field) => {
+
         return field.label === fieldLabel
       });
       let value = foundField.values[foundField.options.findIndex((option) => {

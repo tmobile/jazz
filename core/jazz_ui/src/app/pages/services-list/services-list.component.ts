@@ -128,7 +128,8 @@ private intervalSubscription: Subscription;
 
   //'Name','Type','Namespace','Last modified','health','status'
   statusData = ['Status (All)','Status (Active)','Status (Pending)','Status (Stopped)'];
-  tabData = ['all','api','function','website'];
+  
+  tabData = ['all','api','function','website','sls app'];
 
   filterSelected: Boolean = false;
   paginationSelected: Boolean = true;
@@ -526,7 +527,7 @@ onFilterCancel(event) {
     this.addQueryParam(queryParamKey, offsetValue, false );
 
     queryParamKey = 'type=';
-    var queryParamValue = this.selectedListData[0];
+    var queryParamValue = this.selectedListData[0].replace(/ /g,"-");
     if(queryParamValue == "all"){
       queryParamValue = "";
     }
