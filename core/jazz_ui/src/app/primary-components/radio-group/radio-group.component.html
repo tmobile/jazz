@@ -1,0 +1,15 @@
+<div class="relative">
+  <div class="filter-clear-btn" (click)="clearRadioFilter()">
+    Clear
+  </div>
+</div>
+<section>
+  <div class="radio-container radio-group" *ngFor="let item of radioContent">
+      <input type="radio" class='test-focus' name="runtime" [id]="item" [value]="item" [checked]="selected == item" (click)="onSelectionChange(item)">
+      <label [for]="item">
+        <span class='outer'></span>
+        <span class="background"></span>
+        <i class="label-text">{{item}}</i>
+      </label>
+  </div>
+</section>
