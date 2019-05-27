@@ -312,7 +312,7 @@
 
                                 <div *ngIf="descriptorSelected" class="input-field-container">
                                     <div class="input-wrapper">
-                                        <textarea rows="2" cols="50" name="deploymentDescriptorText"  type="text" class="textForm descriptor" id="deploymentDescriptorText" [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
+                                        <textarea rows="2" cols="50" name="deploymentDescriptorText" type="text" class="textForm descriptor" id="deploymentDescriptorText" [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
                                         <p class="descriptorError" *ngIf="isDescriptorEmpty">Please enter the valid Deployment Descriptor.</p>
                                     </div>
                                 </div>
