@@ -58,11 +58,11 @@ def generateBucketNameForService(domain, service) {
  */
 def getBucket(stage) {
 	if (stage == 'dev') {
-		return config_loader.JAZZ.S3.WEBSITE_DEV_BUCKET
+		return config_loader.JAZZ.PLATFORM.AWS.S3.WEBSITE_DEV_BUCKET
 	} else if (stage == 'stg') {
-		return config_loader.JAZZ.S3.WEBSITE_STG_BUCKET
+		return config_loader.JAZZ.PLATFORM.AWS.S3.WEBSITE_STG_BUCKET
 	} else if (stage == 'prod') {
-		return config_loader.JAZZ.S3.WEBSITE_PROD_BUCKET
+		return config_loader.JAZZ.PLATFORM.AWS.S3.WEBSITE_PROD_BUCKET
 	}
 }
 
@@ -170,6 +170,68 @@ def getApiToken(){
 def isReplayedBuild() {
   def replayClassName = "org.jenkinsci.plugins.workflow.cps.replay.ReplayCause"
   currentBuild.rawBuild.getCauses().any{ cause -> cause.toString().contains(replayClassName) }
+}
+
+/*
+* Get the required account
+*/
+def getAccountInfo(service_config){
+	def dataObj = {};
+	for (item in configLoader.AWS.ACCOUNTS) {
+		if(item.ACCOUNTID == service_config.accountId){
+			dataObj = item
+		}
+	}
+	return dataObj;
+}
+
+/*
+* Get the primary account
+*/
+def getAccountInfoPrimary(){
+  def dataObjPrimary = {};
+	for (item in configLoader.AWS.ACCOUNTS) {
+		if(item.PRIMARY){
+			dataObjPrimary = item
+		}
+	}
+	return dataObjPrimary;
+}
+
+/**
+*  Get Account Specific S3
+*/
+
+def getAccountBucketName(service_config) {
+	def s3Object = {}
+	def accountObject = getAccountInfo(service_config);
+	if( accountObject.size() > 0){
+		def regions = accountObject['REGIONS'];
+		for (region in regions ){
+			if( region['REGION'] == service_config.region) { 
+				s3Object = region['S3'];
+			}
+		}
+	}
+	return s3Object;
+}
+
+/**
+*  Get Account Specific API Gateway
+*/
+
+def getApiId(service_config) {
+	def apiGateway = {}
+	def accountObject = getAccountInfo(service_config);
+	if( accountObject.size() > 0){
+		def regions = accountObject['REGIONS'];
+		for (region in regions ){
+			if( region['REGION'] == service_config.region) { 
+				apiGateway = region['API_GATEWAY'];
+			}
+		}
+	}
+	return apiGateway;
 }
 
 return this
