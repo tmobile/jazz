@@ -61,9 +61,6 @@ export class CreateServiceComponent implements OnInit {
   sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
   kinesisStreamString:string = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/";
   dynamoStreamString:string = "arn:aws:dynamo:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/";
-  sqsStreamString:string;
-  kinesisStreamString:string;
-  dynamoStreamString:string;
   SlackEnabled:boolean = false;
   docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
@@ -99,6 +96,7 @@ export class CreateServiceComponent implements OnInit {
   private headers = new Headers({'Content-Type': 'application/json'});
   submitted = false;
   vpcSelected: boolean = false;
+  isDescriptorEmpty: boolean = false;
   resMessage:string='';
   cdnConfigSelected:boolean = false;
   descriptorSelected:boolean = false;
@@ -136,6 +134,7 @@ export class CreateServiceComponent implements OnInit {
   regionSelected;
   accountMap: any;
   webObject : any;
+  selectedDescriptorField: any;
   webKeys : any;
   deploymentTargetSelected: any;
 
@@ -171,6 +170,7 @@ export class CreateServiceComponent implements OnInit {
     if(ele){
       ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
     }
+  }
   selectAccountsRegions(){
     this.accountMap = env_oss.accountMap;
     this.accountList = [];
@@ -247,6 +247,8 @@ export class CreateServiceComponent implements OnInit {
       this.startNew = true;
       this.deploymentDescriptorText = "";
     }
+    this.selectedDescriptorField = event[0];
+    this.isDescriptorEmpty = false;
   }
   
   onaccountSelected(event){
@@ -736,6 +738,9 @@ export class CreateServiceComponent implements OnInit {
     if (!this.serviceAvailable) {
         return true;
     }
+    if (this.deploymentDescriptorText === '' && this.selectedDescriptorField === 'Start New') {
+        return true;
+    }
     if (this.slackSelected && !this.slackAvailble) {
         return true
     }
@@ -846,6 +851,12 @@ export class CreateServiceComponent implements OnInit {
       console.error('Invalid YAML file.', error);
       this.isyamlValid=false;
     });
+    if (this.selectedDescriptorField === 'Start New' && this.deploymentDescriptorText === '') {
+      this.isDescriptorEmpty = true;
+    }
+    else {
+      this.isDescriptorEmpty = false;
+    }
   }
 
  

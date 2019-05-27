@@ -299,6 +299,7 @@
                     <div class="">
                         <div class="">
                             <p class="step-title">Deployment Descriptor</p>
+                            <p class="step-details">See <a a target="_blank" href="https://github.com/serverless/examples">https://github.com/serverless/examples</a> for examples of currently supported serverless templates.</p>
                         </div>
                         <div class="">
                             <section class="pad-left0">
@@ -311,7 +312,8 @@
 
                                 <div *ngIf="descriptorSelected" class="input-field-container">
                                     <div class="input-wrapper">
-                                        <textarea rows="2" cols="50" name="deploymentDescriptorText" type="text" class="textForm descriptor" id="deploymentDescriptorText" [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
+                                        <textarea rows="2" cols="50" name="deploymentDescriptorText"  type="text" class="textForm descriptor" id="deploymentDescriptorText" [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
+                                        <p class="descriptorError" *ngIf="isDescriptorEmpty">Please enter the valid Deployment Descriptor.</p>
                                     </div>
                                 </div>
                                 <div class="form-error" *ngIf="!isyamlValid">Invalid Yaml Text</div>

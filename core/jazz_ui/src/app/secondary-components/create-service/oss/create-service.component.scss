@@ -66,6 +66,12 @@
   object-fit: contain;
 }
 
+.descriptorError {
+  margin: 0;
+  font-size: 1rem;
+  color: #FF0000;
+}
+
 .service-box p {
   padding-top: 1rem;
   margin: 0;
@@ -190,8 +196,8 @@
 
 .custom-cb label {
   cursor: pointer;
-  width: 1.5rem;
-  height: 1.5rem;
+  width: 16px;
+  height: 16px;
   position: absolute;
   top: 0;
   background: transparent;

@@ -431,7 +431,7 @@ export class EnvLogsSectionComponent implements OnInit {
    return this.http.get('/jazz/assets',{
 	   domain: self.service.domain,
 				   service: self.service.name,              
-   }).toPromise().then((response:any)=>{
+   }, self.service.id).toPromise().then((response:any)=>{
 	   if(response&&response.data&&response.data.assets){
 		    let assets=_(response.data.assets).map('asset_type').uniq().value();
 			let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
