@@ -179,12 +179,12 @@ describe('Overview', () => {
     //commonUtils.refreshbutton(jazzServices_po.getMetricesRequestCount(),Common.miniWait);
     //expect(jazzServices_po.getMetricesRequestCount().getText()).toEqual('10');  
     browser.sleep(Common.microWait);
-    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
-    jazzServices_po.getServiceHomePage().click();
   });
 
   it('Identifying Environment and Navigation for Website', () => {
     browser.driver.sleep(Common.microWait);
+    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
+    jazzServices_po.getServiceHomePage().click();
     commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
     browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
     //To Navigate to the particular service and verifying the Page
