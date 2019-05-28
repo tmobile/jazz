@@ -683,8 +683,12 @@ class SBR_To_Constraint implements SBR_Constraint {
   }
 
   public boolean compliant(val) {
-    if(val && val != '')  return Integer.parseInt(val.toString()) <= Integer.parseInt(toValue.toString());
-    else return false
+    try {
+      if(val && val != '')  return Integer.parseInt(val.toString()) <= Integer.parseInt(toValue.toString());
+      else return false
+    } catch(e) {
+      throw new IllegalArgumentException("Invalid Integer: " + val + " is of type: " + val?.class);
+    }
   }
 }
 
@@ -696,8 +700,12 @@ class SBR_From_Constraint implements SBR_Constraint {
   }
 
   public boolean compliant(val) {
-    if(val && val != '')  return Integer.parseInt(val.toString()) >= Integer.parseInt(fromValue.toString());
-    else return false
+    try {
+      if(val && val != '')  return Integer.parseInt(val.toString()) >= Integer.parseInt(fromValue.toString());
+      else return false
+    } catch(e) {
+      throw new IllegalArgumentException("Invalid Integer: " + val + " is of type: " + val?.class);
+    }
   }
 }
 
