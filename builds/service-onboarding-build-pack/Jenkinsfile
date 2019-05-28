@@ -222,7 +222,7 @@ node  {
 				sh "echo -n > ./deployment-env.yml"
 				// Add service_id  in deployment-env.yml
 				sh "echo 'service_id: $service_id' >> ./deployment-env.yml"
-				
+
         // Replacing template specific keys in the code
         if (service_config['type'] == "sls-app" && service_config['runtime'].startsWith("go")) {
 					echo "Updating go template in the serveless app"
@@ -233,7 +233,7 @@ node  {
         		for (item in dirs) {
           	def functionpath = "./functions/${item}"
           		sh "sed -i -- 's/sls-api-template-go/${repo_name}/g' ${functionpath}/main.go"
-        		}   
+        		}
       		} else {
         		echo "No functions found.. Skipping code updates to the template!"
      			}
@@ -526,9 +526,9 @@ def jsonParse(jsonString) {
 
 @NonCPS
 def readDir(dirPath) {
-  def  dirsl = [] 
+  def  dirsl = []
   new File(dirPath).eachDir() {
-    dirs -> println dirs.getName() 
+    dirs -> println dirs.getName()
     dirsl.add(dirs.getName())
   }
   dirsl
