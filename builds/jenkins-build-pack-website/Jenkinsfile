@@ -910,7 +910,7 @@ def loadBuildModules(buildModuleUrl){
 		echo "config loader loaded successfully."
 
 		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
-    	awsAPIGatewayModule.initialize()
+    awsAPIGatewayModule.initialize()
 
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
