@@ -20,7 +20,7 @@ import { nodejsTemplate } from "../../../../config/templates/nodejs-yaml";
 import { javaTemplate } from "../../../../config/templates/java-yaml";
 import { goTemplate } from "../../../../config/templates/go-yaml";
 import { pythonTemplate } from "../../../../config/templates/python-yaml";
-const yamlLint = require('yaml-lint'); 
+const yamlLint = require('yaml-lint');
 
 
 @Component({
@@ -61,9 +61,6 @@ export class CreateServiceComponent implements OnInit {
   sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
   kinesisStreamString:string = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/";
   dynamoStreamString:string = "arn:aws:dynamo:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/";
-  sqsStreamString:string;
-  kinesisStreamString:string;
-  dynamoStreamString:string;
   SlackEnabled:boolean = false;
   docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
@@ -179,7 +176,7 @@ export class CreateServiceComponent implements OnInit {
       this.accountList.push(item.account + ' (' + item.accountName + ')' )
       if(item.primary){
         this.accountSelected = item.account
-        this.accountDetails = item.account + ' (' + item.accountName + ')' 
+        this.accountDetails = item.account + ' (' + item.accountName + ')'
       }
     })
     this.regionList = this.accountMap[0].regions;
@@ -222,7 +219,7 @@ export class CreateServiceComponent implements OnInit {
   }
 
  // function for opening and closing create service popup
-  closeCreateService(serviceRequest){    
+  closeCreateService(serviceRequest){
     if(serviceRequest){
       this.serviceList.serviceCall();
       this.showToastPending(
@@ -237,7 +234,7 @@ export class CreateServiceComponent implements OnInit {
     this.onClose.emit(false);
   }
 
-  
+
   onFilterSelected(event){
     if(event == "Function Template"){
       this.startNew = false;
@@ -248,12 +245,12 @@ export class CreateServiceComponent implements OnInit {
       this.deploymentDescriptorText = "";
     }
   }
-  
+
   onaccountSelected(event){
     this.accountMap.map((item,index)=>{
       if((item.account + ' (' + item.accountName + ')') === event){
         this.accountSelected = item.account
-        this.accountDetails = item.account + ' (' + item.accountName + ')' 
+        this.accountDetails = item.account + ' (' + item.accountName + ')'
         this.regionList = item.regions;
         this.regionSelected = this.regionList[0];
       }
@@ -308,7 +305,7 @@ export class CreateServiceComponent implements OnInit {
   }
 
   changeRuntimeType(runtimeType){
-    this.typeOfRuntime=runtimeType;   
+    this.typeOfRuntime=runtimeType;
   }
 
 
@@ -319,7 +316,7 @@ export class CreateServiceComponent implements OnInit {
     }
     if(document.getElementById('deployment-type')){
       this.scrollTo('deployment-type');
-    }     
+    }
     else{
       this.scrollTo('runtime-type');
     }
@@ -340,13 +337,13 @@ export class CreateServiceComponent implements OnInit {
         case 'python2.7' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
       }
     }
-    
+
     this.scrollTo('additional');
 
   }
 
   descriptorChanged(){
-    this.descriptorSelected = !this.descriptorSelected;    
+    this.descriptorSelected = !this.descriptorSelected;
   }
 
   onWebSelectionChange(val){
@@ -498,7 +495,7 @@ export class CreateServiceComponent implements OnInit {
         approversPayload.push(this.selectedApprovers[i].userId);
     }
 
-    
+
 
     var payload = {
                 "service_type": this.typeOfService,
@@ -570,7 +567,7 @@ export class CreateServiceComponent implements OnInit {
     if(this.typeOfService == 'api' && this.ttlSelected){
         payload["cache_ttl"] = this.model.ttlValue;
     }
-    
+
     /* Including deployment_accounts in the payload */
     let deployment_accounts = [
       {
@@ -582,7 +579,7 @@ export class CreateServiceComponent implements OnInit {
     ]
     payload['deployment_accounts'] = deployment_accounts
 
-    this.isLoading = true;  
+    this.isLoading = true;
     this.http.post('/jazz/create-serverless-service' , payload)
         .subscribe(
         (Response) => {
@@ -848,14 +845,14 @@ export class CreateServiceComponent implements OnInit {
     });
   }
 
- 
+
   onScroll(event){
     let el = document.getElementById('crs');
     for(let i=0;i<this.ids.length;i++){
       let ele = document.getElementById(this.ids[i]);
       if(el.offsetHeight + el.scrollTop == el.scrollHeight)
       {
-        
+
         if(ele){
           ele.classList.remove('in-active');
         }
@@ -878,17 +875,17 @@ export class CreateServiceComponent implements OnInit {
             }
           }
         }
-        
+
       }
-      
+
       if(ele){
-        var rect = ele.getBoundingClientRect();       
+        var rect = ele.getBoundingClientRect();
         let diff = windowHeight - ele.offsetHeight;
-        
+
         if(i!=0){
-          
+
           if(rect.top > windowHeight/2){
-            ele.classList.add('in-active');  
+            ele.classList.add('in-active');
             if(this.ids[i].includes('type')){
               let newId = this.ids[i]+'-label';
               let element = document.getElementById(newId);
@@ -896,24 +893,24 @@ export class CreateServiceComponent implements OnInit {
                 element.classList.add('in-active');
 
               }
-            } 
+            }
           }
-          
+
           else{
-            ele.classList.remove('in-active');   
+            ele.classList.remove('in-active');
             if(this.ids[i].includes('type')){
               let element = document.getElementById(this.ids[i]+'-label');
               if(element){
                 element.classList.remove('in-active');
               }
-            } 
+            }
           }
         }
-        
+
       }
     }
-    
-    
+
+
   }
   ngOnInit() {
     console.log('nodejsTemplate',nodejsTemplate);
@@ -922,11 +919,11 @@ export class CreateServiceComponent implements OnInit {
     this.loadMaxLength();
     if(env_oss.slack_support) this.SlackEnabled=true;
   };
-  
+
   inputChanged(val){
     this.Currentinterval = val;
   }
-      
+
   // cron validation related functions //
   private isCronObjValid(cronObj) {
     var cronValidity = this.cronParserService.validateCron(cronObj);
@@ -938,10 +935,10 @@ export class CreateServiceComponent implements OnInit {
   };
 
   hasClass(el, cls) {
-    if (el.className.match('(?:^|\\s)'+cls+'(?!\\S)')) { return true; } 
+    if (el.className.match('(?:^|\\s)'+cls+'(?!\\S)')) { return true; }
     }
   addClass(el, cls) {
-    if (!el.className.match('(?:^|\\s)'+cls+'(?!\\S)')){ el.className += ' '+cls; } 
+    if (!el.className.match('(?:^|\\s)'+cls+'(?!\\S)')){ el.className += ' '+cls; }
     }
   delClass(el, cls) {
     el.className = el.className.replace(new RegExp('(?:^|\\s)'+cls+'(?!\\S)'),'');

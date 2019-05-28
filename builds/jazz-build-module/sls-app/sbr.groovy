@@ -41,15 +41,10 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
     Map<String, Object> transformedYmlTreelet = transformer.transform(origAppYmlFile);
     Map<String, SBR_Rule> path2MandatoryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value instanceof SBR_Rule && item.value.isMandatory) acc.put(item.key, item.value); return acc}
 
-    Map<String, SBR_NonPrimaryRule> path2MandatoryNonPrimaryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value instanceof SBR_NonPrimaryRule ) acc.put(item.key, item.value); return acc}
-echo "path2MandatoryNonPrimaryRuleMap : ${path2MandatoryNonPrimaryRuleMap.keySet()}"
-
     Map<String, Object> mandatoryYmlTreelet = retrofitMandatoryFields(path2MandatoryRuleMap, config, context)
 
-echo "mandatoryYmlTreelet : $mandatoryYmlTreelet"
-echo "transformedYmlTreelet : $transformedYmlTreelet"
-
     Map<String, Object> ymlOutput = merge(mandatoryYmlTreelet, transformedYmlTreelet) // Order of arguments is important here because in case of collision we want the user values to overwrite the default values
+
     return ymlOutput
 
 }
@@ -109,7 +104,6 @@ class Transformer {
       return simpleMatch;
     } else {
       def path2rule = templatedPath2RulesMap.find{thePath2Rule -> pathMatcher(thePath2Rule.key, aPath)}
-      println "path2rule: $path2rule"
       if(path2rule == null) return null
       path2rule.value.asteriskValues = resolveAsterisks(path2rule.key, aPath)
       return path2rule.value
@@ -689,7 +683,8 @@ class SBR_To_Constraint implements SBR_Constraint {
   }
 
   public boolean compliant(val) {
-    return Integer.parseInt(val.toString()) <= Integer.parseInt(toValue.toString());
+    if(val && val !== '')  return Integer.parseInt(val.toString()) <= Integer.parseInt(toValue.toString());
+    else return false
   }
 }
 
@@ -701,7 +696,8 @@ class SBR_From_Constraint implements SBR_Constraint {
   }
 
   public boolean compliant(val) {
-     return Integer.parseInt(val.toString()) >= Integer.parseInt(fromValue.toString());
+    if(val && val !== '')  return Integer.parseInt(val.toString()) >= Integer.parseInt(fromValue.toString());
+    else return false
   }
 }
 
@@ -823,16 +819,13 @@ class SBR_Rule extends SBR_PreRule {
 
 class SBR_NonPrimaryRule extends SBR_PreRule {
   def template
-  boolean isMandatory
 
   public SBR_NonPrimaryRule(SBR_Type_Descriptor aType,
                             SBR_Render aRender,
-                            boolean aIsMandatory,
                             SBR_Constraint aConstraint,
                             aTemplate) {
       super(aType, aRender, aConstraint)
       template = aTemplate
-      isMandatory = aIsMandatory
   }
 
   public Map<String, SBR_Rule> getLinearRuleMap() {
@@ -871,7 +864,7 @@ def extractLeaf(Map<String, Object> aTag) {
 
   boolean isMandatory = (aTag["sbr-mandatory"] == true) ? true : false
 
-  SBR_PreRule retVal = primary ? new SBR_Rule(type, render, constraint, value, isMandatory, defaultValue) : new SBR_NonPrimaryRule(type, render, isMandatory, constraint, aTag["sbr-template"])
+  SBR_PreRule retVal = primary ? new SBR_Rule(type, render, constraint, value, isMandatory, defaultValue) : new SBR_NonPrimaryRule(type, render, constraint, aTag["sbr-template"])
 
   return retVal;
 
@@ -906,7 +899,7 @@ def extractRefs(Map<String, SBR_Rule> aPath2RuleMap, Map<String, SBR_Rule> nonPr
   return ret
 }
 
-//&& item.value.isMandatory
+
 def extractNonPrimary(Map<String, SBR_Rule> aPath2RuleMap) {
   def ret = aPath2RuleMap.inject([:]){acc, item -> if(item.value instanceof SBR_NonPrimaryRule ) acc.put(item.key, item.value); return acc}
   return ret
@@ -967,7 +960,6 @@ def subtract(target, arg1, arg2, arg3) {
 
 /* Merges two maps nicely. In case of conflict the second (later) argument overwrites the first (early) one  */
 def Map merge(Map[] sources) {
-  echo "Merge :sources:  $sources "
     if (sources.length == 0) return [:]
     if (sources.length == 1) return sources[0]
 
@@ -975,7 +967,6 @@ def Map merge(Map[] sources) {
         source.each { k, v ->
             result[k] = result[k] instanceof Map ? merge(result[k], v) : v
         }
-        echo "result : $result"
         return result
     }
 }
@@ -1025,10 +1016,10 @@ def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
                                                   config,
                             Map<String, String>   context) {
   def accumulator = aPath2RuleMap.inject([:]){acc, item -> def ymlTreelet = retrofitMandatoryFields(item.key, item.value, config, context);
-  echo "ymlTreelet: $ymlTreelet"
                                                            def accCopy = [:]; if(acc != null) accCopy << acc;
                                                            acc  = merge(accCopy, ymlTreelet);
                                                            return acc;}
+
   return accumulator
 }
 

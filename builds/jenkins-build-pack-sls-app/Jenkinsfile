@@ -36,7 +36,7 @@ node() {
 
   def accountDetailsPrimary = utilModule.getAccountInfoPrimary();
   def coreDomain = "jazz";
-  def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfo('PROD', coreDomain, "*", accountDetailsPrimary);
+  def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
   echo "Build triggered via branch: " + params.scm_branch + " with params " + params
