@@ -1043,9 +1043,6 @@ def prepareServerlessYml(aConfig, env, configLoader) {
 						"REGION": configLoader.AWS.REGION,
 						"cloud_provider": "aws"]
 
-            //SINI
-            aConfig['providerMemorySize'] = 512
-
 		def rules = readYaml(text: sbrContent)
 		def resultingDoc = processServerless(doc,
                                           rules,
