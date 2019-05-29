@@ -247,7 +247,7 @@ ngOnInit()
 		this.payload['offset'] = this.offsetval;
 		this.payload['asset_type']=this.assetSelected;
 
-    this.subscription = this.http.get(this.relativeUrl, this.payload).subscribe(
+    this.subscription = this.http.get(this.relativeUrl, this.payload, this.service.id).subscribe(
       (response) => {
 
         if((response.data == undefined) || (response.data.length == 0 || response.data.count === 0)){

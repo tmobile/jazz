@@ -348,7 +348,11 @@ export class CreateServiceComponent implements OnInit {
   }
 
   descriptorChanged(){
-    this.descriptorSelected = !this.descriptorSelected;    
+    this.descriptorSelected = !this.descriptorSelected;
+    if(this.descriptorSelected === false) {
+      this.startNew = false;
+      this.onSelectionChange(this.runtime);
+    }
   }
 
   onWebSelectionChange(val){
@@ -561,7 +565,12 @@ export class CreateServiceComponent implements OnInit {
     }
     else if(this.typeOfService == 'sls-app'){
       payload["service_type"] = "sls-app";
-      payload["deployment_descriptor"] = this.deploymentDescriptorText;
+      if(this.descriptorSelected){
+        payload["deployment_descriptor"] = this.deploymentDescriptorText;
+      } else {
+        payload["deployment_descriptor"] = ""
+      }
+      
       payload["deployment_targets"]={"sls-app":"aws_sls-app"};
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
@@ -589,7 +598,6 @@ export class CreateServiceComponent implements OnInit {
         .subscribe(
         (Response) => {
           var output = Response;
-          console.log("res",output)
           this.serviceRequested = true;
           this.serviceRequestSuccess = true;
           this.serviceRequestFailure = false;
@@ -597,7 +605,6 @@ export class CreateServiceComponent implements OnInit {
           var index = output.data.indexOf("https://");
           this.serviceLink = output.data.slice(index, output.data.length);
           this.resMessage=this.toastmessage.successMessage(Response,"createService");
-          console.log("res", this.resMessage)
           this.resetEvents();
           this.selectAccountsRegions();
        },
@@ -927,7 +934,6 @@ export class CreateServiceComponent implements OnInit {
     
   }
   ngOnInit() {
-    console.log('nodejsTemplate',nodejsTemplate);
     this.selectAccountsRegions();
     this.getData();
     this.loadMaxLength();

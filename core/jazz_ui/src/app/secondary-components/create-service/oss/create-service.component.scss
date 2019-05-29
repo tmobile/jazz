@@ -42,8 +42,8 @@
   padding: 2rem 0;
   cursor: pointer;
   min-height: 120px;
-  width:11rem;
-  height: 11rem;
+  width: 10rem;
+  height: 10rem;
   &:hover{
     transform: scale(1.04);
     transition:0.3s transform;
@@ -114,7 +114,7 @@
   &.service-box-selected {
     .icon-icon-api,
     .icon-icon-lambda,
-    .icon-icon-web, {
+    .icon-icon-web {
       color: #ed008c;
     }
   }
@@ -196,8 +196,8 @@
 
 .custom-cb label {
   cursor: pointer;
-  width: 16px;
-  height: 16px;
+  width: 1.5rem;
+  height: 1.5rem;
   position: absolute;
   top: 0;
   background: transparent;
