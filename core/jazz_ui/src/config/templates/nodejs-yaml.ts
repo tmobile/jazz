@@ -20,6 +20,11 @@ functions:
           events:s3events
   function2:
     handler: function2/index.handler
+vpc:
+  securityGroupIds:
+    "Fn::Split":
+      - ","
+      - vpcname
 resources:
   Resources:
     myresources:
