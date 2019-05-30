@@ -168,27 +168,8 @@ export class CreateServiceComponent implements OnInit {
     if(ele){
       ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
     }
-  selectAccountsRegions(){
-    this.accountMap = env_oss.accountMap;
-    this.accountList = [];
-    this.regionList = [];
-    this.accountMap.map((item)=>{
-      this.accountList.push(item.account + ' (' + item.accountName + ')' )
-      if(item.primary){
-        this.accountSelected = item.account
-        this.accountDetails = item.account + ' (' + item.accountName + ')'
-      }
-    })
-    this.regionList = this.accountMap[0].regions;
-    this.regionSelected = this.regionList[0];
-    this.setAccountandRegion();
   }
-
-  setAccountandRegion(){
-    this.sqsStreamString = "arn:aws:sqs:" + this.regionSelected + ":" + this.accountSelected + ":";
-    this.kinesisStreamString = "arn:aws:kinesis:" + this.regionSelected + ":" + this.accountSelected + ":stream/";
-    this.dynamoStreamString = "arn:aws:dynamo:" + this.regionSelected + ":" + this.accountSelected + ":table/";
-  }
+  
 
   chkDynamodb() {
     this.focusDynamo.emit(true);
