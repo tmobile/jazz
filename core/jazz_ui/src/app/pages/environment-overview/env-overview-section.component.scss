@@ -395,6 +395,10 @@ transform: rotateY(-50%)
   display: flex;
   border-radius: 5px;
 }
+.text-area-div{
+  max-height: 20rem;
+  overflow: auto;
+}
 .col-detail{
   flex-grow: 1;
   flex-basis: 0;
