@@ -381,12 +381,7 @@ node() {
 }
 
 def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, config){
-  def s3bucketvalue
-  for (item in accountDetails.REGIONS) {
-      if(item.REGION == config.region){
-        s3bucketvalue = item.S3[envBucketKey]
-      }
-  }
+  def s3bucketvalue = getS3BucketValue(accountDetails , config, envBucketKey)
   echoServerlessFile()
   sh "serverless remove --stage $environment_logical_id -v --bucket ${s3bucketvalue}"
   def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
@@ -403,12 +398,7 @@ def echoServerlessFile() {
 
 def servelessDeploy(env, envBucketKey){
   try {
-    def s3bucketvalue
-    for (item in accountDetails.REGIONS) {
-      if(item.REGION == config.region){
-        s3bucketvalue = item.S3[envBucketKey]
-      }
-  	}
+    def s3bucketvalue = getS3BucketValue(accountDetails, config, envBucketKey)
     sh "serverless deploy --stage ${env} -v --bucket ${s3bucketvalue} > output.log"
     def outputLog = readFile('output.log').trim()
     echo "serverless deployment log $outputLog"
@@ -424,6 +414,19 @@ def servelessDeploy(env, envBucketKey){
 def removeEventResources(){
   sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
   sh "sed -i -- '/#Start:events/,/#End:events/d' ./serverless.yml"
+}
+
+/**
+** Get BucketName by region
+**/
+def getS3BucketValue(accountDetails , config, env_bucketKey){
+  def s3bucketvalue
+  for (item in accountDetails.REGIONS) {
+    if(item.REGION == config.region){
+      s3bucketvalue = item.S3[env_bucketKey]
+    }
+  }
+  return s3bucketvalue
 }
 
 
