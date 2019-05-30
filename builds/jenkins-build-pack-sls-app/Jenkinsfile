@@ -55,6 +55,12 @@ node() {
 
   def domain = params.domain
 
+  accountDetailsPrimary = utilModule.getAccountInfoPrimary();
+
+  def coreDomain = "jazz";
+  def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
+  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
+
   stage('Checkout code base') {
 
     sh 'rm -rf ' + repo_name
@@ -93,10 +99,6 @@ node() {
   }
 
   accountDetails = utilModule.getAccountInfo(config);
-  accountDetailsPrimary = utilModule.getAccountInfoPrimary();
-
-  def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
-  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
   dir(repo_name) {
     scmModule.setServiceConfig(config)
@@ -258,7 +260,7 @@ node() {
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
           // Please refer to https://docs.aws.amazon.com/cli/latest/reference/cloudformation/validate-template.html
-          sh "aws cloudformation validate-template --template-body file://.serverless/cloudformation-template-update-stack.json --region ${configLoader.AWS.REGION} > output.log"
+          sh "aws cloudformation validate-template --template-body file://.serverless/cloudformation-template-update-stack.json --region ${config['region']} > output.log"
           def outputLog = readFile('output.log').trim()
           echo "template validation log $outputLog"
 
@@ -313,7 +315,7 @@ node() {
           // Generate serverless yml file with domain added in function name
           echo "Generate deployment env with domain"
 
-          def envBucketKey = "${env_key}${configLoader.JAZZ.S3_BUCKET_NAME_SUFFIX}"
+          def envBucketKey = "${env_key}"
           echoServerlessFile()
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey)
 
@@ -351,7 +353,7 @@ node() {
           }
 
           if (domain != "jazz") {
-            createSubscriptionFilters(config, accountDetails, roleId, credsId);
+            createSubscriptionFilters(config, accountDetails, env_key, credsId);
           }
 					// reset Credentials
           resetCredentials(credsId)
@@ -423,6 +425,8 @@ def removeEventResources(){
   sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
   sh "sed -i -- '/#Start:events/,/#End:events/d' ./serverless.yml"
 }
+
+
 
 
 /**
@@ -561,16 +565,6 @@ def validateDeploymentConfigurations(def prop) {
 		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
 	}
 
-	if (prop.containsKey("region")) {
-		if (prop['region'] == "") {
-			error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-		} else if (prop['region'] != configLoader.AWS.REGION) {
-			error "Wrong configuration. Value for Key 'region' should be ${region}"
-		}
-	} else {
-		error "Wrong configuration. Key 'region' is missing in the configuration"
-	}
-
 }
 
 def installplugins(){
@@ -628,14 +622,14 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(config, accountDetails, roleId, credsId) {
+def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
   def deploymentDescriptor = config['deployment_descriptor']
   def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
   def functionsElem = doc['functions']
   functionsElem.each{funcName, funcConfig ->
     def name = funcConfig['name'] ? funcConfig['name'] : funcName
     def lambda = "/aws/lambda/${name}"
-    def logStreamer = configLoader.AWS.KINESIS_LOGS_STREAM.PROD
+    def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
     try {
       sh "aws logs create-log-group --log-group-name ${lambda} --region ${config.region}"
@@ -643,7 +637,7 @@ def createSubscriptionFilters(config, accountDetails, roleId, credsId) {
 
     try {
       filter_json = sh(
-        script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${config.region} --profile ${credsId}",
+        script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${config['region']} --profile ${credsId}",
         returnStdout: true
       ).trim()
       echo "${filter_json}"
@@ -651,7 +645,7 @@ def createSubscriptionFilters(config, accountDetails, roleId, credsId) {
       filtername = resultJson.subscriptionFilters[0].filterName
       echo "removing existing filter... $filtername"
       if (filtername != "" && !filtername.equals(lambda)) {
-        sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${config.region} --profile ${credsId}"
+        sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${config['region']} --profile ${credsId}"
       }
     } catch (Exception ex) { } // ignore error if not created yet
     try {
@@ -665,7 +659,7 @@ def createSubscriptionFilters(config, accountDetails, roleId, credsId) {
             }
           }
           updatePolicy(env_key, destARN);
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${config.region} --profile ${credsId}"
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${config['region']} --profile ${credsId}"
         } else {
           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
         }
@@ -702,7 +696,7 @@ def updatePolicy(env, destARN){
 			 destArnArray = destinationName.tokenize(":").last();
 			 
 			 def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
-			 sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${config.region} --profile ${primaryCredsId}"
+			 sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${config['region']} --profile ${primaryCredsId}"
 		} catch(ex){
 			send_status_email(config, 'FAILED', '')
 			events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
@@ -822,7 +816,7 @@ def getEventsArn(config, env) {
   def eventsArn = []
   try {
     def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}"
-    def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${config.region} --function-name $lambdaFnName --output json --profile ${credsId}", returnStdout: true)
+    def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${config['region']} --function-name $lambdaFnName --output json --profile ${credsId}", returnStdout: true)
 
     def policyLists = null
     if (lambdaPolicyTxt) {
