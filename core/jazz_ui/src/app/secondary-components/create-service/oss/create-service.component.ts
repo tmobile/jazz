@@ -20,7 +20,7 @@ import { nodejsTemplate } from "../../../../config/templates/nodejs-yaml";
 import { javaTemplate } from "../../../../config/templates/java-yaml";
 import { goTemplate } from "../../../../config/templates/go-yaml";
 import { pythonTemplate } from "../../../../config/templates/python-yaml";
-const yamlLint = require('yaml-lint'); 
+const yamlLint = require('yaml-lint');
 
 
 @Component({
@@ -126,14 +126,15 @@ export class CreateServiceComponent implements OnInit {
   invalidEventName:boolean = false;
   runtimeKeys : any;
   runtimeObject : any;
-  webObject : any;
-  webKeys : any;
   accountList = [];
   regionList = [];
   accountSelected;
   accountDetails;
   regionSelected;
   accountMap: any;
+  webObject : any;
+  webKeys : any;
+  deploymentTargetSelected: any;
 
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
@@ -167,6 +168,26 @@ export class CreateServiceComponent implements OnInit {
     if(ele){
       ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
     }
+  selectAccountsRegions(){
+    this.accountMap = env_oss.accountMap;
+    this.accountList = [];
+    this.regionList = [];
+    this.accountMap.map((item)=>{
+      this.accountList.push(item.account + ' (' + item.accountName + ')' )
+      if(item.primary){
+        this.accountSelected = item.account
+        this.accountDetails = item.account + ' (' + item.accountName + ')'
+      }
+    })
+    this.regionList = this.accountMap[0].regions;
+    this.regionSelected = this.regionList[0];
+    this.setAccountandRegion();
+  }
+
+  setAccountandRegion(){
+    this.sqsStreamString = "arn:aws:sqs:" + this.regionSelected + ":" + this.accountSelected + ":";
+    this.kinesisStreamString = "arn:aws:kinesis:" + this.regionSelected + ":" + this.accountSelected + ":stream/";
+    this.dynamoStreamString = "arn:aws:dynamo:" + this.regionSelected + ":" + this.accountSelected + ":table/";
   }
 
   chkDynamodb() {
@@ -189,8 +210,16 @@ export class CreateServiceComponent implements OnInit {
     return this.eventExpression.type === 's3';
   }
 
+  getSelectedData(data){
+    this.deploymentTargetSelected = data;
+    if(this.deploymentTargetSelected === 'gcp_apigee'){
+      this.accountSelected = this.buildEnvironment.defaults.account_id,
+      this.regionSelected = this.buildEnvironment.defaults.region
+    }
+  }
+
  // function for opening and closing create service popup
-  closeCreateService(serviceRequest){    
+  closeCreateService(serviceRequest){
     if(serviceRequest){
       this.serviceList.serviceCall();
       this.showToastPending(
@@ -205,7 +234,7 @@ export class CreateServiceComponent implements OnInit {
     this.onClose.emit(false);
   }
 
-  
+
   onFilterSelected(event){
     if(event == "Function Template"){
       this.startNew = false;
@@ -216,7 +245,23 @@ export class CreateServiceComponent implements OnInit {
       this.deploymentDescriptorText = "";
     }
   }
-  
+
+  onaccountSelected(event){
+    this.accountMap.map((item,index)=>{
+      if((item.account + ' (' + item.accountName + ')') === event){
+        this.accountSelected = item.account
+        this.accountDetails = item.account + ' (' + item.accountName + ')'
+        this.regionList = item.regions;
+        this.regionSelected = this.regionList[0];
+      }
+    })
+    this.setAccountandRegion()    ;
+  }
+  onregionSelected(event){
+    this.regionSelected = event;
+    this.setAccountandRegion();
+  }
+
 
   /**
    * Display pending toast
@@ -230,7 +275,7 @@ export class CreateServiceComponent implements OnInit {
       body: body,
       closeHtml: '<button>Dismiss</button>',
       showCloseButton: true,
-      timeout: 0,
+      timeout: 10000,
       title: title,
       type: 'wait',
     };
@@ -260,7 +305,7 @@ export class CreateServiceComponent implements OnInit {
   }
 
   changeRuntimeType(runtimeType){
-    this.typeOfRuntime=runtimeType;   
+    this.typeOfRuntime=runtimeType;
   }
 
 
@@ -271,7 +316,7 @@ export class CreateServiceComponent implements OnInit {
     }
     if(document.getElementById('deployment-type')){
       this.scrollTo('deployment-type');
-    }     
+    }
     else{
       this.scrollTo('runtime-type');
     }
@@ -292,13 +337,13 @@ export class CreateServiceComponent implements OnInit {
         case 'python2.7' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
       }
     }
-    
+
     this.scrollTo('additional');
 
   }
 
   descriptorChanged(){
-    this.descriptorSelected = !this.descriptorSelected;    
+    this.descriptorSelected = !this.descriptorSelected;
   }
 
   onWebSelectionChange(val){
@@ -450,7 +495,7 @@ export class CreateServiceComponent implements OnInit {
         approversPayload.push(this.selectedApprovers[i].userId);
     }
 
-    
+
 
     var payload = {
                 "service_type": this.typeOfService,
@@ -487,16 +532,16 @@ export class CreateServiceComponent implements OnInit {
         var event = {};
         event["type"] = this.eventExpression.type;
         if(this.eventExpression.type === "dynamodb") {
-          event["source"] = "arn:aws:dynamodb:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":table/" + this.eventExpression.dynamoTable;
+          event["source"] = "arn:aws:dynamodb:" + this.regionSelected + ":"+this.accountSelected+":table/" + this.eventExpression.dynamoTable;
           event["action"] = "PutItem";
         } else if(this.eventExpression.type === "kinesis") {
-          event["source"] = "arn:aws:kinesis:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":stream/" + this.eventExpression.streamARN;
+          event["source"] = "arn:aws:kinesis:" + this.regionSelected + ":"+this.accountSelected+":stream/" + this.eventExpression.streamARN;
           event["action"] = "PutRecord";
         } else if(this.eventExpression.type === "s3") {
           event["source"] = this.eventExpression.S3BucketName;
           event["action"] = "s3:ObjectCreated:*";
         } else if (this.eventExpression.type === "sqs") {
-          event["source"] = "arn:aws:sqs:" + env_oss.aws.region + ":"+env_oss.aws.account_number+":"+ this.eventExpression.SQSstreamARN;
+          event["source"] = "arn:aws:sqs:" + this.regionSelected + ":"+this.accountSelected+":"+ this.eventExpression.SQSstreamARN;
         }
         payload["events"] = [];
         payload["events"].push(event);
@@ -523,7 +568,18 @@ export class CreateServiceComponent implements OnInit {
         payload["cache_ttl"] = this.model.ttlValue;
     }
 
-    this.isLoading = true;  
+    /* Including deployment_accounts in the payload */
+    let deployment_accounts = [
+      {
+        "accountId": this.accountSelected,
+        "region": this.regionSelected,
+        "provider":"aws",
+        "primary":true
+      }
+    ]
+    payload['deployment_accounts'] = deployment_accounts
+
+    this.isLoading = true;
     this.http.post('/jazz/create-serverless-service' , payload)
         .subscribe(
         (Response) => {
@@ -550,6 +606,7 @@ export class CreateServiceComponent implements OnInit {
           this.errMessage = this.toastmessage.errorMessage(error, 'createService');
           this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
           this.rateExpression.error = undefined;
+          this.selectAccountsRegions();
           try {
             this.parsedErrBody = JSON.parse(this.errBody);
             if(this.parsedErrBody.message != undefined && this.parsedErrBody.message != '' ) {
@@ -574,6 +631,7 @@ export class CreateServiceComponent implements OnInit {
     this.eventExpression.type = 'awsEventsNone';
     this.runtime = this.runtimeKeys[0];
   }
+
 
   // function to navigate from success or error screen to create service screen
   backToCreateService(){
@@ -788,14 +846,14 @@ export class CreateServiceComponent implements OnInit {
     });
   }
 
- 
+
   onScroll(event){
     let el = document.getElementById('crs');
     for(let i=0;i<this.ids.length;i++){
       let ele = document.getElementById(this.ids[i]);
       if(el.offsetHeight + el.scrollTop == el.scrollHeight)
       {
-        
+
         if(ele){
           ele.classList.remove('in-active');
         }
@@ -818,17 +876,17 @@ export class CreateServiceComponent implements OnInit {
             }
           }
         }
-        
+
       }
-      
+
       if(ele){
-        var rect = ele.getBoundingClientRect();       
+        var rect = ele.getBoundingClientRect();
         let diff = windowHeight - ele.offsetHeight;
-        
+
         if(i!=0){
-          
+
           if(rect.top > windowHeight/2){
-            ele.classList.add('in-active');  
+            ele.classList.add('in-active');
             if(this.ids[i].includes('type')){
               let newId = this.ids[i]+'-label';
               let element = document.getElementById(newId);
@@ -836,24 +894,24 @@ export class CreateServiceComponent implements OnInit {
                 element.classList.add('in-active');
 
               }
-            } 
+            }
           }
-          
+
           else{
-            ele.classList.remove('in-active');   
+            ele.classList.remove('in-active');
             if(this.ids[i].includes('type')){
               let element = document.getElementById(this.ids[i]+'-label');
               if(element){
                 element.classList.remove('in-active');
               }
-            } 
+            }
           }
         }
-        
+
       }
     }
-    
-    
+
+
   }
 
   selectAccountsRegions(){
@@ -884,11 +942,11 @@ export class CreateServiceComponent implements OnInit {
     this.loadMaxLength();
     if(env_oss.slack_support) this.SlackEnabled=true;
   };
-  
+
   inputChanged(val){
     this.Currentinterval = val;
   }
-      
+
   // cron validation related functions //
   private isCronObjValid(cronObj) {
     var cronValidity = this.cronParserService.validateCron(cronObj);
@@ -900,10 +958,10 @@ export class CreateServiceComponent implements OnInit {
   };
 
   hasClass(el, cls) {
-    if (el.className.match('(?:^|\\s)'+cls+'(?!\\S)')) { return true; } 
+    if (el.className.match('(?:^|\\s)'+cls+'(?!\\S)')) { return true; }
     }
   addClass(el, cls) {
-    if (!el.className.match('(?:^|\\s)'+cls+'(?!\\S)')){ el.className += ' '+cls; } 
+    if (!el.className.match('(?:^|\\s)'+cls+'(?!\\S)')){ el.className += ' '+cls; }
     }
   delClass(el, cls) {
     el.className = el.className.replace(new RegExp('(?:^|\\s)'+cls+'(?!\\S)'),'');

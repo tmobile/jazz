@@ -80,6 +80,7 @@ export class EnvOverviewSectionComponent implements OnInit, AfterViewInit {
   disableSave:boolean = true;
   invalid:boolean = false;
  
+  errMessage: string = "Something went wrong while fetching your data";
   message:string="lalalala"
   public lineNumberCount: any = new Array(7);
   private subscription:any;
@@ -261,7 +262,7 @@ popup(state){
                   let errorMessage='';
                   if(errMsgBody!=undefined)
                     errorMessage = errMsgBody.message;
-                  // let errorMessage = this.toastmessage.errorMessage(Error,"updateEnv");
+                  this.errMessage = this.toastmessage.errorMessage(error, "updateEnv");
                   this.toast_pop('error', 'Oops!', errorMessage)
                   this.callServiceEnv();
 
@@ -392,7 +393,8 @@ popup(state){
           this.errorAPI = env_internal.baseurl+"/jazz/environment/"+this.env;
           this.errorRequest = payload;
           this.errorUser = this.authenticationservice.getUserId();
-          this.errorResponse = JSON.parse(error._body);  
+          this.errorResponse = JSON.parse(error._body);
+          this.errMessage = this.toastmessage.errorMessage(error, "environment");
       })
     };
   

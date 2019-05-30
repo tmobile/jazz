@@ -1,5 +1,5 @@
 import { Component, OnInit, ComponentFactoryResolver, ReflectiveInjector, ElementRef ,EventEmitter, Output, Inject, Input,ViewChild} from '@angular/core';
-import { RequestService } from "../../core/services";
+import { RequestService, MessageService } from "../../core/services";
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpModule } from '@angular/http';
 import { DataCacheService , AuthenticationService } from '../../core/services/index';
@@ -18,7 +18,7 @@ declare let Promise;
 @Component({
   selector: 'env-assets-section',
 	templateUrl: './env-assets-section.component.html',
-	providers: [RequestService],
+	providers: [RequestService, MessageService],
   styleUrls: ['./env-assets-section.component.scss']
 })
 export class EnvAssetsSectionComponent implements OnInit {
@@ -124,11 +124,13 @@ export class EnvAssetsSectionComponent implements OnInit {
 	public assetSelected:any;
 	relativeUrl:string = '/jazz/assets';
 	payload:any = {}
+	errMessage: string = "Something went wrong while fetching your data"
 
 	@Input() service: any = {};
 
   constructor(
 		private request:RequestService,
+		private messageservice: MessageService,
 		private route: ActivatedRoute,
 		private router: Router,
 		private cache: DataCacheService,
@@ -137,6 +139,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 
   ) {
 		this.http = request;
+		this.toastmessage = messageservice;
 		this.componentFactoryResolver = componentFactoryResolver;
 		var comp = this;
 		setTimeout(function(){
@@ -247,7 +250,7 @@ ngOnInit()
     this.subscription = this.http.get(this.relativeUrl, this.payload).subscribe(
       (response) => {
 
-        if((response.data == undefined) || (response.data.length == 0 || response.data.count === 0)){
+        if((response.data == undefined) || (response.data.count == 0)){
           this.envResponseEmpty = true;
           this.isLoading = false;
         }
@@ -256,7 +259,10 @@ ngOnInit()
           var pageCount = response.data.count;
 
         if(pageCount){
-          this.totalPageNum = Math.ceil(pageCount/this.limitValue);
+					this.totalPageNum = Math.ceil(pageCount/this.limitValue);
+					if(this.totalPageNum === 1){
+						this.showPaginationtable = false;
+					}
         }
         else{
           this.totalPageNum = 0;
@@ -337,7 +343,7 @@ ngOnInit()
         this.errorRequest = this.payload;
         this.errorUser = this.authenticationservice.getUserId();
         this.errorResponse = JSON.parse(error._body);
-
+        this.errMessage = this.toastmessage.errorMessage(error, "getAssetResponse");
 
       })
 		};

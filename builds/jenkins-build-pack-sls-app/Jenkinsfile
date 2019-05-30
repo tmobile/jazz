@@ -7,6 +7,9 @@ import groovy.transform.Field
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
 
 @Field def repo_credential_id
+@Field def aws_credential_id
+@Field def region
+@Field def instance_prefix
 @Field def repo_base
 @Field def repo_core
 @Field def scm_type
@@ -14,15 +17,14 @@ import groovy.transform.Field
 @Field def configModule
 @Field def configLoader
 @Field def scmModule
-@Field def serviceConfigdata
 @Field def events
-@Field def lambdaEvents
 @Field def serviceMetadataLoader
 @Field def utilModule
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
 @Field def whiteListModule
 @Field def slsBuildRules
+@Field def awsAPIGatewayModule
 
 @Field def auth_token = ''
 @Field def config
@@ -35,8 +37,10 @@ node() {
   def jazzBuildModuleURL = getBuildModuleUrl()
   loadBuildModules(jazzBuildModuleURL)
 
-  def jazz_prod_api_id = utilModule.getAPIIdForCore(configLoader.AWS.API["PROD"])
-  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.REGION}.amazonaws.com/prod"
+  def accountDetailsPrimary = utilModule.getAccountInfoPrimary();
+  def coreDomain = "jazz";
+  def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
+  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
   echo "Build triggered via branch: " + params.scm_branch + " with params " + params
   def _event = ""
@@ -139,20 +143,10 @@ node() {
 
   dir(repo_name) {
   /* Writing the file from config */
-    def deploymentDescriptor = prepareServerlessYml(config, environment_logical_id) // Generating the deployment descriptor
+    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, environment_logical_id, configLoader) // Generating the deployment descriptor
     echo "prepareServerlessYml = ${deploymentDescriptor}"
     writeYaml(file: './serverless.yml', data: deploymentDescriptor)
 
-    if (domain && domain == "jazz") {
-      stage('Update Service Template') {
-        echo "Inside Update service template"
-        try {
-          updatePlatformServiceTemplate(config, config['iamRoleARN'], roleId, current_environment, repo_name)
-        } catch (error) {
-          error "Error occured while updating service template."
-        }
-      }
-    }
     stage('Pre-Build Validation') {
       events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation started', context_map, environment_logical_id)
       try {
@@ -397,54 +391,6 @@ def echoServerlessFile() {
   echo "serverless file data $serverlessyml"
 }
 
-def prepareServerlessYml(aConfig, env) {
-  def deploymentDescriptor = aConfig['deployment_descriptor']
-  try {
-    def appContent = readFile('application.yml').trim()
-    if(!appContent.isEmpty()) deploymentDescriptor = appContent
-  } catch(e) {
-    echo "Error occured while reading application.yml. The default value from config will be used. Exception is $e"
-  }
-
-  def doc = deploymentDescriptor  ? readYaml(text: deploymentDescriptor ) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
-
-  context =["environment_logical_id": env,
-            "INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
-            "REGION": configLoader.AWS.REGION,
-            "cloud_provider": "aws"]
-
-  def rules = readYaml(text: slsBuildRules.sbrContent)
-  def resultingDoc = slsBuildRules.processServerless(doc,
-                                                     rules,
-                                                     aConfig,
-                                                     context)
-
-// Supplying the Outputs element to render all arns for all 'resources/Resources that got listed'
-  def smallResourcesElem = resultingDoc['resources']
-  if(smallResourcesElem) {
-    def bigResourcesElem = smallResourcesElem['Resources']
-    if(bigResourcesElem) {
-      def bigOutputsElem = smallResourcesElem['Outputs']
-      if(!bigOutputsElem) {
-        bigOutputsElem = [:]
-        smallResourcesElem['Outputs'] = bigOutputsElem
-      }
-      def resourceKeys = bigResourcesElem.collect{key, val -> key}
-      /* Forming a record that extracts the arn from resulting item for each of resource key extracted from resources:
-      UsersTableArn:\n
-        Value:\n
-          \"Fn::GetAtt\": [ usersTable, Arn ]\n
-      */
-      resourceKeys.collect{name ->
-          bigOutputsElem[name+'Arn']=["Value":["Fn::GetAtt":[name, "Arn"]]]
-      }
-    }
-  }
-
-  return resultingDoc
-
-}
-
 def servelessDeploy(env, envBucketKey){
   try {
     sh "serverless deploy --stage ${env} -v --bucket ${configLoader.AWS.S3[envBucketKey]} > output.log"
@@ -536,7 +482,16 @@ def buildSlsApp(String runtime, String repo_name) {
       sh "mkdir -p $GOPATH/src"
       sh "rsync -a --exclude='.*' $GOPATH/" + repo_name + " $GOPATH/src"
       sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
-      sh "env GOOS=linux GOARCH=amd64 go build -o main $GOPATH/src/" + repo_name + "/main.go"
+      dirs = readDir("${env.WORKSPACE}/src/${repo_name}/functions")
+      def size = dirs.size()
+      if( size > 0) {
+        for(item in dirs) {
+          def functionpath = "$GOPATH/src/${repo_name}/functions/${item}"
+          sh "env GOOS=linux GOARCH=amd64 go build -o functions/${item}/main ${functionpath}/main.go"
+        }
+      } else {
+        error "No Functions Found..skipping build"
+      }
     }
   }
 }
@@ -565,7 +520,7 @@ def validateDeploymentConfigurations(def prop) {
 		if (_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "java8", "go1.x"]
+			def validRuntimes = ["nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x"]
 			def flag = false
 
 			for (int i = 0; i < validRuntimes.size(); i++) {
@@ -607,13 +562,18 @@ def validateDeploymentConfigurations(def prop) {
 def installplugins(){
   try {
     def serverlessyml = readFile('./serverless.yml').trim()
-    def plugins = whiteListModule.getPluginsfromYaml(serverlessyml)
-    if( plugins ) {
-      for (plugin in plugins){
-        sh "npm install ${plugin}"
+    def outstandingPlugins = whiteListModule.validatePlugins(serverlessyml)
+    if(outstandingPlugins.isEmpty()) {
+      def plugins = whiteListModule.getPluginsfromYaml(serverlessyml)
+      if( plugins ) {
+        for (plugin in plugins){
+          sh "npm install ${plugin}"
+        }
+      } else {
+        echo "No plugins listed..skipping"
       }
     } else {
-      echo "No plugins listed..skipping"
+      error "The following plugins are not allowed: ${outstandingPlugins}"
     }
   } catch( ex ){
     error "Plugin Installation Failed "+ ex.getMessage();
@@ -833,18 +793,22 @@ def runValidation(String runtime) {
 }
 
 @NonCPS
+def readDir(dirPath) {
+  def  dirsl = []
+  new File(dirPath).eachDir() {
+    dirs -> println dirs.getName()
+    dirsl.add(dirs.getName())
+  }
+  dirsl
+}
+
+
+@NonCPS
 def parseJson(jsonString) {
   def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
   def m = [:]
   m.putAll(lazyMap)
   return m
-}
-
-def updatePlatformServiceTemplate(config, roleARN, roleId, current_environment, repo_name) {
-  echo "loadServerlessConfig......."
-  def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-  serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, current_environment, repo_name, utilModule)
-  serviceConfigdata.loadServiceConfigurationData()
 }
 /*
  * Load build modules
@@ -857,17 +821,13 @@ def loadBuildModules(buildModuleUrl) {
         [credentialsId: repo_credential_id, url: buildModuleUrl]
       ]])
 
-    def resultJsonString = readFile("jazz-installer-vars.json")
     configModule = load "config-loader.groovy"
-    configLoader = configModule.initialize(resultJsonString)
-    echo "config loader loaded successfully."
+		configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
+		echo "config loader loaded successfully."
 
     scmModule = load "scm-module.groovy"
     scmModule.initialize(configLoader)
     echo "SCM module loaded successfully."
-
-    serviceConfigdata = load "service-configuration-data-loader.groovy"
-    echo "Service configuration module loaded successfully."
 
     events = load "events-module.groovy"
     echo "Event module loaded successfully."
@@ -878,10 +838,6 @@ def loadBuildModules(buildModuleUrl) {
 
     utilModule = load "utility-loader.groovy"
     echo "Util module loaded successfully."
-
-    lambdaEvents = load "aws-lambda-events-module.groovy"
-    lambdaEvents.initialize(configLoader, utilModule)
-    echo "Lambda event module loaded successfully."
 
     sonarModule = load "sonar-module.groovy"
     echo "Sonar module loaded successfully."
@@ -894,8 +850,12 @@ def loadBuildModules(buildModuleUrl) {
     echo "Environment deployment data loader module loaded successfully."
 
     slsBuildRules = load "sls-app/sbr.groovy"
-    slsBuildRules.initialize()
+    slsBuildRules.initialize(whiteListModule)
     echo "sls-app/sbr.groovy has been loaded"
+
+    awsAPIGatewayModule = load "aws-apigateway-module.groovy"
+    awsAPIGatewayModule.initialize()
+    echo "aws-apigateway-module has been loaded"
 
   }
 }

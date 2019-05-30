@@ -1,31 +1,11 @@
 .jz-formgroup {
   position: relative;
   padding: 1.5rem 0;
-  &:not(:last-child):after {
-    content: " ";
-    display: block;
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border-bottom: 1px solid $color-gray-tertiary;
-  }
 }
 
 .jz-formfield-label {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1rem;
   font-weight: bold;
-  text-transform: uppercase;
-  &:before {
-    content: " ";
-    display: inline-block;
-    height: 2px;
-    width: 10px;
-    border-radius: 1px;
-    background-color: black;
-    vertical-align: middle;
-    transform: translateY(-50%);
-  }
 }
 
 .jz-formfield {

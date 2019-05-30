@@ -5,6 +5,9 @@ import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" except for config_loader. instance_prefix, jazz_bucket_web to be taken from the config_loader.
 @Field def repo_credential_id
+@Field def aws_credential_id
+@Field def region
+@Field def instance_prefix
 @Field def repo_base
 @Field def repo_core
 @Field def scm_type
@@ -50,7 +53,7 @@ def invalidate_cloudfront(cf_id) {
 def aws_configure() {
   withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: config_loader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
     try {
-    sh "aws configure set profile.cloud-api.region ${config_loader.AWS.REGION}"
+    sh "aws configure set profile.cloud-api.region ${config_loader.AWS.DEFAULTS.REGION}"
     sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
     sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
     } catch(ex) {
@@ -71,9 +74,10 @@ node ()  {
   }
 
   stage('Checking out Jazz_UI repo') {
-    dir('jazz_ui') {
+    dir('jazz_ui') {    
+
       checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz_ui")]]])
-      def jazz_prod_api_id = utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])
+      def jazz_prod_api_id = getApiGatewayCore()
 
       if(config_loader.UI_CONFIG.service_tabs.overview)   sh "sed -i 's/{overview}/overview/g' ./src/environments/environment.oss.ts";
       if(config_loader.UI_CONFIG.service_tabs.access_control)   sh "sed -i 's/{access control}/access control/g' ./src/environments/environment.oss.ts";
@@ -86,11 +90,11 @@ node ()  {
       if(config_loader.UI_CONFIG.environment_tabs.assets)  sh "sed -i 's/{assets}/assets/g' ./src/environments/environment.oss.ts";
       if(config_loader.UI_CONFIG.environment_tabs.logs)  sh "sed -i 's/{env_logs}/logs/g' ./src/environments/environment.oss.ts";
 
-      sh "sed -i 's/{api_doc_name}/${config_loader.AWS.S3.API_DOC}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{account_number}/${config_loader.AWS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{region}/${config_loader.AWS.REGION}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{api_doc_name}/${config_loader.JAZZ.PLATFORM.AWS.S3.API_DOC}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{account_number}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${jazz_prod_api_id}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{inst_region}/${config_loader.AWS.REGION}/g' ./src/environments/environment.oss.ts"
+      sh "sed -i 's/{inst_region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./src/environments/environment.oss.ts"
       sh "sed -i 's/{multi_env}/${config_loader.UI_CONFIG.feature.multi_env}/g' ./src/environments/environment.oss.ts"
 
       def accountMap = [:];
@@ -120,6 +124,30 @@ node ()  {
 
       sh "sed -i s!{swagger_editor}!${config_loader.JAZZ.SWAGGER.EDITOR_URL}!g ./src/environments/environment.oss.ts"
 
+      /* Getting the accounts and regions */
+      def accountMap = [:];
+      def eachAccountMap = [];
+      def regions = [];
+      for (item in config_loader.AWS.ACCOUNTS) {
+          regions = [];
+          for(data in item.REGIONS){
+              regions.push(data.REGION)
+          }
+          accountMap = [:]
+          if(item.PRIMARY){
+              accountMap.put('primary', true)
+          } else {
+              accountMap.put('primary', false)
+          }
+          accountMap.put('account', item.ACCOUNTID);
+          accountMap.put('regions', regions);
+          accountMap.put('accountName', item.ACCOUNTNAME);
+          eachAccountMap.push(accountMap);
+      }
+      def uiAccountMap = JsonOutput.toJson(eachAccountMap)
+      sh "sed -i 's/{accountMap}/${uiAccountMap}/g' ./src/environments/environment.oss.ts"
+
+      /* Getting the deployment targets */
       sh "sed -i 's/{api_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.API_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
 
       sh "sed -i 's/{function_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.FUNCTION_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
@@ -133,8 +161,7 @@ node ()  {
       else sh "sed -i 's/{apigee_support}/false/g' ./src/environments/environment.oss.ts"
 
       def envFile = readFile('./src/environments/environment.oss.ts');
-      echo "displaying env file :"
-      echo "$envFile";
+      echo "displaying env file : ${envFile}"
     }
   }
   stage('Building the UI - NPM build') {
@@ -155,14 +182,42 @@ node ()  {
   }
   stage('Copying generated NPM build files to Jazz-Web S3 bucket') {
     sh """
-    aws s3 ls ${config_loader.JAZZ.S3_BUCKET_WEB} --profile cloud-api
-    aws s3 cp jazz_ui/dist s3://${config_loader.JAZZ.S3_BUCKET_WEB} --recursive --include "*" --profile cloud-api
-    aws s3 ls ${config_loader.JAZZ.S3_BUCKET_WEB} --profile cloud-api
+    aws s3 ls ${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB} --profile cloud-api
+    aws s3 cp jazz_ui/dist s3://${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB} --recursive --include "*" --profile cloud-api
+    aws s3 ls ${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB} --profile cloud-api
     """
   }
   stage('Invalidating CloudFront') {
     invalidate_cloudfront(cf_id)
   }
+}
+
+def getApiGatewayCore(){
+  def gatewayValue
+  for (item in config_loader.AWS.ACCOUNTS) {
+    if(item.PRIMARY){
+      for (data in item.REGIONS) {
+        if(data.PRIMARY){
+          gatewayValue = data.API_GATEWAY
+        }
+      }
+    }
+  }
+  return getAPIIdNameMapping(gatewayValue.PROD, 'jazz')
+}
+
+def getAPIIdNameMapping(apiIdMapping, namespace) {
+	if (!apiIdMapping) {
+		error "No mapping document provided to lookup API !"
+	}
+
+	if (apiIdMapping["${namespace}"]) {
+		return apiIdMapping["${namespace}"];
+	} else if (apiIdMapping["${namespace}_*"]) {
+		return apiIdMapping["${namespace}_*"];
+	} else {
+		apiIdMapping["*"];
+	}
 }
 
 /*
@@ -178,12 +233,12 @@ def loadBuildModules(buildModuleUrl){
         [credentialsId: repo_credential_id, url: buildModuleUrl]
       ]])
 
-      def result_json_string = readFile("jazz-installer-vars.json")
-      config_module = load "config-loader.groovy"
-      config_loader = config_module.initialize(result_json_string)
+      configModule = load "config-loader.groovy"
+      configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
+      echo "config loader loaded successfully."
 
       scmModule = load "scm-module.groovy"
-      scmModule.initialize(config_loader)
+      scmModule.initialize(configLoader)
 
       utilModule = load "utility-loader.groovy"
     }

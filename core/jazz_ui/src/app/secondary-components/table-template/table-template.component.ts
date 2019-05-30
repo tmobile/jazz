@@ -13,14 +13,13 @@ import { environment as env_internal } from './../../../environments/environment
   styleUrls: ['./table-template.component.scss']
 })
 export class TableTemplateComponent implements OnInit {
-
   @Input() type: string = '';
   @Input() message: string = '';
   @Input() errcode:number;
 	@Input() header: Array<any>;
 	@Input() showFilters: boolean = false;
-	@Input() isfromservice: boolean = false;
-
+  @Input() isfromservice: boolean = false;
+  @Input() isSort: boolean = false;
   @Input() state: string = 'default';
   @Input() showPaginationtable: boolean = true;
   @Input() currentlyActive: number = 1; 
@@ -122,6 +121,7 @@ export class TableTemplateComponent implements OnInit {
       }
     }
     this.onSort.emit({key:col.key, reverse: col._reverse})
+   // this.isload = false;
   };
    paginatePageInTable(clickedPage){
      switch(clickedPage){
@@ -156,7 +156,7 @@ export class TableTemplateComponent implements OnInit {
     this.cache.set('scroll_flag',true);
     this.cache.set('scroll_id',hash);
  }
- 
+ isload:boolean = true;
  feedbackRes:boolean=false;
  openModal:boolean=false;
    feedbackMsg:string='';

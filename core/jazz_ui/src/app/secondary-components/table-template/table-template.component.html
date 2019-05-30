@@ -33,16 +33,15 @@
 		</div>
 	</div>
 </div>
-<div class="table-wrp" [ngClass]="type">
-	<!-- Table Header --> 
-	<div class="table-header">
-		<div *ngFor="let column of header" class="column" [class.sortable]="column.sort" (click)="onSortColumn(column)">
-		<span>{{column.label}}</span>
-		<div class="arrow-wrap" [ngClass]="{'sort-down': column._reverse == true, 'sort-up': column._reverse == false}">
-			<div class="upper-arrow" (click)="onSortColumn(column , true)"></div>
-			<div class="lower-arrow" (click)="onSortColumn(column , false)"></div>
-		</div>
-	</div>
+<!-- Table Header --> 
+<div class="table-header">
+  <div *ngFor="let column of header" class="column" [class.sortable]="column.sort" (click)="onSortColumn(column)">
+    <span>{{column.label}}</span>
+    <div class="arrow-wrap" [ngClass]="{'sort-down': column._reverse == true, 'sort-up': column._reverse == false}" *ngIf="!isSort">
+      <div class="upper-arrow" (click)="onSortColumn(column , true)"></div>
+      <div class="lower-arrow" (click)="onSortColumn(column , false)"></div>
+    </div>
+  </div>
 </div>
 <!-- Filter Row -->
 <div class="table-filters-row" [class.open]="showFilters">
@@ -62,6 +61,7 @@
 		</div>
 	</div>
 </div>
+<div class="table-wrp" [ngClass]="type">
 <!-- Table Body -->
 <div class="table-body" *ngIf=" type=='accordian' && state =='default' ">
 	<ng-content select=".table-row-wrp"></ng-content>

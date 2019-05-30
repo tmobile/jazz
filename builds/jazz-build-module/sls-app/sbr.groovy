@@ -1,12 +1,19 @@
+#!groovy?
 import groovy.transform.Field
+import org.json.*
+
+@Field def whitelistValidator
+@Field def sbrContent
 
 echo "sbr.groovy is being loaded"
 
-@Field def sbrContent
 
-def initialize() {
+
+def initialize(aWhitelistValidator) {
   sbrContent = readFile("./sls-app/serverless-build-rules.yml")
+  whitelistValidator = aWhitelistValidator
 }
+
 
 /** The function traverses through the original user application.yml file that is represented as a Map and applies the rules from the rules file for every clause found in the user input.
     It returns a resulting Map that can immediatelly be serialized into the yml file and written to disk. config and context are also needed to resolve some values from the application yml
@@ -24,6 +31,7 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
                                                               config,
                                           Map<String, String> context) {
 
+
  // Loading and parsing all the rules to be presented in easily discoverable and executable form as map like [path:rule] i.e. [/service/name:SBR_Rule@127eae33, /service/awsKmsKeyArn:SBR_Rule@7e71274c, /frameworkVersion:SBR_Rule@5413e09 ...
     Map<String, SBR_Rule> rules =  convertRuleForestIntoLinearMap(rulesYmlFile)
     Map<String, SBR_Rule> resolvedRules = rulePostProcessor(rules)
@@ -34,7 +42,6 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
     Map<String, SBR_Rule> path2MandatoryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value instanceof SBR_Rule && item.value.isMandatory) acc.put(item.key, item.value); return acc}
 
     Map<String, Object> mandatoryYmlTreelet = retrofitMandatoryFields(path2MandatoryRuleMap, config, context)
-
 
     Map<String, Object> ymlOutput = merge(mandatoryYmlTreelet, transformedYmlTreelet) // Order of arguments is important here because in case of collision we want the user values to overwrite the default values
 
@@ -66,8 +73,6 @@ class Transformer {
     context = aContext;
     path2RulesMap = aPath2RulesMap;
     templatedPath2RulesMap = path2RulesMap.inject([:]){acc, item -> if(item.key.contains("*")) acc.put(item.key, item.value); return acc} // Copying all path-2-rule entries where a path contains '*' thus it is a template
-
-    println "path2MandatoryRuleMap => $path2MandatoryRuleMap"
   }
 
   boolean pathMatcher(String templatedPath, String targetPath) {
@@ -125,17 +130,276 @@ class Transformer {
 
 /* The interface to generailize all type validations */
 interface TypeValidator {
-  void isValid(String aValue)
+  void isValid(def aValue)
 }
 
 /*The simples example of type validation all others must be repeated after this example */
 class IntValidator implements TypeValidator {
-  public void isValid(String aValue) {
+  public void isValid(def aValue) {
     try {
       Integer.parseInt(aValue)
     } catch(e) {
-      throw new IllegalArgumentException(aValue, e);
+      throw new IllegalArgumentException("Invalid Integer: " + aValue + " is of type: " + aValue?.class);
     }
+  }
+}
+
+class StringValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    if(!aValue instanceof String)
+    throw new IllegalArgumentException("Invalid String: " + aValue + " is of type: " + aValue?.class);
+  }
+}
+
+class BooleanValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    try {
+      Boolean.parseBoolean(aValue)
+    } catch(e) {
+      throw new IllegalArgumentException("Invalid Boolean: " + aValue + " is of type: " + aValue?.class);
+    }
+  }
+}
+
+class EnumValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    if(!aValue instanceof Enum)
+    throw new IllegalArgumentException("Invalid Enum: " + aValue );
+  }
+}
+
+class ListValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    if(!aValue instanceof List)
+     throw new IllegalArgumentException("Invalid List: " + aValue + " is of type: " + aValue?.class);
+  }
+}
+
+class MapValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    if(!aValue instanceof Map)
+     throw new IllegalArgumentException("Invalid Map: " + aValue + " is of type: " + aValue?.class);
+  }
+}
+
+class JsonValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    if(!aValue instanceof JSONObject)
+     throw new IllegalArgumentException("Invalid Json: " + aValue + " is of type: " + aValue?.class);
+  }
+}
+
+class SequenceValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    if(!aValue instanceof List)
+    throw new IllegalArgumentException("Invalid Sequence: " + aValue + " is of type: " + aValue?.class);
+  }
+}
+
+class IamArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+"
+    def match = aValue ==~ pattern
+    if(!match)
+     throw new IllegalArgumentException("Invalid IAM Arn: " + aValue );
+  }
+}
+
+class KmsArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^arn:aws:kms::\\d{12}:key/?[a-zA-Z_0-9+=,.@\\-_/]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid KMS Arn: " + aValue );
+  }
+}
+
+class AwsIdValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^\\d{12}"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid AWS ID: " + aValue );
+  }
+}
+
+class FunctionValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z_0-9+=,.@\\-_/]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Function: " + aValue );
+  }
+}
+
+class PluginValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z0-9_.-]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Plugin :" + aValue)
+  }
+}
+
+class ResourceValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Resource: " + aValue );
+  }
+}
+
+class PolicyValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Policy Arn: " + aValue );
+  }
+}
+
+class EventValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Event: " + aValue );
+  }
+}
+
+class AwsVariableValueValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Aws variable value: " + aValue );
+  }
+}
+
+class AwsVariableNameValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Aws variable name: " + aValue );
+  }
+}
+
+
+class GenericArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def elements = aValue.split(":")
+    if(elements.size() != 6)
+    throw new IllegalArgumentException("Invalid Arn: " + aValue );
+  }
+}
+
+class SnsArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^arn:aws:sns::\\d{12}:?[a-zA-Z_0-9+=,.@\\-_/]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid SNS Arn: " + aValue );
+  }
+}
+
+class LayerArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^arn:aws:opsworks::\\d{12}:layer/?[a-zA-Z_0-9+=,.@\\-_/]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Layer Arn: " + aValue );
+  }
+}
+
+class SqsArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^arn:aws:sqs::\\d{12}:?[a-zA-Z0-9-_]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid SQS Arn: " + aValue );
+  }
+}
+
+class IamPolicyArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^arn:aws:iam::\\d{12}:([user|group]+)\\/\\*"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Iam policy Arn: " + aValue );
+  }
+}
+
+class KinesisArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^arn:aws:kinesis::\\d{12}:stream/?^[a-zA-Z0-9_.-]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Kinesis Arn: " + aValue );
+  }
+}
+
+class AwsArtifactNameValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "[a-zA-Z0-9_\\-]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid artifact name: " + aValue );
+  }
+}
+
+class AwsS3BucketNameValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "(?=^.{3,63})(?!^(\\d+\\.)+\\d+)(^(([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9])\\.)*([a-z0-9]|[a-z0-9][a-z0-9\\-]*[a-z0-9]))"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid S3 Bucket name: " + aValue );
+  }
+}
+
+class AwsTagNameValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z_0-9+=,.@\\-_/+-=._:/ ]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Tag name: " + aValue );
+  }
+}
+
+class AwsScheduleRateValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "(cron|rate)?([()\\d\\?*, ]+)"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid schedule rate expression: " + aValue );
+  }
+}
+
+class AwsPathValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z_0-9+.\\-_/. ]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid AWS path: " + aValue );
+  }
+}
+
+class AwsPrincipleValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z_0-9+.\\-_/.*? ]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid AWS principle: " + aValue );
+  }
+}
+
+class AwsDescriptionValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z_0-9+=,.@\\-_/+-=._:/ ]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid AWS description: " + aValue );
   }
 }
 
@@ -143,36 +407,40 @@ class IntValidator implements TypeValidator {
 enum SBR_Type {
 
    INT("int", new IntValidator()),
-   BOOL("bool", null), // TODO Must provide a validator
-   STR("str", null),  // TODO Must provide a validator
-   ENUM("enum", null),  // TODO Must provide a validator
-   JSON("json", null), // TODO Must provide a validator
+   BOOL("bool", new BooleanValidator()),
+   STR("str", new StringValidator()),
+   ENUM("enum", new EnumValidator()),
+   JSON("json", new JsonValidator()),
 
-   ARN("arn", null), // Generic ARN TODO Must provide a validator
-   ARN_KMS("arn-kms", null),  // TODO Must provide a validator
-   ARN_IAM("arn-iam", null),  // TODO Must provide a validator
-   ARN_SNS("arn-sns", null), // TODO Must provide a validator
-   ARN_LAYER("arn-layer", null), // TODO Must provide a validator
-   ARN_SQS("arn-sqs", null), // TODO Must provide a validator
-   ARN_IAM_POLICY("arn-iam-policy", null), // TODO Must provide a validator
-   ARN_KINESIS("arn-kinesis", null), // TODO Must provide a validator
-   AWS_ID("aws-id", null),  // TODO Must provide a validator
-   AWS_ARTIFACT_NAME("aws-artifact-name", null),  // TODO Must provide a validator
-   AWS_VAR_NAME("aws-var-name", null),  // TODO Must provide a validator
-   AWS_BUCKET_NAME("aws-bucket-name", null),  // TODO Must provide a validator
-   AWS_TAG_VAL("aws-tag-value", null),  // TODO Must provide a validator
-   AWS_SCHEDULE_RATE("aws-schedule-rate", null), // TODO Must provide a validator
-   PATH("path", null),  // TODO Must provide a validator
-   AWS_VAR_VALUE("aws-var-value", null), // TODO Must provide a validator
-   AWS_PRINCIPAL("aws-principal", null),  // TODO Must provide a validator
-   AWS_DESCRIPTION("aws-description", null), // TODO Must provide a validator
-   FUNCTION("function", null),  // TODO Must provide a validator
-   EVENT("event", null),  // TODO Must provide a validator
-   RESOURCE("resource", null),  // TODO Must provide a validator
-   AWS_POLICY("aws-policy", null),  // TODO Must provide a validator
-   MAP("[:]", null),  // TODO Must provide a validator
-   LIST("[]", null),  // TODO Must provide a validator
-   SEQUENCE("sequence", null)  // TODO Must provide a validator
+   ARN("arn", new GenericArnValidator()),
+   ARN_KMS("arn-kms", new KmsArnValidator()),
+   ARN_IAM("arn-iam", new IamArnValidator()),
+   AWS_ID("aws-id", new AwsIdValidator()),
+   ARN_SNS("arn-sns", new SnsArnValidator()),
+   ARN_LAYER("arn-layer", new LayerArnValidator()),
+   ARN_SQS("arn-sqs", new SqsArnValidator()),
+   ARN_IAM_POLICY("arn-iam-policy", new IamPolicyArnValidator()), // TODO Must provide a validator
+   ARN_KINESIS("arn-kinesis", new KinesisArnValidator()),
+   AWS_ARTIFACT_NAME("aws-artifact-name", new AwsArtifactNameValidator()),
+   AWS_BUCKET_NAME("aws-bucket-name", new AwsS3BucketNameValidator()),
+   AWS_TAG_VAL("aws-tag-value", new AwsTagNameValidator()),
+   AWS_SCHEDULE_RATE("aws-schedule-rate", new AwsScheduleRateValidator()),
+   PATH("path", new AwsPathValidator()),
+   AWS_PRINCIPAL("aws-principal", new AwsPrincipleValidator()),
+   AWS_DESCRIPTION("aws-description", new AwsDescriptionValidator()),
+   AWS_VAR_VALUE("aws-var-value", new AwsVariableValueValidator()),
+   AWS_VAR_NAME("aws-var-name", new AwsVariableNameValidator()),
+   FUNCTION("function", new FunctionValidator()),
+   PLUGIN("plugin", new PluginValidator()),
+   EVENT("event", new EventValidator()),
+   RESOURCE("resource", new ResourceValidator()),
+   AWS_POLICY("aws-policy",  new PolicyValidator()), // TODO Must provide a validator
+   MAP("[:]", new MapValidator()),
+   LIST("[]", new ListValidator()),
+   SEQUENCE("sequence", new SequenceValidator())    // TODO Must provide a validator
+
+
+
 
    String tagValue
    TypeValidator typeValidator
@@ -252,45 +520,45 @@ class SBR_Type_Descriptor {
     return "SBR_Type_Descriptor{type:"+type+"; underlyingTypeList="+underlyingTypeList+"}"
   }
 
-   public void validate(aValue) { // TODO: This method needs to be implemented
-   }
-
+  public void validate(aValue) {
+   return underlyingTypeList.contains(aValue)
+  }
 }
 
 /* Resolves value in accordance with render policy. */
 interface Resolver {
-  Object resolve(Object userVal, Object configVal)
+  Object resolve(Object userVal, Object configVal, Object defaultValue)
 }
 
 class UserWinsResolver implements Resolver {
-  public Object resolve(Object userVal, Object configVal) {
+  public Object resolve(Object userVal, Object configVal, Object defaultValue) {
 // TODO: Put the log entry with both user and config values here
-    return userVal
+    return userVal ? userVal : defaultValue
   }
 }
 
 class UserOnlyResolver implements Resolver {
-  public Object resolve(Object userVal, Object configVal) {
-    return userVal
+  public Object resolve(Object userVal, Object configVal, Object defaultValue) {
+    return userVal ? userVal : defaultValue
   }
 }
 
 class ConfigWinsResolver implements Resolver {
-  public Object resolve(Object userVal, Object configVal) {
+  public Object resolve(Object userVal, Object configVal, Object defaultValue) {
 // TODO: Put the log entry with both user and config values here
     return configVal
   }
 }
 
 class ConfigOnlyResolver implements Resolver {
-  public Object resolve(Object userVal, Object configVal) {
+  public Object resolve(Object userVal, Object configVal, Object defaultValue) {
     return configVal
   }
 }
 
 class ConfigMerge implements Resolver {
-  public Object resolve(Object userVal, Object configVal) {
-    println "ConfigMerge called: $userVal, $configVal"
+  public Object resolve(Object userVal, Object configVal, Object defaultValue) {
+
     if(userVal instanceof List &&  configVal instanceof List) {
       def out = []
       if(userVal != null) out << userVal
@@ -326,21 +594,21 @@ enum SBR_Render {
     resolver = aResolver
   }
 
-  public Object resolve(userVal, configVal) {
-    if(resolver != null) return resolver.resolve(userVal, configVal)
+  public Object resolve(userVal, configVal, defaultValue) {
+    if(resolver != null) return resolver.resolve(userVal, configVal, defaultValue)
     else throw new IllegalStateException("The resolver is not set for $tagValue")
   }
 
   static final SBR_Render getByTagValue(aTagValue) {
-    switch(aTagValue) {
-      case "user-wins": return USER_WINS;
-      case "config-wins": return CONFIG_WINS;
-      case "user-only": return USER_ONLY;
-      case "config-only": return CONFIG_ONLY;
-      case "exception-on-mismatch": return EXCEPTION_ON_MISMATCH;
-      case "merge": return MERGE;
-      default: throw new IllegalArgumentException("[SBR_Render] Unknown tagValue: "+aTagValue)
-    }
+
+    Map<String, SBR_Render> tagVal2RenderMap =  SBR_Render.values()
+                                                     .collect{aType -> [(aType.tagValue) : aType]}
+                                                     .inject([:]){acc, item -> item.each{entry -> acc.put(entry.key, entry.value)}; return acc}
+
+     SBR_Render theRender = tagVal2RenderMap[aTagValue]
+     if(theRender == null) throw new IllegalArgumentException("[SBR_Render] Unknown tagValue: "+aTagValue)
+
+     return theRender
   }
 
 }
@@ -353,47 +621,57 @@ interface SBR_Constraint {
 class SBR_Composite_Constraint implements SBR_Constraint {
   private List<SBR_Constraint> constraintList = new ArrayList<>();
 
-  static final SBR_Constraint parseTag(tag) {
+  static final SBR_Constraint parseTag(tag, aWhitelistValidator) {
     SBR_Constraint cumulativeConstr = new SBR_Composite_Constraint();
     tag.collect{key, value ->
       switch(key) {
         case "sbr-enum": cumulativeConstr.constraintList.add(new SBR_Enum_Constraint(value)); break;
         case "sbr-from": cumulativeConstr.constraintList.add(new SBR_From_Constraint(value)); break;
         case "sbr-to": cumulativeConstr.constraintList.add(new SBR_To_Constraint(value)); break;
-        case "sbr-whitelist": cumulativeConstr.constraintList.add(new SBR_Whitelist_Constraint([:], value)); break; // TODO real whitelist loaded needed here instead of an empty map
+        case "sbr-whitelist": cumulativeConstr.constraintList.add(new SBR_Whitelist_Constraint(aWhitelistValidator, value)); break; // TODO real whitelist loaded needed here instead of an empty map
         default: throw new IllegalStateException("sbr-constraint contains an unknown tag inside as follows: $key")
       }
     }
+
     return cumulativeConstr
   }
 
   public boolean compliant(val) {
     return !constraintList.any{elem -> !elem.compliant(val)};
   }
-
-
 }
 
 class SBR_Enum_Constraint implements SBR_Constraint {
+  private ArrayList<String> enumValue = new ArrayList<String>();
+
   public SBR_Enum_Constraint(inputEnum) {
+    enumValue.addAll(inputEnum)
   }
 
-  public boolean compliant(val) { // TODO: Write a good validator
-    return true;
+  public boolean compliant(aVal) {
+    def status = enumValue.find{val -> val == aVal}
+    return status ? true: false
   }
 }
 
 class SBR_Whitelist_Constraint implements SBR_Constraint {
   private def whitelist;
   private String elementPointer
+  private def whitelistValidator
 
-  public SBR_Whitelist_Constraint(aWhitelist, anElementPointer) {
-     whitelist = aWhitelist
+   public SBR_Whitelist_Constraint(aWhitelistValidator, anElementPointer) {
      elementPointer = anElementPointer
+     whitelistValidator = aWhitelistValidator
   }
 
-  public boolean compliant(val) { // TODO: Write a good validator
-    return true;
+  public boolean compliant(val) {
+    switch(elementPointer) {
+      case "resources": return whitelistValidator.validateWhitelistResources(val); break;
+      case "events": return whitelistValidator.validateWhitelistEvents(val); break;
+      case "plugins": return whitelistValidator.validateWhitelistPlugins(val); break;
+      case "actions": return whitelistValidator.validateWhitelistActions(val); break;
+      default: throw new IllegalStateException("SBR_Whitelist_Constraint contains an unknown $elementPointer inside as follows: $val")
+    }
   }
 }
 
@@ -405,17 +683,29 @@ class SBR_To_Constraint implements SBR_Constraint {
   }
 
   public boolean compliant(val) {
-    return val <= toValue;
+    try {
+      if(val && val != '')  return Integer.parseInt(val.toString()) <= Integer.parseInt(toValue.toString());
+      else return false
+    } catch(e) {
+      throw new IllegalArgumentException("Invalid Integer: " + val + " is of type: " + val?.class);
+    }
   }
-
 }
 
 class SBR_From_Constraint implements SBR_Constraint {
-  public SBR_From_Constraint(int inputVal) {
+  private int fromValue
+
+  public SBR_From_Constraint(int aFromValue) {
+    fromValue = aFromValue
   }
 
-  public boolean compliant(val) { // TODO: Write a good validator
-    return true;
+  public boolean compliant(val) {
+    try {
+      if(val && val != '')  return Integer.parseInt(val.toString()) >= Integer.parseInt(fromValue.toString());
+      else return false
+    } catch(e) {
+      throw new IllegalArgumentException("Invalid Integer: " + val + " is of type: " + val?.class);
+    }
   }
 }
 
@@ -501,22 +791,29 @@ class SBR_PreRule {
 class SBR_Rule extends SBR_PreRule {
    SBR_Value value
    boolean isMandatory
+   SBR_Example_Value defaultValue
    List<String> asteriskValues = []
 
    public SBR_Rule(SBR_Type_Descriptor aType,
                    SBR_Render aRender,
                    SBR_Constraint aConstraint,
                    SBR_Value aValue,
-                   boolean aIsMandatory) {
+                   boolean aIsMandatory,
+                   SBR_Example_Value aDefaultValue) {
       super(aType, aRender, aConstraint)
       isMandatory = aIsMandatory
       value = aValue
+      defaultValue = aDefaultValue
    }
 
    public Object applyRule(userValue, path, config, context) {
+
      def valueRendered = (value != null) ? value.renderValue(config, context, asteriskValues) : userValue;
-     def theValue = render.resolve(userValue, valueRendered)
+     def defValue = (defaultValue != null) ? defaultValue.renderValue(config, context, asteriskValues) : ""
+     def theValue = render.resolve(userValue, valueRendered, defValue)
+
      type.validate(theValue); // This will raise the exception if type is wrong but we shave to suppliment it with path so TODO is to catch the exceotion then add the path and the re-throw it
+
      if(constraint != null && !constraint.compliant(theValue)) {
        throw new IllegalStateException("Constraint violated at the path $path with the value: $theValue")
      }
@@ -560,19 +857,22 @@ def extractLeaf(Map<String, Object> aTag) {
   SBR_Constraint constraint = null;
   def constraintTag = aTag["sbr-constraint"]
   if(constraintTag != null) {
-    constraint = SBR_Composite_Constraint.parseTag(constraintTag)
+    constraint = SBR_Composite_Constraint.parseTag(constraintTag, whitelistValidator)
   }
+
   SBR_Value value = null;
+  SBR_Example_Value defaultValue
   def valueTag = aTag["sbr-value"]
   if(valueTag != null) {
     if(valueTag["sbr-formula"] != null) value = SBR_Formula_Value.parseTag(valueTag) // Only Formula tag is implemented for now this if shall go away eventully
+    if(valueTag["sbr-example"] != null) defaultValue = new SBR_Example_Value(valueTag["sbr-example"])
   }
 
   boolean primary = (aTag["sbr-primary"] != null && !aTag["sbr-primary"]) ? false : true
 
   boolean isMandatory = (aTag["sbr-mandatory"] == true) ? true : false
 
-  SBR_PreRule retVal = primary ? new SBR_Rule(type, render, constraint, value, isMandatory) : new SBR_NonPrimaryRule(type, render, constraint, aTag["sbr-template"])
+  SBR_PreRule retVal = primary ? new SBR_Rule(type, render, constraint, value, isMandatory, defaultValue) : new SBR_NonPrimaryRule(type, render, constraint, aTag["sbr-template"])
 
   return retVal;
 
@@ -594,6 +894,7 @@ def collector(ruleTree, currentPath) {
 */
 Map<String, SBR_Rule> convertRuleForestIntoLinearMap(/* Map<String, Object> */  ruleForest) {
  // Loading and parsing all the rules to be presented in easily discoverable and executable form as map like [path:rule] i.e. [/service/name:SBR_Rule@127eae33, /service/awsKmsKeyArn:SBR_Rule@7e71274c, /frameworkVersion:SBR_Rule@5413e09 ...
+
     Map<String, SBR_Rule> path2RuleMap =  collector(ruleForest, "") // collector is the function that will return the map of enclosed map due to it rucursive nature
                                                                      .flatten() // so flatten is needed to convert this tree like structure into the map like [[/service/name:SBR_Rule@127eae33], [/service/awsKmsKeyArn:SBR_Rule@7e71274c], ...]
                                                                      .inject([:]){acc, item -> item.each{entry -> acc.put(entry.key, entry.value)};  return acc} // Now the reduce step is needed to convert all the sub-maplets into one big convenient map
@@ -606,8 +907,9 @@ def extractRefs(Map<String, SBR_Rule> aPath2RuleMap, Map<String, SBR_Rule> nonPr
   return ret
 }
 
+
 def extractNonPrimary(Map<String, SBR_Rule> aPath2RuleMap) {
-  def ret = aPath2RuleMap.inject([:]){acc, item -> if(item.value instanceof SBR_NonPrimaryRule) acc.put(item.key, item.value); return acc}
+  def ret = aPath2RuleMap.inject([:]){acc, item -> if(item.value instanceof SBR_NonPrimaryRule ) acc.put(item.key, item.value); return acc}
   return ret
 }
 
@@ -643,6 +945,7 @@ Map<String, SBR_Rule> rulePostProcessor(Map<String, SBR_PreRule> aPath2RuleMap) 
   Map<String, SBR_NonPrimaryRule> path2NonPrimaryRuleMap = extractNonPrimary(aPath2RuleMap) // Finding all non-primary rules
   Map<String, SBR_Rule> path2ReferrerRuleMap = extractRefs(aPath2RuleMap, path2NonPrimaryRuleMap) // Finding all Referrers that address the associated non-primary rule
   Map<String, SBR_Rule> path2ResolvedRuleMap = resolveReferences(path2ReferrerRuleMap, path2NonPrimaryRuleMap) //Replacing all the referrer parts with the content from non
+
   // Repeating the excersise here as I know that the  path2ResolvedRuleMap itself will still contain the rules to be resolver over again. Ideally it should have been done in the loop that continues the process until no resolutions has occured
   Map<String, SBR_Rule> path2ReferrerRuleMapFinal = extractRefs(path2ResolvedRuleMap, path2NonPrimaryRuleMap)
   Map<String, SBR_Rule> path2ResolvedRuleMapFinal = resolveReferences(path2ReferrerRuleMapFinal, path2NonPrimaryRuleMap)
@@ -676,6 +979,7 @@ def Map merge(Map[] sources) {
     }
 }
 
+
 /* Converting Array to List that is a much nicer to work with */
 def toList(value) {
     [value].flatten().findAll { it != null }
@@ -694,6 +998,8 @@ def retrofitMandatoryFields(String              aPath,
                             SBR_Rule            rule,
                                                 config,
                             Map<String, String> context) {
+
+
   Map<String, Object> ymlTree = [:]
   String[] segmentedPath = aPath.split("/")
   List<String> pathAsList = toList(segmentedPath)
@@ -702,9 +1008,11 @@ def retrofitMandatoryFields(String              aPath,
   pathAsList.removeAt(pathAsList.size()-1)
   def lastHandler =  pathAsList.inject(ymlTree){acc, item -> enclose(acc, item)}
 
+
   def userDefaultValue = ""
   if(rule.type.isMap()) userDefaultValue = [:]
   if(rule.type.isList()) userDefaultValue = []
+
   lastHandler[lastName] = rule.applyRule(userDefaultValue, aPath, config, context)
 
   return ymlTree
@@ -719,67 +1027,59 @@ def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
                                                            def accCopy = [:]; if(acc != null) accCopy << acc;
                                                            acc  = merge(accCopy, ymlTreelet);
                                                            return acc;}
+
   return accumulator
 }
 
+/**
+* Prepare serverless.yml from
+* config
+**/
+def prepareServerlessYml(aConfig, env, configLoader) {
+	def deploymentDescriptor = aConfig['deployment_descriptor']
+	try {
+		def appContent = readFile('application.yml').trim()
+		if(!appContent.isEmpty()) deploymentDescriptor = appContent
+		} catch(e) {
+			echo "Error occured while reading application.yml. The default value from config will be used. Exception is $e"
+		}
+
+		def doc = deploymentDescriptor  ? readYaml(text: deploymentDescriptor ) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
+
+		context =["environment_logical_id": env,
+						"INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
+						"REGION": configLoader.AWS.REGION,
+						"cloud_provider": "aws"]
+
+		def rules = readYaml(text: sbrContent)
+		def resultingDoc = processServerless(doc,
+                                          rules,
+                                          aConfig,
+                                          context)
+
+// Supplying the Outputs element to render all arns for all 'resources/Resources that got listed'
+		def smallResourcesElem = resultingDoc['resources']
+		if(smallResourcesElem) {
+			def bigResourcesElem = smallResourcesElem['Resources']
+			if(bigResourcesElem) {
+				def bigOutputsElem = smallResourcesElem['Outputs']
+				if(!bigOutputsElem) {
+					bigOutputsElem = [:]
+					smallResourcesElem['Outputs'] = bigOutputsElem
+				}
+				def resourceKeys = bigResourcesElem.collect{key, val -> key}
+				/* Forming a record that extracts the arn from resulting item for each of resource key extracted from resources:
+				UsersTableArn:\n
+				Value:\n
+				\"Fn::GetAtt\": [ usersTable, Arn ]\n
+				*/
+				resourceKeys.collect{name ->
+				bigOutputsElem[name+'Arn']=["Value":["Fn::GetAtt":[name, "Arn"]]]
+			}
+		}
+	}
+
+	return resultingDoc
+}
+
 return this
-
-
-//SBR_Type_Descriptor d = SBR_Type_Descriptor.parseTag(["sbr-type": "[int]"])
-//println d.isList()
-
-
-//println SBR_Type.getByTagValue("none")
-println ">>>>>>>>>>>>>>>>>>>>>>>>>"
-
-/*  boolean pathMatcher(String templatedPath, String targetPath) {
-    String[] templatedPathSegments = templatedPath.split("/")
-    String[] targetPathSegments = targetPath.split("/")
-    if(templatedPathSegments.length != targetPathSegments.length) return false
-    println targetPathSegments
-    boolean acc = true
-    targetPathSegments.eachWithIndex{seg, idx -> acc &= (seg == templatedPathSegments[idx] ||  templatedPathSegments[idx] == "*")}
-    return acc
-  }
-
-
-lll = pathMatcher("/f/", "/f/")
-println "lll="+lll */
-
-// (seg.isEmpty() && templatedPath[idx].isEmpty()) || (seg.equals(templatedPath[idx]) || templatedPath[idx].equals("*"))
-// /* && templatedPath[idx].isEmpty()*/) || (segment == templatedPath[idx] || templatedPath[idx] == "*")
-/*
-@Grab('org.yaml:snakeyaml:1.17')
-import org.yaml.snakeyaml.Yaml
-parser = new Yaml()
-
-config = ["service_id": "4a053679-cdd4-482a-a34b-1b83662f1e81",
-          "service": "olegservice28",
-          "domain": "olegdomain28",
-          "created_by": "admin",
-          "type":"sls-app",
-          "runtime":"nodejs8.10",
-          "region":"us-west-2b",
-          "cloud_provider": "aws"]
-
-context =  ["INSTANCE_PREFIX": "slsapp19",
-            "asterisk": "yyy",
-            "environment_logical_id": "dev"]
-
-Map<String, Object> initialSmallServerless = parser.load(new File("/Users/olegfomin/verysmallserverless.yml").text) // Here provide a path to overly simplistic serverless.yml like
-//service:
-//  name: myService
-//  awsKmsKeyArn: arn:aws:kms:us-east-1:XXXXXX:key/some-hash
-Map<String, Object> sbrContent = parser.load(new File("/Users/olegfomin/rajeev/jenkins-build-sls-app/serverless-build-rules.yml").text) // Here provide a path to your serverless-build-rules.yml
-
-Map<String, SBR_Rule> rules = convertRuleForestIntoLinearMap(sbrContent)
-
-Map<String, SBR_Rule> after = rulePostProcessor(rules)
-
-// println after
-
-
-// println explodeNonPrimaryRule(rules["/function"], "/functions")
-
-Map<String, Object> resultingServerless = processServerless(initialSmallServerless, sbrContent, config, context)
-println resultingServerless */

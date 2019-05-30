@@ -10,6 +10,11 @@
     float: right;
   }
 }
+.container{
+  width: 100%;
+  padding: 0px;
+  margin: 0px;
+}
 
 section.json-viewer-container {
   position: relative;
@@ -18,7 +23,6 @@ section.json-viewer-container {
   padding: 20px;
   height: 65vh;
   width: 100%;
-  overflow-y: scroll;
 }
 
 .section-centered {
@@ -41,4 +45,225 @@ section.json-viewer-container {
   margin: 0.55rem 1rem;
   cursor: pointer;
   font-size: 1.5rem;
+}
+
+// toggle
+
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 58px;
+  height: 30px;
+}
+
+.switch input { 
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ca2222;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 19px;
+  width: 18px;
+  left: 4px;
+  bottom: 6px;
+  background-color: white;
+  -webkit-transition: .4s;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2ab934;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  -webkit-transform: translateX(26px);
+  -ms-transform: translateX(26px);
+  transform: translateX(26px);
+}
+.row-item{
+  display:flex;
+  justify-content: space-between;
+}
+.row-item-user{
+  width:33.3%;
+}
+.row{
+  padding: 0 25px;
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+.column{
+  padding:10px;
+}
+
+// loading 
+
+    .loading-circle {
+    position: absolute;
+    top: 50%;
+    -webkit-transform: translateY(-50%);
+    transform: translateY(-50%);
+    width: 100%;
+    z-index: 2;
+    }
+    .row-userstatus{
+      width: 33.3%;
+    }
+
+    // pagination
+
+    .table-pagination {
+      display: none;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translate(-50%);
+    }
+
+    .pagination-nav {
+      text-align: center;
+    }
+
+    .pagination>li {
+      cursor: pointer;
+    }
+    
+    .pagination>li.disable,
+    .pagination>li.disable>a,
+    .pagination>li.dots,
+    .pagination>li.dots>a {
+      cursor: default !important;
+      background: #fff !important;
+    }
+    
+    .pagination>li.hide,
+    .pagination>li.extended-pages {
+      display: none !important;
+    }
+    
+    .pagination>li,
+    .pagination>li.extended-pages.show {
+      display: inline-block !important;
+    }
+    
+    .pagination>li>a {
+      border: 0 !important;
+      color: #9c9c9c !important;
+    }
+    
+    .pagination>.active>a {
+      color: #fff !important;
+      border-radius: 5px !important;
+      cursor: pointer !important;
+    }
+    
+    .pagination>li>a:hover,
+    .pagination>li>a:focus,
+    .pagination>li>span:hover,
+    .pagination>li>span:focus {
+      border-radius: 5px !important;
+    }
+    
+    a.page-link.icon>span {
+      color: #ed0295;
+    }
+    
+    a.page-link.icon.right {
+      transform: scale(-1, -1);
+    }
+    
+    .pagination>li.disable>a.page-link.icon>span:before {
+      color: #9c9c9c !important;
+    }
+
+    // load more button
+
+    .btn-wrp {
+      margin-top: 4.5rem auto;
+    }
+    
+    .btn-wrp btn-jazz-primary>>>button {
+      width: 10rem;
+    }
+
+    button.btn-primary {
+      border-radius: 30px;
+      padding: 0px 23px;
+      letter-spacing: .5px;
+      background-color: #ed008c;
+      border: 1px solid #ed008c;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+      font-size: 13px;
+      font-weight: 500;
+    }
+    
+    button.btn-primary:hover,
+    button.btn-primary:focus,
+    button.btn-primary:active {
+      outline: none !important;
+      //background-color: #ffffff;
+      color: #ffffff;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+      border: 1px solid #ffffff;
+    }
+    
+    button.btn-primary[disabled]:hover {
+      color: #fff;
+    }
+    
+    .buttonPadding {
+      width: 20rem;
+      box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+      font-size: 1.4rem !important;
+      line-height: 2rem;
+      font-weight: 400 !important;
+      padding: 12px 16px !important;
+    }
+    
+    .loginbutton {
+      width: 10rem;
+      height: 4rem;
+    }
+    
+   
+    
+    .login {
+      border-radius: 20px !important;
+      background-color: #ed008c;
+      height: 34px;
+      line-height: 33px;
+    }
+    
+    .wrapper {
+      text-align: center;
+  }
+  .button {
+    position: absolute;
+    top: 50%;
 }

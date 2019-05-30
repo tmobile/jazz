@@ -13,25 +13,27 @@ echo "Service configuration module loaded successfully"
 @Field def config_loader
 @Field def role_arn
 @Field def region
-@Field def role_id
+@Field def accountId
 @Field def jenkins_url
 @Field def current_environment
 @Field def es_hostname
 @Field def service_name
 @Field def utilModule
+@Field def awsAPIGatewayModule
 
 /**
  * Initialize the module
  */
-def initialize(config, role_arn, region, role_id, jenkins_url, current_environment, service_name, utilModule) {
-  config_loader = config
-  setRoleARN(role_arn)
-  setRegion(region)
-  setRoleId(role_id)
-  setJenkinsUrl(jenkins_url)
-  setCurrentEnvironment(current_environment)
-  setServiceName(service_name)
-  setUtilModule(utilModule)
+def initialize(configLoader, role_arn, region, accountId, jenkins_url, current_environment, service_name, utilModule, awsAPIGatewayModule) {
+    config_loader = configLoader
+    setRoleARN(role_arn)
+    setRegion(region)
+    setAccountId(accountId)
+    setJenkinsUrl(jenkins_url)
+    setCurrentEnvironment(current_environment)
+    setServiceName(service_name)
+    setUtilModule(utilModule)
+    setAWSAPIGatewayModule(awsAPIGatewayModule)
 }
 
 /**
@@ -45,7 +47,7 @@ def loadServiceConfigurationData() {
       //Swagger SEDs
       echo "Updating the Swagger SEDs"
       sh "sed -i -- 's/{conf-region}/${region}/g' ./swagger/swagger.json"
-      sh "sed -i -- 's/{conf-accId}/${role_id}/g' ./swagger/swagger.json"
+      sh "sed -i -- 's/{conf-accId}/${accountId}/g' ./swagger/swagger.json"
     }
 
     if ((config_loader.SLACK.ENABLE_SLACK == "true") && (service_name.trim() == "jazz_is-slack-channel-available")) {
@@ -84,13 +86,13 @@ def loadServiceConfigurationData() {
     if (service_name.trim() == "jazz_metrics") {
       updateConfigValue("{conf-region}", region)
       updateCoreAPI()
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
-      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
 
-      sh "sed -i -- 's/{conf-region}/${region}/g' ./config/global-config.json"
-      sh "sed -i -- 's/{conf-apikey-dev}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/global-config.json"
-      sh "sed -i -- 's/{conf-apikey-stg}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/global-config.json"
-      sh "sed -i -- 's/{conf-apikey-prod}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/global-config.json"
+      sh "sed -i -- 's/{cf-region}/us-east-1/g' ./config/global-config.json"  // CloudFront Metrics are in us-east-1
+      sh "sed -i -- 's/{conf-apikey-dev}/${getApigatewayInfoCore('jazz','DEV')}/g' ./config/global-config.json"
+      sh "sed -i -- 's/{conf-apikey-stg}/${getApigatewayInfoCore('jazz','STG')}/g' ./config/global-config.json"
+      sh "sed -i -- 's/{conf-apikey-prod}/${getApigatewayInfoCore('jazz','PROD')}/g' ./config/global-config.json"
       sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/global-config.json"
 
       if (configLoader.APIGEE && configLoader.APIGEE.ENABLE_APIGEE instanceof Boolean && configLoader.APIGEE.ENABLE_APIGEE) {
@@ -115,8 +117,8 @@ def loadServiceConfigurationData() {
       updateConfigValue("{conf-region}", region)
       updateConfigValue("{sonar_hostname}", config_loader.CODE_QUALITY.SONAR.HOST_NAME)
       updateConfigValue("{key_prefix}", config_loader.CODE_QUALITY.SONAR.KEY_PREFIX)
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
-      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
 
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.CODE_QUALITY.SONAR.ADMIN_SONAR_CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
         updateConfigValue("{sonar_user}", UNAME)
@@ -131,8 +133,8 @@ def loadServiceConfigurationData() {
 
     if (service_name.trim() == "jazz_deployments") {
       updateConfigValue("{conf_stack_prefix}", config_loader.INSTANCE_PREFIX)
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
-      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
     }
 
     if (service_name.trim() == "jazz_scm-webhook") {
@@ -144,21 +146,21 @@ def loadServiceConfigurationData() {
       updateCoreAPI()
       updateConfigValue("{conf-region}", region)
       updateConfigValue("{inst_stack_prefix}", config_loader.INSTANCE_PREFIX)
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
     }
 
     if (service_name.trim() == "jazz_environment-event-handler") {
       updateCoreAPI()
       updateConfigValue("{conf-region}", region)
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
-      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
     }
 
     if (service_name.trim() == "jazz_asset-event-handler") {
       updateCoreAPI()
       updateConfigValue("{conf-region}", region)
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
-      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
 
       sh "sed -i -- 's/{conf-region}/${region}/g' ./event.json"
     }
@@ -166,15 +168,15 @@ def loadServiceConfigurationData() {
     if (service_name.trim() == "jazz_deployments-event-handler") {
       updateCoreAPI()
       updateConfigValue("{conf-region}", region)
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
-      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
     }
 
     if ((config_loader.SLACK.ENABLE_SLACK == "true") && (service_name.trim() == "jazz_slack-event-handler")) {
       updateCoreAPI()
       updateConfigValue("{conf-region}", region)
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
-      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
       updateConfigValue("{slack_notifier_name}", config_loader.SLACK.SLACK_USER)
       updateConfigValue("{slack_token}", config_loader.SLACK.SLACK_TOKEN)
     }
@@ -190,21 +192,21 @@ def loadServiceConfigurationData() {
     if ((service_name.trim() == "jazz_services-handler") || (service_name.trim() == "jazz_create-serverless-service")
       || (service_name.trim() == "jazz_acl")) {
       updateCoreAPI()
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
-      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
       updateConfigValue("{conf-region}", region)
     }
 
     if ((service_name.trim() == "jazz_login") || (service_name.trim() == "jazz_logout") || (service_name.trim() == "jazz_cognito-authorizer") || (service_name.trim() == "jazz_cognito-admin-authorizer") || (service_name.trim() == "jazz_token-authorizer")) {
-      updateConfigValue("{conf-user-pool-id}", config_loader.AWS.COGNITO.USER_POOL_ID)
-      updateConfigValue("{conf-client-id}", config_loader.AWS.COGNITO.CLIENT_ID)
+      updateConfigValue("{conf-user-pool-id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.USER_POOL_ID)
+      updateConfigValue("{conf-client-id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.CLIENT_ID)
       updateConfigValue("{conf-region}", region)
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
     }
 
     if (service_name.trim() == "jazz_cognito-authorizer") {
       updateCoreAPI()
-      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
     }
 
     if (service_name.trim() == "jazz_is-service-available") {
@@ -230,11 +232,11 @@ def loadServiceConfigurationData() {
 
     if (service_name.trim() == "jazz_services") {
       updateConfigValue("{inst_stack_prefix}", config_loader.INSTANCE_PREFIX)
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
     }
 
     if ((service_name.trim() == "jazz_logs") || (service_name.trim() == "jazz_cloud-logs-streamer") || (service_name.trim() == "jazz_es-kinesis-log-streamer")) {
-      updateConfigValue("{inst_elastic_search_hostname}", config_loader.AWS.ES_HOSTNAME)
+      updateConfigValue("{inst_elastic_search_hostname}", config_loader.JAZZ.ES_HOSTNAME)
 
       if (service_name.trim() == "jazz_logs") {
         updateConfigValue("{env-prefix}", config_loader.INSTANCE_PREFIX)
@@ -258,12 +260,12 @@ def loadServiceConfigurationData() {
     }
 
     if (service_name.trim() == "jazz_usermanagement") {
-      updateConfigValue("{user_pool_id}", config_loader.AWS.COGNITO.USER_POOL_ID)
-      updateConfigValue("{user_client_id}", config_loader.AWS.COGNITO.CLIENT_ID)
+      updateConfigValue("{user_pool_id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.USER_POOL_ID)
+      updateConfigValue("{user_client_id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.CLIENT_ID)
       updateConfigValue("{region}", region)
     }
 
-    if ((service_name.trim() == "jazz_usermanagement") || (service_name.trim() == "jazz_admin")) {
+    if ((service_name.trim() == "jazz_usermanagement") ) {
       updateConfigValue("{scm_type}", config_loader.SCM.TYPE)
 
       sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/dev-config.json"
@@ -283,7 +285,9 @@ def loadServiceConfigurationData() {
     }
 
     if (service_name.trim() == "jazz_admin") {
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{conf-region}", region)
+      updateConfigValue("{config_table}", config_loader.INSTANCE_PREFIX + '_JazzConfig')
     }
 
     if (service_name.trim() == "jazz_email") {
@@ -293,8 +297,8 @@ def loadServiceConfigurationData() {
     if ((config_loader.SLACK.ENABLE_SLACK == "true") && (service_name.trim() == "jazz_slack-channel")) {
       updateCoreAPI()
       updateConfigValue("{conf-region}", region)
-      updateConfigValue("{jazz_admin}", config_loader.JAZZ.ADMIN)
-      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.PASSWD)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
       updateConfigValue("{slack_notifier_name}", config_loader.SLACK.SLACK_USER)
       updateConfigValue("{slack-token}", config_loader.SLACK.SLACK_TOKEN)
       updateConfigValue("{slack-workspace}", config_loader.SLACK.SLACK_WORKSPACE)
@@ -326,8 +330,6 @@ def loadServiceConfigurationData() {
         slsAppOptions += '"' + item + '",'
       }
       slsAppOptions = slsAppOptions.substring(0, slsAppOptions.length() - 1)
-
-      updateConfigValue("{api_token}", utilModule.getApiToken())
 
       sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/dev-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/stg-config.json"
@@ -363,9 +365,9 @@ def updateConfigValue(key, val) {
 }
 
 def updateCoreAPI() {
-  sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["DEV"])}/g' ./config/dev-config.json"
-  sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["STG"])}/g' ./config/stg-config.json"
-  sh "sed -i -- 's/{conf-apikey}/${utilModule.getAPIIdForCore(config_loader.AWS.API["PROD"])}/g' ./config/prod-config.json"
+  sh "sed -i -- 's/{conf-apikey}/${getApigatewayInfoCore('jazz','DEV')}/g' ./config/dev-config.json"
+  sh "sed -i -- 's/{conf-apikey}/${getApigatewayInfoCore('jazz','STG')}/g' ./config/stg-config.json"
+  sh "sed -i -- 's/{conf-apikey}/${getApigatewayInfoCore('jazz','PROD')}/g' ./config/prod-config.json"
 }
 
 def setRoleARN(roleArn){
@@ -374,8 +376,8 @@ def setRoleARN(roleArn){
 def setRegion(rgn){
   region = rgn
 }
-def setRoleId(roleId){
-  role_id = roleId
+def setAccountId(account_id){
+    accountId = account_id
 }
 def setJenkinsUrl(jenkinsUrl){
   jenkins_url = jenkinsUrl
@@ -389,16 +391,20 @@ def setServiceName(serviceName){
 def setUtilModule(util){
   utilModule = util
 }
+def setAWSAPIGatewayModule(awsAPIGateway){
+  awsAPIGatewayModule = awsAPIGateway;
+}
+
 def setKinesisStream(config){
-  if ((config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") ||
-    (config['service'] == "environment-event-handler") || (config['service'] == "deployments-event-handler") ||
-    (config['service'] == "asset-event-handler") || ((config['service'] == "slack-event-handler") && (config_loader.SLACK.ENABLE_SLACK == "true"))) {
-    def kinesisArn = "arn:aws:kinesis:$region:$role_id:stream/${config_loader.INSTANCE_PREFIX}-events-hub-${current_environment}"
-    setEventSourceMapping(kinesisArn, config)
-  } else if ((config['service'].trim() == "es-kinesis-log-streamer") || (config['service'].trim() == "splunk-kinesis-log-streamer")) {
-    def kinesisArn = config_loader.AWS.KINESIS_LOGS_STREAM.PROD
-    setEventSourceMapping(kinesisArn, config)
-  }
+    if ((config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") ||
+        (config['service'] == "environment-event-handler") || (config['service'] == "deployments-event-handler") ||
+        (config['service'] == "asset-event-handler") || ((config['service'] == "slack-event-handler") && (config_loader.SLACK.ENABLE_SLACK == "true"))) {
+        def kinesisArn = "arn:aws:kinesis:$region:$accountId:stream/${config_loader.INSTANCE_PREFIX}-events-hub-${current_environment}"
+        setEventSourceMapping(kinesisArn, config)
+    } else if ((config['service'].trim() == "es-kinesis-log-streamer") || (config['service'].trim() == "splunk-kinesis-log-streamer")) {
+      def kinesisArn = config_loader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
+      setEventSourceMapping(kinesisArn, config)
+    }
 }
 
 def setEventSourceMapping(eventSourceArn, config) {
@@ -409,17 +415,17 @@ def setEventSourceMapping(eventSourceArn, config) {
   ).trim()
   echo "$event_source_list"
   if (event_source_list == "[]") {
-    sh "aws lambda create-event-source-mapping --event-source-arn ${eventSourceArn} --function-name arn:aws:lambda:$region:$role_id:function:$function_name --enabled --starting-position LATEST --region $region"
+      sh "aws lambda create-event-source-mapping --event-source-arn ${eventSourceArn} --function-name arn:aws:lambda:$region:$accountId:function:$function_name --enabled --starting-position LATEST --region $region"
   }
 }
 
-def setLogStreamPermission(config) {
+def setLogStreamPermission(config){
   if (config['service'] == "cloud-logs-streamer") {
     def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
     echo "set permission for cloud-logs-streamer"
     try {
       def rd = sh(script: "openssl rand -hex 4", returnStdout: true).trim()
-      sh "aws lambda add-permission --function-name arn:aws:lambda:${region}:${role_id}:function:${function_name} --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs.${region}.amazonaws.com --region ${region}"
+      sh "aws lambda add-permission --function-name arn:aws:lambda:${region}:${accountId}:function:${function_name} --statement-id lambdaFxnPermission${rd} --action lambda:* --principal logs.${region}.amazonaws.com --region ${region}"
       echo "set permission for cloud-logs-streamer - success"
     } catch (ss) {
       //ignore if already registered permissions
@@ -428,4 +434,10 @@ def setLogStreamPermission(config) {
     }
   }
 }
+
+def getApigatewayInfoCore(domain, stage){
+  def accountDetailsPrimary = utilModule.getAccountInfoPrimary();
+   return awsAPIGatewayModule.getApigatewayInfoCore(stage, domain, accountDetailsPrimary);
+}
+
 return this

@@ -2,14 +2,15 @@ import {
   Component, OnInit, Input, ViewChild, AfterViewInit
 } from '@angular/core';
 import * as moment from 'moment';
-import {UtilsService} from '../../core/services/utils.service';
-import {ActivatedRoute} from '@angular/router';
-import {RequestService} from '../../core/services';
-import {Observable} from 'rxjs/Observable';
-import {environment} from '../../../environments/environment.oss'
-import { environment as env_oss} from './../../../environments/environment.oss';
+import { UtilsService } from '../../core/services/utils.service';
+import { ActivatedRoute } from '@angular/router';
+import { RequestService, MessageService } from '../../core/services';
+import { Observable } from 'rxjs/Observable';
+import { environment } from '../../../environments/environment.oss'
+import { environment as env_oss } from './../../../environments/environment.oss';
 import * as _ from 'lodash';
 declare let Promise;
+
 @Component({
   selector: 'service-metrics',
   templateUrl: './service-metrics.component.html',
@@ -17,14 +18,15 @@ declare let Promise;
 })
 export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   @Input() service;
-  @Input()  assetTypeList;
+  @Input() assetTypeList;
   @ViewChild('filters') filters;
-  public assetWithDefaultValue:any=[];
-  payload:any={};
+  public assetWithDefaultValue: any = [];
+  payload: any = {};
+  public allData: any;
   public serviceType;
   public assetFilter;
   public environmentFilter;
-  public assetList:any = [];
+  public assetList: any = [];
   public formFields: any = [
     {
       column: 'View By:',
@@ -56,8 +58,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       type: 'select',
       options: ['1 Minute', '1 Hour', '1 Day'],
       values: [moment(0).add(1, 'minute').valueOf() / 1000,
-        moment(0).add(1, 'hour').valueOf() / 1000,
-        moment(0).add(1, 'day').valueOf() / 1000],
+      moment(0).add(1, 'hour').valueOf() / 1000,
+      moment(0).add(1, 'day').valueOf() / 1000],
       selected: '1 Minute'
     },
     {
@@ -69,7 +71,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       selected: 'Sum'
     },
   ];
-  
+
   public form;
   public selectedAsset;
   public selectedMetric;
@@ -78,33 +80,42 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public errorData = {};
   public graphData;
   private http;
-  public assetType=[];
-  public assetSelected:any;
+  public assetType = [];
+  public assetSelected: any;
+
+  errMessage: any;
+  private toastmessage: any = '';
   constructor(private request: RequestService,
-              private utils: UtilsService,
-              private activatedRoute: ActivatedRoute) {
+    private utils: UtilsService,
+    private messageservice: MessageService,
+    private activatedRoute: ActivatedRoute) {
     this.http = this.request;
+    this.toastmessage = messageservice;
   }
 
   ngAfterViewInit() {
-    setTimeout(() => {
-      this.sectionStatus = 'loading';
+    this.sectionStatus = 'loading';
+
     if (!this.activatedRoute.snapshot.params['env']) {
-      return (this.getEnvironments() && this.getAssetType()) 
+      return (this.getEnvironments() && this.getAssetType())
         .then(() => {
-          return (this.applyFilter());
+          return this.applyFilter();
+        })
+        .catch(err => {
+          this.sectionStatus = 'error';
+          this.errorData['response'] = err;
+          this.errMessage = this.toastmessage.errorMessage(err, "metricsResponse");
         });
     } else {
       return this.getAssetType()
-      .then(()=>{
-        return (this.applyFilter());
-      })
+        .then(() => {
+          return (this.applyFilter());
+        })
     }
 
-    })
   }
-  ngOnChanges(x:any){
-    if(x.service.currentValue.domain){
+  ngOnChanges(x: any) {
+    if (x.service.currentValue.domain) {
       this.getAssetType()
     }
   }
@@ -113,62 +124,62 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     this.serviceType = this.service.type || this.service.serviceType;
     this.setPeriodFilters();
   }
-
-  setPeriodFilters() {  
-    if (this.service.deployment_targets === 'gcp_apigee'){
+  setPeriodFilters() {
+    if (this.service.deployment_targets === 'gcp_apigee') {
       const periodFilterIndex = this.formFields.findIndex(formField => formField.label === 'PERIOD');
-      this.formFields[periodFilterIndex].options =  ['1 Minutes', '1 Hour', '1 Day'];
+      this.formFields[periodFilterIndex].options = ['1 Minutes', '1 Hour', '1 Day'];
       this.formFields[periodFilterIndex].values = [moment(0).add(1, 'minute').valueOf() / 1000,
-        moment(0).add(1, 'hour').valueOf() / 1000,
-        moment(0).add(1, 'day').valueOf() / 1000,
+      moment(0).add(1, 'hour').valueOf() / 1000,
+      moment(0).add(1, 'day').valueOf() / 1000,
       ];
-      this.formFields[periodFilterIndex].selected =  '1 Minutes';
+      this.formFields[periodFilterIndex].selected = '1 Minutes';
     }
   }
 
   refresh() {
     this.ngAfterViewInit();
   }
-  getAssetType(data?){
-		let self=this;
-    return self.http.get('/jazz/assets',{
+  getAssetType(data?) {
+    let self = this;
+    return self.http.get('/jazz/assets', {
       domain: self.service.domain,
-			service:self.service.name,
-    }).toPromise().then((response:any)=>{
-      if(response&&response.data&&response.data.assets){
-				let assets=_(response.data.assets).map('asset_type').uniq().value();
-				self.assetWithDefaultValue=assets;
+      service: self.service.name,
+    }).toPromise().then((response: any) => {
+      if (response && response.data && response.data.assets) {
+        let assets = _(response.data.assets).map('asset_type').uniq().value();
+        self.assetWithDefaultValue = assets;
         let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
-		    self.assetWithDefaultValue = validAssetList;
-        for(var i=0;i<self.assetWithDefaultValue.length;i++){
-        self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
+        self.assetWithDefaultValue = validAssetList;
+        for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
+          self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
         }
-        self.assetFilter={
-            column: 'Filter By:',
-            label: 'ASSET TYPE',
-            options:  this.assetList,
-            values: validAssetList,
-            selected:validAssetList[0].replace(/_/g, " ")
-				};
-				if(!data){
-          self.assetSelected=validAssetList[0].replace(/_/g," ");
+        self.assetFilter = {
+          column: 'Filter By:',
+          label: 'ASSET TYPE',
+          options: this.assetList,
+          values: validAssetList,
+          selected: validAssetList[0].replace(/_/g, " ")
+        };
+        if (!data) {
+          self.assetSelected = validAssetList[0].replace(/_/g, " ");
         }
-        this.payload.asset_type = this.assetSelected.replace(/ /g ,"_");
-        self.assetSelected=validAssetList[0].replace(/ /g,"_");
-       let assetField = self.filters.getFieldValueOfLabel('ASSET TYPE');
+        this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
+        self.assetSelected = validAssetList[0].replace(/ /g, "_");
+        let assetField = self.filters.getFieldValueOfLabel('ASSET TYPE');
         if (!assetField) {
-					self.formFields.splice(0, 0, self.assetFilter);
-					self.filters.setFields(self.formFields);
-				}
-    }
+          self.formFields.splice(0, 0, self.assetFilter);
+          self.filters.setFields(self.formFields);
+        }
+      }
     })
-    .catch((error) => {
-      return Promise.reject(error);
-    })
+      .catch((error) => {
+        return Promise.reject(error);
+      })
   }
 
   getEnvironments() {
     return this.http.get('/jazz/environments', {
+
       domain: this.service.domain,
       service: this.service.name
     }, this.service.id).toPromise()
@@ -178,120 +189,120 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           this.environmentFilter = {
             column: 'Filter By:',
             label: 'ENVIRONMENT',
+            type: 'select',
             options: serviceEnvironments,
             values: serviceEnvironments,
             selected: 'prod'
           };
+
           let environmentField = this.filters.getFieldValueOfLabel('ENVIRONMENT');
           if (!environmentField) {
             this.formFields.splice(0, 0, this.environmentFilter);
           }
         }
       })
-      
+
       .catch((error) => {
         return Promise.reject(error);
       })
   }
-
-  findIndexOfObjectWithKey(array,key,value){
-    for(let i = 0; i < array.length; i++ ){
-      if(array[i][key] == value){
+  findIndexOfObjectWithKey(array, key, value) {
+    for (let i = 0; i < array.length; i++) {
+      if (array[i][key] == value) {
         return i;
       }
     }
   }
 
   applyFilter(changedFilter?) {
-    if(changedFilter){
-      let index = this.findIndexOfObjectWithKey(this.formFields,'label','PERIOD');
-      if(this.service.deployment_targets === 'gcp_apigee'){
-        switch(changedFilter.selected){
-          case 'Day':{
-            this.formFields[index].options =  ['1 Minutes', '1 Hour', '1 Day'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'minute').valueOf() / 1000,
-                moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(1, 'day').valueOf() / 1000,];
-            this.filters.changeFilter('1 Minutes',this.formFields[index]);
+    if (changedFilter) {
+      let index = this.findIndexOfObjectWithKey(this.formFields, 'label', 'PERIOD');
+      if (this.service.deployment_targets === 'gcp_apigee') {
+        switch (changedFilter.selected) {
+          case 'Day': {
+            this.formFields[index].options = ['1 Minutes', '1 Hour', '1 Day'];
+            this.formFields[index].values = [
+              moment(0).add(1, 'minute').valueOf() / 1000,
+              moment(0).add(1, 'hour').valueOf() / 1000,
+              moment(0).add(1, 'day').valueOf() / 1000,];
+            this.filters.changeFilter('1 Minutes', this.formFields[index]);
             break;
           }
-          case 'Week':{
-            this.formFields[index].options =  ['1 Hour', '1 Day', '7 Days'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,];
-            this.filters.changeFilter('1 Hour',this.formFields[index]);
+          case 'Week': {
+            this.formFields[index].options = ['1 Hour', '1 Day', '7 Days'];
+            this.formFields[index].values = [
+              moment(0).add(1, 'hour').valueOf() / 1000,
+              moment(0).add(1, 'day').valueOf() / 1000,
+              moment(0).add(7, 'day').valueOf() / 1000,];
+            this.filters.changeFilter('1 Hour', this.formFields[index]);
             break;
           }
-          case 'Month':{
-            this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,
-                moment(0).add(30, 'day').valueOf() / 1000];
-            this.filters.changeFilter('1 Day',this.formFields[index]);
+          case 'Month': {
+            this.formFields[index].options = ['1 Day', '7 Days', '30 Days'];
+            this.formFields[index].values = [
+              moment(0).add(1, 'day').valueOf() / 1000,
+              moment(0).add(7, 'day').valueOf() / 1000,
+              moment(0).add(30, 'day').valueOf() / 1000];
+            this.filters.changeFilter('1 Day', this.formFields[index]);
             break;
           }
-          case 'Year':{
-            this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,
-                moment(0).add(30, 'day').valueOf() / 1000];
-            this.filters.changeFilter('1 Day',this.formFields[index]);
+          case 'Year': {
+            this.formFields[index].options = ['1 Day', '7 Days', '30 Days'];
+            this.formFields[index].values = [
+              moment(0).add(1, 'day').valueOf() / 1000,
+              moment(0).add(7, 'day').valueOf() / 1000,
+              moment(0).add(30, 'day').valueOf() / 1000];
+            this.filters.changeFilter('1 Day', this.formFields[index]);
             break;
           }
         }
       }
-      else{
-        switch(changedFilter.selected){
-          case 'Day':{
-            this.formFields[index].options =  ['1 Minutes', '1 Hour', '1 Day'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'minute').valueOf() / 1000,
-                moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(1, 'day').valueOf() / 1000,];
-            this.filters.changeFilter('1 Minutes',this.formFields[index]);
+      else {
+        switch (changedFilter.selected) {
+          case 'Day': {
+            this.formFields[index].options = ['1 Minutes', '1 Hour', '1 Day'];
+            this.formFields[index].values = [
+              moment(0).add(1, 'minute').valueOf() / 1000,
+              moment(0).add(1, 'hour').valueOf() / 1000,
+              moment(0).add(1, 'day').valueOf() / 1000,];
+            this.filters.changeFilter('1 Minutes', this.formFields[index]);
             break;
           }
-          case 'Week':{
-            this.formFields[index].options =  ['1 Hour', '1 Day', '7 Days'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,];
-            this.filters.changeFilter('1 Hour',this.formFields[index]);
+          case 'Week': {
+            this.formFields[index].options = ['1 Hour', '1 Day', '7 Days'];
+            this.formFields[index].values = [
+              moment(0).add(1, 'hour').valueOf() / 1000,
+              moment(0).add(1, 'day').valueOf() / 1000,
+              moment(0).add(7, 'day').valueOf() / 1000,];
+            this.filters.changeFilter('1 Hour', this.formFields[index]);
             break;
           }
-          case 'Month':{
-            this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,
-                moment(0).add(30, 'day').valueOf() / 1000];
-            this.filters.changeFilter('1 Day',this.formFields[index]);
+          case 'Month': {
+            this.formFields[index].options = ['1 Day', '7 Days', '30 Days'];
+            this.formFields[index].values = [
+              moment(0).add(1, 'day').valueOf() / 1000,
+              moment(0).add(7, 'day').valueOf() / 1000,
+              moment(0).add(30, 'day').valueOf() / 1000];
+            this.filters.changeFilter('1 Day', this.formFields[index]);
             break;
 
           }
-          case 'Year':{
-            this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
-            this.formFields[index].values =  [
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,
-                moment(0).add(30, 'day').valueOf() / 1000];
-            this.filters.changeFilter('1 Day',this.formFields[index]);
+          case 'Year': {
+            this.formFields[index].options = ['1 Day', '7 Days', '30 Days'];
+            this.formFields[index].values = [
+              moment(0).add(1, 'day').valueOf() / 1000,
+              moment(0).add(7, 'day').valueOf() / 1000,
+              moment(0).add(30, 'day').valueOf() / 1000];
+            this.filters.changeFilter('1 Day', this.formFields[index]);
             break;
           }
         }
       }
-      if(changedFilter.label === 'ASSET TYPE'){
-        this.assetSelected=changedFilter.selected.replace(/ /g,"_")
-    } 
+      if (changedFilter.label === 'ASSET TYPE') {
+        this.assetSelected = changedFilter.selected.replace(/ /g, "_")
+      }
     }
-
-    if (changedFilter && (changedFilter.label === 'ASSET' || 
+    if (changedFilter && (changedFilter.label === 'ASSET' ||
       changedFilter.label === 'METHOD' ||
       changedFilter.label === 'PATH')) {
       this.setAsset();
@@ -299,6 +310,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       return this.queryMetricsData();
     }
   }
+
 
   queryMetricsData() {
     this.sectionStatus = 'loading';
@@ -309,7 +321,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         service: this.service.name,
         environment: this.filters.getFieldValueOfLabel('ENVIRONMENT') || this.activatedRoute.snapshot.params['env'] || 'prod',
         start_time: this.filters.getFieldValueOfLabel('TIME RANGE').range,
-        asset_type:this.assetSelected,
+        asset_type: this.assetSelected,
         end_time: moment().toISOString(),
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
         statistics: this.filters.getFieldValueOfLabel('AGGREGATION')
@@ -319,26 +331,35 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       .toPromise()
       .then((response) => {
         this.sectionStatus = 'empty';
-        if (response && response.data && response.data.assets && response.data.assets.length) {
+        if (response && response.data && response.data.length) {
           this.queryDataRaw = response.data;
-          this.queryDataRaw.assets = this.filterAssetType(response.data);
-          this.setAssetsFilter();
-          this.setAsset();
+          this.getAllData(response.data);
         }
-      },
-      (error) => {
+      })
+      .catch((error) => {
         this.sectionStatus = 'error';
+        // comment following 2 lines if there are any issues?
         this.errorData['response'] = error;
-      });
-
+        this.errMessage = this.toastmessage.errorMessage(error, "metricsResponse");
+      })
   }
-
+  getAllData(data) {
+    this.allData = data;
+    this.queryDataRaw.assets = this.filterAssetType(this.allData[0]);
+    if (this.queryDataRaw.assets.length !== 0) {
+      this.setAssetsFilter();
+      this.setAsset();
+    }
+    else {
+      this.sectionStatus = 'empty';
+    }
+  }
   filterAssetType(data) {
     return data.assets.filter((asset) => {
       if (this.serviceType === 'api') {
         if (this.service.deployment_targets === "gcp_apigee") {
           return asset.type === 'apigee_proxy';
-        }else{
+        } else {
           return asset.type === 'apigateway';
         }
       } else if (this.serviceType === 'function') {
@@ -358,17 +379,17 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           .uniq().value();
         let paths = _(this.queryDataRaw.assets)
           .map('asset_name.Resource')
-          .uniq().value();       
-        this.filters.addField('Filter By:', 'METHOD', methods, null);
-        this.filters.addField('Filter By:', 'PATH', paths);
+          .uniq().value();
+        this.filters.addField('Filter By:', 'METHOD', methods, 'select', null, 'GET');
+        this.filters.addField('Filter By:', 'PATH', paths, 'select', null, null);
         break;
       case 'website':
         let websiteAssets = _(this.queryDataRaw.assets).map('type').uniq().value();
-        this.filters.addField('Filter By:', 'ASSET', websiteAssets, null, 'cloudfront');
+        this.filters.addField('Filter By:', 'ASSET', websiteAssets, 'select', null, 'cloudfront');
         break;
     }
   }
-  
+
 
   setAsset() {
     switch (this.serviceType) {
@@ -384,7 +405,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         break;
       case 'website':
         let assetType = this.filters.getFieldValueOfLabel('ASSET');
-        this.selectedAsset = _.find(this.queryDataRaw.assets, {type: assetType});
+        this.selectedAsset = _.find(this.queryDataRaw.assets, { type: assetType });
         break;
     }
 
@@ -426,7 +447,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           y: parseInt(dataPoint[valueProperty])
         };
 
-        if(!obj['y']){
+        if (!obj['y']) {
           obj['y'] = parseInt(dataPoint[valueProperty.toLowerCase()])
         }
         return obj;
@@ -472,5 +493,4 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       metric.datapoints = datapoints;
     })
   }
-
 }

@@ -15,63 +15,73 @@
 // =========================================================================
 
 const AWS = require("aws-sdk");
+const logger = require('./logger.js');
 
 /* fetch list of serviceIds from dynamodb */
 var scanResult;
 async function scanExecute(dynamodb, scanparams, items_formatted) {
-  let dataDb = await dynamodb.scan(scanparams).promise();
+    let dataDb = await dynamodb.scan(scanparams).promise();
 
-  if (dataDb && dataDb.Items && dataDb.Items.length || items_formatted.length) {
-    dataDb.Items.forEach(function (item) {
-      items_formatted.push(item.SERVICE_ID.S);
-    });
-    if (dataDb.LastEvaluatedKey) {
-      scanparams.ExclusiveStartKey = dataDb.LastEvaluatedKey;
-      await scanExecute(dynamodb, scanparams, items_formatted);
+  	logger.debug("dataDb : " + JSON.stringify(dataDb));
+
+    if ((dataDb && dataDb.Items && dataDb.Items.length) || (dataDb.LastEvaluatedKey && Object.keys(dataDb.LastEvaluatedKey).length > 0)) {
+        dataDb.Items.forEach(function (item) {
+            items_formatted.push(item.SERVICE_ID.S);
+        });
+        if (dataDb.LastEvaluatedKey) {
+            scanparams.ExclusiveStartKey = dataDb.LastEvaluatedKey;
+            await scanExecute(dynamodb, scanparams, items_formatted);
+        } else {
+            scanResult = {
+                data: items_formatted
+            };
+        }
     } else {
-      scanResult = {
-        data: items_formatted
-      };
+        if (items_formatted.length) {
+            scanResult = {
+                data: items_formatted
+            };
+        } else {
+            scanResult = {
+                error: "No data available"
+            };
+        }
     }
-  } else {
-    scanResult = {
-      error: "No data available"
-    };
-  }
-
-  return scanResult
+    logger.debug("scanResult: " + JSON.stringify(scanResult));
+    return scanResult
 }
 
 async function getSeviceIdList(config, serviceId) {
-  let items_formatted = [];
-  AWS.config.update({
-    region: config.REGION
-  });
+    let items_formatted = [];
+    AWS.config.update({
+        region: config.REGION
+    });
 
-  let dynamodb = new AWS.DynamoDB({
-    apiVersion: '2012-08-10'
-  });
+    let dynamodb = new AWS.DynamoDB({
+        apiVersion: '2012-08-10'
+    });
 
-  let scanparams = {
-    "TableName": config.SERVICES_TABLE_NAME,
-    "ProjectionExpression": "SERVICE_ID",
-    "ReturnConsumedCapacity": "TOTAL",
-    "Limit": "500"
-  };
-  if(serviceId) {
-    scanparams.FilterExpression = "SERVICE_ID = :service_id";
-    scanparams.ExpressionAttributeValues = {
-      ":service_id": {
-        "S": serviceId
-      }
+    let scanparams = {
+        "TableName": config.SERVICES_TABLE_NAME,
+        "ProjectionExpression": "SERVICE_ID",
+        "ReturnConsumedCapacity": "TOTAL",
+        "Limit": "500"
+    };
+    if (serviceId) {
+        scanparams.FilterExpression = "SERVICE_ID = :service_id";
+        scanparams.ExpressionAttributeValues = {
+            ":service_id": {
+                "S": serviceId
+            }
+        }
     }
-  }
 
-  const dbResult = await scanExecute(dynamodb, scanparams, items_formatted);
-  return dbResult;
+    logger.debug("scanparams : " + JSON.stringify(scanparams));
+    const dbResult = await scanExecute(dynamodb, scanparams, items_formatted);
+    return dbResult;
 
 }
 
 module.exports = {
-  getSeviceIdList
+    getSeviceIdList
 };

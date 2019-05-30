@@ -1006,4 +1006,34 @@ transform: rotate(0deg);
     width:50%;
   }
 
+.account-region-wrap{
+  display: flex;
+  .each-section-accReg{
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+  }
+  .accReg-label{
+    margin:0.5rem 0;
+  }
+  .accReg-dropdown{
+    /deep/.dropdown{
+      width: 15rem !important;
+    }
+  }
+}
+
+.defaultDropdown{
+  background-color: #fff;
+  width: 15rem;
+  text-align: left;
+  position: relative;
+  box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
+  border-radius: 3px;
+  padding-left: 15px;
+  font-size: 12px;
+  border-top: 1px solid #eee;
+  border: 1px solid transparent;
+  padding: 6px 12px;
+  line-height: 1.42857143;
 }

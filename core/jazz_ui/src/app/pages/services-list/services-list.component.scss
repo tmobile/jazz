@@ -8,6 +8,25 @@
 /deep/ .table-wrap.fixed {
   position: fixed;
 }
+/deep/.service-list-table
+ .column:nth-child(3) 
+ .input-wrapper {
+    margin-left: 0 !important;
+}
+/deep/ .service-list-table 
+.column:nth-child(3) 
+.input-wrapper .textForm {
+    margin-left: 0 !important;
+}
+/deep/ .service-list-table .table-filters-row
+.column:nth-child(3){
+    padding: 10px 3px !important;
+}
+.create-service{
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
 
 /deep/ .table-filter-wrap .tabs-wrap {
   ul {
@@ -194,9 +213,6 @@
   /deep/ .table-filters-row {
     &.open {
       height: 50px;
-    }
-    .column {
-      padding: 10px 5px !important;
     }
   }
   /deep/ .table-body {
@@ -413,3 +429,4 @@ search- box {
 // .status:first-letter {
 //     text-transform:capitalize;
 // }
+

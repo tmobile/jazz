@@ -24,6 +24,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
   filterloglevel:string = 'INFO';
   loadingState:string='default';
   envObj:any;
+  isSort:boolean = false;
   disableRetry:boolean = false;
   paginationSelected: Boolean = true;
 	totalPagesTable: number = 7;
@@ -70,6 +71,8 @@ export class EnvDeploymentsSectionComponent implements OnInit {
   errorRequest:any={};
   rebuild_id:any;
   isRebuildReq:Boolean = false;
+  pageSelected:Boolean = true;
+  errorMessage: string = "Something went wrong while fetching your data";
 
 	errorResponse:any={};
 	errorUser:any;
@@ -290,6 +293,9 @@ export class EnvDeploymentsSectionComponent implements OnInit {
           
           if(pageCount){
             this.totalPagesTable = Math.ceil(pageCount/this.limitValue);
+            if(this.totalPagesTable === 1){
+              this.pageSelected = false;
+            }
           }
           else{
             this.totalPagesTable = 0;
@@ -357,8 +363,8 @@ export class EnvDeploymentsSectionComponent implements OnInit {
           this.errorRequest = payload;
           this.errorUser = this.authenticationservice.getUserId();
           this.errorResponse = JSON.parse(error._body);
-  
-        
+          this.errorMessage = this.toastmessage.errorMessage(error, "getDeploymentsResponse");
+
       })
     };
   
@@ -648,8 +654,8 @@ rebuild(){
       this.toast_pop('success',"",successMessage+this.service.name);      
     },
     (error) => {
-      let errorMessage = this.toastmessage.errorMessage(error, "retryDeploy");    
-      this.toast_pop('error', 'Oops!', errorMessage);
+      this.errorMessage = this.toastmessage.errorMessage(error, "retryDeploy");
+      this.toast_pop('error', 'Oops!', this.errorMessage);
       this.disableBuild = false;
     })
     this.isLoading = true;

@@ -1,13 +1,5 @@
 {
   "ADMIN_ID": "test@test.com",
-  "BASE_URL": "scm_base_url",
-  "BITBUCKET": {
-    "USERNAME": "bb_username",
-    "PASSWORD": "bb_password",
-    "CONFIG_FILE_PATH": "/projects/SLF/repos/jazz-build-module/raw/jazz-installer-vars.json"
-  },
-  "GITLAB": {
-    "CONFIG_FILE_PATH": "/slf/jazz-build-module/raw/master/jazz-installer-vars.json",
-    "PRIVATE_TOKEN": "private-token"
-  }
+  "TABLE_NAME": "{config_table}" ,
+  "REGION": "{conf-region}"
 }

@@ -3,17 +3,24 @@
   "JOB_TOKEN": "{job_token}",
   "API_TOKEN": "{api_token}",
   "SVC_USER": "{ci_user}",
-  "REGION": "{conf-region}",
   "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
   "SERVICE_API_RESOURCE": "/dev/jazz/services",
   "TOKEN_URL": "/dev/jazz/login",
   "SERVICE_USER": "{jazz_admin}",
   "TOKEN_CREDS": "{jazz_admin_creds}",
   "DEPLOYMENT_TARGETS": {
-    "api": ["{conf_deployment_targets_api}"],
-    "function": ["{conf_deployment_targets_function}"],
-    "website": ["{conf_deployment_targets_website}"],
-    "sls-app": ["{conf_deployment_targets_sls-app}"]
+    "api": [
+      "{conf_deployment_targets_api}"
+    ],
+    "function": [
+      "{conf_deployment_targets_function}"
+    ],
+    "website": [
+      "{conf_deployment_targets_website}"
+    ],
+    "sls-app": [
+      "{conf_deployment_targets_sls-app}"
+    ]
   },
   "EVENT_SOURCE_NAME": {
     "s3": {
@@ -36,5 +43,10 @@
       "maxLength": 128,
       "regexPattern": "^[a-zA-Z0-9_.-]+$"
     }
+  },
+  "PRIMARY_DEPLOYMENT_ACCOUNT": {
+    "accountId": "{conf-account}",
+    "region": "{conf-region}",
+    "provider": "{conf-provider}"
   }
 }

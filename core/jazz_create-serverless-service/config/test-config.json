@@ -5,10 +5,18 @@
   "SVC_USER": "{ci_user}",
   "SERVICE_API_URL": "https://test.execute-api.test-region.amazonaws.com",
   "DEPLOYMENT_TARGETS": {
-    "api": ["{conf_deployment_targets_api}"],
-      "function": ["{conf_deployment_targets_function}"],
-      "website": ["{conf_deployment_targets_website}"],
-      "sls-app": ["{conf_deployment_targets_sls-app}"]
+    "api": [
+      "{conf_deployment_targets_api}"
+    ],
+    "function": [
+      "{conf_deployment_targets_function}"
+    ],
+    "website": [
+      "{conf_deployment_targets_website}"
+    ],
+    "sls-app": [
+      "{conf_deployment_targets_sls-app}"
+    ]
   },
   "EVENT_SOURCE_NAME": {
     "s3": {
@@ -31,5 +39,10 @@
       "maxLength": 128,
       "regexPattern": "^[a-zA-Z0-9_.-]+$"
     }
+  },
+  "PRIMARY_DEPLOYMENT_ACCOUNT": {
+    "accountId": "{conf-account}",
+    "region": "{conf-region}",
+    "provider": "{conf-provider}"
   }
 }

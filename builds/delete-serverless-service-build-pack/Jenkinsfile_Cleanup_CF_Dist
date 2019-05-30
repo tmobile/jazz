@@ -5,6 +5,9 @@ import groovy.transform.Field
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
 @Field def repo_credential_id
+@Field def aws_credential_id
+@Field def region
+@Field def instance_prefix
 @Field def repo_base
 @Field def repo_core
 @Field def scm_type
@@ -12,9 +15,6 @@ import groovy.transform.Field
 //@Field def events
 @Field def configModule
 @Field def configLoader
-@Field def aws_credential_id
-@Field def instance_prefix
-@Field def region
 
 /**
  * The Jenkins Job deletes any diabled CloudFront Distributions
@@ -27,11 +27,6 @@ node {
 	echo "params : $params"
 
 	loadConfigModule(getBuildModuleUrl())
-	
-	aws_credential_id = configLoader.AWS_CREDENTIAL_ID
-	instance_prefix = configLoader.INSTANCE_PREFIX
-	region = configLoader.AWS.REGION
-
 	cleanupCloudFrontDistribution()
 }
 
@@ -136,7 +131,7 @@ def getDistributionConfig(distributionID) {
 	}catch (ex) {
 		echo "getDistributionConfig Failed."+ex.getMessage()
 		echo "getDistributionConfig Failed." + ex
-        error "getDistributionConfig Failed."+ex.getMessage()
+    error "getDistributionConfig Failed."+ex.getMessage()
 
 	}
 
@@ -209,17 +204,17 @@ def loadConfigModule(buildModuleUrl){
 			[credentialsId: repo_credential_id, url: buildModuleUrl]
 		]])
 
-		def resultJsonString = readFile("jazz-installer-vars.json")
 		configModule = load "config-loader.groovy"
-		configLoader = configModule.initialize(resultJsonString)
+    configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
+    echo "config loader loaded successfully."
 	}
 }
 
 def getBuildModuleUrl() {
-    if (scm_type && scm_type != "bitbucket") {
-      // right now only bitbucket has this additional tag scm in its git clone path
-      return "http://${repo_base}/${repo_core}/jazz-build-module.git" 
-    }else {
-      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    } 
-} 
+  if (scm_type && scm_type != "bitbucket") {
+    // right now only bitbucket has this additional tag scm in its git clone path
+    return "http://${repo_base}/${repo_core}/jazz-build-module.git"
+  }else {
+    return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+  }
+}
