@@ -54,5 +54,6 @@ export const environment = {
   aws: {
     account_number:'{account_number}',
     region:"{region}"
-  }
+  },
+  accountMap:{accountMap}
 };
