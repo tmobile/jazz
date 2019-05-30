@@ -1,7 +1,6 @@
 #!groovy?
 import groovy.transform.Field
 import org.json.*
-import org.apache.log4j.Logger;
 
 @Field def whitelistValidator
 @Field def sbrContent
@@ -32,6 +31,7 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
                                                               config,
                                           Map<String, String> context) {
 
+
  // Loading and parsing all the rules to be presented in easily discoverable and executable form as map like [path:rule] i.e. [/service/name:SBR_Rule@127eae33, /service/awsKmsKeyArn:SBR_Rule@7e71274c, /frameworkVersion:SBR_Rule@5413e09 ...
     Map<String, SBR_Rule> rules =  convertRuleForestIntoLinearMap(rulesYmlFile)
     Map<String, SBR_Rule> resolvedRules = rulePostProcessor(rules)
@@ -42,7 +42,6 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
     Map<String, SBR_Rule> path2MandatoryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value instanceof SBR_Rule && item.value.isMandatory) acc.put(item.key, item.value); return acc}
 
     Map<String, Object> mandatoryYmlTreelet = retrofitMandatoryFields(path2MandatoryRuleMap, config, context)
-
 
     Map<String, Object> ymlOutput = merge(mandatoryYmlTreelet, transformedYmlTreelet) // Order of arguments is important here because in case of collision we want the user values to overwrite the default values
 
@@ -269,14 +268,24 @@ class EventValidator implements TypeValidator {
   }
 }
 
+class AwsVariableValueValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^[a-zA-Z]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid Aws variable value: " + aValue );
+  }
+}
+
 class AwsVariableNameValidator implements TypeValidator {
   public void isValid(def aValue) {
     def pattern = "^[a-zA-Z]+"
     def match = aValue ==~ pattern
     if(!match)
-    throw new IllegalArgumentException("Invalid Aws variable: " + aValue );
+    throw new IllegalArgumentException("Invalid Aws variable name: " + aValue );
   }
 }
+
 
 class GenericArnValidator implements TypeValidator {
   public void isValid(def aValue) {
@@ -419,9 +428,10 @@ enum SBR_Type {
    PATH("path", new AwsPathValidator()),
    AWS_PRINCIPAL("aws-principal", new AwsPrincipleValidator()),
    AWS_DESCRIPTION("aws-description", new AwsDescriptionValidator()),
-   AWS_VAR_VALUE("aws-var-value", new AwsVariableNameValidator()),
+   AWS_VAR_VALUE("aws-var-value", new AwsVariableValueValidator()),
+   AWS_VAR_NAME("aws-var-name", new AwsVariableNameValidator()),
    FUNCTION("function", new FunctionValidator()),
-   PLUGIN("plugin", new PluginValidator()), 
+   PLUGIN("plugin", new PluginValidator()),
    EVENT("event", new EventValidator()),
    RESOURCE("resource", new ResourceValidator()),
    AWS_POLICY("aws-policy",  new PolicyValidator()), // TODO Must provide a validator
@@ -517,37 +527,37 @@ class SBR_Type_Descriptor {
 
 /* Resolves value in accordance with render policy. */
 interface Resolver {
-  Object resolve(Object userVal, Object configVal)
+  Object resolve(Object userVal, Object configVal, Object defaultValue)
 }
 
 class UserWinsResolver implements Resolver {
-  public Object resolve(Object userVal, Object configVal) {
+  public Object resolve(Object userVal, Object configVal, Object defaultValue) {
 // TODO: Put the log entry with both user and config values here
-    return userVal
+    return userVal ? userVal : defaultValue
   }
 }
 
 class UserOnlyResolver implements Resolver {
-  public Object resolve(Object userVal, Object configVal) {
-    return userVal
+  public Object resolve(Object userVal, Object configVal, Object defaultValue) {
+    return userVal ? userVal : defaultValue
   }
 }
 
 class ConfigWinsResolver implements Resolver {
-  public Object resolve(Object userVal, Object configVal) {
+  public Object resolve(Object userVal, Object configVal, Object defaultValue) {
 // TODO: Put the log entry with both user and config values here
     return configVal
   }
 }
 
 class ConfigOnlyResolver implements Resolver {
-  public Object resolve(Object userVal, Object configVal) {
+  public Object resolve(Object userVal, Object configVal, Object defaultValue) {
     return configVal
   }
 }
 
 class ConfigMerge implements Resolver {
-  public Object resolve(Object userVal, Object configVal) {
+  public Object resolve(Object userVal, Object configVal, Object defaultValue) {
 
     if(userVal instanceof List &&  configVal instanceof List) {
       def out = []
@@ -584,21 +594,21 @@ enum SBR_Render {
     resolver = aResolver
   }
 
-  public Object resolve(userVal, configVal) {
-    if(resolver != null) return resolver.resolve(userVal, configVal)
+  public Object resolve(userVal, configVal, defaultValue) {
+    if(resolver != null) return resolver.resolve(userVal, configVal, defaultValue)
     else throw new IllegalStateException("The resolver is not set for $tagValue")
   }
 
   static final SBR_Render getByTagValue(aTagValue) {
-    switch(aTagValue) {
-      case "user-wins": return USER_WINS;
-      case "config-wins": return CONFIG_WINS;
-      case "user-only": return USER_ONLY;
-      case "config-only": return CONFIG_ONLY;
-      case "exception-on-mismatch": return EXCEPTION_ON_MISMATCH;
-      case "merge": return MERGE;
-      default: throw new IllegalArgumentException("[SBR_Render] Unknown tagValue: "+aTagValue)
-    }
+
+    Map<String, SBR_Render> tagVal2RenderMap =  SBR_Render.values()
+                                                     .collect{aType -> [(aType.tagValue) : aType]}
+                                                     .inject([:]){acc, item -> item.each{entry -> acc.put(entry.key, entry.value)}; return acc}
+
+     SBR_Render theRender = tagVal2RenderMap[aTagValue]
+     if(theRender == null) throw new IllegalArgumentException("[SBR_Render] Unknown tagValue: "+aTagValue)
+
+     return theRender
   }
 
 }
@@ -673,7 +683,12 @@ class SBR_To_Constraint implements SBR_Constraint {
   }
 
   public boolean compliant(val) {
-    return val <= toValue;
+    try {
+      if(val && val != '')  return Integer.parseInt(val.toString()) <= Integer.parseInt(toValue.toString());
+      else return false
+    } catch(e) {
+      throw new IllegalArgumentException("Invalid Integer: " + val + " is of type: " + val?.class);
+    }
   }
 }
 
@@ -685,7 +700,12 @@ class SBR_From_Constraint implements SBR_Constraint {
   }
 
   public boolean compliant(val) {
-     return val >= toValue;
+    try {
+      if(val && val != '')  return Integer.parseInt(val.toString()) >= Integer.parseInt(fromValue.toString());
+      else return false
+    } catch(e) {
+      throw new IllegalArgumentException("Invalid Integer: " + val + " is of type: " + val?.class);
+    }
   }
 }
 
@@ -771,22 +791,26 @@ class SBR_PreRule {
 class SBR_Rule extends SBR_PreRule {
    SBR_Value value
    boolean isMandatory
+   SBR_Example_Value defaultValue
    List<String> asteriskValues = []
 
    public SBR_Rule(SBR_Type_Descriptor aType,
                    SBR_Render aRender,
                    SBR_Constraint aConstraint,
                    SBR_Value aValue,
-                   boolean aIsMandatory) {
+                   boolean aIsMandatory,
+                   SBR_Example_Value aDefaultValue) {
       super(aType, aRender, aConstraint)
       isMandatory = aIsMandatory
       value = aValue
+      defaultValue = aDefaultValue
    }
 
    public Object applyRule(userValue, path, config, context) {
 
      def valueRendered = (value != null) ? value.renderValue(config, context, asteriskValues) : userValue;
-     def theValue = render.resolve(userValue, valueRendered)
+     def defValue = (defaultValue != null) ? defaultValue.renderValue(config, context, asteriskValues) : ""
+     def theValue = render.resolve(userValue, valueRendered, defValue)
 
      type.validate(theValue); // This will raise the exception if type is wrong but we shave to suppliment it with path so TODO is to catch the exceotion then add the path and the re-throw it
 
@@ -835,17 +859,20 @@ def extractLeaf(Map<String, Object> aTag) {
   if(constraintTag != null) {
     constraint = SBR_Composite_Constraint.parseTag(constraintTag, whitelistValidator)
   }
+
   SBR_Value value = null;
+  SBR_Example_Value defaultValue
   def valueTag = aTag["sbr-value"]
   if(valueTag != null) {
     if(valueTag["sbr-formula"] != null) value = SBR_Formula_Value.parseTag(valueTag) // Only Formula tag is implemented for now this if shall go away eventully
+    if(valueTag["sbr-example"] != null) defaultValue = new SBR_Example_Value(valueTag["sbr-example"])
   }
 
   boolean primary = (aTag["sbr-primary"] != null && !aTag["sbr-primary"]) ? false : true
 
   boolean isMandatory = (aTag["sbr-mandatory"] == true) ? true : false
 
-  SBR_PreRule retVal = primary ? new SBR_Rule(type, render, constraint, value, isMandatory) : new SBR_NonPrimaryRule(type, render, constraint, aTag["sbr-template"])
+  SBR_PreRule retVal = primary ? new SBR_Rule(type, render, constraint, value, isMandatory, defaultValue) : new SBR_NonPrimaryRule(type, render, constraint, aTag["sbr-template"])
 
   return retVal;
 
@@ -880,8 +907,9 @@ def extractRefs(Map<String, SBR_Rule> aPath2RuleMap, Map<String, SBR_Rule> nonPr
   return ret
 }
 
+
 def extractNonPrimary(Map<String, SBR_Rule> aPath2RuleMap) {
-  def ret = aPath2RuleMap.inject([:]){acc, item -> if(item.value instanceof SBR_NonPrimaryRule) acc.put(item.key, item.value); return acc}
+  def ret = aPath2RuleMap.inject([:]){acc, item -> if(item.value instanceof SBR_NonPrimaryRule ) acc.put(item.key, item.value); return acc}
   return ret
 }
 
@@ -917,6 +945,7 @@ Map<String, SBR_Rule> rulePostProcessor(Map<String, SBR_PreRule> aPath2RuleMap) 
   Map<String, SBR_NonPrimaryRule> path2NonPrimaryRuleMap = extractNonPrimary(aPath2RuleMap) // Finding all non-primary rules
   Map<String, SBR_Rule> path2ReferrerRuleMap = extractRefs(aPath2RuleMap, path2NonPrimaryRuleMap) // Finding all Referrers that address the associated non-primary rule
   Map<String, SBR_Rule> path2ResolvedRuleMap = resolveReferences(path2ReferrerRuleMap, path2NonPrimaryRuleMap) //Replacing all the referrer parts with the content from non
+
   // Repeating the excersise here as I know that the  path2ResolvedRuleMap itself will still contain the rules to be resolver over again. Ideally it should have been done in the loop that continues the process until no resolutions has occured
   Map<String, SBR_Rule> path2ReferrerRuleMapFinal = extractRefs(path2ResolvedRuleMap, path2NonPrimaryRuleMap)
   Map<String, SBR_Rule> path2ResolvedRuleMapFinal = resolveReferences(path2ReferrerRuleMapFinal, path2NonPrimaryRuleMap)
@@ -950,6 +979,7 @@ def Map merge(Map[] sources) {
     }
 }
 
+
 /* Converting Array to List that is a much nicer to work with */
 def toList(value) {
     [value].flatten().findAll { it != null }
@@ -968,6 +998,8 @@ def retrofitMandatoryFields(String              aPath,
                             SBR_Rule            rule,
                                                 config,
                             Map<String, String> context) {
+
+
   Map<String, Object> ymlTree = [:]
   String[] segmentedPath = aPath.split("/")
   List<String> pathAsList = toList(segmentedPath)
@@ -976,9 +1008,11 @@ def retrofitMandatoryFields(String              aPath,
   pathAsList.removeAt(pathAsList.size()-1)
   def lastHandler =  pathAsList.inject(ymlTree){acc, item -> enclose(acc, item)}
 
+
   def userDefaultValue = ""
   if(rule.type.isMap()) userDefaultValue = [:]
   if(rule.type.isList()) userDefaultValue = []
+
   lastHandler[lastName] = rule.applyRule(userDefaultValue, aPath, config, context)
 
   return ymlTree
@@ -993,6 +1027,7 @@ def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
                                                            def accCopy = [:]; if(acc != null) accCopy << acc;
                                                            acc  = merge(accCopy, ymlTreelet);
                                                            return acc;}
+
   return accumulator
 }
 
@@ -1008,14 +1043,14 @@ def prepareServerlessYml(aConfig, env, configLoader) {
 		} catch(e) {
 			echo "Error occured while reading application.yml. The default value from config will be used. Exception is $e"
 		}
-			
+
 		def doc = deploymentDescriptor  ? readYaml(text: deploymentDescriptor ) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
-		
+
 		context =["environment_logical_id": env,
 						"INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
 						"REGION": configLoader.AWS.REGION,
 						"cloud_provider": "aws"]
-						
+
 		def rules = readYaml(text: sbrContent)
 		def resultingDoc = processServerless(doc,
                                           rules,
@@ -1043,7 +1078,7 @@ def prepareServerlessYml(aConfig, env, configLoader) {
 			}
 		}
 	}
-	
+
 	return resultingDoc
 }
 

@@ -250,7 +250,7 @@ ngOnInit()
     this.subscription = this.http.get(this.relativeUrl, this.payload, this.service.id).subscribe(
       (response) => {
 
-        if((response.data == undefined) || (response.data.length == 0 || response.data.count === 0)){
+        if((response.data == undefined) || (response.data.count == 0)){
           this.envResponseEmpty = true;
           this.isLoading = false;
         }

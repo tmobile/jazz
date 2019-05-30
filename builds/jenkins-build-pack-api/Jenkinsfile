@@ -424,13 +424,13 @@ def updateSwagger(){
                 // initialize aws credentials
                 def randomStringPrimary = utilModule.generateRequestId();
                 primaryCredsId = "jazzprimary-${randomStringPrimary}";
-                                
+
                 sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
                 sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
                 sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
 
                 sh "aws s3 cp swagger/ s3://${configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --profile ${primaryCredsId} --region ${config.region} --recursive "
-				        echo "completed deployment........."                
+				        echo "completed deployment........."
 
                 } catch(ex){
                 send_status_email(config, 'FAILED', '')
@@ -1021,7 +1021,7 @@ def updatePolicy(env, destARN){
               // initialize aws credentials
               def randomStringPrimary = utilModule.generateRequestId();
               primaryCredsId = "jazzprimary-${randomStringPrimary}";
-                            
+
               sh "aws configure set profile.${primaryCredsId}.region ${primaryRegionValue}"
               sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
               sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"

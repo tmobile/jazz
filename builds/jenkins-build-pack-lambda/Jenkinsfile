@@ -369,7 +369,7 @@ def addPermission(functionName, primaryAccountValue, credsId, service_config){
 		sh "aws lambda remove-permission --function-name ${functionName} --region ${service_config.region} --statement-id ${functionName}_invoke --profile ${credsId}"
 	} catch(Exception ex) {
 		// ignore if the policy is not there
-	} 
+	}
   /* Adding permission to invoke the function created in secondary account*/
   sh "aws lambda add-permission --function-name ${functionName} --region ${service_config.region} --statement-id ${functionName}_invoke --action 'lambda:InvokeFunction' --principal ${primaryAccountValue} --profile ${credsId}"
 }

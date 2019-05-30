@@ -79,7 +79,7 @@ node()  {
    		service_config.region = configLoader.AWS.DEFAULTS.REGION
 	}
 
- 	if(!service_config.accountId) {	
+ 	if(!service_config.accountId) {
    		service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
  	}
 
@@ -191,9 +191,9 @@ node()  {
         			error ex.getMessage()
 				}
 				events.sendCompletedEvent('BUILD', 'build completed', context_map, environment_logical_id)
-			}		
+			}
 		}
-	
+
 		stage("Deployment to ${current_environment} Env"){
 			def randomString = utilModule.generateRequestId();
 			def credsId = "jazz-${randomString}";
@@ -223,6 +223,7 @@ node()  {
 				def isBucketwithEnvExists = checkIfBucketExists(asset_info, credsId)
 				def asset_event
 				def asset_event_message
+				buildApp(service_config['framework'], environment_logical_id)
 				if (isBucketwithEnvExists) {
 					asset_event = 'UPDATE_ASSET'
 					asset_event_message = 'update'
@@ -909,7 +910,7 @@ def loadBuildModules(buildModuleUrl){
 		echo "config loader loaded successfully."
 
 		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
-    	awsAPIGatewayModule.initialize()
+    awsAPIGatewayModule.initialize()
 
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
@@ -966,7 +967,7 @@ def validateAngularTemplate() {
 	} else {
 		error "package.json is not available."
 	}
-	
+
 	if (fileExists('deployment-env.yml')) {
 		echo "deployment-env.yml is present"
 	} else {
@@ -1013,7 +1014,7 @@ def validateReactTemplate() {
 
 		def reactDomVersionString = new groovy.json.JsonSlurperClassic().parseText(packageString).dependencies.'react-dom';
 		def domVersion = reactDomVersionString.substring(1, reactDomVersionString.indexOf('.'))
-		
+
 		echo "React Project version $version, Dom version $domVersion"
 	} catch(ex) {
 		error "Error while checking version::"+ ex.getMessage();
@@ -1022,7 +1023,7 @@ def validateReactTemplate() {
 
 
 /**
-  * Function to do build of angular/react 
+  * Function to do build of angular/react
 */
 def buildWebsite(framework) {
 	def websiteCodeFolder = "app/"
@@ -1032,16 +1033,33 @@ def buildWebsite(framework) {
 				sh "rm -rf dist"
 				sh "npm cache clean --force"
 				sh "npm install"
-				sh "ng build --prod --output-path=dist"
 			break
 			case "react":
 				sh "rm -rf build"
 				sh "npm cache clean --force"
 				sh "npm install"
-				sh "npm run build"
 			break
 			default:
 			break
+		}
+	}
+}
+def buildApp(framework, env) {
+	if(env.contains("-dev")){
+		env = "dev"
+	}
+	def websiteCodeFolder = "app/"
+	dir(websiteCodeFolder) {
+		switch(framework) {
+			case "angular":
+				sh "ng build --configuration=${env} --output-path=dist"
+				break
+			case "react":
+				sh "npm run build"
+				break
+			default:
+				echo "Not executing any build commands.."
+				break
 		}
 	}
 }
