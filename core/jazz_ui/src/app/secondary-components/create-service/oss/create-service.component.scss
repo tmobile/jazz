@@ -42,8 +42,8 @@
   padding: 2rem 0;
   cursor: pointer;
   min-height: 120px;
-  width:11rem;
-  height: 11rem;
+  width: 10rem;
+  height: 10rem;
   &:hover{
     transform: scale(1.04);
     transition:0.3s transform;
@@ -64,6 +64,12 @@
   width: 88%;
   max-width: 70px;
   object-fit: contain;
+}
+
+.descriptorError {
+  margin: 0;
+  font-size: 1rem;
+  color: #FF0000;
 }
 
 .service-box p {
@@ -108,7 +114,7 @@
   &.service-box-selected {
     .icon-icon-api,
     .icon-icon-lambda,
-    .icon-icon-web, {
+    .icon-icon-web {
       color: #ed008c;
     }
   }

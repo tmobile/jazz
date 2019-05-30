@@ -391,10 +391,13 @@ transform: rotateY(-50%)
   height: calc(100% - 5em);
 }
 .textbox {
-  max-height: 33.5rem;
   overflow-y: auto;
   display: flex;
   border-radius: 5px;
+}
+.text-area-div{
+  max-height: 20rem;
+  overflow: auto;
 }
 .col-detail{
   flex-grow: 1;

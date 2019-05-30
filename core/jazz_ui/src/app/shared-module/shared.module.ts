@@ -63,7 +63,6 @@ import { MetricsCarouselComponent } from "../secondary-components/metrics-carous
 import { RouterModule } from "@angular/router";
 import { Error403Component } from "../pages/error403/error403.component";
 import { RadioCheckboxComponent } from "../primary-components/radio-checkbox/radio-checkbox.component";
-import { RadioGroupComponent } from 'app/primary-components/radio-group/radio-group.component';
 
 let specificComponents: any
 let specificModules: any;
