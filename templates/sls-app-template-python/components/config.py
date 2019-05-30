@@ -22,12 +22,13 @@ class Config:
         conf = ConfigParser()
         # Add config variables in the respective config files
         # and they would be available in index handler.
+
         if stage == 'dev':
-            conf.read('%s\config\dev-config.ini' %(caller_module_path))
+            conf.read('%s/components/dev-config.ini' %(caller_module_path))
         elif stage == 'stg':
-            conf.read('%s\config\stg-config.ini' %(caller_module_path))
+            conf.read('%s/components/stg-config.ini' %(caller_module_path))
         else:
-            conf.read('%s\config\prod-config.ini' %(caller_module_path))
+            conf.read('%s/components/prod-config.ini' %(caller_module_path))
         return conf
 
     def get_config(self, secretObj):

@@ -6,7 +6,7 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "mocha function*/test"
+    "test": "mocha functions/*/test"
   },
   "dependencies": {},
   "devDependencies": {
