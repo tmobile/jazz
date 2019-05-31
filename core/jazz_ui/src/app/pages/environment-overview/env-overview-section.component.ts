@@ -208,15 +208,6 @@ popup(state){
       if(line_numbers < 7){
         line_numbers = 7;
       }
-      if(this.lineNumberCount){
-        if(line_numbers > this.lineNumberCount.length){
-          let textElement = document.getElementsByClassName('text-area')[0];
-          textElement.setAttribute('style', 'height:' + (textElement.scrollHeight+16) + 'px')
-        } else if(line_numbers < this.lineNumberCount.length){
-          let textElement = document.getElementsByClassName('text-area')[0];
-          textElement.setAttribute('style', 'height:' + (textElement.scrollHeight-16) + 'px')
-        }
-      }
       this.lineNumberCount = new Array(line_numbers);
     }
   }
@@ -283,9 +274,9 @@ popup(state){
     this.yaml = this.yamlName;
     this.isCancel = false;
     this.disableSave = true;
-    let textElement = document.getElementsByClassName('text-area')[0];
-    textElement.setAttribute('style', 'height: auto')
-    textElement.setAttribute('style', 'height:' + (textElement.scrollHeight) + 'px')
+    this.lineNumbers();
+    this.invalid = false;
+    this.isvalid = false;
 }
   onCancelClick(){
     this.showCncl=false;
