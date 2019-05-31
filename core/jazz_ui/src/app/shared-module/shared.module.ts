@@ -11,7 +11,6 @@ import { JazzTableComponent } from '../secondary-components/jazz-table/jazz-tabl
 import { TableTemplateComponent } from '../secondary-components/table-template/table-template.component';
 import { MobileSecondaryTabComponent } from '../secondary-components/mobile-secondary-tab/mobile-secondary-tab.component';
 import { DropdownComponent } from '../primary-components/dropdown/dropdown.component';
-import { RadioGroupComponent } from '../primary-components/radio-group/radio-group.component';
 import { CheckboxGroupComponent } from '../primary-components/checkbox-group/checkbox-group.component';
 import { CheckboxGroupRegionComponent } from '../primary-components/checkbox-group-region/checkbox-group-region.component';
 import { FilterTagComponent } from '../primary-components/filter-tag/filter-tag.component';

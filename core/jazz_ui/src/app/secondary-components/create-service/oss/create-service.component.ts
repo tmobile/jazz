@@ -192,6 +192,7 @@ export class CreateServiceComponent implements OnInit {
     this.kinesisStreamString = "arn:aws:kinesis:" + this.regionSelected + ":" + this.accountSelected + ":stream/";
     this.dynamoStreamString = "arn:aws:dynamo:" + this.regionSelected + ":" + this.accountSelected + ":table/";
   }
+  
 
   chkDynamodb() {
     this.focusDynamo.emit(true);
@@ -614,6 +615,7 @@ export class CreateServiceComponent implements OnInit {
           this.serviceRequestSuccess = false;
           this.serviceRequestFailure = true;
           this.errBody = error._body;
+          this.selectAccountsRegions();
           this.errMessage = this.toastmessage.errorMessage(error, 'createService');
           this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
           this.rateExpression.error = undefined;
@@ -933,6 +935,29 @@ export class CreateServiceComponent implements OnInit {
 
 
   }
+
+  selectAccountsRegions(){
+    this.accountMap = env_oss.accountMap;
+    this.accountList = [];
+    this.regionList = [];
+    this.accountMap.map((item)=>{
+      this.accountList.push(item.account + ' (' + item.accountName + ')' )
+      if(item.primary){
+        this.accountSelected = item.account
+        this.accountDetails = item.account + ' (' + item.accountName + ')' 
+      }
+    })
+    this.regionList = this.accountMap[0].regions;
+    this.regionSelected = this.regionList[0];
+    this.setAccountandRegion();
+  }
+
+  setAccountandRegion(){
+    this.sqsStreamString = "arn:aws:sqs:" + this.regionSelected + ":" + this.accountSelected + ":";
+    this.kinesisStreamString = "arn:aws:kinesis:" + this.regionSelected + ":" + this.accountSelected + ":stream/";
+    this.dynamoStreamString = "arn:aws:dynamo:" + this.regionSelected + ":" + this.accountSelected + ":table/";
+  }
+
   ngOnInit() {
     this.selectAccountsRegions();
     this.getData();

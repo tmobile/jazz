@@ -1005,6 +1005,14 @@ transform: rotate(0deg);
   margin-bottom: 7rem;
   font-size: 1.4rem;
 }
+
+.each-section-accReg{
+  width:50%;
+  .accReg-dropdown{
+    width:50%;
+  }
+}
+
 .account-region-wrap{
   display: flex;
   .each-section-accReg{
