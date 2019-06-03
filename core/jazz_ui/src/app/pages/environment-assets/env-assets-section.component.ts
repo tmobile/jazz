@@ -183,7 +183,7 @@ ngOnInit()
       domain: self.service.domain,
 			service:self.service.name,
 			environment:self.env
-    }).toPromise().then((response:any)=>{
+    },self.service.id).toPromise().then((response:any)=>{
       if(response&&response.data&&response.data.assets){
 				let assets=_(response.data.assets).map('asset_type').uniq().value();
 				self.assetWithDefaultValue=assets;
@@ -247,7 +247,7 @@ ngOnInit()
 		this.payload['offset'] = this.offsetval;
 		this.payload['asset_type']=this.assetSelected;
 
-    this.subscription = this.http.get(this.relativeUrl, this.payload).subscribe(
+    this.subscription = this.http.get(this.relativeUrl, this.payload, this.service.id).subscribe(
       (response) => {
 
         if((response.data == undefined) || (response.data.count == 0)){

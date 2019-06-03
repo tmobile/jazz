@@ -1048,7 +1048,7 @@ def prepareServerlessYml(aConfig, env, configLoader) {
 
 		context =["environment_logical_id": env,
 						"INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
-						"REGION": configLoader.AWS.REGION,
+						"REGION": aConfig.region,
 						"cloud_provider": "aws"]
 
 		def rules = readYaml(text: sbrContent)

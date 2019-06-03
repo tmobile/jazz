@@ -96,6 +96,7 @@ export class CreateServiceComponent implements OnInit {
   private headers = new Headers({'Content-Type': 'application/json'});
   submitted = false;
   vpcSelected: boolean = false;
+  isDescriptorEmpty: boolean = false;
   resMessage:string='';
   cdnConfigSelected:boolean = false;
   descriptorSelected:boolean = false;
@@ -133,6 +134,7 @@ export class CreateServiceComponent implements OnInit {
   regionSelected;
   accountMap: any;
   webObject : any;
+  selectedDescriptorField: any;
   webKeys : any;
   deploymentTargetSelected: any;
 
@@ -168,6 +170,7 @@ export class CreateServiceComponent implements OnInit {
     if(ele){
       ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
     }
+  }
   selectAccountsRegions(){
     this.accountMap = env_oss.accountMap;
     this.accountList = [];
@@ -189,6 +192,7 @@ export class CreateServiceComponent implements OnInit {
     this.kinesisStreamString = "arn:aws:kinesis:" + this.regionSelected + ":" + this.accountSelected + ":stream/";
     this.dynamoStreamString = "arn:aws:dynamo:" + this.regionSelected + ":" + this.accountSelected + ":table/";
   }
+
 
   chkDynamodb() {
     this.focusDynamo.emit(true);
@@ -244,6 +248,8 @@ export class CreateServiceComponent implements OnInit {
       this.startNew = true;
       this.deploymentDescriptorText = "";
     }
+    this.selectedDescriptorField = event[0];
+    this.isDescriptorEmpty = false;
   }
 
   onaccountSelected(event){
@@ -344,6 +350,10 @@ export class CreateServiceComponent implements OnInit {
 
   descriptorChanged(){
     this.descriptorSelected = !this.descriptorSelected;
+    if(this.descriptorSelected === false) {
+      this.startNew = false;
+      this.onSelectionChange(this.runtime);
+    }
   }
 
   onWebSelectionChange(val){
@@ -556,7 +566,12 @@ export class CreateServiceComponent implements OnInit {
     }
     else if(this.typeOfService == 'sls-app'){
       payload["service_type"] = "sls-app";
-      payload["deployment_descriptor"] = this.deploymentDescriptorText;
+      if(this.descriptorSelected){
+        payload["deployment_descriptor"] = this.deploymentDescriptorText;
+      } else {
+        payload["deployment_descriptor"] = ""
+      }
+
       payload["deployment_targets"]={"sls-app":"aws_sls-app"};
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
@@ -584,7 +599,6 @@ export class CreateServiceComponent implements OnInit {
         .subscribe(
         (Response) => {
           var output = Response;
-          console.log("res",output)
           this.serviceRequested = true;
           this.serviceRequestSuccess = true;
           this.serviceRequestFailure = false;
@@ -592,7 +606,6 @@ export class CreateServiceComponent implements OnInit {
           var index = output.data.indexOf("https://");
           this.serviceLink = output.data.slice(index, output.data.length);
           this.resMessage=this.toastmessage.successMessage(Response,"createService");
-          console.log("res", this.resMessage)
           this.resetEvents();
           this.selectAccountsRegions();
        },
@@ -602,6 +615,7 @@ export class CreateServiceComponent implements OnInit {
           this.serviceRequestSuccess = false;
           this.serviceRequestFailure = true;
           this.errBody = error._body;
+          this.selectAccountsRegions();
           this.errMessage = this.toastmessage.errorMessage(error, 'createService');
           this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
           this.rateExpression.error = undefined;
@@ -733,6 +747,9 @@ export class CreateServiceComponent implements OnInit {
     if (!this.serviceAvailable) {
         return true;
     }
+    if (this.deploymentDescriptorText === '' && this.selectedDescriptorField === 'Start New') {
+        return true;
+    }
     if (this.slackSelected && !this.slackAvailble) {
         return true
     }
@@ -843,6 +860,12 @@ export class CreateServiceComponent implements OnInit {
       console.error('Invalid YAML file.', error);
       this.isyamlValid=false;
     });
+    if (this.selectedDescriptorField === 'Start New' && this.deploymentDescriptorText === '') {
+      this.isDescriptorEmpty = true;
+    }
+    else {
+      this.isDescriptorEmpty = false;
+    }
   }
 
 
@@ -912,8 +935,8 @@ export class CreateServiceComponent implements OnInit {
 
 
   }
+
   ngOnInit() {
-    console.log('nodejsTemplate',nodejsTemplate);
     this.selectAccountsRegions();
     this.getData();
     this.loadMaxLength();

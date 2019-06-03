@@ -294,11 +294,47 @@
                         </div>
                     </div>
                 </section>
+
+                <section class="each-step-wrap Internal-access">
+                    <div class="">
+                        <div class="">
+                            <p class="step-title">Account &amp; Region</p>
+                            <p class="step-details">Choose the account and region you want your application deployed on</p>
+                        </div>
+                        <div class="">
+                            <section class="">
+                                <div class="account-region-wrap flex">
+                                  <div class="each-section-accReg">
+                                    <div class="accReg-label">
+                                      Account
+                                    </div>
+                                    <div class="accReg-dropdown">
+                                      <dropdown *ngIf="deploymentTargetSelected !== 'gcp_apigee'" class='dropdown'  [dropdwnContent]="accountList" title="accountDetails" [selected]="accountDetails" (onSelected)="onaccountSelected($event)"></dropdown>
+                                      <div *ngIf="deploymentTargetSelected === 'gcp_apigee'" class="defaultDropdown">302890901340 (tmodevops)</div>
+                                    </div>
+                                  </div>
+                                  <div class="">
+                                    <div class="accReg-label">
+                                      Region
+                                    </div>
+                                    <div class="accReg-dropdown">
+                                      <dropdown *ngIf="deploymentTargetSelected !== 'gcp_apigee'" class='dropdown'  [dropdwnContent]="regionList" title="regionSelected" [selected]="regionSelected" (onSelected)="onregionSelected($event)"></dropdown>
+                                      <div *ngIf="deploymentTargetSelected === 'gcp_apigee'" class="defaultDropdown">us-west-2</div>
+                                    </div>
+                                  </div>
+      
+                                </div>
+                            </section>
+                        </div>
+                    </div>
+                </section>
+      
     
                 <section id="deployment-descriptor" class="each-step-wrap service-description" *ngIf="typeOfService == 'sls-app'">
                     <div class="">
                         <div class="">
                             <p class="step-title">Deployment Descriptor</p>
+                            <p class="step-details">See <a a target="_blank" href="https://github.com/serverless/examples">https://github.com/serverless/examples</a> for examples of currently supported serverless templates.</p>
                         </div>
                         <div class="">
                             <section class="pad-left0">
@@ -312,6 +348,7 @@
                                 <div *ngIf="descriptorSelected" class="input-field-container">
                                     <div class="input-wrapper">
                                         <textarea rows="2" cols="50" name="deploymentDescriptorText" type="text" class="textForm descriptor" id="deploymentDescriptorText" [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
+                                        <p class="descriptorError" *ngIf="isDescriptorEmpty">Please enter the valid Deployment Descriptor.</p>
                                     </div>
                                 </div>
                                 <div class="form-error" *ngIf="!isyamlValid">Invalid Yaml Text</div>
@@ -658,12 +695,13 @@
                 </div>
             </section>
         </div>
-    </section>
+    </section> 
 
     <p  *ngIf='!serviceRequested' class="requiredInfo"><span>*</span>Indicates required fields</p>
     <section  *ngIf='!serviceRequested' class="submit-form">
         <button type="submit" [disabled]="!serviceForm.valid || (disableForm())" class="btn btn-primary">SUBMIT</button>
     </section>
+
     <section  *ngIf='!serviceRequested' class="justify-center cancel-btn">
         <a class="pointer" (click)='closeCreateService(serviceRequestSuccess)'> Cancel </a>
     </section>
