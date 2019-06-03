@@ -13,6 +13,7 @@ import { MobileSecondaryTabComponent } from '../secondary-components/mobile-seco
 import { DropdownComponent } from '../primary-components/dropdown/dropdown.component';
 import { CheckboxGroupComponent } from '../primary-components/checkbox-group/checkbox-group.component';
 import { CheckboxGroupRegionComponent } from '../primary-components/checkbox-group-region/checkbox-group-region.component';
+import { RadioGroupComponent } from '../primary-components/radio-group/radio-group.component';
 import { FilterTagComponent } from '../primary-components/filter-tag/filter-tag.component';
 import { InputComponent } from '../primary-components/input/input.component';
 import { BtnJazzPrimaryComponent } from '../primary-components/btn-jazz-primary/btn-jazz-primary.component';
