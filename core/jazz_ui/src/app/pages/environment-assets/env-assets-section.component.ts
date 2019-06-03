@@ -30,13 +30,11 @@ export class EnvAssetsSectionComponent implements OnInit {
 	offset:number = 0;
 	offsetval:number = 0;
 	public assetList:any = [];
-
 	private env:any;
 	private http:any;
 	private subscription:any;
 	public serviceType;
 	public assetWithDefaultValue:any=[];
-	public assetFilter;
   public environmentFilter;
 	@ViewChild('filtertags') FilterTags: FilterTagsComponent;
   @ViewChild('filters') filters;
@@ -45,7 +43,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 	componentFactoryResolver:ComponentFactoryResolver;
 	filterSelected: boolean = false;
 	fromassets:boolean = true;
-
+  public assetFilter: any;
 	advanced_filter_input:any = {
 		time_range:{
 			show:false,
@@ -157,7 +155,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 ngOnInit()
 {
 	this.serviceType = this.service.type || this.service.serviceType;
-  this.getAssetType()
+  this.getAssetType();
 }
 	 getFilter(filterServ){
 
@@ -174,8 +172,9 @@ ngOnInit()
 	 }
 
 	applyFilter(value){
-		this.getAssetType(value);
+		this.isLoading = true;
 		this.assetSelected=value.selected.replace(/ /g,"_");
+		this.getAssetType(value);
 	 }
 	getAssetType(data?){
 		let self=this;
@@ -187,14 +186,14 @@ ngOnInit()
       if(response&&response.data&&response.data.assets){
 				let assets=_(response.data.assets).map('asset_type').uniq().value();
 				self.assetWithDefaultValue=assets;
-				self.assetWithDefaultValue = assets;
+				self.assetWithDefaultValue.splice(0,0,'all');
         for(var i=0;i<self.assetWithDefaultValue.length;i++){
         self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
         }
         self.assetFilter={
             column: 'Filter By:',
             label: 'ASSET TYPE',
-            options:  self.assetList,
+            options: self.assetList,
             values: assets,
             selected:assets[0].replace(/_/g," ")
 				};
@@ -245,7 +244,11 @@ ngOnInit()
 		this.payload['environment'] = this.env;
 		this.payload['limit'] = this.limitValue;
 		this.payload['offset'] = this.offsetval;
-		this.payload['asset_type']=this.assetSelected;
+		if (this.assetSelected !== 'all') {
+			this.payload['asset_type'] = this.assetSelected;
+		}	else {
+			delete this.payload['asset_type'];
+		}
 
     this.subscription = this.http.get(this.relativeUrl, this.payload, this.service.id).subscribe(
       (response) => {

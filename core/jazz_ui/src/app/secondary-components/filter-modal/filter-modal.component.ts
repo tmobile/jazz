@@ -1,7 +1,7 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 // import {IonRangeSliderModule} from 'ng2-ion-range-slider';
-import { CheckboxGroupComponent } from './../../primary-components/checkbox-group/checkbox-group.component'
-import { CheckboxGroupRegionComponent } from './../../primary-components/checkbox-group-region/checkbox-group-region.component'
+import { CheckboxGroupComponent } from './../../primary-components/checkbox-group/checkbox-group.component';
+import { CheckboxGroupRegionComponent } from './../../primary-components/checkbox-group-region/checkbox-group-region.component';
 
 import * as _ from "lodash";
 
@@ -38,8 +38,6 @@ export class FilterModalComponent implements OnInit {
   getRange(e) {
 
   }
-
-
   reOrderFilterColumns() {
     let columnA = this.form.columns[0];
     let columnB = this.form.columns[1];
