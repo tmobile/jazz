@@ -51,7 +51,7 @@ public class EnvironmentConfig {
 			throw new BadRequestException("Invalid Stage. Can't load ENV configurations");
 		}
 
-		String configFile = "/"+fnNoPrefix+"/"+stage+".properties";
+		String configFile = "/functions/"+fnNoPrefix+"/"+stage+".properties";
 		logger.info("Loading configuration file for env..:"+configFile);
 		props.load(this.getClass().getResourceAsStream(configFile));
 	}
