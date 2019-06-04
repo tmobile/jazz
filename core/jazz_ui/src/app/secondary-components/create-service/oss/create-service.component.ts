@@ -235,6 +235,7 @@ export class CreateServiceComponent implements OnInit {
     this.serviceRequested = false;
     this.serviceRequestFailure = false;
     this.serviceRequestSuccess = false;
+    this.descriptorSelected = false;
     this.onClose.emit(false);
   }
 
@@ -350,10 +351,7 @@ export class CreateServiceComponent implements OnInit {
 
   descriptorChanged(){
     this.descriptorSelected = !this.descriptorSelected;
-    if(this.descriptorSelected === false) {
-      this.startNew = false;
-      this.onSelectionChange(this.runtime);
-    }
+    this.onFilterSelected('Function Template');
   }
 
   onWebSelectionChange(val){
@@ -651,6 +649,7 @@ export class CreateServiceComponent implements OnInit {
     this.serviceRequested = false;
     this.serviceRequestSuccess = false;
     this.serviceRequestFailure = false;
+    this.descriptorSelected = false;
 
   }
 

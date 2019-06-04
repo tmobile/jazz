@@ -27,9 +27,9 @@
                             <div><div class='hori-line'></div>REGION</div>
                             <dropdown class="dropdown-3 method" title="Select method" [dropdwnContent]="regList" [selected]="regSelected" (onSelected)="onregSelected($event)"></dropdown>
                         </div>
-                        <div class="eachFilter" *ngIf='advanced_filter_input.asset.show && showAsset'>
+                        <div class="eachFilter" *ngIf='advanced_filter_input.asset.show'>
                         <div><div class='hori-line'></div>ASSET TYPE</div>
-                        <radio-group  #assetTypes [radioContent]="assetList" title="Select asset" [selected]="assetSelected" (onSelected)="getAssetType($event)"></radio-group>
+                        <radio-group  #assetTypes [radioContent]="assetList" title="Select asset" [selected]="assetSelected" (onRadioSelected)="getAssetType($event)"></radio-group>
                     </div>
                     </div>
                     <div class="filter-inner-wrap">
