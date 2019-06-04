@@ -35,7 +35,7 @@ public class ContextStub implements Context {
   }
 
   public String getInvokedFunctionArn() {
-    return "arn:aws:lambda:us-east-1:102707241671:function:jazzolg19-javadomain-javaname-prod";
+    return "arn:aws:lambda:us-east-1:123456789012:function:jazzolg19-javadomain-javaname-prod-function1";
   }
 
   public CognitoIdentity getIdentity() {

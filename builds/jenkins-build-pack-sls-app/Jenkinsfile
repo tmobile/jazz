@@ -36,6 +36,7 @@ import groovy.transform.Field
 
 node() {
 
+  sh 'rm -rf *'
   def jazzBuildModuleURL = getBuildModuleUrl()
   loadBuildModules(jazzBuildModuleURL)
 
@@ -689,15 +690,15 @@ def updatePolicy(env, destARN){
 			 // initialize aws credentials
 			 def randomStringPrimary = utilModule.generateRequestId();
 			 primaryCredsId = "jazzprimary-${randomStringPrimary}";
-			 
+
 			 sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
 			 sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
 			 sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
-			 
+
 			 def destinationName = destARN;
 			 def destArnArray = [];
 			 destArnArray = destinationName.tokenize(":").last();
-			 
+
 			 def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
 			 sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${config['region']} --profile ${primaryCredsId}"
 		} catch(ex){
@@ -759,7 +760,7 @@ def setCredentials() {
  * @return
  */
 def send_status_email(config, build_status, email_content) {
-  if (domain != "jazz") {
+  if (config['domain'] != "jazz") {
     echo "Sending build notification to ${config['created_by']}"
     def body_subject = ''
     def body_text = ''
