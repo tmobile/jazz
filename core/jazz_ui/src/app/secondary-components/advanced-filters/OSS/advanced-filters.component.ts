@@ -61,6 +61,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   regList = env_internal.urls.regions;
   accSelected: string = this.accList[0];
   regSelected: string = this.regList[0];
+  assetSelected: string;
 
   envList: any = ['prod', 'stg'];
   envSelected: string = this.envList[0];
@@ -128,7 +129,6 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   }
 
   getAssetType(event) {
-    console.log("event", event);
     this.assetSel = event;
     this.selectFilter["key"] = 'asset';
     this.selectFilter["value"] = event;
@@ -186,10 +186,12 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     this.advanced_filter_input = this.data.advanced_filter_input;
     this.service = this.data.service;
     this.assetList = this.service.assetList
+    if(this.assetList){
+      this.assetSelected = this.assetList[0];
+    }
     if (this.service.logsData) {
       this.envList.push(this.service.logsData);
     }
-
     if (this.service.ismetrics) {
       this.statisticSelected = this.statisticList[1];
     }
