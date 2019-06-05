@@ -234,7 +234,7 @@
                               </div>
                               <div class="accReg-dropdown">
                                 <dropdown *ngIf="deploymentTargetSelected !== 'gcp_apigee'" class='dropdown'  [dropdwnContent]="accountList" title="accountDetails" [selected]="accountDetails" (onSelected)="onaccountSelected($event)"></dropdown>
-                                <div *ngIf="deploymentTargetSelected === 'gcp_apigee'" class="defaultDropdown">302890901340 (tmodevops)</div>
+                                <div *ngIf="deploymentTargetSelected === 'gcp_apigee'" class="defaultDropdown">{{primaryAccount}}</div>
                               </div>
                             </div>
                             <div class="">
@@ -243,7 +243,7 @@
                               </div>
                               <div class="accReg-dropdown">
                                 <dropdown *ngIf="deploymentTargetSelected !== 'gcp_apigee'" class='dropdown'  [dropdwnContent]="regionList" title="regionSelected" [selected]="regionSelected" (onSelected)="onregionSelected($event)"></dropdown>
-                                <div *ngIf="deploymentTargetSelected === 'gcp_apigee'" class="defaultDropdown">us-west-2</div>
+                                <div *ngIf="deploymentTargetSelected === 'gcp_apigee'" class="defaultDropdown">{{primaryRegion}}</div>
                               </div>
                             </div>
 

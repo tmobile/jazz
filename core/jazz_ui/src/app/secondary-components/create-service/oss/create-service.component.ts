@@ -95,6 +95,8 @@ export class CreateServiceComponent implements OnInit {
   invalidEventName:boolean = false;
   runtimeKeys : any;
   runtimeObject : any;
+  primaryAccount : string;
+  primaryRegion : string;
   accountList = [];
   regionList = [];
   accountSelected;
@@ -138,6 +140,8 @@ export class CreateServiceComponent implements OnInit {
     this.accountMap.map((item)=>{
       this.accountList.push(item.account + ' (' + item.accountName + ')' )
       if(item.primary){
+        this.primaryAccount = item.account + ' (' + item.accountName + ')' 
+        this.primaryRegion = this.buildEnvironment.aws.region
         this.accountSelected = item.account
         this.accountDetails = item.account + ' (' + item.accountName + ')' 
       }
@@ -176,8 +180,8 @@ export class CreateServiceComponent implements OnInit {
   getSelectedData(data){
     this.deploymentTargetSelected = data;
     if(this.deploymentTargetSelected === 'gcp_apigee'){
-      this.accountSelected = this.buildEnvironment.defaults.account_id,
-      this.regionSelected = this.buildEnvironment.defaults.region
+      this.accountSelected = this.buildEnvironment.aws.account_number,
+      this.regionSelected = this.buildEnvironment.aws.region
     }
   }
 
