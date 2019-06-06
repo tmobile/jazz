@@ -23,7 +23,7 @@ Jazz, a serverless development platform, accelerates adoption of serverless tech
 * **Extensions** - Jazz is designed to integrate and work well with other systems that your enterprise needs. You can check out our optional extensions like Slack, Splunk, Apigee etc. Centralized configuration helps Jazz admins to easily enable/disable these features as per their needs.
 * **Multiple Accounts & Regions** - Jazz's multi account/region extension allows you to add support for multiple accounts & regions to an existing Jazz stack. Developers can simply select the target account & region from the UI to deploy their services. Admins can add/remove new accounts/regions to the stack with ease.
 * **Other Features** - Jazz comes with many useful integrations like SCM (Gitlab/Bitbucket), monitoring (CloudWatch), logging (ElasticSearch), authentication (Cognito), access controls, code quality metrics (SonarQube) by default.
-* **Utilities** - Jazz comes many utilties that allow admins to monitor, govern and report the usage of serverless services through Jazz environment.
+* **Utilities** - Jazz comes with many utilties that allow admins to monitor, govern and report the usage of serverless services through Jazz environment.
 
 
 Jazz is [open-sourced](http://opensource.t-mobile.com) and under active development by T-Mobile's Cloud Center of Excellence.
