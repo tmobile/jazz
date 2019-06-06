@@ -565,13 +565,8 @@ export class CreateServiceComponent implements OnInit {
       }
     }
     else if(this.typeOfService == 'sls-app'){
-      payload["service_type"] = "sls-app";
-      if(this.descriptorSelected){
-        payload["deployment_descriptor"] = this.deploymentDescriptorText;
-      } else {
-        payload["deployment_descriptor"] = ""
-      }
-
+      payload["service_type"] = "sls-app";        
+      payload["deployment_descriptor"] = this.deploymentDescriptorText;
       payload["deployment_targets"]={"sls-app":"aws_sls-app"};
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
