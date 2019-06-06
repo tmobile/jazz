@@ -1,4 +1,4 @@
-# ![Jazz Logo](misc/logo.png) Jazz Serverless Platform
+# ![Jazz Logo](misc/logo.png) Jazz Serverless Development Platform
 
 <a href="https://github.com/tmobile/jazz/graphs/contributors" alt="Contributors"><img src="https://img.shields.io/github/contributors/tmobile/jazz.svg" /></a>
 [![Build Status](https://travis-ci.org/tmobile/jazz.svg?branch=master)](https://travis-ci.org/tmobile/jazz)
@@ -10,15 +10,18 @@
 
 ## Introduction
 
-Jazz, a serverless platform, accelerates adoption of serverless technology within your enterprise. Jazz comes with a beautiful UI that lets developers quickly create serverless applications with a click of a button. Its modular design makes it easy to add new integrations.
+Jazz, a serverless development platform, accelerates adoption of serverless technology within your enterprise. Jazz comes with a beautiful UI that lets developers quickly create serverless applications with a click of a button. Its modular design makes it easy to add new integrations that your enteprise needs.
 
 ## Overview
 
-* **Services** - As of today, Jazz can help build functions, APIs and static websites. Fully customizable template-based design makes it easy to define new ones and expose them as services to the developers.
-* **Deployment Targets** - Currently Jazz can deploy to AWS managed services like (Lambda, API Gateway, S3, CloudFront etc.). We plan to support related services in Azure and GCP in the near future.
-* **Deployment & CI/CD** - Jazz comes with CI/CD by default. It creates a code repository per service and adds a web hook to trigger build/deployment workflows whenever it sees a commit. We leverage [Jenkins](https://github.com/jenkinsci/jenkins) open source for build process and [Serverless Framework](http://www.serverless.com) for deploying these services.
-* **Other Features** - Other useful features/integrations like SCM (Gitlab/Bitbucket), monitoring (CloudWatch), logging (ElasticSearch), authentication (Cognito), code quality metrics (SonarQube) comes with Jazz by default.
-* **Extensions** - Jazz is designed to integrate and work well with other systems that your enterprise needs. You can check out our optional extensions like Slack, Splunk etc. Centralized configuration helps Jazz admins to easily enable/disable these features as per their needs.
+* **Services** - As of today, Jazz can help build functions, APIs and static websites. Fully customizable template-based design makes it easy for admins to define new ones and expose them as services to the developers. Support for [AWS SAM](https://github.com/awslabs/serverless-application-model) & [Serverless Framework](https://github.com/serverless/serverless) templates will be coming soon - this will allow developers to define their serverless applicatinos using these commonly used frameworks!
+* **Deployment Targets** - Currently, Jazz can deploy to AWS serverless services including Lambda, API Gateway, S3, CloudFront, DynamoDB, SQS, Kinesis etc. We plan to support related services in Azure and GCP in the near future.
+* **CI/CD** - Jazz comes with CI/CD by default. It creates a code repository for each service, assigns appropriate permissions and adds a web hook to trigger build/deployment workflows whenever it sees a commit. We leverage [Jenkins](https://github.com/jenkinsci/jenkins) open source for build process and [Serverless Framework](http://www.serverless.com) for deploying these services.
+* **One-Click Development Environments** - Jazz automatically creates a new dedicated development environment for each git branch in the service repository. This allows parallel development in a multi-developer team without a hitch! Jazz takes care of deleting these environments once the branch gets deleted.
+* **Extensions** - Jazz is designed to integrate and work well with other systems that your enterprise needs. You can check out our optional extensions like Slack, Splunk, Apigee etc. Centralized configuration helps Jazz admins to easily enable/disable these features as per their needs.
+* **Multiple Accounts & Regions** - Jazz's multi account/region extension allows you to add support for multiple accounts & regions to an existing Jazz stack. Developers can simply select the target account & region from the UI to deploy their services. Admins can add/remove new accounts/regions to the stack with ease.
+* **Other Features** - Jazz comes with many useful integrations like SCM (Gitlab/Bitbucket), monitoring (CloudWatch), logging (ElasticSearch), authentication (Cognito), access controls, code quality metrics (SonarQube) by default.
+
 
 Jazz is [open-sourced](http://opensource.t-mobile.com) and under active development by T-Mobile's Cloud Center of Excellence.
 
