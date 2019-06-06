@@ -1,8 +1,9 @@
 # ![Jazz Logo](misc/logo.png) Jazz Serverless Development Platform
 
-<a href="https://github.com/tmobile/jazz/graphs/contributors" alt="Contributors"><img src="https://img.shields.io/github/contributors/tmobile/jazz.svg" /></a>
 [![Build Status](https://travis-ci.org/tmobile/jazz.svg?branch=master)](https://travis-ci.org/tmobile/jazz)
+<a href="https://github.com/tmobile/jazz/graphs/contributors" alt="Contributors"><img src="https://img.shields.io/github/contributors/tmobile/jazz.svg" /></a>
 [![License](https://img.shields.io/badge/License-Apache%202.0-yellowgreen.svg)](https://github.com/tmobile/jazz/blob/master/LICENSE)
+![GitHub release](https://img.shields.io/github/release/tmobile/jazz.svg)
 [![Gitter](https://img.shields.io/gitter/room/badges/shields.svg)](https://gitter.im/TMO-OSS/Jazz)
 [![Slack Chat](https://img.shields.io/badge/Chat-Slack-ff69b4.svg)](https://tmo-oss-getinvite.herokuapp.com/)
 
