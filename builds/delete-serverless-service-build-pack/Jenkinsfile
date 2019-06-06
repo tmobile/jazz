@@ -157,7 +157,7 @@ node {
 				} else {
 					cloudfrontEnabled = "false"
 				}
-			} else if(fileExists('build.sls-app')) {
+			} else if(fileExists('build.slsapp')) {
 				flowType = "SLSAPP"
 			} else {
 				error "Invalid project configuration"
