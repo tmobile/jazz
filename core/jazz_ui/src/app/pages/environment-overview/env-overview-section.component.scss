@@ -181,7 +181,9 @@
 .bad-value {
   color: #d0021b;
 }
-
+.Invalidation {
+  color: #d0021b;
+}
 .good-value {
   color: #5dae02;
 }
@@ -633,9 +635,15 @@ transform: rotateY(-50%)
   width: 13rem;
   margin-bottom: 15px;
 }
-.validation{
+.valid{
   padding-top:0.5em;
   margin:0;
+  .validation {
+    color: #5cae01;
+  }
+  .Invalidation {
+    color: #d0021b;
+  }
 }
 .line-numbers{
     height: 100%;

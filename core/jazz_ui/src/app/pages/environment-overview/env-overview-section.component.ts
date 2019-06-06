@@ -218,9 +218,11 @@ popup(state){
       const yamlLint = require('yaml-lint');
       yamlLint.lint(yaml).then(() => {
         this.isvalid = true;
+        this.invalid = false;
         this.disableSave = false;
       }).catch((error) => {
         this.invalid = true;
+        this.isvalid = false;
       });
     }
     else{
