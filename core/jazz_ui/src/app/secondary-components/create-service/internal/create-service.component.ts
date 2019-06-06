@@ -455,10 +455,8 @@ export class CreateServiceComponent implements OnInit {
         var event = {};
         event["type"] = this.eventExpression.type;
         if (this.eventExpression.type === "dynamodb") {
-          event["source"] = "arn:aws:dynamodb:us-west-2:302890901340:table/" + this.eventExpression.dynamoTable;
           event["action"] = "PutItem";
         } else if (this.eventExpression.type === "kinesis") {
-          event["source"] = "arn:aws:kinesis:us-west-2:302890901340:stream/" + this.eventExpression.streamARN;
           event["action"] = "PutRecord";
         } else if (this.eventExpression.type === "s3") {
           event["source"] = this.eventExpression.S3BucketName;

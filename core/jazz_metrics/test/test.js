@@ -295,7 +295,7 @@ describe('jazz_metrics', function () {
         "timestamp": "2018-04-11T16:27:34:800",
         "status": "active",
         "provider": "aws",
-        "provider_id": "arn:aws:lambda:test-region:302890901340:function:jazztest_test-service",
+        "provider_id": "arn:aws:lambda:test-region:1234:function:jazztest_test-service",
         "id": "886d901d-fffe-9ac9-becb-a7cfe96fd5dc",
         "domain": "jazztest",
         "asset_type": "lambda"
@@ -1171,7 +1171,7 @@ describe('jazz_metrics', function () {
         "timestamp": "2018-04-11T16:27:34:800",
         "status": "active",
         "provider": "aws",
-        "provider_id": "arn:aws:lambda:test-region:302890901340:function:jazztest_test-service",
+        "provider_id": "arn:aws:lambda:test-region:1234:function:jazztest_test-service",
         "id": "886d901d-fffe-9ac9-becb-a7cfe96fd5dc",
         "domain": "jazztest",
         "asset_type": "lambda"
@@ -1183,7 +1183,7 @@ describe('jazz_metrics', function () {
         "timestamp": "2018-04-11T16:30:46:715",
         "status": "active",
         "provider": "aws",
-        "provider_id": "arn:aws:execute-api:test-region:302890901340:qwertyuiop/test/GET/jazztest/test-service",
+        "provider_id": "arn:aws:execute-api:test-region:1234:qwertyuiop/test/GET/jazztest/test-service",
         "id": "f6aabe91-cc2a-6a79-0e29-68e9ce037426",
         "domain": "jazztest",
         "asset_type": "apigateway"

@@ -380,7 +380,7 @@ describe('jazz_splunk-cw-log-streamer', function () {
     beforeEach(function () {
       lambdaLogsPaylod = {
         "messageType": "DATA_MESSAGE",
-        "owner": "302890901340",
+        "owner": "1234",
         "logGroup": "/aws/lambda/jazztest_test-splunk-prod",
         "logStream": "2018/09/04/[$LATEST]89e64d592ffa4374a9a85dc57a622e14",
         "subscriptionFilters": [
@@ -394,7 +394,7 @@ describe('jazz_splunk-cw-log-streamer', function () {
           {
             "id": "34255429465848969731169788136032554706765058698490413057",
             "timestamp": 1536066582569,
-            "message": "2018-09-04T13:09:42.552Z\tc95e7ca7-b043-11e8-8bbd-75b43bc0efcd\tINFO  \t  { callbackWaitsForEmptyEventLoop: [Getter/Setter],\n  done: [Function: done],\n  succeed: [Function: succeed],\n  fail: [Function: fail],\n  logGroupName: '/aws/lambda/jazztest_test-splunk-prod',\n  logStreamName: '2018/09/04/[$LATEST]89e64d592ffa4374a9a85dc57a622e14',\n  functionName: 'jazztest_test-splunk-prod',\n  memoryLimitInMB: '256',\n  functionVersion: '$LATEST',\n  getRemainingTimeInMillis: [Function: getRemainingTimeInMillis],\n  invokeid: 'c95e7ca7-b043-11e8-8bbd-75b43bc0efcd',\n  awsRequestId: 'c95e7ca7-b043-11e8-8bbd-75b43bc0efcd',\n  invokedFunctionArn: 'arn:aws:lambda:us-west-2:302890901340:function:jazztest_test-splunk-prod' }\n"
+            "message": "2018-09-04T13:09:42.552Z\tc95e7ca7-b043-11e8-8bbd-75b43bc0efcd\tINFO  \t  { callbackWaitsForEmptyEventLoop: [Getter/Setter],\n  done: [Function: done],\n  succeed: [Function: succeed],\n  fail: [Function: fail],\n  logGroupName: '/aws/lambda/jazztest_test-splunk-prod',\n  logStreamName: '2018/09/04/[$LATEST]89e64d592ffa4374a9a85dc57a622e14',\n  functionName: 'jazztest_test-splunk-prod',\n  memoryLimitInMB: '256',\n  functionVersion: '$LATEST',\n  getRemainingTimeInMillis: [Function: getRemainingTimeInMillis],\n  invokeid: 'c95e7ca7-b043-11e8-8bbd-75b43bc0efcd',\n  awsRequestId: 'c95e7ca7-b043-11e8-8bbd-75b43bc0efcd',\n  invokedFunctionArn: 'arn:aws:lambda:us-west-2:1234:function:jazztest_test-splunk-prod' }\n"
           },
           {
             "id": "34255429465871270476368318759174090425037707059996393474",
@@ -419,7 +419,7 @@ describe('jazz_splunk-cw-log-streamer', function () {
           {
             "id": "34255429528335657777452594178615637306725767638247538694",
             "timestamp": 1536066585371,
-            "message": "2018-09-04T13:09:45.370Z\tcb344d6a-b043-11e8-933c-9d414b034894\tINFO  \t  { callbackWaitsForEmptyEventLoop: [Getter/Setter],\n  done: [Function: done],\n  succeed: [Function: succeed],\n  fail: [Function: fail],\n  logGroupName: '/aws/lambda/jazztest_test-splunk-prod',\n  logStreamName: '2018/09/04/[$LATEST]89e64d592ffa4374a9a85dc57a622e14',\n  functionName: 'jazztest_test-splunk-prod',\n  memoryLimitInMB: '256',\n  functionVersion: '$LATEST',\n  getRemainingTimeInMillis: [Function: getRemainingTimeInMillis],\n  invokeid: 'cb344d6a-b043-11e8-933c-9d414b034894',\n  awsRequestId: 'cb344d6a-b043-11e8-933c-9d414b034894',\n  invokedFunctionArn: 'arn:aws:lambda:us-west-2:302890901340:function:jazztest_test-splunk-prod' }\n"
+            "message": "2018-09-04T13:09:45.370Z\tcb344d6a-b043-11e8-933c-9d414b034894\tINFO  \t  { callbackWaitsForEmptyEventLoop: [Getter/Setter],\n  done: [Function: done],\n  succeed: [Function: succeed],\n  fail: [Function: fail],\n  logGroupName: '/aws/lambda/jazztest_test-splunk-prod',\n  logStreamName: '2018/09/04/[$LATEST]89e64d592ffa4374a9a85dc57a622e14',\n  functionName: 'jazztest_test-splunk-prod',\n  memoryLimitInMB: '256',\n  functionVersion: '$LATEST',\n  getRemainingTimeInMillis: [Function: getRemainingTimeInMillis],\n  invokeid: 'cb344d6a-b043-11e8-933c-9d414b034894',\n  awsRequestId: 'cb344d6a-b043-11e8-933c-9d414b034894',\n  invokedFunctionArn: 'arn:aws:lambda:us-west-2:1234:function:jazztest_test-splunk-prod' }\n"
           },
           {
             "id": "34255429528335657777452594178615637306725767638247538695",
@@ -436,7 +436,7 @@ describe('jazz_splunk-cw-log-streamer', function () {
 
       apiGatewayLogsPayload = {
         "messageType": "DATA_MESSAGE",
-        "owner": "302890901340",
+        "owner": "1234",
         "logGroup": "API-Gateway-Execution-Logs_dww0le4qre/prod",
         "logStream": "2a38a4a9316c49e5a833517c45d31070",
         "subscriptionFilters": [
