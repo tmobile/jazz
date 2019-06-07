@@ -324,7 +324,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
 
   queryMetricsData() {
-    console.log('aytu')
     this.sectionStatus = 'loading';
     let request = {
       url: '/jazz/metrics',
