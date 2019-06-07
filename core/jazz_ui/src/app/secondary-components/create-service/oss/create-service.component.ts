@@ -99,7 +99,6 @@ export class CreateServiceComponent implements OnInit {
   isDescriptorEmpty: boolean = false;
   resMessage:string='';
   cdnConfigSelected:boolean = false;
-  descriptorSelected:boolean = false;
   focusindex:any = -1;
   scrollList:any = '';
   toast : any;
@@ -346,14 +345,6 @@ export class CreateServiceComponent implements OnInit {
 
     this.scrollTo('additional');
 
-  }
-
-  descriptorChanged(){
-    this.descriptorSelected = !this.descriptorSelected;
-    if(this.descriptorSelected === false) {
-      this.startNew = false;
-      this.onSelectionChange(this.runtime);
-    }
   }
 
   onWebSelectionChange(val){

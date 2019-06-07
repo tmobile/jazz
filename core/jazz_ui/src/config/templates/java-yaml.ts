@@ -1,7 +1,7 @@
 export const javaTemplate = {
   template:
 `package:
-artifact: target/sls-app-java-template-1.0.jar
+  artifact: target/sls-app-java-template-1.0.jar
 
 functions:
  function1:

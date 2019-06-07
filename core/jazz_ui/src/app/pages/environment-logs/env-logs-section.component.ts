@@ -435,19 +435,22 @@ export class EnvLogsSectionComponent implements OnInit {
 	   if(response&&response.data&&response.data.assets){
 		    let assets=_(response.data.assets).map('asset_type').uniq().value();
 			let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
-		    self.assetWithDefaultValue = validAssetList;
-		    for(var i=0;i<self.assetWithDefaultValue.length;i++){
-			self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
-			}
-			self.assetSelected=validAssetList[0].replace(/_/g ," ");
-			if(!data){
-			self.payload.asset_type = self.assetSelected.replace(/ /g ,"_");
-			}
-			self.callLogsFunc();
-			self.getFilter(self.advancedFilters);
-			self.instance_yes.showAsset = true;
-			self.instance_yes.assetSelected = validAssetList[0].replace(/_/g ," ");
+			self.assetWithDefaultValue = validAssetList;
+			if(validAssetList.length){
+				for(var i=0;i<self.assetWithDefaultValue.length;i++){
+					self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
+				}
+				self.assetSelected=validAssetList[0].replace(/_/g ," ");
+				if(!data){
+				self.payload.asset_type = self.assetSelected.replace(/ /g ,"_");
+				}
+				self.callLogsFunc();
+				self.getFilter(self.advancedFilters);
+				self.instance_yes.showAsset = true;
+				self.instance_yes.assetSelected = validAssetList[0].replace(/_/g ," ");
+			}		    
 		}
+		self.callLogsFunc();
    })
    .catch((error) => {
 	   return Promise.reject(error);
