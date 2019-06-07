@@ -917,7 +917,7 @@ def loadBuildModules(buildModuleUrl) {
     echo "Environment deployment data loader module loaded successfully."
 
     slsBuildRules = load "sls-app/sbr.groovy"
-    slsBuildRules.initialize(whiteListModule)
+    slsBuildRules.initialize(steps,whiteListModule)
     echo "sls-app/sbr.groovy has been loaded"
 
     awsAPIGatewayModule = load "aws-apigateway-module.groovy"
