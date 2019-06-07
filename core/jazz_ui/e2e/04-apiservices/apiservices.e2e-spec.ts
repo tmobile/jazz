@@ -217,12 +217,12 @@ describe('Overview', () => {
     commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.mediumWait);
     expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
     browser.sleep(Common.miniWait);
-    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.mediumWait);
-    jazzServices_po.getServiceHomePage().click();
   });
 
   it('Identifying Environment and Navigation for API', () => {
     browser.driver.sleep(Common.microWait);
+    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.mediumWait);
+    jazzServices_po.getServiceHomePage().click();
     commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
     browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
     //To Navigate to the particular service and verifying the Page
