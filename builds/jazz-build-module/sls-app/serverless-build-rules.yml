@@ -152,8 +152,8 @@ provider:
     sbr-type: int
     sbr-render: user-wins
     sbr-constraint:
-        sbr-from: 100
-        sbr-to: 500
+      sbr-from: 100
+      sbr-to: 500
     sbr-value:
       sbr-formula: ${config.providerTimeout}
       sbr-example: 160
