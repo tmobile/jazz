@@ -45,9 +45,7 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
 
     Map<String, Object> ymlOutput = merge(mandatoryYmlTreelet, transformedYmlTreelet) // Order of arguments is important here because in case of collision we want the user values to overwrite the default values
 
-
     return ymlOutput
-
 }
 
 def Map<String, String> allRules(Map<String, Object> origAppYmlFile,
