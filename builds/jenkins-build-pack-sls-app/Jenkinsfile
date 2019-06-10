@@ -122,8 +122,10 @@ node() {
     if (!environment_logical_id && config['domain'] != 'jazz') {
       error "The environment has not been created yet and its missing the environment id"
     }
+    //set g_environment_logical_id
+    environmentDeploymentMetadata.setEnvironmentLogicalId(environment_logical_id)
     //Get deployment descriptor from environments
-    env_deployment_descriptor = environmentDeploymentMetadata.getEnvDeploymentDecscriptor(environment_logical_id)
+    env_deployment_descriptor = environmentDeploymentMetadata.getEnvDeploymentDecscriptor()
   }
   if (!events) {
     error "Can't load events module"

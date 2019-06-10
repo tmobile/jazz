@@ -96,7 +96,7 @@ def getEnvironmentInfo() {
 	}
 }
 
-def getEnvDeploymentDecscriptor(env_logical_id) {
+def getEnvDeploymentDecscriptor() {
     def envdeploymentdescriptor =null
 	if (g_environment_logical_id == null && g_service_config['domain'] != "jazz") {
 		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" \
@@ -107,7 +107,7 @@ def getEnvDeploymentDecscriptor(env_logical_id) {
 		if( getEnvironments ) {
 			def environmentsData =  parseJson(getEnvironments)
 			for( env in environmentsData.data.environment) {
-				if(env['logical_id'] == env_logical_id) {
+				if(env['logical_id'] == g_environment_logical_id) {
 					envdeploymentdescriptor = env['deployment_descriptor']
 				}
 			}
