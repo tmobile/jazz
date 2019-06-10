@@ -92,11 +92,9 @@ class Transformer {
     String[] templatedPathSegments = templatedPath.split("/")
     String[] targetPathSegments = targetPath.split("/")
 
-    targetPathSegments.eachWithIndex{seg, idx ->
-    if(templatedPathSegments[idx] == "*") val2Ret.add(targetPathSegments[idx])}
+    targetPathSegments.eachWithIndex{seg, idx -> if(templatedPathSegments[idx] == "*") val2Ret.add(targetPathSegments[idx])}
 
     return val2Ret
-
   }
 
 
@@ -990,8 +988,7 @@ def toList(value) {
 
 /* Creates a new map and adds it to the envelopeMap as the new entry under the given key */
 def enclose(Map envelopeMap, String key) {
-  if(key.isEmpty()) {
-    return envelopeMap }
+  if(key.isEmpty()) return envelopeMap
   def Map enclosedContent = [:]
   envelopeMap[key] = enclosedContent
   return enclosedContent
@@ -1073,12 +1070,9 @@ def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
                             Map<String, List> path2OrigRuleMap) {
 
   def accumulator = aPath2RuleMap.inject([:]){acc, item ->
-  List ymlTreeList = new ArrayList()
   def targetedPaths = new ArrayList()
-  if((item.key).toString().contains("*")) {
-    targetedPaths = findTargetPath (item.key, path2OrigRuleMap)
-  } else
-    targetedPaths.add(item.key)
+  if((item.key).toString().contains("*")) targetedPaths = findTargetPath (item.key, path2OrigRuleMap)
+  else targetedPaths.add(item.key)
 
   targetedPaths.each { entry ->
     def ymlTreelet = retrofitMandatoryFields(entry, item.value, config, context)
