@@ -5,7 +5,7 @@ import org.json.*
 @Field def whitelistValidator
 @Field def sbrContent
 
-echo "sbr.groovy is being loaded"
+println "sbr.groovy is being loaded"
 
 
 
@@ -44,6 +44,7 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
     Map<String, Object> mandatoryYmlTreelet = retrofitMandatoryFields(path2MandatoryRuleMap, config, context)
 
     Map<String, Object> ymlOutput = merge(mandatoryYmlTreelet, transformedYmlTreelet) // Order of arguments is important here because in case of collision we want the user values to overwrite the default values
+
 
     return ymlOutput
 
@@ -86,12 +87,15 @@ class Transformer {
 
   List<String> resolveAsterisks(String templatedPath, String targetPath) {
     List<String> val2Ret = []
+    println "templatedPath: $templatedPath"
     if(!templatedPath.contains("*")) return val2Ret
 
     String[] templatedPathSegments = templatedPath.split("/")
     String[] targetPathSegments = targetPath.split("/")
 
-    targetPathSegments.eachWithIndex{seg, idx -> if(templatedPathSegments[idx] == "*") val2Ret.add(targetPathSegments[idx])}
+    targetPathSegments.eachWithIndex{seg, idx ->
+    println "templatedPathSegments[idx]: ${templatedPathSegments[idx]}"
+    if(templatedPathSegments[idx] == "*") val2Ret.add(targetPathSegments[idx])}
 
     return val2Ret
 
@@ -914,6 +918,8 @@ def extractNonPrimary(Map<String, SBR_Rule> aPath2RuleMap) {
 }
 
 Map<String, SBR_Rule> explodeNonPrimaryRule(aRule, String prefix) {
+  echo "explodeNonPrimaryRule aRule : $aRule"
+  echo "explodeNonPrimaryRule prefix : $prefix"
   return convertRuleForestIntoLinearMap(aRule.template).inject([:]){acc, item -> acc.put(prefix+"/"+"*"+item.key, item.value); return acc}
 }
 
@@ -972,10 +978,10 @@ def Map merge(Map[] sources) {
     if (sources.length == 1) return sources[0]
 
     sources.inject([:]) { result, source ->
-        source.each { k, v ->
-            result[k] = result[k] instanceof Map ? merge(result[k], v) : v
-        }
-        return result
+      source.each { k, v ->
+          result[k] = result[k] instanceof Map ? merge(result[k], v) : v
+      }
+      return result
     }
 }
 
@@ -987,7 +993,8 @@ def toList(value) {
 
 /* Creates a new map and adds it to the envelopeMap as the new entry under the given key */
 def enclose(Map envelopeMap, String key) {
-  if(key.isEmpty()) return envelopeMap
+  if(key.isEmpty()) {
+    return envelopeMap }
   def Map enclosedContent = [:]
   envelopeMap[key] = enclosedContent
   return enclosedContent
@@ -999,35 +1006,98 @@ def retrofitMandatoryFields(String              aPath,
                                                 config,
                             Map<String, String> context) {
 
-
   Map<String, Object> ymlTree = [:]
   String[] segmentedPath = aPath.split("/")
+
   List<String> pathAsList = toList(segmentedPath)
 // The Jenkins groovy does not support removeLast so I had to substitute it with two following lines
   String lastName = pathAsList[pathAsList.size()-1]
   pathAsList.removeAt(pathAsList.size()-1)
   def lastHandler =  pathAsList.inject(ymlTree){acc, item -> enclose(acc, item)}
 
-
   def userDefaultValue = ""
   if(rule.type.isMap()) userDefaultValue = [:]
   if(rule.type.isList()) userDefaultValue = []
-
   lastHandler[lastName] = rule.applyRule(userDefaultValue, aPath, config, context)
 
+  println "ymlTree : $ymlTree"
   return ymlTree
-
 }
+
+def makeList(list) {
+    List created = new ArrayList()
+    list.each { line ->
+        created.add(line)
+    }
+    return created
+}
+
+def getLeafPath (String templatedPath, Map<String, List> path2OrigRuleMap) {
+  def pathKeyArr = makeList(templatedPath.split('/'))
+  def pathTempKeyList = path2OrigRuleMap.findAll { entry -> entry.key.split('/').size() == pathKeyArr.size() }
+                                         .max { res, item ->  res.value.size() <=> item.value.size() }
+  println "pathTempKeyList : $pathTempKeyList"
+
+  return pathTempKeyList.value
+}
+
+
+def findTargetPath (String templatedPath, Map<String, List> path2OrigRuleMap) {
+  def pathKey = path2OrigRuleMap.keySet().find { templatedPath.contains(it)  }
+  def targetedPaths = pathKey ? path2OrigRuleMap.get(pathKey) : getLeafPath(templatedPath, path2OrigRuleMap)
+
+  def pathKeyArr = makeList(templatedPath.split('/'))
+  def asteriskIdx = pathKeyArr.findIndexOf{it =="*"}
+
+  List path2OrigKey = new ArrayList()
+  for (path in targetedPaths) {
+    def pathArr = makeList(path.split('/'))
+    def pathValue = pathArr[asteriskIdx]
+    pathKeyArr[asteriskIdx] = pathValue
+    def reqPath = pathKeyArr.join("/")
+    if(reqPath.contains("*")) {
+      def commons = pathKeyArr.intersect(pathArr)
+      reqPath = commons.join("/")
+      def difference = pathKeyArr.plus(pathArr)
+      difference.removeAll(commons)
+      difference.removeAll("*")
+      def diff = difference.join("/")
+      reqPath = "${reqPath}/${diff}"
+    }
+    path2OrigKey.add(reqPath)
+  }
+
+  return path2OrigKey
+}
+
 
 /* Returning a new yml tree with paths enlisted inside the map and with associated rule result placed under */
 def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
                                                   config,
-                            Map<String, String>   context) {
-  def accumulator = aPath2RuleMap.inject([:]){acc, item -> def ymlTreelet = retrofitMandatoryFields(item.key, item.value, config, context);
-                                                           def accCopy = [:]; if(acc != null) accCopy << acc;
-                                                           acc  = merge(accCopy, ymlTreelet);
-                                                           return acc;}
+                            Map<String, String>   context,
+                            Map<String, List> path2OrigRuleMap) {
 
+  def accumulator = aPath2RuleMap.inject([:]){acc, item ->
+  List ymlTreeList = new ArrayList()
+  def targetedPaths = new ArrayList()
+  if((item.key).toString().contains("*")) {
+    targetedPaths = findTargetPath (item.key, path2OrigRuleMap)
+     println "targetedPaths : ${targetedPaths}"
+  } else
+    targetedPaths.add(item.key)
+
+  targetedPaths.each {
+      println "path : $path"
+      ymlTreeList.add(retrofitMandatoryFields(path, item.value, config, context))
+    }
+
+  // TODO TO AADD LIST
+   def accCopy = [:]; if(acc != null) accCopy << acc;
+    println "acc : $acc"
+     println "accCopy : $accCopy"
+   acc  = merge(accCopy, ymlTreelet);
+   println "acc : $acc"
+   return acc;}
   return accumulator
 }
 
@@ -1081,5 +1151,33 @@ def prepareServerlessYml(aConfig, env, configLoader) {
 
 	return resultingDoc
 }
+
+
+@Grab('org.yaml:snakeyaml:1.17')
+import org.yaml.snakeyaml.Yaml
+parser = new Yaml()
+config = ["service_id": "4a053679-cdd4-482a-a34b-1b83662f1e81",
+              "service": "olegservice28",
+              "domain": "olegdomain28",
+              "created_by": "admin",
+              "type":"sls-app",
+              "runtime":"nodejs8.10",
+              "region":"us-west-2b",
+              "providerRuntime":"nodejs8.10",
+               "providerTimeout":160,
+               "providerMemorySize":256
+              ]
+
+context =  ["INSTANCE_PREFIX": "slsapp19"]
+
+Map<String, Object> initialSmallServerless = parser.load(new File("/Users/U44693/Documents/groovytest/test.yml").text) // Here provide a path to overly simplistic serverless.yml like
+//service:
+//  name: myService
+//  awsKmsKeyArn: arn:aws:kms:us-east-1:XXXXXX:key/some-hash
+Map<String, Object> sbrContent = parser.load(new File("/Users/U44693/Documents/groovytest/build-rule.yml").text) // Here provide a path to your serverless-build-rules.yml
+
+Map<String, Object> resultingServerless = processServerless(initialSmallServerless, sbrContent, config, context)
+
+echo "resultingServerless : $resultingServerless"
 
 return this

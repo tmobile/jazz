@@ -152,11 +152,11 @@ provider:
     sbr-type: int
     sbr-render: user-wins
     sbr-constraint:
-        sbr-from: 5
-        sbr-to: 13
+        sbr-from: 100
+        sbr-to: 500
     sbr-value:
       sbr-formula: ${config.providerTimeout}
-      sbr-example: 6
+      sbr-example: 160
 
   logRetentionInDays:  # Set the default RetentionInDays for a CloudWatch LogGroup
     sbr-type: int
@@ -535,6 +535,7 @@ function:
     handler:
       sbr-type: path
       sbr-render: user-only
+      sbr-mandatory: true  #TODO to Remove
       sbr-value:
         sbr-example: index.handler
 
@@ -553,6 +554,7 @@ function:
     memorySize: # memorySize for this specific function.
       sbr-type: int
       sbr-render: user-wins
+      sbr-mandatory: true  #TODO to Remove
       sbr-constraint:
         sbr-from: 256
         sbr-to: 2048
@@ -577,18 +579,18 @@ function:
     timeout:
       sbr-type: int
       sbr-render: user-wins
+      sbr-mandatory: true  #TODO to Remove
       sbr-constraint:
-          sbr-from: 5
-          sbr-to: 13
+        sbr-from: 100
+        sbr-to: 500
       sbr-value:
         sbr-formula: ${config.providerTimeout}
-        sbr-example: 6
+        sbr-example: 160
 
     role:  # Overwrite the default IAM role which is used for all functions
       sbr-type: arn-iam
       sbr-render: user-wins
       sbr-value:
-        sbr-formula: ${iamRoleARN}
         sbr-example: arn:aws:iam::XXXXXX:role/role
 
     onError: # Optional SNS topic / SQS arn (Ref, Fn::GetAtt and Fn::ImportValue are supported as well) which will be used for the DeadLetterConfig
