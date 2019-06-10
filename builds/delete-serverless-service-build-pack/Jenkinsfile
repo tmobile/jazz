@@ -268,8 +268,6 @@ node {
 							}
 							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-							//Get deployment descriptor from environments
-    					env_deployment_descriptor = environmentDeploymentMetadata.getEnvDeploymentDecscriptor()
 							echo 'undeploying function for environment: ' + _envId
 
 							cleanupEventSourceMapping(_envId)
@@ -1096,6 +1094,8 @@ def LoadConfiguration() {
 
 def loadServerlessYml(config, env){
 	sh "rm -f ./serverless.yml" // remove if exists
+	//Get deployment descriptor from environments
+  env_deployment_descriptor = environmentMetadataLoader.getEnvDeploymentDecscriptor(env)
 	def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader, env_deployment_descriptor) // Generating the deployment descriptor
 	echo "prepareServerlessYml = ${deploymentDescriptor}"
 	writeYaml(file: './serverless.yml', data: deploymentDescriptor)
