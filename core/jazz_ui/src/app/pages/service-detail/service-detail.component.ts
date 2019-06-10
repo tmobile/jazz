@@ -14,6 +14,7 @@ import { BarGraphComponent } from '../../secondary-components/bar-graph/bar-grap
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
 import { ServiceMetricsComponent } from '../service-metrics/service-metrics.component';
 import { environment } from './../../../environments/environment';
+import { environment as env_oss } from './../../../environments/environment.oss';
 
 
 @Component({
@@ -111,7 +112,7 @@ export class ServiceDetailComponent implements OnInit {
         serviceType: service.type,
         runtime: service.runtime,
         status: service.status.replace('_', ' '),
-        description: service.description,
+        description: service.description || '',
         approvers: service.approvers,
         domain: service.domain,
         email: service.email,
@@ -121,7 +122,9 @@ export class ServiceDetailComponent implements OnInit {
         endpoints: service.endpoints,
         deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type],
         is_public_endpoint: service.is_public_endpoint,
-        created_by: service.created_by
+        created_by: service.created_by,
+        accountID: service.deployment_accounts[0].accountId,
+        region: service.deployment_accounts[0].region
       }
       if (service.metadata) {
         returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;
@@ -200,8 +203,9 @@ export class ServiceDetailComponent implements OnInit {
           'link': ''
         }]
       this.isLoadingService = false;
-      if (service.status == 'deletion_completed' || service.status == 'deletion_started' || service.status == 'creation_started' || service.status == 'creation_failed')
+      if (service.status == 'deletion_completed' || service.status == 'deletion_started' || service.status == 'creation_started' || service.status == 'creation_failed' || (!service.repository && service.domain == 'jazz'))
         this.canDelete = false;
+
     } else {
       this.isLoadingService = false;
       let errorMessage = this.toastmessage.successMessage(service, "serviceDetail");
@@ -277,7 +281,9 @@ export class ServiceDetailComponent implements OnInit {
   };
 
   env(event) {
-    if ((event != 'creation failed') && (event != 'creation started') && (event != 'deletion started') && (event != 'deletion completed')) {
+    if (!this.service.repository && this.service.domain == 'jazz') {
+      this.canDelete = false;
+    } else if ((event != 'creation failed') && (event != 'creation started') && (event != 'deletion started') && (event != 'deletion completed')) {
       this.canDelete = true;
     } else {
       this.canDelete = false;

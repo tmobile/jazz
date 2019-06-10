@@ -48,23 +48,23 @@ export class Jazz {
   getAwsServiceName() {
     return element(by.xpath('(//table-template//div[@class="table-row pointer"]/div)[1]'));
   }
-  getAPIType() {
-    return element(by.xpath('//div/div[2][@class="table-row pointer"]//div[text()="api"]'));
+  getAPIType(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[2]'));
   }
-  getFunctionType() {
-    return element(by.xpath('//div/div[2][@class="table-row pointer"]//div[text()="function"]'));
+  getFunctionType(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[2]'));
   }
-  getWebsiteType() {
-    return element(by.xpath('//div/div[2][@class="table-row pointer"]//div[text()="website"]'));
+  getWebsiteType(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[2]'));
   }
-  getAPIStatus() {
-    return element(by.xpath('//div/div[2][@class="table-row pointer"]/div[text()="api"]/parent::div/div[5]'));
+  getAPIStatus(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[5]'));
   }
-  getFunctionStatus() {
-    return element(by.xpath('//div/div[2][@class="table-row pointer"]/div[text()="function"]/parent::div/div[5]'));
+  getFunctionStatus(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[5]'));
   }
-  getWebsiteStatus() {
-    return element(by.xpath('//div/div[2][@class="table-row pointer"]/div[text()="website"]/parent::div/div[5]'));
+  getWebsiteStatus(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[5]'));
   }
   getDummy() {
     return element(by.xpath('//*[@id="exampleName"]'));
@@ -79,7 +79,8 @@ export class Jazz {
     return element(by.xpath('//div[@class="page-title-wrap hide-for-mobile"]/h1[@class="page-hdr bold-title"]'));
   }
   getProdName() {
-    return element(by.xpath('//div[@class="stage-title stageDisp" and contains(text(),"prod")]'))
+    return element(by.xpath('//div[1]/span[@title="deployment completed"]'))
+      // '//div[@class="stage-title stageDisp" and contains(text(),"prod")]'))
   }
   getProdHeader() {
     return element(by.xpath('//div[@class="servie-details-container"]/h1[@class="page-hdr bold-title relative" and contains(text(),"prod")]'));
@@ -93,7 +94,7 @@ export class Jazz {
   getRefresh() {
     return element(by.xpath('*//div[@class="refresh-button"]'));
   }
-  getServiceFromAsset() {
+  getServiceHomePage() {
     return element(by.xpath('//div[@class="navigation-item"]/span[@class="icon-icon-back hide"]/following-sibling::a[text()="Services"]'));
   }
   getWebsiteName() {
@@ -147,8 +148,8 @@ export class Jazz {
   homePageRefresh() {
     return element(by.xpath('//span[@title="Refresh"]'));
   }
-  serviceStatus() {
-    return element(by.xpath('//div[@class="table-body"]//div[2]//div[contains(text(),"active")]'));
+  serviceStatus(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[contains(text(), "active")]'));
   }
   getMetrices() {
     return element(by.xpath('//li[contains(text(),"metrics")]'));
@@ -157,10 +158,10 @@ export class Jazz {
     return element(by.xpath('//button[text()="TEST API"]'));
   }
   getAPIGET() {
-    return element(by.xpath('//span[contains(text(),"GET")]'));
+    return element(by.xpath('//span[@class="opblock-summary-method"][contains(text(),"GET")]'));
   }
   getAPIPOST() {
-    return element(by.xpath('//span[contains(text(),"POST")]'));
+    return element(by.xpath('//span[@class="opblock-summary-method"][contains(text(),"POST")]'));
   }
   getTryOut() {
     return element(by.xpath('//button[@class="btn try-out__btn"]'));
@@ -244,7 +245,7 @@ export class Jazz {
     return element(by.xpath('//button[@class="btnT-radial-in"]'));
   }
   testSuccessMessage() {
-    return element(by.xpath('//span[contains(text(),"Function got triggered successfully")]'));
+    return element(by.css('div.column-heading.success > span:nth-child(2)'));
   }
   websiteTemplete() {
     return element(by.xpath('//p[contains(text(),"Jazz Serverless Platform Website Template")]'));
@@ -257,6 +258,12 @@ export class Jazz {
     return element(by.xpath('//div[contains(@class,"det-value repository-link link PlaceHolder")]'));
   }
   // bitbucket locators
+  getEnvironmentBit() {
+    return element(by.xpath('//span[contains(text(), "Bitbucket")]'));
+  }
+  getEnvironmentGit() {
+    return element(by.xpath('//div/div[2]/div[1]/h1[contains(text(),"GitLab Community Edition")]'));
+  }
   bitbucketLogo() {
     return element(by.xpath('//span[@class="aui-header-logo-device"]'));
   }
@@ -286,6 +293,9 @@ export class Jazz {
   }
   testBranch() {
     return element(by.xpath('//div[@class="eachBranch col-md-2 col-sm-5"]//div//div[@class="overview-value"]'));
+  }
+  activeTestBranch() {
+    return element(by.xpath('//div[2]/span[@title="deployment completed"]'));
   }
   getTestBranch() {
     return element(by.xpath('//div[@class="eachBranch col-md-2 col-sm-5"]//div//div[@class="overview-value"]'));
@@ -321,6 +331,17 @@ export class Jazz {
     return element(by.xpath('//button[@class=aui-button aui-button-primary commit-button"]'));
   }
   //gitlab locators
+  gitUsername() {
+    return element(by.xpath('//*[@id="user_login"]'));
+  }
+  gitPassword() {
+    return element(by.xpath('//*[@id="user_password"]'));
+  }
+  gitLogin() {
+    return element(by.xpath('//input[@value="Sign in"]'));
+  }
+
+
   drpGitBranchType() {
     return element(by.xpath('//a[@class="btn dropdown-toggle has-tooltip"]//i[@class="fa fa-caret-down"]'));
   }
@@ -333,10 +354,60 @@ export class Jazz {
   btnGitCreateBranch() {
     return element(by.xpath('//button[contains(text(),"Create branch")]'));
   }
+  gitIndexFile() {
+    return element(by.xpath('//span[contains(text(),"index.js")]'));
+  }
+  gitEditIndexFile() {
+    return element(by.xpath('//a[contains(text(),"Edit")]'));
+  }
+  removeLineFirst() {
+    return element(by.xpath('//*[@id="editor"]/div[2]/div'));
+  }
+  gitComitChanges() {
+    return element(by.xpath('//button[contains(text(),"Commit changes:)]'));
+  }
+  getRepo() {
+    return element(by.xpath('//div[contains(text(),"Repository")]'));
+  }
+  getTestBranchName() {
+    return element(by.xpath('//div[@class="stage-title2 stageDisp"]'));
+  }
+  getLoginSpinner()
+  {
+    return element(by.css('div.loader'));
+  }
   getSpinner() {
     return element(by.css('div.loading-circle'));
   }
   getMetricsSpinner() {
     return element(by.css('div.jz-spinner'));
   }
+  getBitLogoutIcon() {
+    return element(by.xpath('//span[@id="current-user"]//span[@class="aui-avatar-inner"]'));
+  }
+  getBitLogout() {
+    return element(by.xpath('//a[@class="logout-link"]'));
+  }
+  getGitLogoutIcon() {
+    return element(by.xpath('//a[@class="header-user-dropdown-toggle"]//*[contains(@class,"caret-down")]'));
+  }
+  getGitLogout() {
+    return element(by.xpath('//a[@class="sign-out-link"]'));
+  }
+  getService(servicename) { 
+    return element(by.xpath('(//table-template//div[@class="table-row pointer"]/div)[contains(text(),"'+servicename+'")]'));  
+    }
+  SwaggerFailed(){
+    return element(by.xpath('//*[@class="errors__title"]'));  
+    }
+  logoutIcon() {
+    return element(by.xpath('//jazz-header/header/div[2]/div[2]/ul/li[2]/div/div/div[1]'));
+  }
+  logout() {
+    return element(by.xpath('//div[contains(text(),"Logout")]'));
+  }
+  testError() {
+    return element(by.xpath('//*[@id="main-message"]/h1/span'));  
+  }
+
 }

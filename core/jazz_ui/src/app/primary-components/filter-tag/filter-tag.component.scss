@@ -1,0 +1,32 @@
+@import './../../../main-styles';
+.filter-tags-wrap{
+  margin: 0 1rem;
+}
+.each-tag{
+  border: 1px solid #C3C3C3;
+  display: inline-block;
+    border-radius: 2rem;
+    padding: 0.25rem 2.5rem 0.25rem 1rem;
+    margin: 0 1rem 1rem 0;
+    font-size: 1rem;
+    justify-content: space-between;
+  .filter-tag-key{
+    color:#C3C3C3;
+    padding-right: 0.4rem;
+
+  }
+  .icon-icon-close{
+    color: white;
+    cursor: pointer;
+    background-color: #80868B;
+    border-radius: 50%;
+    padding: 5px;
+    font-size: 9px;
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    &:hover{
+      background-color: #ed008c;
+    }
+  }
+}

@@ -23,7 +23,7 @@ import org.apache.log4j.Logger;
  */
 public class EnvironmentConfig {
 	
-	static final Logger logger = Logger.getLogger(EnvironmentConfig.class);
+	private static final Logger LOGGER = Logger.getLogger(EnvironmentConfig.class);
 	
 	private static Properties props = new Properties();
 	private static String stage = null; 
@@ -32,7 +32,7 @@ public class EnvironmentConfig {
 		String fnName = context.getFunctionName();
 		
 		if(null != fnName) {
-			int lastIndx = fnName.lastIndexOf("-");
+			int lastIndx = fnName.lastIndexOf('-');
 			stage = fnName.substring(lastIndx+1);
 		}
 		
@@ -41,14 +41,13 @@ public class EnvironmentConfig {
 		}
 		
 		String configFile = "/"+stage+".properties";
-		logger.info("Loading configuration file for env..:"+configFile);
+		LOGGER.info("Loading configuration file for env..:"+configFile);
 		props.load(this.getClass().getResourceAsStream(configFile));
 	}
 	
 	public String getConfig(String key) {
 		if(props != null) {
-			String value = props.getProperty(key);
-			return value;
+			return props.getProperty(key);
 		}
 		return null;
 	}

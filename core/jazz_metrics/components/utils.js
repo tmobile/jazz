@@ -26,10 +26,13 @@ const metricConfig = require("./metrics.json");
 const global_config = require("../config/global-config.json");
 const logger = require("../components/logger.js")();
 const AWS = require("aws-sdk");
+const Uuid = require("uuid/v4");
 
-function massageData(assetResults, eventBody) {
+function massageData(assetResults, eventBody, account) {
   var output_obj = {};
   output_obj = {
+    "accountId": account.accountId,
+    "region": account.region,
     "domain": eventBody.domain,
     "service": eventBody.service,
     "environment": eventBody.environment,
@@ -70,7 +73,7 @@ function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset, provider) {
   var nameSpace = nameSpaceFrmAsset.toLowerCase();
   var namespacesList = metricConfig.namespaces;
 
-  if(!namespacesList[provider]) {
+  if (!namespacesList[provider]) {
     output_obj["isError"] = true;
     output_obj["message"] = `Provider not defined for namespace: ${nameSpace}`
     output_obj["nameSpace"] = `Invalid`;
@@ -144,7 +147,7 @@ function getAssetsObj(assetsArray, userStatistics) {
   assetsArray.forEach((asset) => {
 
     var assetType = asset.asset_type;
-    if(!namespaces[asset.provider]) {
+    if (!namespaces[asset.provider]) {
       newAssetArr.push({
         "message": `Provider not defined for the asset: ${asset.asset_type}`,
         "isError": true
@@ -327,20 +330,69 @@ function updateCloudfrontAsset(newAssetObj, relativeId) {
   return newAssetObj;
 }
 
-function getCloudWatch() {
-  var cloudwatch = new AWS.CloudWatch({
-    apiVersion: '2010-08-01',
-    region: global_config.CF_REGION
-  });
+function getCloudWatch(tempcreds, region) {
+  tempcreds.apiVersion = '2010-08-01';
+  tempcreds.region = region;
+  var cloudwatch = new AWS.CloudWatch(tempcreds);
   return cloudwatch;
 }
 
-function getCloudfrontCloudWatch() {
-  var cloudwatch = new AWS.CloudWatch({
-    apiVersion: '2010-08-01',
-    region: global_config.CF_REGION
-  });
+function getCloudfrontCloudWatch(tempcreds) {
+  tempcreds.apiVersion = '2010-08-01';
+  tempcreds.region = global_config.CF_REGION;
+  var cloudwatch = new AWS.CloudWatch(tempcreds);
   return cloudwatch;
+}
+function checkIsPrimary(accountId, jsonConfig) {
+  var data = jsonConfig.config.AWS.ACCOUNTS;
+  var index = data.findIndex(x => x.ACCOUNTID == accountId);
+  if (data[index].PRIMARY) {
+    return data[index].PRIMARY;
+  } else {
+    return false;
+  }
+}
+
+function getRolePlatformService(accountId, jsonConfig) {
+  var data = jsonConfig.config.AWS.ACCOUNTS;
+  var index = data.findIndex(x => x.ACCOUNTID == accountId);
+  return data[index].IAM.PLATFORMSERVICES_ROLEID;
+}
+
+function AssumeRole(accountID, configJson) {
+  var isPrimary = checkIsPrimary(accountID, configJson);
+  var roleArn = getRolePlatformService(accountID, configJson);
+  var accessparams;
+  return new Promise((resolve, reject) => {
+    if (isPrimary) {
+      accessparams = {};
+      resolve(accessparams)
+    } else {
+      const sts = new AWS.STS({ region: process.env.REGION });
+      const roleSessionName = Uuid();
+      const params = {
+        RoleArn: roleArn,
+        RoleSessionName: roleSessionName,
+        DurationSeconds: 3600,
+      };
+      sts.assumeRole(params, (err, data) => {
+        if (err) {
+          reject({
+            "result": "serverError",
+            "message": "Unknown internal error occurred"
+          })
+        } else {
+          logger.debug("Temporary Credentials are : ", JSON.stringify(data));
+          accessparams = {
+            accessKeyId: data.Credentials.AccessKeyId,
+            secretAccessKey: data.Credentials.SecretAccessKey,
+            sessionToken: data.Credentials.SessionToken,
+          };
+          resolve(accessparams)
+        }
+      })
+    }
+  });
 }
 
 module.exports = {
@@ -349,5 +401,6 @@ module.exports = {
   getNameSpaceAndMetricDimensons,
   getAssetsObj,
   getCloudWatch,
-  getCloudfrontCloudWatch
+  getCloudfrontCloudWatch,
+  AssumeRole
 };

@@ -1,13 +1,39 @@
 {
+<<<<<<< HEAD
   "REQUIRED_FIELDS": ["service", "domain", "environment", "end_time", "start_time", "interval", "statistics"],
   "ASSET_REQUIRED_FIELDS": ["type", "asset_name", "statistics"],
   "STATISTICS_TYPE": ["sum", "average", "maximum", "minimum", "samplecount","total"],
   "CF_REGION": "{conf-region}",
+=======
+  "REQUIRED_FIELDS": [
+    "service",
+    "domain",
+    "environment",
+    "end_time",
+    "start_time",
+    "interval",
+    "statistics"
+  ],
+  "ASSET_REQUIRED_FIELDS": [
+    "type",
+    "asset_name",
+    "statistics"
+  ],
+  "STATISTICS_TYPE": [
+    "sum",
+    "average",
+    "maximum",
+    "minimum",
+    "samplecount"
+  ],
+  "CF_REGION": "{cf-region}",
+>>>>>>> 8083550dbffd4ce8e5a490906e4e4ffbd733f1a1
   "APINAME": {
     "{conf-apikey-dev}": "{conf_stack_prefix}-dev",
     "{conf-apikey-stg}": "{conf_stack_prefix}-stg",
     "{conf-apikey-prod}": "{conf_stack_prefix}-prod"
   },
+  "STACK_PREFIX": "{conf_stack_prefix}",
   "APIGEE": {
     "STATISTICS_MAP": {
       "average": "avg",

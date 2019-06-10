@@ -87,7 +87,7 @@
                 <h1>CONFIRMATION</h1>
                 <div class="delete-service-popup-content message">
                         <div class='oops'>Oops!</div>
-                        <div class="ctc-us">something went wrong while fetching data<br><a (click)="deleteServiceInit()">REFRESH</a> to give it another try.</div>
+                        <div class="ctc-us">{{errorMessage}}</div>
                         <br><div class='ctc-us'>If the problem persists, <a (click)='goToAbout("about")'> contact us</a>.</div>
                 </div>
                 <div class="footer-btns" [class.invisible]="isLoading">

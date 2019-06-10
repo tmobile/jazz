@@ -51,7 +51,9 @@ function sendReq(client, params, users_list) {
 
         if (data.PaginationToken) {
           params.PaginationToken = data.PaginationToken
-          sendReq(client, params, users_list);
+          sendReq(client, params, users_list)
+          .then(res => resolve(res))
+          .catch(err => reject(err));
         } else {
           let email_list = [];
           users_list.forEach(each => {

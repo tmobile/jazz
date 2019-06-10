@@ -33,12 +33,22 @@ describe('register', () => {
   
     it('backtologin', () => {
       JazzServices_po.navigateToJazzGet();
-      browser.wait(EC.visibilityOf(register_po.getLoginButton()), timeOutHigh);
-      browser.driver.switchTo().activeElement();
-      register_po.getLoginButton().click();
-      browser.driver.switchTo().activeElement();
-      browser.wait(EC.visibilityOf(register_po.getRegister()), timeOutHigh);
-      register_po.getRegister().click();
+      register_po.getLoginButton().isPresent().
+      then(function() { 
+        browser.driver.switchTo().activeElement();
+        register_po.getLoginButton().click();
+        browser.driver.switchTo().activeElement();
+      }, function(err) { 
+        console.log(err);
+        throw new Error("Page is not uploaded");
+      });
+      register_po.getRegister().isPresent().
+      then(function() { 
+        register_po.getRegister().click();
+      }, function(err) { 
+        console.log(err);
+        throw new Error("Button is not uploaded");
+      });
       browser.sleep(4000);
       register_po.getBackToLogin().click();
     });
