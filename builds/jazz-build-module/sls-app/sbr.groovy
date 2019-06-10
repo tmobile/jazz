@@ -41,7 +41,7 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
     Map<String, Object> transformedYmlTreelet = transformer.transform(origAppYmlFile);
     Map<String, SBR_Rule> path2MandatoryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value instanceof SBR_Rule && item.value.isMandatory) acc.put(item.key, item.value); return acc}
 
-    Map<String, Object> mandatoryYmlTreelet = retrofitMandatoryFields(path2MandatoryRuleMap, config, context)
+    Map<String, Object> mandatoryYmlTreelet = retrofitMandatoryFields(path2MandatoryRuleMap, config, context, transformer.path2OrigRuleMap)
 
     Map<String, Object> ymlOutput = merge(mandatoryYmlTreelet, transformedYmlTreelet) // Order of arguments is important here because in case of collision we want the user values to overwrite the default values
 
@@ -66,6 +66,7 @@ class Transformer {
   private Map<String, SBR_Rule> path2RulesMap;
   private Map<String, SBR_Rule> templatedPath2RulesMap;
   private Map<String, SBR_Rule> path2MandatoryRuleMap;
+  private Map<String, List> path2OrigRuleMap = [:];
 
   public Transformer(aConfig, aContext, aPath2RulesMap) {
     config = aConfig;
@@ -91,6 +92,9 @@ class Transformer {
     String[] targetPathSegments = targetPath.split("/")
 
     targetPathSegments.eachWithIndex{seg, idx -> if(templatedPathSegments[idx] == "*") val2Ret.add(targetPathSegments[idx])}
+
+    if(path2OrigRuleMap[(templatedPath)] ) path2OrigRuleMap[(templatedPath)].add(targetPath)
+    else path2OrigRuleMap[(templatedPath)] = new ArrayList(); path2OrigRuleMap[(templatedPath)].add(targetPath)
 
     return val2Ret
   }
@@ -184,6 +188,13 @@ class JsonValidator implements TypeValidator {
   public void isValid(def aValue) {
     if(!aValue instanceof JSONObject)
      throw new IllegalArgumentException("Invalid Json: " + aValue + " is of type: " + aValue?.class);
+  }
+}
+
+class DeploymentStageNameValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    if(!(aValue == "prod" || aValue == "stg" || aValue.endsWith("dev")))
+    throw new IllegalArgumentException("Invalid stage : " + aValue );
   }
 }
 
@@ -433,6 +444,7 @@ enum SBR_Type {
    EVENT("event", new EventValidator()),
    RESOURCE("resource", new ResourceValidator()),
    AWS_POLICY("aws-policy",  new PolicyValidator()), // TODO Must provide a validator
+   DEPLOYMENT_STAGE("deployment-stage", new DeploymentStageNameValidator()),
    MAP("[:]", new MapValidator()),
    LIST("[]", new ListValidator()),
    SEQUENCE("sequence", new SequenceValidator())    // TODO Must provide a validator

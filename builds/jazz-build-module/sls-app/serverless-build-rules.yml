@@ -70,14 +70,9 @@ provider:
 
 
   stage: # It will be setup automagically so you may not want to touch it
-    sbr-type: enum
+    sbr-type: deployment-stage
     sbr-render: config-wins
     sbr-mandatory: true
-    sbr-constraint:
-      sbr-enum:
-        - dev
-        - prod
-        - stg
     sbr-value:
       sbr-formula: ${context.environment_logical_id}
       sbr-example: dev
