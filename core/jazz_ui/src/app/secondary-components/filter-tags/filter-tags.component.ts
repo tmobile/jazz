@@ -49,7 +49,7 @@ export class FilterTagsComponent implements OnInit {
         },
         {
             key:'Asset Type',
-            value:'lambda'
+            value:'all'
         }
             
     ];
@@ -72,7 +72,7 @@ export class FilterTagsComponent implements OnInit {
         filter_Region_default:any='reg 1';
         filter_Env_default:any='prod';
         filter_Method_default:any='POST';
-        filter_Asset_default:any = 'lambda';
+        filter_Asset_default:any = 'all';
 
 
     constructor(private cache: DataCacheService){

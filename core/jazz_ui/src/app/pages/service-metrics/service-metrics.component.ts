@@ -69,7 +69,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       options: ['Sum', 'Average'],
       values: ['Sum', 'average'],
       selected: 'Sum'
-    },
+    }
   ];
 
   public form;
@@ -151,6 +151,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           if(assets){
             self.assetWithDefaultValue = assets;
             let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
+            validAssetList.splice(0,0,'all');
             self.assetWithDefaultValue = validAssetList;
             if(validAssetList.length){
               for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
@@ -332,12 +333,14 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         service: this.service.name,
         environment: this.filters.getFieldValueOfLabel('ENVIRONMENT') || this.activatedRoute.snapshot.params['env'] || 'prod',
         start_time: this.filters.getFieldValueOfLabel('TIME RANGE').range,
-        asset_type: this.assetSelected,
         end_time: moment().toISOString(),
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
         statistics: this.filters.getFieldValueOfLabel('AGGREGATION')
       }
     };
+    if(this.assetSelected !== 'all') {
+      request.body['asset_type'] = this.assetSelected;
+    }
     return this.http.post(request.url, request.body, this.service.id)
       .toPromise()
       .then((response) => {

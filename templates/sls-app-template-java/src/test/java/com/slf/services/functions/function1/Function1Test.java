@@ -14,7 +14,7 @@ public class Function1Test {
 
 	private Function1 f1 = new Function1();
 
-	public  Context context = new ContextStub("Function1-dev");
+	public  Context context = new ContextStub("instprefx-java-pkg-sls-45665-dev-function1");
 
 	@Test
 	public void shouldExecuteRequest() {

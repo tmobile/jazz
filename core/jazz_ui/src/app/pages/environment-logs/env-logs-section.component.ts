@@ -434,23 +434,21 @@ export class EnvLogsSectionComponent implements OnInit {
    }, self.service.id).toPromise().then((response:any)=>{
 	   if(response&&response.data&&response.data.assets){
 		    let assets=_(response.data.assets).map('asset_type').uniq().value();
-			let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
-			self.assetWithDefaultValue = validAssetList;
-			if(validAssetList.length){
-				for(var i=0;i<self.assetWithDefaultValue.length;i++){
-					self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
-				}
-				self.assetSelected=validAssetList[0].replace(/_/g ," ");
-				if(!data){
-				self.payload.asset_type = self.assetSelected.replace(/ /g ,"_");
-				}
-				self.callLogsFunc();
-				self.getFilter(self.advancedFilters);
-				self.instance_yes.showAsset = true;
-				self.instance_yes.assetSelected = validAssetList[0].replace(/_/g ," ");
-			}		    
+			 let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
+			 validAssetList.splice(0, 0, 'all');
+			 self.assetWithDefaultValue = validAssetList;
+			 for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
+				 self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
+			 }
+			self.assetSelected=validAssetList[0].replace(/_/g ," ");
+			 if (!data) {
+				 self.assetSelected = validAssetList[0].replace(/_/g, " ");
+			 }
+			self.callLogsFunc();
+			self.getFilter(self.advancedFilters);
+			self.instance_yes.showAsset = true;
+			self.instance_yes.assetSelected = validAssetList[0].replace(/_/g ," ");
 		}
-		self.callLogsFunc();
    })
    .catch((error) => {
 	   return Promise.reject(error);
@@ -551,7 +549,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		  
 			break;
 		  }
-		  case 'asset':{        this.instance_yes.getAssetType('lambda');
+		  case 'asset':{        this.instance_yes.getAssetType('all');
 		  
 		    break;
 		  }
@@ -563,7 +561,7 @@ export class EnvLogsSectionComponent implements OnInit {
 				this.instance_yes.onregSelected('reg 1');
 				this.instance_yes.onEnvSelected('prod');
 				this.instance_yes.onMethodListSelected('POST');
-				this.instance_yes.getAssetType('lambda');
+				this.instance_yes.getAssetType('all');
 				break;
 		  	}
 		}
@@ -604,8 +602,13 @@ export class EnvLogsSectionComponent implements OnInit {
 		  }
 		  case 'asset' :{
 			  this.FilterTags.notify('filter-Asset',event.value)
-			  this.assetSelected=event.value;
-			  this.payload.asset_type = this.assetSelected.replace(/ /g ,"_");
+				this.assetSelected=event.value;
+				if (this.assetSelected !== 'all') {
+					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
+				}
+				else {
+					delete this.payload['asset_type'];
+				}
 			  this.resetPayload();
 			  break;
 		  }
@@ -641,11 +644,13 @@ export class EnvLogsSectionComponent implements OnInit {
 			"environment": this.env, //"dev"
 			"category": this.service.serviceType,//"api",//
 			"size": this.limitValue,
-			"asset_type":this.assetSelected,
 			"offset": this.offsetValue,
 			"type": this.filterloglevel || "ERROR",
 			"end_time": (new Date().toISOString()).toString(),
 			"start_time": new Date(todayDate.setDate(todayDate.getDate() - this.sliderFrom)).toISOString()
+		}
+		if( this.assetSelected !== 'all') {
+			this.payload["asset_type"] = this.assetSelected;
 		}
 		this.callLogsFunc();
 		this.filter = new Filter(this.logs);
