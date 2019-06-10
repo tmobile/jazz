@@ -96,6 +96,27 @@ def getEnvironmentInfo() {
 	}
 }
 
+def getEnvDeploymentDecscriptor() {
+    def envdeploymentdescriptor =null
+	if (g_environment_logical_id == null && g_service_config['domain'] != "jazz") {
+		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" \
+     -H \"Jazz-Service-ID: ${g_service_config['service_id']}\" \
+     -H \"Authorization: $g_login_token \" \
+     -X GET \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
+		 
+		if( getEnvironments ) {
+			def environmentsData =  parseJson(getEnvironments)
+			for( env in environmentsData.data.environment) {
+				if(env['logical_id'] == g_environment_logical_id) {
+					envdeploymentdescriptor = env['deployment_descriptor']
+				}
+			}
+		}
+	}
+	return envdeploymentdescriptor
+}
+
+
 /**
  * @param environment_logical_id
  */

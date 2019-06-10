@@ -29,6 +29,7 @@ import groovy.json.JsonSlurperClassic
 @Field def lambdaEvents
 @Field def aclModule
 @Field def whiteListModule
+@Field def env_deployment_descriptor
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -258,6 +259,7 @@ node {
 					for (_envId in environmentIds) {
 						current_environment_id = _envId
 						loadServerlessYml(service_config, _envId)
+						environmentMetadataLoader.setEnvironmentLogicalId(_envId)
 						try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
@@ -267,7 +269,6 @@ node {
 							}
 							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-
 							echo 'undeploying function for environment: ' + _envId
 
 							cleanupEventSourceMapping(_envId)
@@ -1094,7 +1095,9 @@ def LoadConfiguration() {
 
 def loadServerlessYml(config, env){
 	sh "rm -f ./serverless.yml" // remove if exists
-	def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader) // Generating the deployment descriptor
+	//Get deployment descriptor from environments
+  env_deployment_descriptor = environmentMetadataLoader.getEnvDeploymentDecscriptor()
+	def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader, env_deployment_descriptor) // Generating the deployment descriptor
 	echo "prepareServerlessYml = ${deploymentDescriptor}"
 	writeYaml(file: './serverless.yml', data: deploymentDescriptor)
 }

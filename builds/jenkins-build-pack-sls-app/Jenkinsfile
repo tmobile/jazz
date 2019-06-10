@@ -27,6 +27,7 @@ import groovy.transform.Field
 @Field def awsAPIGatewayModule
 @Field def accountDetails
 @Field def accountDetailsPrimary
+@Field def env_deployment_descriptor
 
 @Field def auth_token = ''
 @Field def config
@@ -121,6 +122,10 @@ node() {
     if (!environment_logical_id && config['domain'] != 'jazz') {
       error "The environment has not been created yet and its missing the environment id"
     }
+    //set g_environment_logical_id
+    environmentDeploymentMetadata.setEnvironmentLogicalId(environment_logical_id)
+    //Get deployment descriptor from environments
+    env_deployment_descriptor = environmentDeploymentMetadata.getEnvDeploymentDecscriptor()
   }
   if (!events) {
     error "Can't load events module"
@@ -149,7 +154,7 @@ node() {
 
   dir(repo_name) {
   /* Writing the file from config */
-    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, environment_logical_id, configLoader) // Generating the deployment descriptor
+    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, environment_logical_id, configLoader, env_deployment_descriptor) // Generating the deployment descriptor
     echo "prepareServerlessYml = ${deploymentDescriptor}"
     writeYaml(file: './serverless.yml', data: deploymentDescriptor)
 
