@@ -2,7 +2,7 @@ export const goTemplate = {
     template:
 `functions: 
     function1: 
-      handler: function1/main
+      handler: functions/function1/main
     function2: 
-      handler: function2/main`
+      handler: functions/function2/main`
 };

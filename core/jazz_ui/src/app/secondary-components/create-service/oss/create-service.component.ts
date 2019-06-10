@@ -99,7 +99,6 @@ export class CreateServiceComponent implements OnInit {
   isDescriptorEmpty: boolean = false;
   resMessage:string='';
   cdnConfigSelected:boolean = false;
-  descriptorSelected:boolean = false;
   focusindex:any = -1;
   scrollList:any = '';
   toast : any;
@@ -235,7 +234,6 @@ export class CreateServiceComponent implements OnInit {
     this.serviceRequested = false;
     this.serviceRequestFailure = false;
     this.serviceRequestSuccess = false;
-    this.descriptorSelected = false;
     this.onClose.emit(false);
   }
 
@@ -349,10 +347,7 @@ export class CreateServiceComponent implements OnInit {
 
   }
 
-  descriptorChanged(){
-    this.descriptorSelected = !this.descriptorSelected;
-    this.onFilterSelected('Function Template');
-  }
+
 
   onWebSelectionChange(val){
     this.webtime = val;
@@ -563,13 +558,8 @@ export class CreateServiceComponent implements OnInit {
       }
     }
     else if(this.typeOfService == 'sls-app'){
-      payload["service_type"] = "sls-app";
-      if(this.descriptorSelected){
-        payload["deployment_descriptor"] = this.deploymentDescriptorText;
-      } else {
-        payload["deployment_descriptor"] = ""
-      }
-
+      payload["service_type"] = "sls-app";        
+      payload["deployment_descriptor"] = this.deploymentDescriptorText;
       payload["deployment_targets"]={"sls-app":"aws_sls-app"};
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
@@ -649,7 +639,6 @@ export class CreateServiceComponent implements OnInit {
     this.serviceRequested = false;
     this.serviceRequestSuccess = false;
     this.serviceRequestFailure = false;
-    this.descriptorSelected = false;
 
   }
 
