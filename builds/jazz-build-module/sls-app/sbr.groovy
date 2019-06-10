@@ -5,7 +5,7 @@ import org.json.*
 @Field def whitelistValidator
 @Field def sbrContent
 
-println "sbr.groovy is being loaded"
+echo "sbr.groovy is being loaded"
 
 
 
@@ -87,14 +87,12 @@ class Transformer {
 
   List<String> resolveAsterisks(String templatedPath, String targetPath) {
     List<String> val2Ret = []
-    println "templatedPath: $templatedPath"
     if(!templatedPath.contains("*")) return val2Ret
 
     String[] templatedPathSegments = templatedPath.split("/")
     String[] targetPathSegments = targetPath.split("/")
 
     targetPathSegments.eachWithIndex{seg, idx ->
-    println "templatedPathSegments[idx]: ${templatedPathSegments[idx]}"
     if(templatedPathSegments[idx] == "*") val2Ret.add(targetPathSegments[idx])}
 
     return val2Ret
@@ -979,7 +977,8 @@ def Map merge(Map[] sources) {
 
     sources.inject([:]) { result, source ->
       source.each { k, v ->
-          result[k] = result[k] instanceof Map ? merge(result[k], v) : v
+          result[k] = (result[k] instanceof Map && v instanceof Map ) ?  merge(result[k], v) :
+          (v instanceof List ) ?  merge(result[k], v[0]) : v
       }
       return result
     }
@@ -1020,7 +1019,6 @@ def retrofitMandatoryFields(String              aPath,
   if(rule.type.isList()) userDefaultValue = []
   lastHandler[lastName] = rule.applyRule(userDefaultValue, aPath, config, context)
 
-  println "ymlTree : $ymlTree"
   return ymlTree
 }
 
@@ -1036,7 +1034,6 @@ def getLeafPath (String templatedPath, Map<String, List> path2OrigRuleMap) {
   def pathKeyArr = makeList(templatedPath.split('/'))
   def pathTempKeyList = path2OrigRuleMap.findAll { entry -> entry.key.split('/').size() == pathKeyArr.size() }
                                          .max { res, item ->  res.value.size() <=> item.value.size() }
-  println "pathTempKeyList : $pathTempKeyList"
 
   return pathTempKeyList.value
 }
@@ -1082,21 +1079,15 @@ def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
   def targetedPaths = new ArrayList()
   if((item.key).toString().contains("*")) {
     targetedPaths = findTargetPath (item.key, path2OrigRuleMap)
-     println "targetedPaths : ${targetedPaths}"
   } else
     targetedPaths.add(item.key)
 
   targetedPaths.each {
-      println "path : $path"
       ymlTreeList.add(retrofitMandatoryFields(path, item.value, config, context))
     }
 
-  // TODO TO AADD LIST
    def accCopy = [:]; if(acc != null) accCopy << acc;
-    println "acc : $acc"
-     println "accCopy : $accCopy"
    acc  = merge(accCopy, ymlTreelet);
-   println "acc : $acc"
    return acc;}
   return accumulator
 }
