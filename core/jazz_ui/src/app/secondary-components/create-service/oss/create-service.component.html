@@ -338,14 +338,10 @@
                         </div>
                         <div class="">
                             <section class="pad-left0">
-                                <div class="slack-checkbox custom-cb" >
-                                    <input type="checkbox" id="checkbox-descriptor" class="ng-untouched ng-valid ng-dirty ng-valid-parse" aria-invalid="false" [checked]="descriptorSelected" (change)="descriptorChanged()">
-                                    <label for="checkbox-descriptor" ></label>
-                                    <div class="cb-status-dets"> Yes, specify deployment details</div>
-                                </div>
-                                <filters *ngIf="descriptorSelected" class="filters" [filtersList]="deploymentDescriptorFilterData" [multiple]="false" [selectedList]="selectedList" (onSelected)="onFilterSelected($event)"></filters>
+                               
+                                <filters  class="filters" [filtersList]="deploymentDescriptorFilterData" [multiple]="false" [selectedList]="selectedList" (onSelected)="onFilterSelected($event)"></filters>
 
-                                <div *ngIf="descriptorSelected" class="input-field-container">
+                                <div  class="input-field-container">
                                     <div class="input-wrapper">
                                         <textarea rows="2" cols="50" name="deploymentDescriptorText" type="text" class="textForm descriptor" id="deploymentDescriptorText" [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
                                         <p class="descriptorError" *ngIf="isDescriptorEmpty">Please enter the valid Deployment Descriptor.</p>

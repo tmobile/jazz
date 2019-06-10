@@ -140,41 +140,53 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     this.ngAfterViewInit();
   }
   getAssetType(data?) {
-    let self = this;
-    return self.http.get('/jazz/assets', {
-      domain: self.service.domain,
-      service: self.service.name,
-    }, self.service.id).toPromise().then((response: any) => {
-      if (response && response.data && response.data.assets) {
-        let assets = _(response.data.assets).map('asset_type').uniq().value();
-        self.assetWithDefaultValue = assets;
-        let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
-        validAssetList.splice(0,0,'all');
-        self.assetWithDefaultValue = validAssetList;
-        for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
-          self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
+    try{
+      let self = this;
+      return self.http.get('/jazz/assets', {
+        domain: self.service.domain,
+        service: self.service.name,
+      }, self.service.id).toPromise().then((response: any) => {
+        if (response && response.data && response.data.assets) {
+          let assets = _(response.data.assets).map('asset_type').uniq().value();
+          if(assets){
+            self.assetWithDefaultValue = assets;
+            let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
+            validAssetList.splice(0,0,'all');
+            self.assetWithDefaultValue = validAssetList;
+            if(validAssetList.length){
+              for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
+                self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
+              }
+              self.assetFilter = {
+                column: 'Filter By:',
+                label: 'ASSET TYPE',
+                options: this.assetList,
+                values: validAssetList,
+                selected: validAssetList[0].replace(/_/g, " ")
+              };
+              if (!data) {
+                self.assetSelected = validAssetList[0].replace(/_/g, " ");
+              }
+              this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
+              self.assetSelected = validAssetList[0].replace(/ /g, "_");
+              let assetField = self.filters.getFieldValueOfLabel('ASSET TYPE');
+              if (!assetField) {
+                self.formFields.splice(0, 0, self.assetFilter);
+                self.filters.setFields(self.formFields);
+              }
+            }
+            
+          }          
         }
-        self.assetFilter = {
-          column: 'Filter By:',
-          label: 'ASSET TYPE',
-          options: this.assetList,
-          values: validAssetList,
-          selected: validAssetList[0].replace(/_/g, " ")
-        };
-        if (!data) {
-          self.assetSelected = validAssetList[0].replace(/_/g, " ");
-        }
-        self.assetSelected = validAssetList[0].replace(/ /g, "_");
-        let assetField = self.filters.getFieldValueOfLabel('ASSET TYPE');
-        if (!assetField) {
-          self.formFields.splice(0, 0, self.assetFilter);
-          self.filters.setFields(self.formFields);
-        }
-      }
-    })
+      })
       .catch((error) => {
         return Promise.reject(error);
       })
+    }
+    catch(ex){
+      console.log('ex:',ex);
+    }
+    
   }
 
   getEnvironments() {

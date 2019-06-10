@@ -1,8 +1,11 @@
 export const javaTemplate = {
-    template:
-`functions:
-    function1:
-      handler: function1/com.slf.services.Handler
-    function2:
-      handler: function2/com.slf.services.Handler`
+  template:
+`package:
+  artifact: target/sls-app-java-template-1.0.jar
+
+functions:
+ function1:
+   handler: com.slf.services.Function1
+ function2:
+   handler: com.slf.services.Function2`
 };

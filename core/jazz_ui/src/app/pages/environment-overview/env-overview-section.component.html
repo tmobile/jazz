@@ -287,10 +287,10 @@
 		<textarea class="text-area" [disabled]="textarea"  (ngModelChange)="textChanged  && lineNumbers()"
 		 [(ngModel)]="yaml" id="yaml" name="yaml" (blur)='checkYaml()'></textarea>
 	   </div>
-		<div *ngIf="isCancel">
-		<p class = "validation" *ngIf="isvalid">Valid Yaml file.</p>
-		<p class = "validation" *ngIf="invalid">Invalid Yaml file.</p>
-		</div>
+	</div>
+	<div class="valid" *ngIf="isCancel">
+		<p class="validation" *ngIf="isvalid">Valid Yaml file.</p>
+		<p class="invalidation" *ngIf="!isvalid">Invalid Yaml file.</p>
 	</div>
 </div>
 <div class="loading-outer-div" [class.show]="isLoading">

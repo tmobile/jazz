@@ -78,7 +78,6 @@ export class EnvOverviewSectionComponent implements OnInit, AfterViewInit {
   toastmessage:any;
   copyLink:string="Copy Link";
   disableSave:boolean = true;
-  invalid:boolean = false;
  
   errMessage: string = "Something went wrong while fetching your data";
   message:string="lalalala"
@@ -220,7 +219,7 @@ popup(state){
         this.isvalid = true;
         this.disableSave = false;
       }).catch((error) => {
-        this.invalid = true;
+        this.isvalid = false;
       });
     }
     else{
@@ -275,7 +274,6 @@ popup(state){
     this.isCancel = false;
     this.disableSave = true;
     this.lineNumbers();
-    this.invalid = false;
     this.isvalid = false;
 }
   onCancelClick(){

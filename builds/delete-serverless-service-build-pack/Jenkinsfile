@@ -1278,7 +1278,7 @@ def loadBuildModules(buildModuleUrl){
     echo "whitelist-validator-module module loaded successfully"
 
 		slsBuildRules = load "sls-app/sbr.groovy"
-		slsBuildRules.initialize(whiteListModule)
+		slsBuildRules.initialize(steps,whiteListModule)
 		echo "sls-app/sbr.groovy has been loaded"
 	}
 }
