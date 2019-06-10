@@ -28,11 +28,13 @@ const logger = require("./components/logger.js")(); //Import the logging module.
 const utils = require("./components/utils.js"); //Import the utils module.
 const validateUtils = require("./components/validation.js");
 const request = require('request');
-const monitorManagementClient = require('azure-arm-monitor');
-const msRestAzure = require('ms-rest-azure');
 const momentDurationFormatSetup = require("moment-duration-format");
 const global_config = require("./config/global-config.json");
 const metricConfig = require("./components/metrics.json");
+
+var armMonitor = require("@azure/arm-monitor");
+var msRestNodeAuth = require("@azure/ms-rest-nodeauth");
+
 
 function handler(event, context, cb) {
   var errorHandler = errorHandlerModule();
@@ -606,7 +608,7 @@ function azureMetricDefinitions(config, assetParam) {
     subscriptionId = config.AZURE.SUBSCRIPTIONID;
 
     // to obtain the azure credentials
-    msRestAzure.loginWithServicePrincipalSecret(
+    msRestNodeAuth.loginWithServicePrincipalSecretWithAuthResponse(
       config.AZURE.CLIENTID,
       config.AZURE.PASSWORD,
       config.AZURE.TENANTID,
@@ -621,7 +623,7 @@ function azureMetricDefinitions(config, assetParam) {
         } else {
 
           // to create an azure client
-          const client = new monitorManagementClient(credentials, subscriptionId);
+          const client = new armMonitor.MonitorManagementClient(credentials, subscriptionId);
           //const uri = `/subscriptions/${subscriptionId}${resourceid}`
           const uri = `${resourceid}`
 
@@ -669,14 +671,14 @@ function azureMetricDetails(definitions, config, assetParam, eventBody) {
     subscriptionId = config.AZURE.SUBSCRIPTIONID;
 
     // to obtain the azure credentials
-    msRestAzure.loginWithServicePrincipalSecret(
+    msRestNodeAuth.loginWithServicePrincipalSecretWithAuthResponse(
       config.AZURE.CLIENTID,
       config.AZURE.PASSWORD,
       config.AZURE.TENANTID,
       (err, credentials) => {
 
         // create an azure client
-        const client = new monitorManagementClient(credentials, subscriptionId);
+        const client = new armMonitor.MonitorManagementClient(credentials, subscriptionId);
         var options = {'metricnames': names.join()}
         options['interval'] = moment.duration(60, "minutes");
         options['timespan'] = eventBody.start_time + "/" + eventBody.end_time;

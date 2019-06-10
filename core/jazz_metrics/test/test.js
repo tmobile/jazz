@@ -535,12 +535,6 @@ describe('jazz_metrics', function () {
         statistics: 'Average'
       }
       ];
-      const getActualParam = sinon.stub(index, "getActualParam").resolves("resObj");
-      const getApigeeParam = sinon.stub(index, "getApigeeParam").resolves("resObj");
-      const getNameSpaceAndMetricDimensons = sinon.stub(utils, "getNameSpaceAndMetricDimensons").returns({
-        nameSpace: "namSpace",
-        paramMetrics: ["metric1", "metric2"]
-      });
       index.validateAssets(assetsArray, event.body)
         .then(res => {
           expect(res[0]).to.have.all.deep.keys('nameSpace', 'actualParam', 'userParam');

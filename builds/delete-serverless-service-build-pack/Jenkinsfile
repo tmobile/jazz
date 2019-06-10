@@ -194,10 +194,10 @@ node {
       }
     }
   }
-	else {
-		dir(repo_name){
+  else {
+    dir(repo_name){
 			switch (flowType) {
-				case "API":
+			  case "API":
 					stage('Undeploy Service') {
 						updateServiceNameConfig()
 						def path = getResourcePath()
@@ -244,7 +244,7 @@ node {
 					}
 					break
 
-				case "LAMBDA":
+			  case "LAMBDA":
 					stage('Undeploy Service') {
 						updateServiceNameConfig()
 
@@ -282,7 +282,7 @@ node {
 					}
 					break
 
-				case "WEBSITE":
+			  case "WEBSITE":
 					stage('Undeploy Website') {
 						for (_envId in environmentIds) {
 							current_environment_id = _envId

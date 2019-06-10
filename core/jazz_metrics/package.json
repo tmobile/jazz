@@ -14,8 +14,9 @@
   "dependencies": {
     "aws-arn-parser": "*",
     "lodash": "*",
-    "azure-arm-monitor": "*",
-    "ms-rest-azure": "*",
+    "@azure/arm-monitor": "*",
+    "@azure/ms-rest-azure-js": "*",
+    "@azure/ms-rest-nodeauth": "*",
     "moment-timezone": "*",
     "moment-duration-format": "*",
     "moment": "^2.22.2",
