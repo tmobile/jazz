@@ -535,7 +535,6 @@ function:
     handler:
       sbr-type: path
       sbr-render: user-only
-      sbr-mandatory: true  #TODO to Remove
       sbr-value:
         sbr-example: index.handler
 
@@ -554,7 +553,6 @@ function:
     memorySize: # memorySize for this specific function.
       sbr-type: int
       sbr-render: user-wins
-      sbr-mandatory: true  #TODO to Remove
       sbr-constraint:
         sbr-from: 256
         sbr-to: 2048
@@ -579,7 +577,6 @@ function:
     timeout:
       sbr-type: int
       sbr-render: user-wins
-      sbr-mandatory: true  #TODO to Remove
       sbr-constraint:
         sbr-from: 100
         sbr-to: 500

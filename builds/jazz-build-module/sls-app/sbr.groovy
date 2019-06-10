@@ -916,8 +916,6 @@ def extractNonPrimary(Map<String, SBR_Rule> aPath2RuleMap) {
 }
 
 Map<String, SBR_Rule> explodeNonPrimaryRule(aRule, String prefix) {
-  echo "explodeNonPrimaryRule aRule : $aRule"
-  echo "explodeNonPrimaryRule prefix : $prefix"
   return convertRuleForestIntoLinearMap(aRule.template).inject([:]){acc, item -> acc.put(prefix+"/"+"*"+item.key, item.value); return acc}
 }
 
@@ -1143,32 +1141,5 @@ def prepareServerlessYml(aConfig, env, configLoader) {
 	return resultingDoc
 }
 
-
-@Grab('org.yaml:snakeyaml:1.17')
-import org.yaml.snakeyaml.Yaml
-parser = new Yaml()
-config = ["service_id": "4a053679-cdd4-482a-a34b-1b83662f1e81",
-              "service": "olegservice28",
-              "domain": "olegdomain28",
-              "created_by": "admin",
-              "type":"sls-app",
-              "runtime":"nodejs8.10",
-              "region":"us-west-2b",
-              "providerRuntime":"nodejs8.10",
-               "providerTimeout":160,
-               "providerMemorySize":256
-              ]
-
-context =  ["INSTANCE_PREFIX": "slsapp19"]
-
-Map<String, Object> initialSmallServerless = parser.load(new File("/Users/U44693/Documents/groovytest/test.yml").text) // Here provide a path to overly simplistic serverless.yml like
-//service:
-//  name: myService
-//  awsKmsKeyArn: arn:aws:kms:us-east-1:XXXXXX:key/some-hash
-Map<String, Object> sbrContent = parser.load(new File("/Users/U44693/Documents/groovytest/build-rule.yml").text) // Here provide a path to your serverless-build-rules.yml
-
-Map<String, Object> resultingServerless = processServerless(initialSmallServerless, sbrContent, config, context)
-
-echo "resultingServerless : $resultingServerless"
 
 return this
