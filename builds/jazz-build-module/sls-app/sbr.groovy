@@ -1080,13 +1080,12 @@ def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
   } else
     targetedPaths.add(item.key)
 
-  targetedPaths.each {
-      ymlTreeList.add(retrofitMandatoryFields(path, item.value, config, context))
-    }
-
-   def accCopy = [:]; if(acc != null) accCopy << acc;
-   acc  = merge(accCopy, ymlTreelet);
-   return acc;}
+  targetedPaths.each { entry ->
+    def ymlTreelet = retrofitMandatoryFields(entry, item.value, config, context)
+    def accCopy = [:]; if(acc != null) accCopy << acc;
+    acc  = merge(accCopy, ymlTreelet);
+  }
+  return acc;}
   return accumulator
 }
 
