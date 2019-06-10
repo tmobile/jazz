@@ -47,7 +47,6 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
     Map<String, Object> ymlOutput = merge(mandatoryYmlTreelet, transformedYmlTreelet) // Order of arguments is important here because in case of collision we want the user values to overwrite the default values
 
     return ymlOutput
-
 }
 
 def Map<String, String> allRules(Map<String, Object> origAppYmlFile,
@@ -99,7 +98,6 @@ class Transformer {
     targetPathSegments.eachWithIndex{seg, idx -> if(templatedPathSegments[idx] == "*") val2Ret.add(targetPathSegments[idx])}
 
     return val2Ret
-
   }
 
 
@@ -977,10 +975,11 @@ def Map merge(Map[] sources) {
     if (sources.length == 1) return sources[0]
 
     sources.inject([:]) { result, source ->
-        source.each { k, v ->
-            result[k] = result[k] instanceof Map ? merge(result[k], v) : v
-        }
-        return result
+      source.each { k, v ->
+          result[k] = (result[k] instanceof Map && v instanceof Map ) ?  merge(result[k], v) :
+          (v instanceof List ) ?  merge(result[k], v[0]) : v
+      }
+      return result
     }
 }
 
@@ -1004,35 +1003,86 @@ def retrofitMandatoryFields(String              aPath,
                                                 config,
                             Map<String, String> context) {
 
-
   Map<String, Object> ymlTree = [:]
   String[] segmentedPath = aPath.split("/")
+
   List<String> pathAsList = toList(segmentedPath)
 // The Jenkins groovy does not support removeLast so I had to substitute it with two following lines
   String lastName = pathAsList[pathAsList.size()-1]
   pathAsList.removeAt(pathAsList.size()-1)
   def lastHandler =  pathAsList.inject(ymlTree){acc, item -> enclose(acc, item)}
 
-
   def userDefaultValue = ""
   if(rule.type.isMap()) userDefaultValue = [:]
   if(rule.type.isList()) userDefaultValue = []
-
   lastHandler[lastName] = rule.applyRule(userDefaultValue, aPath, config, context)
 
   return ymlTree
-
 }
+
+def makeList(list) {
+    List created = new ArrayList()
+    list.each { line ->
+        created.add(line)
+    }
+    return created
+}
+
+def getLeafPath (String templatedPath, Map<String, List> path2OrigRuleMap) {
+  def pathKeyArr = makeList(templatedPath.split('/'))
+  def pathTempKeyList = path2OrigRuleMap.findAll { entry -> entry.key.split('/').size() == pathKeyArr.size() }
+                                         .max { res, item ->  res.value.size() <=> item.value.size() }
+
+  return pathTempKeyList.value
+}
+
+
+def findTargetPath (String templatedPath, Map<String, List> path2OrigRuleMap) {
+  def pathKey = path2OrigRuleMap.keySet().find { templatedPath.contains(it)  }
+  def targetedPaths = pathKey ? path2OrigRuleMap.get(pathKey) : getLeafPath(templatedPath, path2OrigRuleMap)
+
+  def pathKeyArr = makeList(templatedPath.split('/'))
+  def asteriskIdx = pathKeyArr.findIndexOf{it =="*"}
+
+  List path2OrigKey = new ArrayList()
+  for (path in targetedPaths) {
+    def pathArr = makeList(path.split('/'))
+    def pathValue = pathArr[asteriskIdx]
+    pathKeyArr[asteriskIdx] = pathValue
+    def reqPath = pathKeyArr.join("/")
+    if(reqPath.contains("*")) {
+      def commons = pathKeyArr.intersect(pathArr)
+      reqPath = commons.join("/")
+      def difference = pathKeyArr.plus(pathArr)
+      difference.removeAll(commons)
+      difference.removeAll("*")
+      def diff = difference.join("/")
+      reqPath = "${reqPath}/${diff}"
+    }
+    path2OrigKey.add(reqPath)
+  }
+
+  return path2OrigKey
+}
+
 
 /* Returning a new yml tree with paths enlisted inside the map and with associated rule result placed under */
 def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
                                                   config,
-                            Map<String, String>   context) {
-  def accumulator = aPath2RuleMap.inject([:]){acc, item -> def ymlTreelet = retrofitMandatoryFields(item.key, item.value, config, context);
-                                                           def accCopy = [:]; if(acc != null) accCopy << acc;
-                                                           acc  = merge(accCopy, ymlTreelet);
-                                                           return acc;}
+                            Map<String, String>   context,
+                            Map<String, List> path2OrigRuleMap) {
 
+  def accumulator = aPath2RuleMap.inject([:]){acc, item ->
+  def targetedPaths = new ArrayList()
+  if((item.key).toString().contains("*")) targetedPaths = findTargetPath (item.key, path2OrigRuleMap)
+  else targetedPaths.add(item.key)
+
+  targetedPaths.each { entry ->
+    def ymlTreelet = retrofitMandatoryFields(entry, item.value, config, context)
+    def accCopy = [:]; if(acc != null) accCopy << acc;
+    acc  = merge(accCopy, ymlTreelet);
+  }
+  return acc;}
   return accumulator
 }
 
@@ -1086,5 +1136,6 @@ def prepareServerlessYml(aConfig, env, configLoader) {
 
 	return resultingDoc
 }
+
 
 return this
