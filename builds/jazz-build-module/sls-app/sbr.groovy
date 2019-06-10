@@ -1045,7 +1045,7 @@ def getLeafPath (String templatedPath, Map<String, List> path2OrigRuleMap) {
   def pathTempKeyList = path2OrigRuleMap.findAll { entry -> entry.key.split('/').size() == pathKeyArr.size() }
                                          .max { res, item ->  res.value.size() <=> item.value.size() }
 
-  return pathTempKeyList.value
+  return pathTempKeyList ? pathTempKeyList.value: []
 }
 
 
