@@ -509,11 +509,11 @@ def buildSlsApp(String runtime, String repo_name) {
       sh "mkdir -p $GOPATH/src"
       sh "rsync -a --exclude='.*' $GOPATH/" + repo_name + " $GOPATH/src"
       sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
-      dirs = readDir("${env.WORKSPACE}/src/${repo_name}/functions")
+      dirs = readDir()
       def size = dirs.size()
       if( size > 0) {
         for(item in dirs) {
-          def functionpath = "$GOPATH/src/${repo_name}/functions/${item}"
+          def functionpath = "$GOPATH/src/${repo_name}/${item}"
           sh "env GOOS=linux GOARCH=amd64 go build -o functions/${item}/main ${functionpath}/main.go"
         }
       } else {
@@ -869,14 +869,16 @@ def runValidation(String runtime) {
   }
 }
 
-@NonCPS
-def readDir(dirPath) {
-  def  dirsl = []
-  new File(dirPath).eachDir() {
-    dirs -> println dirs.getName()
-    dirsl.add(dirs.getName())
+def readDir() {
+  sh "ls -al"
+  def targetPaths
+  try {
+    targetPaths = sh(returnStdout: true, script: 'ls -d functions/*').split("\n")
+    echo "completed : $targetPaths"
+  } catch (ex) {
+      echo "Error Occured while Fetching functions... $ex"
   }
-  dirsl
+  return targetPaths
 }
 
 
