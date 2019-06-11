@@ -1102,8 +1102,13 @@ def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
 * Prepare serverless.yml from
 * config
 **/
-def prepareServerlessYml(aConfig, env, configLoader) {
-	def deploymentDescriptor = aConfig['deployment_descriptor']
+def prepareServerlessYml(aConfig, env, configLoader, envdeployment_descriptor) {
+	def deploymentDescriptor = null
+  if( envdeployment_descriptor != null){
+    deploymentDescriptor = envdeployment_descriptor
+  } else {
+    deploymentDescriptor = aConfig['deployment_descriptor']
+  }
 	try {
 		def appContent = readFile('application.yml').trim()
 		if(!appContent.isEmpty()) deploymentDescriptor = appContent

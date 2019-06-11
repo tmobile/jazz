@@ -58,21 +58,22 @@
             <section class="page-content" *ngIf="selectedTab == 1">
                 <env-deployments-section #selectedTabComponent #envdeployments [service]="service" [isDeployAccess]="isDeployAccess"></env-deployments-section>
             </section>
-
+            
             <section class="page-content" *ngIf="selectedTab == 2">
-                <env-assets-section #selectedTabComponent [service]="service"></env-assets-section>
-            </section>
-
-        <section class="page-content" *ngIf="selectedTab == 3">
-          <service-metrics #selectedTabComponent [service]="service"></service-metrics>
-        </section>
-
-            <section class="page-content" *ngIf="selectedTab == 4">
             <env-codequality-section #selectedTabComponent [service]="service"></env-codequality-section>
             </section>
 
-            <section class="page-content" *ngIf="selectedTab == 5">
+            <section class="page-content" *ngIf="selectedTab == 3">
+                <env-assets-section #selectedTabComponent [service]="service"></env-assets-section>
+            </section>
+
+            <section class="page-content" *ngIf="selectedTab == 4">
                 <env-logs-section #selectedTabComponent [service]="service"></env-logs-section>
+            </section>
+
+            
+            <section class="page-content" *ngIf="selectedTab == 5">
+                <service-metrics #selectedTabComponent [service]="service"></service-metrics>
             </section>
         </div>
     </div>
