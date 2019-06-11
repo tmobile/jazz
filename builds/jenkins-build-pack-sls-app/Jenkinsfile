@@ -335,7 +335,7 @@ node() {
             if(name2ArnPair.size() > 1) {
               def arn = name2ArnPair[1].trim()
               if(arn.startsWith('arn')) {
-                 def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:102707241671:table/jazzUsersTable53
+                 def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
                  if(arnAsArray.size() > 2) { // Making sure that the third element exists
                    def artifactType = arnAsArray[2]
                    if(artifactType == 'kinesis') artifactType = 'kinesis_stream' // 'kinesis_stream' needs to be instaead of simple 'kinesis' that did not get persisted :-( by itself

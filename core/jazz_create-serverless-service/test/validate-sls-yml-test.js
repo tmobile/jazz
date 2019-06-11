@@ -126,12 +126,12 @@ functions:
           enabled: true
       - sqs:
           enabled: true
-          arn: arn:aws:sqs:us-east-1:102707241671:test
+          arn: arn:aws:sqs:us-east-1:123456789012:test
       - stream:
           type: kinesis
           startingPosition: LATEST
           enabled: true
-          arn: arn:aws:kinesis:us-east-1:102707241671:stream/hub-dev
+          arn: arn:aws:kinesis:us-east-1:123456789012:stream/hub-dev
       - s3:\n
           bucket: jaztest-bucket123
           event: s3:PutObject

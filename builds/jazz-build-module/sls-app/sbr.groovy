@@ -827,6 +827,7 @@ class SBR_Rule extends SBR_PreRule {
      def defValue = (defaultValue != null) ? defaultValue.renderValue(config, context, asteriskValues) : ""
      def theValue = render.resolve(userValue, valueRendered, defValue)
 
+
      type.validate(theValue); // This will raise the exception if type is wrong but we shave to suppliment it with path so TODO is to catch the exceotion then add the path and the re-throw it
 
      if(constraint != null && !constraint.compliant(theValue)) {
@@ -988,8 +989,7 @@ def Map merge(Map[] sources) {
 
     sources.inject([:]) { result, source ->
       source.each { k, v ->
-          result[k] = (result[k] instanceof Map && v instanceof Map ) ?  merge(result[k], v) :
-          (v instanceof List ) ?  merge(result[k], v[0]) : v
+          result[k] = (result[k] instanceof Map && v instanceof Map ) ?  merge(result[k], v) : v
       }
       return result
     }
@@ -1045,7 +1045,7 @@ def getLeafPath (String templatedPath, Map<String, List> path2OrigRuleMap) {
   def pathTempKeyList = path2OrigRuleMap.findAll { entry -> entry.key.split('/').size() == pathKeyArr.size() }
                                          .max { res, item ->  res.value.size() <=> item.value.size() }
 
-  return pathTempKeyList.value
+  return pathTempKeyList ? pathTempKeyList.value: []
 }
 
 
