@@ -139,7 +139,7 @@ export class CreateServiceComponent implements OnInit {
   public focusSQS = new EventEmitter<boolean>();
 
   selectAccountsRegions(){
-    this.accountMap = env_oss.accountMap;
+    this.accountMap = env_oss.aws.accountMap;
     this.accountList = [];
     this.regionList = [];
     this.accountMap.map((item)=>{
