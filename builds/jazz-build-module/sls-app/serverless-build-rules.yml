@@ -350,7 +350,7 @@ provider:
         - arn:aws:iam:*****:policy/some-managed-policy
 
   iamRoleStatements: # IAM role statements so that services can be accessed in the AWS account
-    sbr-type: "[aws-policy]"
+    sbr-type: "[arn-iam-policy]"
     sbr-render: user-only
     sbr-value:
       sbr-example:

@@ -827,6 +827,7 @@ class SBR_Rule extends SBR_PreRule {
      def defValue = (defaultValue != null) ? defaultValue.renderValue(config, context, asteriskValues) : ""
      def theValue = render.resolve(userValue, valueRendered, defValue)
 
+
      type.validate(theValue); // This will raise the exception if type is wrong but we shave to suppliment it with path so TODO is to catch the exceotion then add the path and the re-throw it
 
      if(constraint != null && !constraint.compliant(theValue)) {
@@ -988,8 +989,7 @@ def Map merge(Map[] sources) {
 
     sources.inject([:]) { result, source ->
       source.each { k, v ->
-          result[k] = (result[k] instanceof Map && v instanceof Map ) ?  merge(result[k], v) :
-          (v instanceof List ) ?  merge(result[k], v[0]) : v
+          result[k] = (result[k] instanceof Map && v instanceof Map ) ?  merge(result[k], v) : v
       }
       return result
     }
@@ -1102,10 +1102,10 @@ def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
 * Prepare serverless.yml from
 * config
 **/
-def prepareServerlessYml(aConfig, env, configLoader, envdeployment_descriptor) {
+def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
 	def deploymentDescriptor = null
-  if( envdeployment_descriptor != null){
-    deploymentDescriptor = envdeployment_descriptor
+  if( envDeploymenDescriptor != null){
+    deploymentDescriptor = envDeploymenDescriptor
   } else {
     deploymentDescriptor = aConfig['deployment_descriptor']
   }

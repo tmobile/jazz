@@ -284,7 +284,7 @@ describe('jazz_es-kinesis-log-stream', function () {
       it('should successfully transform the lambda logs', () => {
         let payload = {
           "messageType": "DATA_MESSAGE",
-          "owner": "102707241671",
+          "owner": "123456789012",
           "logGroup": "/aws/lambda/newsplunk-jazztest-test-api-dev",
           "logStream": "2018/09/27/[$LATEST]6c3e9188ce7f4fbcb54270ce70fed6c7",
           "subscriptionFilters": [
