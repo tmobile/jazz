@@ -200,9 +200,9 @@ export class EnvironmentDetailComponent implements OnInit {
 
   setTabs() {
     if (this.service.serviceType === 'api' || this.service.type === 'api') {
-      this.tabData = ['overview', 'deployments', 'assets', 'metrics', 'code quality', 'logs'];
+      this.tabData = ['overview', 'deployments', 'code quality', 'assets', 'logs', 'metrics'];
     } else if (this.service.serviceType === 'function' || this.service.type === 'function') {
-      this.tabData = ['overview', 'deployments', 'assets', 'metrics', 'code quality', 'logs'];
+      this.tabData = ['overview', 'deployments', 'code quality', 'assets', 'logs', 'metrics'];
     } else if (this.service.serviceType === 'website' || this.service.type === 'website') {
       this.tabData = ['overview', 'deployments', 'assets', 'metrics'];
     }
