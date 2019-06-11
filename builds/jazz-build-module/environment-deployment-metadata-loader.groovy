@@ -96,9 +96,9 @@ def getEnvironmentInfo() {
 	}
 }
 
-def getEnvDeploymentDecscriptor() {
+def getEnvDeploymentDescriptor() {
     def envdeploymentdescriptor =null
-	if (g_environment_logical_id == null && g_service_config['domain'] != "jazz") {
+	if (g_environment_logical_id != null && g_service_config['domain'] != "jazz") {
 		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" \
      -H \"Jazz-Service-ID: ${g_service_config['service_id']}\" \
      -H \"Authorization: $g_login_token \" \

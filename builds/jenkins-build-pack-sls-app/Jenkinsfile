@@ -125,7 +125,7 @@ node() {
     //set g_environment_logical_id
     environmentDeploymentMetadata.setEnvironmentLogicalId(environment_logical_id)
     //Get deployment descriptor from environments
-    env_deployment_descriptor = environmentDeploymentMetadata.getEnvDeploymentDecscriptor()
+    env_deployment_descriptor = environmentDeploymentMetadata.getEnvDeploymentDescriptor()
   }
   if (!events) {
     error "Can't load events module"
@@ -632,7 +632,12 @@ def echoServiceInfo(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
-  def deploymentDescriptor = config['deployment_descriptor']
+  def deploymentDescriptor = null
+  if( env_deployment_descriptor != null ){
+    deploymentDescriptor = env_deployment_descriptor
+  } else {
+    deploymentDescriptor = config['deployment_descriptor']
+  }
   def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
   def functionsElem = doc['functions']
   functionsElem.each{funcName, funcConfig ->
