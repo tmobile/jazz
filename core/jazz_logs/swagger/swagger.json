@@ -456,7 +456,8 @@
         "category": {
           "enum": [
             "api",
-            "function"
+            "function",
+            "sls-app"
           ],
           "type": "string",
           "description": "Service type"
