@@ -16,6 +16,7 @@
 
 'use strict';
 
+global.fetch = require('node-fetch');
 const AWSCognito = require('amazon-cognito-identity-js');
 
 const errorHandlerModule = require("./components/error-handler.js");
