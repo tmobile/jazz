@@ -99,6 +99,7 @@ export class CreateServiceComponent implements OnInit {
   isDescriptorEmpty: boolean = false;
   resMessage:string='';
   cdnConfigSelected:boolean = false;
+  isfunction: boolean = true;
   focusindex:any = -1;
   scrollList:any = '';
   toast : any;
@@ -135,6 +136,7 @@ export class CreateServiceComponent implements OnInit {
   webObject : any;
   selectedDescriptorField: any;
   webKeys : any;
+  isstartNew: boolean = false;
   deploymentTargetSelected: any;
 
   public buildEnvironment:any = environment;
@@ -241,16 +243,19 @@ export class CreateServiceComponent implements OnInit {
   onFilterSelected(event){
     if(event == "Function Template"){
       this.startNew = false;
+      this.isfunction = true;
+      this.isstartNew = false;
       this.onSelectionChange(this.runtime);
     }
     else if(event == "Start New"){
       this.startNew = true;
+      this.isstartNew = true;
+      this.isfunction = false;
       this.deploymentDescriptorText = "";
     }
     this.selectedDescriptorField = event[0];
     this.isDescriptorEmpty = false;
   }
-
   onaccountSelected(event){
     this.accountMap.map((item,index)=>{
       if((item.account + ' (' + item.accountName + ')') === event){
@@ -855,6 +860,7 @@ export class CreateServiceComponent implements OnInit {
       this.isDescriptorEmpty = false;
     }
   }
+ 
 
 
   onScroll(event){
@@ -920,8 +926,6 @@ export class CreateServiceComponent implements OnInit {
 
       }
     }
-
-
   }
 
   ngOnInit() {

@@ -574,7 +574,7 @@
 }
 
 .input-wrapper textarea {
-  padding: 10px 10px;
+  padding: 0px 10px;
   max-width: 100%;
   height: auto;
 }
@@ -947,9 +947,48 @@ transform: rotate(0deg);
 }
 }
 .descriptor{
-  border-radius: 8px !important;
-  background-color: #f3f3f3;
-  height: 13rem !important;
+  border:none;
+  resize: none;
+  height: 10rem !important;
+}
+.deployment {
+  border: 1px solid #d3d3d3;
+  border-radius: 10px !important;
+  resize:none;
+  height: 12rem !important;
+  padding: 10px 10px !important;
+}
+.magenta {
+  margin: 0px;
+  color:#ed0295;
+  margin-left: 6px;
+}
+.myservice{
+  padding: 10px;
+  letter-spacing: 0.3px;
+  background-color: rgba(215,215,215,0.3);
+}
+.parameter {
+  margin: 0px;
+}
+.main-div {
+  border: 1px solid #d3d3d3;
+  border-radius: 10px;
+}
+.service {
+  margin-left: 10px;
+  margin-bottom: 0px;
+}
+.services-name {
+  display: flex;
+}
+.non-editable {
+  height: 10rem ;
+  width: 100%;
+  border: none;
+  overflow: hidden;
+  height: 9rem;
+  background-color: rgba(215,215, 215, 0.3);
 }
 .custom-sec{
   margin:1rem 0;
