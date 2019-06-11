@@ -22,7 +22,7 @@ describe('validate-sls-yml', function () {
 
   it("should return empty resource list if all resources are allowed", function () {
     const dynamoDbOnly =
-`resources:
+      `resources:
   Resources:
     usersTable:
       Type: AWS::DynamoDB::Table
@@ -39,19 +39,19 @@ describe('validate-sls-yml', function () {
           WriteCapacityUnits: 1`;
     const outstandingResources = slsYmlValidator.validateResources(dynamoDbOnly);
 
-    assert.isTrue(outstandingResources.length==0);
+    assert.isTrue(outstandingResources.length == 0);
   });
 
   it("should return empty resource list if no resources element is present in dd", function () {
     const noResources = 'service: name';
     const outstandingResources = slsYmlValidator.validateResources(noResources);
-    assert.isTrue(outstandingResources.length==0);
+    assert.isTrue(outstandingResources.length == 0);
   });
 
 
   it("should return a non-empty list with all outstanding resources", function () {
     const dynamo_CodeCommit_Ec2 =
-`resources:
+      `resources:
   Resources:
     usersTable:
       Type: AWS::DynamoDB::Table
@@ -88,30 +88,30 @@ describe('validate-sls-yml', function () {
 `;
     const outstandingResources = slsYmlValidator.validateResources(dynamo_CodeCommit_Ec2);
 
-    assert.isTrue(outstandingResources.length==2);
+    assert.isTrue(outstandingResources.length == 2);
     assert.isTrue(outstandingResources.includes('AWS::CodeCommit::Repository'));
     assert.isTrue(outstandingResources.includes('AWS::EC2::Instance'));
   });
 
   it("should throw an exception on an invalid yml", function () {
-    const invalidYml="greeting: hello\nname:world";
+    const invalidYml = "greeting: hello\nname:world";
     let errorFlag = false;
     try {
       slsYmlValidator.validateResources(invalidYml);
-    } catch(e) {
+    } catch (e) {
       assert.equal('YAMLException', e.name);
       errorFlag = true;
     }
     assert.isTrue(errorFlag);
   });
 
-  it("should return an empty list of outstanding events if no events are not mentioned in dd", function() {
+  it("should return an empty list of outstanding events if no events are not mentioned in dd", function () {
     const justName = "service: cool";
     const outstandingEvents = slsYmlValidator.validateEvents(justName);
-    assert.isTrue(outstandingEvents.length==0);
+    assert.isTrue(outstandingEvents.length == 0);
   });
 
-  it("should return an empty list of outstanding events if all events are allowed in whitelist", function() {
+  it("should return an empty list of outstanding events if all events are allowed in whitelist", function () {
     const bunchOfAllowedEvents = `
 functions:
   handler:
@@ -137,10 +137,10 @@ functions:
           event: s3:PutObject
 `
     const outstandingEvents = slsYmlValidator.validateEvents(bunchOfAllowedEvents);
-    assert.isTrue(outstandingEvents.length==0);
+    assert.isTrue(outstandingEvents.length == 0);
   });
 
-  it("should return an outstandig event if such present", function() {
+  it("should return an outstanding event if such present", function () {
     const threeForbiddenEvents = `
 functions:
   handler:
@@ -163,13 +163,13 @@ functions:
           arn: arn:aws:firehose:us-east-1:842707241659:stream/fh
 `;
     const outstandingEvents = slsYmlValidator.validateEvents(threeForbiddenEvents);
-    assert.isTrue(outstandingEvents.length==3);
+    assert.isTrue(outstandingEvents.length == 3);
     assert.isTrue(outstandingEvents.includes('sns'));
     assert.isTrue(outstandingEvents.includes('stream:redshift'));
     assert.isTrue(outstandingEvents.includes('stream:firehose'));
   });
 
-  it("should return an outstandig events for more than one function if such present", function() {
+  it("should return an outstanding events for more than one function if such present", function () {
     const threeForbiddenEvents = `
 functions:
   handler:
@@ -199,13 +199,13 @@ functions:
     name: withoutAnyEvents
 `;
     const outstandingEvents = slsYmlValidator.validateEvents(threeForbiddenEvents);
-    assert.isTrue(outstandingEvents.length==3);
+    assert.isTrue(outstandingEvents.length == 3);
     assert.isTrue(outstandingEvents.includes('sns'));
     assert.isTrue(outstandingEvents.includes('stream:redshift'));
     assert.isTrue(outstandingEvents.includes('stream:firehose'));
   });
 
-  it("provider/iamRoleStatements: should return an empty list of outstanding actions if all actions're in whitelist", function() {
+  it("provider/iamRoleStatements: should return an empty list of outstanding actions if all actions're in whitelist", function () {
     const bunchOfAllowedActions = `
 service: new-service
 provider:
@@ -229,10 +229,10 @@ provider:
         - "ec2:CopyImage"
 `
     const outstandingActions = slsYmlValidator.validateActions(bunchOfAllowedActions);
-    assert.isTrue(outstandingActions.length==0);
+    assert.isTrue(outstandingActions.length == 0);
   });
 
-  it("provider/iamRoleStatements: should return two rogue actions", function() {
+  it("provider/iamRoleStatements: should return two rogue actions", function () {
     const twoRogueActions = `
 service: new-service
 provider:
@@ -257,13 +257,12 @@ provider:
         - "ec2:CreateLaunchTemplate"
 `
     const outstandingActions = slsYmlValidator.validateActions(twoRogueActions);
-    console.log('outstandingActions=>', outstandingActions);
-    assert.isTrue(outstandingActions.length==2);
+    assert.isTrue(outstandingActions.length == 2);
     assert.isTrue(outstandingActions.includes('ec2:CopyImage'));
     assert.isTrue(outstandingActions.includes('ec2:CreateLaunchTemplate'));
   });
 
-  it("resource/Resources/role[Type='AWS:IAM:Role]/Policies/Statement': should return an empty list of outstanding actions if all actions're in whitelist", function() {
+  it("resource/Resources/role[Type='AWS:IAM:Role]/Policies/Statement': should return an empty list of outstanding actions if all actions're in whitelist", function () {
     const bunchOfAllowedActions = `
 resources:
   Resources:
@@ -323,10 +322,10 @@ resources:
                  - kinesis:PutRecord
 `
     const outstandingActions = slsYmlValidator.validateActions(bunchOfAllowedActions);
-    assert.isTrue(outstandingActions.length==0);
+    assert.isTrue(outstandingActions.length == 0);
   });
 
-  it("resource/Resources/role[Type='AWS:IAM:Role]/Policies/Statement: should return two rogue actions", function() {
+  it("resource/Resources/role[Type='AWS:IAM:Role]/Policies/Statement: should return two rogue actions", function () {
     const twoRogueActions = `
 resources:
   Resources:
@@ -394,14 +393,8 @@ resources:
                   Action: "ec2:CreateLaunchTemplate"
     `
     const outstandingActions = slsYmlValidator.validateActions(twoRogueActions);
-    console.log('outstandingActions=>', outstandingActions);
-    assert.isTrue(outstandingActions.length==2);
+    assert.isTrue(outstandingActions.length == 2);
     assert.isTrue(outstandingActions.includes('ec2:CopyImage'));
     assert.isTrue(outstandingActions.includes('ec2:CreateLaunchTemplate'));
   });
-
-
-
-
-
 });

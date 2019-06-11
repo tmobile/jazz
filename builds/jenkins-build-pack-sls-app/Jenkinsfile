@@ -223,17 +223,18 @@ node() {
       echo 'The packaging state'
       // As per 'Every stage should send started, failed, success events in each stage'
       events.sendStartedEvent('PACKAGE', 'Packaging starts', context_map, environment_logical_id)
+      def credsId = null
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
         try {
           def randomString = utilModule.generateRequestId();
-          def credsId = "jazz-${randomString}";
+          credsId = "jazz-${randomString}";
           sh "aws configure set profile.${credsId}.region ${config.region}"
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-          sh "serverless package --stage ${environment_logical_id} -v > output.log"
+          sh "serverless package --stage ${environment_logical_id} --profile ${credsId} -v > output.log"
           // Printing out the resulting stdout and the cloud-formation template
           def outputLog = readFile('output.log').trim()
           echo "serverless packaging log $outputLog"
@@ -247,6 +248,9 @@ node() {
           def outputLog = readFile('output.log').trim()
           echo "serverless packaging log $outputLog"
           error ex.getMessage()
+        } finally {
+          // reset Credentials
+          resetCredentials(credsId)
         }
 
       }
@@ -256,17 +260,18 @@ node() {
       echo 'The template validation state'
       // As per 'Every stage should send started, failed, success events in each stage'
       events.sendStartedEvent('TEMPLATE_VALIDATION', 'Template validation starts', context_map, environment_logical_id)
+      def credsId = null
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
         try {
           def randomString = utilModule.generateRequestId();
-          def credsId = "jazz-${randomString}";
+          credsId = "jazz-${randomString}";
           sh "aws configure set profile.${credsId}.region ${config.region}"
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
           // Please refer to https://docs.aws.amazon.com/cli/latest/reference/cloudformation/validate-template.html
-          sh "aws cloudformation validate-template --template-body file://.serverless/cloudformation-template-update-stack.json --region ${config['region']} > output.log"
+          sh "aws cloudformation validate-template --template-body file://.serverless/cloudformation-template-update-stack.json --profile ${credsId} > output.log"
           def outputLog = readFile('output.log').trim()
           echo "template validation log $outputLog"
 
@@ -296,6 +301,9 @@ node() {
           def outputLog = readFile('output.log').trim()
           echo "template validation log $outputLog"
           error ex.getMessage() // raising an exception thus propagating the message to the Jenkins
+        } finally {
+          // reset Credentials
+          resetCredentials(credsId)
         }
       }
     }
@@ -306,14 +314,14 @@ node() {
 
       echo "starts Deployment to ${env_key} Env"
       events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
-
+      def credsId = null
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
         try {
           // initialize aws credentials
           def randomString = utilModule.generateRequestId();
-          def credsId = "jazz-${randomString}";
+          credsId = "jazz-${randomString}";
           sh "aws configure set profile.${credsId}.region ${config.region}"
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
@@ -323,7 +331,7 @@ node() {
 
           def envBucketKey = "${env_key}"
           echoServerlessFile()
-          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
 
 // Shoving deploy output lines into array
           def deployLines = deployOutput.split('\n')
@@ -361,8 +369,6 @@ node() {
           if (domain != "jazz") {
             createSubscriptionFilters(config, accountDetails, env_key, credsId);
           }
-					// reset Credentials
-          resetCredentials(credsId)
 
           def svc_response = echoServiceInfo(environment_logical_id)
           send_status_email(config, 'COMPLETED', svc_response)
@@ -373,6 +379,9 @@ node() {
           events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
           events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
           error ex.getMessage()
+        } finally {
+          // reset Credentials
+          resetCredentials(credsId)
         }
 
         def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
@@ -386,11 +395,11 @@ node() {
   }
 }
 
-def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, config){
+def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, config, credsId){
   def s3bucketvalue = getS3BucketValue(accountDetails , config, envBucketKey)
   echoServerlessFile()
-  sh "serverless remove --stage $environment_logical_id -v --bucket ${s3bucketvalue}"
-  def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+  sh "serverless remove --stage $environment_logical_id -v --bucket ${s3bucketvalue} --profile ${credsId}"
+  def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
   if (redeployOutput != 'success') {
     echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
     error "Exception occured while serverless deployment to ${environment_logical_id} environment"
@@ -402,10 +411,10 @@ def echoServerlessFile() {
   echo "serverless file data $serverlessyml"
 }
 
-def servelessDeploy(env, envBucketKey){
+def servelessDeploy(env, envBucketKey, credsId){
   try {
     def s3bucketvalue = getS3BucketValue(accountDetails, config, envBucketKey)
-    sh "serverless deploy --stage ${env} -v --bucket ${s3bucketvalue} > output.log"
+    sh "serverless deploy --stage ${env} -v --bucket ${s3bucketvalue} --profile ${credsId} > output.log"
     def outputLog = readFile('output.log').trim()
     echo "serverless deployment log $outputLog"
     return outputLog
@@ -646,12 +655,12 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
     def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
     try {
-      sh "aws logs create-log-group --log-group-name ${lambda} --region ${config.region}"
+      sh "aws logs create-log-group --log-group-name ${lambda} --profile ${credsId}"
     } catch (Exception ex) { } // ignore if already existing
 
     try {
       filter_json = sh(
-        script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${config['region']} --profile ${credsId}",
+        script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --profile ${credsId}",
         returnStdout: true
       ).trim()
       echo "${filter_json}"
@@ -659,7 +668,7 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
       filtername = resultJson.subscriptionFilters[0].filterName
       echo "removing existing filter... $filtername"
       if (filtername != "" && !filtername.equals(lambda)) {
-        sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${config['region']} --profile ${credsId}"
+        sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\"  --profile ${credsId}"
       }
     } catch (Exception ex) { } // ignore error if not created yet
     try {
@@ -673,9 +682,9 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
             }
           }
           updatePolicy(env_key, destARN);
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${config['region']} --profile ${credsId}"
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\"  --profile ${credsId}"
         } else {
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
         }
       }
     }
