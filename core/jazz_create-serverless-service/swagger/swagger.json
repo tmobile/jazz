@@ -266,7 +266,8 @@
           "enum": [
             "api",
             "lambda",
-            "website"
+            "website",
+            "sls-app"
           ]
         },
         "service_name": {
@@ -319,6 +320,10 @@
         "require_internal_access": {
           "type": "boolean",
           "description": "Does service require access to internal SLF network and resources"
+        },
+        "deployment-descriptor": {
+          "type": "string",
+          "description": "Deployment descriptor using serverless.yml format (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)"
         },
         "deployment_targets": {
           "type": "object",

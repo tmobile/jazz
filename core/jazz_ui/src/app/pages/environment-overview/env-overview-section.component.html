@@ -28,6 +28,8 @@
 		</div>
 	</div>
 </div>
+<div class="row-detail">
+<div class="col-detail">
 <div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined && !isLoading && !envResponseError' >
 	<ul class=" col-md-12 col-sm-12">
 		<li class='det-wrp'>
@@ -74,7 +76,7 @@
 					<div class="det-label">Description</div>
 					<div class="det-value desc" >{{services.description || 'Give me the details for your services'}}</div>
 				</li>
-				<li>
+				<li class="last-update">
 					<div class="det-label">Last Updated</div>
 					<div class="det-value" *ngIf="dayscommit" >{{commitDiff}} days ago</div>
 					<div class="det-value" *ngIf="hourscommit" >{{commitDiff}} hours ago</div>
@@ -84,7 +86,7 @@
 				<li class='hide' *ngIf='service.serviceType == "function"'>
 					<div class="det-label">Accounts</div>
 					<div class="det-value">
-						
+
                         {{selectedAccounts}}
 					</div>
 				</li>
@@ -99,11 +101,11 @@
 						</div>
 						<span class='view-all' (click)='openSidebar()'> View all</span>
 
-						<div id='popup-endp' class='popup-endp'>								
-							Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong> 
+						<div id='popup-endp' class='popup-endp'>
+							Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong>
 						</div>
-						
-                        
+
+
 					</div>
 				</li>
 			</ul>
@@ -128,7 +130,7 @@
 				</li>
 			</ul>
 		</div>
-		
+
 		<div class='overiew-edit' *ngIf="!editBtn">
 			<ul class="section-left col-md-6 col-sm-12">
 				<li>
@@ -159,7 +161,7 @@
                                                 <span (click)="removeAccount(i, selected)" class="icon-icon-close"></span>
                                             </li>
                                             <input (keydown)="keypressAccount($event)"  autocomplete="off" id="AccountInput" name="AccountInput" type="text" class="textForm" [(ngModel)]="AccountInput" (ngModelChange)="onAccountChange($event)">
-    
+
                                         </ul>
                                     </div>
                                     <div [hidden]="!showAccountList" class="approvers-list-wrap">
@@ -185,12 +187,12 @@
 						</div>
 						<span class='view-all' (click)='openSidebar()'> View all</span>
 
-						<div id='popup-endp' class='popup-endp'>								
-							Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong> 
-							
+						<div id='popup-endp' class='popup-endp'>
+							Account: <strong>{{endpList}}</strong>, Region: <strong>{{endpList}}</strong>
+
 						</div>
-						
-						
+
+
 					</div>
 				</li>
 			</ul>
@@ -220,7 +222,7 @@
                                                 <span (click)="removeRegion(i, selected)" class="icon-icon-close"></span>
                                             </li>
                                             <input (keydown)="keypressRegion($event)"  autocomplete="off" id="regionInput" name="regionInput" type="text" class="textForm" [(ngModel)]="regionInput" (ngModelChange)="onRegionChange($event)">
-    
+
                                         </ul>
                                     </div>
                                     <div [hidden]="!showRegionList" class="approvers-list-wrap">
@@ -244,7 +246,7 @@
                 <div>Region , {{regions[0]}} :   <img class='copy-arn' src="./../../../assets/images/icons/icon-link.png"/></div>
                 <div>Account , {{accounts[1]}} :   </div>
 
-				 
+
             </div>
 		</div> -->
 	</div>
@@ -265,6 +267,34 @@
 	</div>
 	<div class="loading-row" [class.show]="isLoading">
 		<div class="loading-circle"></div>
+	</div>
+</div>
+</div>
+<div class="service-details-application relative" *ngIf= "slsapp">
+	<div>
+	<span class="app-label">Application Definition</span>
+	<div   class='edit-service-overview-btn'>
+			<a  *ngIf='showCncl'  (click)='onCancel()'>CANCEL</a>
+			<btn-jazz-secondary class='btn-edit-overview'  *ngIf="editButton" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditAppClick()'></btn-jazz-secondary>
+			<btn-jazz-secondary  class='btn-edit-overview' [disablebtn]="invalid || disableSave" *ngIf='saveButton' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" [disablebtn]='disableEditBtn()'  (click)='descriptor()'></btn-jazz-secondary>
+		</div>
+	</div>
+	<div class="text-area-div" >
+		<div class="textbox">
+			<div class="line-numbers">
+					<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
+				  </div>
+		<textarea class="text-area" [disabled]="textarea"  (ngModelChange)="textChanged  && lineNumbers()"
+		 [(ngModel)]="yaml" id="yaml" name="yaml" (blur)='checkYaml()'></textarea>
+	   </div>
+	</div>
+	<div class="valid" *ngIf="isCancel">
+		<p class="validation" *ngIf="isvalid">Valid Yaml file.</p>
+		<p class="invalidation" *ngIf="!isvalid">Invalid Yaml file.</p>
+	</div>
+</div>
+<div class="loading-outer-div" [class.show]="isLoading">
+		<div class="loading-circle circle"></div>
 	</div>
 </div>
 

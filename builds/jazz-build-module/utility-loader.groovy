@@ -91,28 +91,6 @@ def parseJson(def json) {
     new groovy.json.JsonSlurperClassic().parseText(json)
 }
 
-/**
-getAPIId takes api Id mapping document and a config object to return an API Id
-*/
-
-def getAPIId(apiIdMapping, config) {
-	return getAPIId(apiIdMapping, config['domain'], config['service'])
-}
-
-def getAPIId(apiIdMapping, namespace, service) {
-	if (!apiIdMapping) {
-		error "No mapping document provided to lookup API Id!!"
-	}
-
-	if (apiIdMapping["${namespace}_${service}"]) {
-		return apiIdMapping["${namespace}_${service}"];
-	} else if (apiIdMapping["${namespace}_*"]) {
-		return apiIdMapping["${namespace}_*"];
-	} else {
-		apiIdMapping["*"];
-	}
-}
-
 @NonCPS
 def generateAssetMap(provider, providerId, type, service_config) {
 
@@ -142,12 +120,6 @@ def getAssets(assets_api, auth_token, service_config, env) {
       echo "Exception occured while getting the assets. $ex"
   }
   return assets
-}
-/**
-getAPIIdForCore is a helper method to get apiId for jazz core services
-*/
-def getAPIIdForCore(apiIdMapping) {
-	return getAPIId(apiIdMapping, "jazz", "*")
 }
 
 /**
@@ -214,24 +186,6 @@ def getAccountBucketName(service_config) {
 		}
 	}
 	return s3Object;
-}
-
-/**
-*  Get Account Specific API Gateway
-*/
-
-def getApiId(service_config) {
-	def apiGateway = {}
-	def accountObject = getAccountInfo(service_config);
-	if( accountObject.size() > 0){
-		def regions = accountObject['REGIONS'];
-		for (region in regions ){
-			if( region['REGION'] == service_config.region) { 
-				apiGateway = region['API_GATEWAY'];
-			}
-		}
-	}
-	return apiGateway;
 }
 
 return this

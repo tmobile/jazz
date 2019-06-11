@@ -8,13 +8,15 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ToasterService } from 'angular2-toaster';
 import { AdvancedFiltersComponent } from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
 
-
 import { RequestService, MessageService, DataCacheService, AuthenticationService } from '../../core/services/index';
 import { AdvancedFilterService } from './../../advanced-filter.service';
 import { AdvFilters } from './../../adv-filter.directive';
 import { environment } from './../../../environments/environment';
+import { environment as env_oss} from './../../../environments/environment.oss';
 import { environment as env_internal } from './../../../environments/environment.internal';
-
+import { EnvAssetsSectionComponent } from '../environment-assets/env-assets-section.component';
+import * as _ from 'lodash';
+declare let Promise;
 @Component({
 	selector: 'env-logs-section',
 	templateUrl: './env-logs-section.component.html',
@@ -25,6 +27,7 @@ export class EnvLogsSectionComponent implements OnInit {
 	private http: any;
 	@ViewChild('filtertags') FilterTags: FilterTagsComponent;
 	@ViewChild(AdvFilters) advFilters: AdvFilters;
+	@Input() radioContent;
 	componentFactoryResolver:ComponentFactoryResolver;
 
 	advanced_filter_input:any = {
@@ -54,8 +57,12 @@ export class EnvLogsSectionComponent implements OnInit {
 		},
 		region:{
 			show:true,
+		},
+		asset:{
+			show:true,
 		}
 	}
+	public assetWithDefaultValue:any=[]
 	fromlogs:boolean = true;
 	private subscription: any;
 	limitValue: number = 20;
@@ -64,6 +71,7 @@ export class EnvLogsSectionComponent implements OnInit {
 	filterloglevel: string = 'ERROR';
 	loadingState: string = 'default';
 	backupLogs = [];
+	public assetList:any = [];
 	errBody: any;
 	parsedErrBody: any;
 	errMessage: any;
@@ -146,13 +154,17 @@ export class EnvLogsSectionComponent implements OnInit {
 
 	accList=env_internal.urls.accounts;
 	regList=env_internal.urls.regions;
-	  accSelected:string = this.accList[0];
+	accSelected:string = this.accList[0];
 	regSelected:string=this.regList[0];
+  public assetSelected:string;
 	instance_yes;
 	getFilter(filterServ){
 		
 		this.service['islogs']=true;
 		this.service['isServicelogs']=true;
+		if(this.assetList){
+			this.service['assetList']=this.assetList;
+		}
 
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
@@ -166,8 +178,17 @@ export class EnvLogsSectionComponent implements OnInit {
 		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
 			comp.onFilterSelect(event);
 		});
+		this.instance_yes.onAssetSelect.subscribe(event => {
+		
+			comp.onAssetSelect(event);
+		});
 
 	}
+	onAssetSelect(event){
+		this.FilterTags.notify('filter-Asset',event);
+		this.assetSelected=event;
+	} 
+	
 
 	 onaccSelected(event){
 	  this.accSelected=event;
@@ -405,6 +426,35 @@ export class EnvLogsSectionComponent implements OnInit {
   refresh() {
     this.callLogsFunc();
   }
+  getAssetType(data?){
+	let self=this;
+   return this.http.get('/jazz/assets',{
+	   domain: self.service.domain,
+				   service: self.service.name,              
+   }, self.service.id).toPromise().then((response:any)=>{
+	   if(response&&response.data&&response.data.assets){
+		    let assets=_(response.data.assets).map('asset_type').uniq().value();
+			 let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
+			 validAssetList.splice(0, 0, 'all');
+			 self.assetWithDefaultValue = validAssetList;
+			 for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
+				 self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
+			 }
+			self.assetSelected=validAssetList[0].replace(/_/g ," ");
+			 if (!data) {
+				 self.assetSelected = validAssetList[0].replace(/_/g, " ");
+			 }
+			self.callLogsFunc();
+			self.getFilter(self.advancedFilters);
+			self.instance_yes.showAsset = true;
+			self.instance_yes.assetSelected = validAssetList[0].replace(/_/g ," ");
+		}
+   })
+   .catch((error) => {
+	   return Promise.reject(error);
+   })
+}
+
 
 	callLogsFunc() {
 		this.loadingState = 'loading';
@@ -454,7 +504,6 @@ export class EnvLogsSectionComponent implements OnInit {
 				this.errorRequest = this.payload;
 				this.errorUser = this.authenticationservice.getUserId();
 				this.errorResponse = JSON.parse(err._body);
-
 				this.cache.set('feedback', this.model.userFeedback)
 				this.cache.set('api', this.errorAPI)
 				this.cache.set('request', this.errorRequest)
@@ -468,18 +517,19 @@ export class EnvLogsSectionComponent implements OnInit {
 	};
 	cancelFilter(event){
 		switch(event){
-		  case 'time-range':{this.instance_yes.onRangeListSelected('Day'); 
-			break;
+		  case 'time-range':{  this.instance_yes.onRangeListSelected('Day'); 
+			
+		    break;
 		  }
-		  case 'time-range-slider':{
-			this.instance_yes.resetslider(1);
+		  case 'time-range-slider':{  this.instance_yes.resetslider(1);
 		  
 			break;
 		  }
-		  case 'period':{ this.instance_yes.onPeriodSelected('15 Minutes');
-			break;
+		  case 'period':{       this.instance_yes.onPeriodSelected('15 Minutes');
+			
+		  break;
 		  }
-		  case 'statistic':{      this.instance_yes.onStatisticSelected('Average');
+		  case 'statistic':{    this.instance_yes.onStatisticSelected('Average');
 		  
 			break;
 		  }
@@ -487,27 +537,31 @@ export class EnvLogsSectionComponent implements OnInit {
 		  
 			break;
 		  }
-		  case 'region':{      this.instance_yes.onregSelected('reg 1');
+		  case 'region':{       this.instance_yes.onregSelected('reg 1');
 		  
 			break;
 		  }
-		  case 'env':{      this.instance_yes.onEnvSelected('prod');
+		  case 'env':{          this.instance_yes.onEnvSelected('prod');
 		  
 			break;
 		  }
-		  case 'method':{      
-				
-				this.instance_yes.onMethodListSelected('POST');
+		  case 'method':{       this.instance_yes.onMethodListSelected('POST');
 		  
 			break;
 		  }
-		  case 'all':{ this.instance_yes.onRangeListSelected('Day');    
+		  case 'asset':{        this.instance_yes.getAssetType('all');
+		  
+		    break;
+		  }
+		  case 'all':{
+		        this.instance_yes.onRangeListSelected('Day');    
 				this.instance_yes.onPeriodSelected('15 Minutes');
 				this.instance_yes.onStatisticSelected('Average');
 				this.instance_yes.onaccSelected('Acc 1');
 				this.instance_yes.onregSelected('reg 1');
 				this.instance_yes.onEnvSelected('prod');
 				this.instance_yes.onMethodListSelected('POST');
+				this.instance_yes.getAssetType('all');
 				break;
 		  	}
 		}
@@ -526,7 +580,6 @@ export class EnvLogsSectionComponent implements OnInit {
 			this.FilterTags.notifyLogs('filter-TimeRange',event.value);		
 			this.sliderFrom =1;
 			this.FilterTags.notifyLogs('filter-TimeRangeSlider',this.sliderFrom);
-			
 			var resetdate = this.getStartDate(event.value, this.sliderFrom);
 			// this.resetPeriodList(range);
 			this.selectedTimeRange = event.value;
@@ -537,7 +590,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		  }
 		  
 		  case 'account':{
-			  this.FilterTags.notify('filter-Account',event.value);
+			this.FilterTags.notify('filter-Account',event.value);
 			this.accSelected=event.value;
 			break;
 		  }
@@ -546,6 +599,18 @@ export class EnvLogsSectionComponent implements OnInit {
 			this.regSelected=event.value;
 			break;
 				
+		  }
+		  case 'asset' :{
+			  this.FilterTags.notify('filter-Asset',event.value)
+				this.assetSelected=event.value;
+				if (this.assetSelected !== 'all') {
+					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
+				}
+				else {
+					delete this.payload['asset_type'];
+				}
+			  this.resetPayload();
+			  break;
 		  }
 	
 	   
@@ -565,6 +630,10 @@ export class EnvLogsSectionComponent implements OnInit {
 			});
 		if (this.env == 'prd')
 			this.env = 'prod';
+			if(x.service.currentValue.domain)
+			{
+				this.getAssetType()
+			}
 	}
 
 	ngOnInit() {
@@ -580,9 +649,13 @@ export class EnvLogsSectionComponent implements OnInit {
 			"end_time": (new Date().toISOString()).toString(),
 			"start_time": new Date(todayDate.setDate(todayDate.getDate() - this.sliderFrom)).toISOString()
 		}
+		if( this.assetSelected !== 'all') {
+			this.payload["asset_type"] = this.assetSelected;
+		}
 		this.callLogsFunc();
 		this.filter = new Filter(this.logs);
 		this.sort = new Sort(this.logs);
+		
 	}
-
+ 
 }

@@ -131,7 +131,7 @@ def getDistributionConfig(distributionID) {
 	}catch (ex) {
 		echo "getDistributionConfig Failed."+ex.getMessage()
 		echo "getDistributionConfig Failed." + ex
-        error "getDistributionConfig Failed."+ex.getMessage()
+    error "getDistributionConfig Failed."+ex.getMessage()
 
 	}
 
@@ -205,16 +205,16 @@ def loadConfigModule(buildModuleUrl){
 		]])
 
 		configModule = load "config-loader.groovy"
-		configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
+    configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
     echo "config loader loaded successfully."
 	}
 }
 
 def getBuildModuleUrl() {
-    if (scm_type && scm_type != "bitbucket") {
-      // right now only bitbucket has this additional tag scm in its git clone path
-      return "http://${repo_base}/${repo_core}/jazz-build-module.git"
-    }else {
-      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    }
+  if (scm_type && scm_type != "bitbucket") {
+    // right now only bitbucket has this additional tag scm in its git clone path
+    return "http://${repo_base}/${repo_core}/jazz-build-module.git"
+  }else {
+    return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+  }
 }

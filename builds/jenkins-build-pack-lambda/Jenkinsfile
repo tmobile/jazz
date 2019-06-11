@@ -108,7 +108,8 @@ node() {
     config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
   }
 
-  def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
+  def coreDomain = "jazz";
+  def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
   if(domain && domain != "jazz"){
     auth_token = setCredentials()
@@ -330,7 +331,6 @@ node() {
             def primaryAccountData = utilModule.getAccountInfoPrimary();
             def primaryAccountValue = primaryAccountData.ACCOUNTID;
             def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-            def functionName = "arn:aws:lambda:${service_config.region}:${service_config.accountId}:${lambdaFnNameValue}"
 
             addPermission(lambdaFnNameValue, primaryAccountValue, credsId, config);
           }
@@ -369,7 +369,7 @@ def addPermission(functionName, primaryAccountValue, credsId, service_config){
 		sh "aws lambda remove-permission --function-name ${functionName} --region ${service_config.region} --statement-id ${functionName}_invoke --profile ${credsId}"
 	} catch(Exception ex) {
 		// ignore if the policy is not there
-	} 
+	}
   /* Adding permission to invoke the function created in secondary account*/
   sh "aws lambda add-permission --function-name ${functionName} --region ${service_config.region} --statement-id ${functionName}_invoke --action 'lambda:InvokeFunction' --principal ${primaryAccountValue} --profile ${credsId}"
 }
@@ -499,10 +499,6 @@ def servelessDeploy(env, envBucketKey, credsId, env_key, accountDetails){
   def outputLog = readFile('output.log').trim()
   echo "serverless deployment log $outputLog"
   return outputLog
-}
-
-def getApiIDName(accountDetails) {
-	return awsAPIGatewayModule.getApiGatewayCore(accountDetails)
 }
 
 def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isSQSEventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
@@ -1127,7 +1123,7 @@ def parseJson(jsonString) {
 def updatePlatformServiceTemplate(config, roleARN, current_environment, repo_name) {
   echo "loadServerlessConfig......."
   def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-  serviceConfigdata.initialize(configLoader, roleARN, config['region'], config['accountId'], jenkinsURL, current_environment, repo_name, utilModule)
+  serviceConfigdata.initialize(configLoader, roleARN, config['region'], config['accountId'], jenkinsURL, current_environment, repo_name, utilModule, awsAPIGatewayModule)
   serviceConfigdata.loadServiceConfigurationData()
 }
 /*

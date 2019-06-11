@@ -85,8 +85,7 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [
-          {
+        "parameters": [{
             "name": "type",
             "in": "query",
             "required": false,
@@ -253,11 +252,9 @@
             }
           }
         },
-        "security": [
-          {
-            "{envPrefix}-{domain}-cognito-authorizer": []
-          }
-        ],
+        "security": [{
+          "{envPrefix}-{domain}-cognito-authorizer": []
+        }],
         "x-amazon-apigateway-integration": {
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
           "passthroughBehavior": "when_no_templates",
@@ -341,17 +338,15 @@
       },
       "post": {
         "description": "Method to create a new service",
-        "parameters": [
-          {
-            "name": "param",
-            "in": "body",
-            "description": "post body parameter.",
-            "required": true,
-            "schema": {
-              "$ref": "#/definitions/CreateServiceObj"
-            }
+        "parameters": [{
+          "name": "param",
+          "in": "body",
+          "description": "post body parameter.",
+          "required": true,
+          "schema": {
+            "$ref": "#/definitions/CreateServiceObj"
           }
-        ],
+        }],
         "consumes": [
           "application/json",
           "application/x-www-form-urlencoded"
@@ -464,11 +459,9 @@
             }
           }
         },
-        "security": [
-          {
-            "{envPrefix}-{domain}-token-authorizer": []
-          }
-        ],
+        "security": [{
+          "{envPrefix}-{domain}-token-authorizer": []
+        }],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -558,14 +551,12 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [
-          {
-            "name": "id",
-            "in": "path",
-            "required": true,
-            "type": "string"
-          }
-        ],
+        "parameters": [{
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "type": "string"
+        }],
         "tags": [
           "CORS"
         ],
@@ -631,8 +622,7 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [
-          {
+        "parameters": [{
             "name": "id",
             "in": "path",
             "required": true,
@@ -749,11 +739,9 @@
             }
           }
         },
-        "security": [
-          {
-            "{envPrefix}-{domain}-cognito-authorizer": []
-          }
-        ],
+        "security": [{
+          "{envPrefix}-{domain}-cognito-authorizer": []
+        }],
         "x-amazon-apigateway-integration": {
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
           "passthroughBehavior": "when_no_templates",
@@ -837,8 +825,7 @@
       },
       "put": {
         "description": "Method to Update Service",
-        "parameters": [
-          {
+        "parameters": [{
             "name": "id",
             "in": "path",
             "required": true,
@@ -972,11 +959,9 @@
             }
           }
         },
-        "security": [
-          {
-            "{envPrefix}-{domain}-cognito-authorizer": []
-          }
-        ],
+        "security": [{
+          "{envPrefix}-{domain}-cognito-authorizer": []
+        }],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -1058,8 +1043,7 @@
       },
       "delete": {
         "description": "Method to Delete Service",
-        "parameters": [
-          {
+        "parameters": [{
             "name": "id",
             "in": "path",
             "required": true,
@@ -1184,11 +1168,9 @@
             }
           }
         },
-        "security": [
-          {
-            "{envPrefix}-{domain}-cognito-authorizer": []
-          }
-        ],
+        "security": [{
+          "{envPrefix}-{domain}-cognito-authorizer": []
+        }],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -1507,6 +1489,28 @@
             "type": "string"
           },
           "description": "Tags for the service"
+        },
+        "deployment_descriptor": {
+          "type": "string",
+          "description": "Deployment descriptor using serverless.yml format (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)"
+        },
+        "deployment_targets": {
+          "type": "object",
+          "description": "Deployment targets list for the service",
+          "properties": {
+            "api": {
+              "type": "string",
+              "enum": ["aws_apigateway", "gcp_apigee"]
+            },
+            "function": {
+              "type": "string",
+              "enum": ["aws_lambda"]
+            },
+            "website": {
+              "type": "string",
+              "enum": ["aws_s3", "aws_cloudfront"]
+            }
+          }
         }
       }
     },
@@ -1600,6 +1604,28 @@
             "type": "string"
           },
           "description": "Tags for the service"
+        },
+        "deployment_targets": {
+          "type": "object",
+          "description": "Deployment targets list for the service",
+          "properties": {
+            "api": {
+              "type": "string",
+              "enum": ["aws_apigateway", "gcp_apigee"]
+            },
+            "function": {
+              "type": "string",
+              "enum": ["aws_lambda"]
+            },
+            "website": {
+              "type": "string",
+              "enum": ["aws_s3", "aws_cloudfront"]
+            }
+          }
+        },
+        "deployment_descriptor": {
+          "type": "string",
+          "description": "Deployment descriptor using serverless.yml format (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)"
         },
         "policies": {
           "type": "array",

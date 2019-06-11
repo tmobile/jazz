@@ -104,7 +104,8 @@ node() {
     config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
   }
 
-  def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
+  def coreDomain = "jazz";
+  def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
   if(domain && domain != "jazz"){
     auth_token = setCredentials()
@@ -423,13 +424,13 @@ def updateSwagger(){
                 // initialize aws credentials
                 def randomStringPrimary = utilModule.generateRequestId();
                 primaryCredsId = "jazzprimary-${randomStringPrimary}";
-                                
+
                 sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
                 sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
                 sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
 
                 sh "aws s3 cp swagger/ s3://${configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --profile ${primaryCredsId} --region ${config.region} --recursive "
-				        echo "completed deployment........."                
+				        echo "completed deployment........."
 
                 } catch(ex){
                 send_status_email(config, 'FAILED', '')
@@ -476,10 +477,6 @@ def getLambdaARN(stackName, credsId) {
     ARN = ARN.substring(0, ARN.lastIndexOf(':'));
   }
   return [arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias]
-}
-
-def getApiIDName(accountDetails) {
-	return awsAPIGatewayModule.getApiGatewayCore(accountDetails)
 }
 
 def getApiIDNameUserService(stage, service_config, accountDetails) {
@@ -1024,7 +1021,7 @@ def updatePolicy(env, destARN){
               // initialize aws credentials
               def randomStringPrimary = utilModule.generateRequestId();
               primaryCredsId = "jazzprimary-${randomStringPrimary}";
-                            
+
               sh "aws configure set profile.${primaryCredsId}.region ${primaryRegionValue}"
               sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
               sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
@@ -1169,7 +1166,7 @@ def clearVirtualEnv() {
 def updatePlatformServiceTemplate(config, roleARN, roleId, environment_logical_id, repo_name)	{
   echo "loadServerlessConfig......."
   def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-  serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, environment_logical_id, repo_name, utilModule)
+  serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, environment_logical_id, repo_name, utilModule, awsAPIGatewayModule)
   serviceConfigdata.loadServiceConfigurationData()
 }
 

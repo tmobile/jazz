@@ -37,7 +37,10 @@ describe('jazz_environments', function () {
         "created_by": "g10$saryck",
         "physical_id": "test",
         "logical_id": "test",
-        "status": "active"
+        "status": "active",
+        "deployment_descriptor":
+        `TestYamlDta
+        `
       },
       "headers": {
         "Authorization": "zaqwsxcderfv.qawsedrftg.qxderfvbhy"
