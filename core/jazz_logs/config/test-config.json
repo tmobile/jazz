@@ -3,7 +3,7 @@
   "DEFAULT_SIZE": 1000,
   "DEFAULT_TIME_IN_DAYS": 7,
   "VALID_ENVIRONMENTS": ["prod", "stg", "dev", "test"],
-  "VALID_CATEGORIES": ["api", "function"],
+  "VALID_CATEGORIES": ["api", "function", "sls-app"],
   "VALID_ASSET_TYPES": ["lambda", "apigateway"],
   "ASSET_INDEX_MAP":[{
     "asset_type": "lambda",
