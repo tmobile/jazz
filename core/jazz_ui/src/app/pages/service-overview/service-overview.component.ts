@@ -289,6 +289,7 @@ export class ServiceOverviewComponent implements OnInit {
 
       if (duration === undefined || duration === null || duration <= 0) {
         this.rateExpression.isValid = false;
+        this.eventDisable = true;
         this.rateExpression.error = 'Please enter a valid duration';
       } else {
         if (interval == 'Minutes') {
@@ -298,6 +299,7 @@ export class ServiceOverviewComponent implements OnInit {
         } else if (interval == 'Days') {
           this.cronObj = new CronObject('0', '0', ('1/' + duration), '*', '?', '*');
         }
+        this.eventDisable = false;
         this.rateExpression.isValid = true;
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
       }
@@ -308,45 +310,34 @@ export class ServiceOverviewComponent implements OnInit {
       var _isCronObjValid = this.isCronObjValid(cronObj)
 
       if (_isCronObjValid === false) {
+        this.eventDisable = true;
         this.rateExpression.isValid = false;
         this.rateExpression.error = 'Please enter a valid cron expression';
       } else {
+        this.eventDisable = false;
         this.rateExpression.isValid = true;
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
         if(this.rateExpression.interval === "Minutes" || this.rateExpression.interval === "Hours"){
           let cronExp = JSON.parse(JSON.stringify(this.rateExpression.cronStr));
           cronExp = cronExp.split(" ");
-          if((cronExp[0].includes("0/") && cronExp[1].includes("*")) || (cronExp[1].includes("0/") && cronExp[0].includes("0"))){
-            if(cronExp[0].includes("0/")){
-              let duration = cronExp[0].split("/");
-              duration = parseInt(duration[1]);
-              this.rateExpression.duration = duration;
-              this.rateExpression.interval = "Minutes";
-            } else {
-              let duration = cronExp[1].split("/");
-              duration = parseInt(duration[1]);
-              this.rateExpression.duration = duration;
-              this.rateExpression.interval = "Hours";
-            }
-          } else {
+          if (_isCronObjValid) {
+            let duration = cronExp[1].split("/");
+            duration = parseInt(duration[1]);
+            this.rateExpression.duration = duration;
+            this.rateExpression.interval = "Minutes";
+            this.setEventScheduleRate();
+          }
+          else {
             this.rateExpression.duration = "5";
             this.rateExpression.interval = "Minutes";
           }
-        } else {
-          this.rateExpression.duration = "5";
-          this.rateExpression.interval = "Minutes";
-        }
+        }       
       }
     }if (this.rateExpression.type != 'none') {
       this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
       let tempExp = `cron(${this.rateExpression.cronStr})`;
       if( tempExp == this.service.eventScheduleRate){
         this.eventDisable = true;
-      }
-      if((this.initialRateInterval === this.rateExpression.interval) && (parseInt(this.initialDuration) === parseInt(this.rateExpression.duration))){
-        this.eventDisable = true;
-      } else {
-        this.eventDisable = false;
       }
     }
 
