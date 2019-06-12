@@ -60,11 +60,13 @@
             </section>
             
             <section class="page-content" *ngIf="selectedTab == 2">
-            <env-codequality-section #selectedTabComponent [service]="service"></env-codequality-section>
+                <env-assets-section *ngIf="service.serviceType == 'website'" #selectedTabComponent [service]="service"></env-assets-section>
+                <env-codequality-section *ngIf="service.serviceType != 'website'" #selectedTabComponent [service]="service"></env-codequality-section>
             </section>
 
             <section class="page-content" *ngIf="selectedTab == 3">
-                <env-assets-section #selectedTabComponent [service]="service"></env-assets-section>
+                <service-metrics *ngIf="service.serviceType == 'website'" #selectedTabComponent [service]="service"></service-metrics>
+                <env-assets-section *ngIf="service.serviceType != 'website'" #selectedTabComponent [service]="service"></env-assets-section>
             </section>
 
             <section class="page-content" *ngIf="selectedTab == 4">
@@ -75,6 +77,8 @@
             <section class="page-content" *ngIf="selectedTab == 5">
                 <service-metrics #selectedTabComponent [service]="service"></service-metrics>
             </section>
+
+            
         </div>
     </div>
     <section *ngIf='isError403'>
