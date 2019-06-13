@@ -19,7 +19,7 @@ import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 import { Common } from '../common/commontest';
 
 
-xdescribe('Overview', () => {
+describe('Overview', () => {
   let jazzServices_po: Jazz;
   let commonUtils: Common;
 
@@ -39,10 +39,6 @@ xdescribe('Overview', () => {
     if (flag == 0) {
       pending();
     }
-  });
-
-  afterAll(() => {
-    browser.close();
   });
 
   function createservice(servicename) {
@@ -90,10 +86,10 @@ xdescribe('Overview', () => {
     browser.driver.sleep(Common.miniWait);
     //Creating Website
     jazzServices_po.getWebsite().click();
-    var min = 111111111;
-    var max = 999999999;
+    var min = 111111;
+    var max = 999999;
     var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
-    servicename = 'servicename' + randomNum;
+    servicename = 'website' + randomNum;
     createservice(servicename);
     serviceapprover();
     browser.driver.sleep(Common.mediumWait);
@@ -183,12 +179,12 @@ xdescribe('Overview', () => {
     //commonUtils.refreshbutton(jazzServices_po.getMetricesRequestCount(),Common.miniWait);
     //expect(jazzServices_po.getMetricesRequestCount().getText()).toEqual('10');  
     browser.sleep(Common.microWait);
-    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
-    jazzServices_po.getServiceHomePage().click();
   });
 
   it('Identifying Environment and Navigation for Website', () => {
     browser.driver.sleep(Common.microWait);
+    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
+    jazzServices_po.getServiceHomePage().click();
     commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
     browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
     //To Navigate to the particular service and verifying the Page
@@ -349,4 +345,3 @@ xdescribe('Overview', () => {
     jazzServices_po.getServiceHomePage().click();
   });
 });
-

@@ -19,7 +19,7 @@ import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
 import { Common } from '../common/commontest';
 
 
-xdescribe('Overview', () => {
+describe('Overview', () => {
   let jazzServices_po: Jazz;
   let commonUtils: Common;
   let flag = 1;
@@ -32,7 +32,6 @@ xdescribe('Overview', () => {
     jazzServices_po = new Jazz();
     commonUtils = new Common();
     browser.driver.sleep(Common.miniWait);
-    //jazzServices_po.navigateToJazzGet();
     commonUtils.Login();
   });
 
@@ -98,7 +97,7 @@ xdescribe('Overview', () => {
     var min = 111;
     var max = 999;
     var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
-    servicename = 'service' + randomNum;
+    servicename = 'lambda' + randomNum;
     createservice(servicename);
     jazzServices_po.getEventScheduleFixedRate().click();
     serviceapprover();
@@ -191,12 +190,12 @@ xdescribe('Overview', () => {
     commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.miniWait);
     expect(jazzServices_po.getMetricesCount().getText()).not.toEqual('-');
     browser.sleep(Common.microWait);
-    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
-    jazzServices_po.getServiceHomePage().click();
   });
 
   it('Identifying Environment and Navigation for Lambda', () => {
     browser.driver.sleep(Common.microWait);
+    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
+    jazzServices_po.getServiceHomePage().click();
     commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
     browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
     //To Navigate to the particular service and verifying the Page
@@ -352,4 +351,3 @@ xdescribe('Overview', () => {
     jazzServices_po.getServiceHomePage().click();
   });
 });
-

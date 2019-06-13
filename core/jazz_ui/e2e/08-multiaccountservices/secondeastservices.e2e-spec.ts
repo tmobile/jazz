@@ -32,14 +32,13 @@ describe('Overview', () => {
     commonUtils = new Common();
     browser.driver.sleep(Common.miniWait);
     commonUtils.Login();
-    
   });
   beforeEach(() => {
     if (flag == 0) {
       pending();
     }
-    if (found == 0){
-        pending();
+    if (found == 0) {
+      pending();
     }
   });
   afterAll(() => {
@@ -48,7 +47,6 @@ describe('Overview', () => {
     browser.driver.sleep(Common.miniWait);
     jazzServices_po.logoutIcon().click();
     jazzServices_po.logout().click();
-    browser.close();
   });
 
   function createservice(servicename) {
@@ -60,10 +58,8 @@ describe('Overview', () => {
   function serviceapprover() {
     browser.driver.sleep(Common.miniWait);
     jazzServices_po.getSubmit().click();
-    jazzServices_po.getDone().click().then(null, function (err) {
-      flag = 0;
-    });
-    commonUtils.waitForSpinnerLogin();
+    commonUtils.fluentwaittry(jazzServices_po.getDone(), Common.shortWait);
+    jazzServices_po.getDone().click();
   }
 
   function waitforskiptest(ele, t) {
@@ -81,10 +77,10 @@ describe('Overview', () => {
             flag = 0;
             return false;
           });
-    }, 240 * 1000);
+    }, 300 * 1000);
   }
 
-  it('Create second account west region Service', function () {
+  it('Create Service for second account with east region', function () {
     browser.driver.sleep(Common.miniWait);
     browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), Common.timeOutHigh).then(null, function (err) {
       console.log(err);
@@ -95,16 +91,19 @@ describe('Overview', () => {
     jazzServices_po.getCreateService().click();
     browser.driver.switchTo().activeElement();
     browser.driver.sleep(Common.miniWait);
-    var min = 111111111;
-    var max = 999999999;
+    var min = 111111;
+    var max = 999999;
     var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
-    servicename = 'servicename' + randomNum;
+    servicename = 'secondeast' + randomNum;
     // First Account with east Region
     createservice(servicename);
     jazzServices_po.accountSelect().click();
-    jazzServices_po.secountAccount().click();
+    jazzServices_po.secountAccount().click().then(null, function (err) {
+      console.log(err);
+      flag = 0;
+    });;
     jazzServices_po.regionSelect().click();
-    jazzServices_po.westRegion().click();
+    jazzServices_po.eastRegion().click();
     serviceapprover();
     browser.driver.sleep(Common.mediumWait);
     //Assert-Verifying the created service,Type and Status of the API
@@ -115,16 +114,14 @@ describe('Overview', () => {
     waitforskiptest(jazzServices_po.serviceStatus(servicename), Common.xxlWait);
   });
 
-  it('Verify 1st account with us-east-1 Service and Navigation', () => {
+  it('Verify Service and Navigation for second account with east region', () => {
     browser.driver.sleep(Common.microWait);
     commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
     browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
     //To Navigate to the particular service and verifying the Page
     jazzServices_po.getService(servicename).click();
     commonUtils.waitForSpinnerDisappear();
-    commonUtils.fluentwaittry(jazzServices_po.getOverviewStatus(), Common.miniWait);
-    expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
-    commonUtils.elementPresent(jazzServices_po.getServiceNameHeader(), Common.miniWait);
+    expect(jazzServices_po.eastRegionVerify().getText()).toEqual('us-east-1');
     waitforskiptest(jazzServices_po.getProdName(), Common.xxlWait);
     jazzServices_po.getProdName().click();
     commonUtils.waitForSpinnerDisappear();
@@ -134,7 +131,7 @@ describe('Overview', () => {
     browser.driver.switchTo().activeElement();
   });
 
-  it('Verify METRICS Navigation for 1st account with us-east-1', () => {
+  it('Verify METRICS Navigation for second account with east region', () => {
     browser.sleep(Common.microWait);
     jazzServices_po.getTestAPI().click().then(null, function (err) {
       console.log("the error occurred is : " + err.name);
@@ -201,21 +198,21 @@ describe('Overview', () => {
     });
   });
 
-  it('Verify 1st account with us-east-1 Deployments', () => {
+  it('Verify Deployment for second account with east region', () => {
     commonUtils.verifyDelpoyment();
   });
 
-  it('Verify 1st account with us-east-1 Asset', () => {
+  it('Verify Asset for second account with east region', () => {
     commonUtils.verifyAsset();
 
   });
 
-  it('Verify 1st account with us-east-1 Logs', () => {
+  it('Verify Logs for second account with east region', () => {
     commonUtils.verifyLogs();
 
   });
 
-  it('Verify METRICS COUNT for 1st account with us-east-1', () => {
+  it('Verify METRICS COUNT for second account with east region', () => {
     browser.sleep(Common.miniWait);
     commonUtils.fluentwaittry(jazzServices_po.getMetrices(), Common.shortWait);
     jazzServices_po.getMetrices().click();
@@ -223,10 +220,10 @@ describe('Overview', () => {
     browser.sleep(Common.shortWait);
     commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.mediumWait);
     expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
-    
+
   });
 
-  it('Identifying Environment and Navigation for 1st account with us-east-1', () => {
+  it('Identifying Environment and Navigation for second account with east region', () => {
     browser.driver.sleep(Common.microWait);
     commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.mediumWait);
     jazzServices_po.getServiceHomePage().click();
@@ -241,7 +238,7 @@ describe('Overview', () => {
     browser.sleep(Common.miniWait);
   });
 
-  it('Create the Test Branch for 1st account with us-east-1', () => {
+  it('Create the Test Branch for second account with east region', () => {
     browser.getAllWindowHandles().then(function (handles) {
       browser.sleep(Common.microWait);
       var min = 11;
@@ -357,7 +354,7 @@ describe('Overview', () => {
     });
   });
 
-  it('Verify METRICS Navigation for 1st account with us-east-1 Test Branch', () => {
+  it('Verify METRICS Navigation Test Branch for second account with east region', () => {
     commonUtils.fluentwaittry(jazzServices_po.getTestAPI(), Common.mediumWait);
     expect(jazzServices_po.getTestAPI().getText()).toEqual('TEST API');
     browser.wait(EC.elementToBeClickable(jazzServices_po.getTestAPI()), Common.timeOutHigh);
@@ -420,19 +417,19 @@ describe('Overview', () => {
       });
     });
   });
-  it('Verify 1st account with us-east-1 Deployments for Test Branch', () => {
+  it('Verify Deployments for Test Branch for second account with east region', () => {
     commonUtils.verifyDelpoyment();
   });
 
-  it('Verify 1st account with us-east-1 Asset for Test Branch', () => {
+  it('Verify Asset for Test Branch for second account with east region', () => {
     commonUtils.verifyAsset();
   });
 
-  it('Verify 1st account with us-east-1 Logs for Test Branch', () => {
+  it('Verify Logs for Test Branch for second account with east region', () => {
     commonUtils.verifyLogs();
   });
 
-  it('Verify METRICS COUNT for 1st account with us-east-1 for Test Branch', () => {
+  it('Verify METRICS COUNT Test Branch for second account with east region', () => {
     browser.driver.sleep(Common.microWait);
     commonUtils.fluentwaittry(jazzServices_po.getMetrices(), Common.mediumWait);
     jazzServices_po.getMetrices().click();

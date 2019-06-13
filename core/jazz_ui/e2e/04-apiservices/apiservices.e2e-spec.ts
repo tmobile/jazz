@@ -19,7 +19,7 @@ import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG, SSL_OP_TLS_BLOCK_PADDING_BUG } from 'c
 import { Common } from '../common/commontest';
 
 
-xdescribe('Overview', () => {
+describe('Overview', () => {
   let jazzServices_po: Jazz;
   let commonUtils: Common;
   let found = 1;
@@ -96,7 +96,7 @@ xdescribe('Overview', () => {
     var min = 111111111;
     var max = 999999999;
     var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
-    servicename = 'servicename' + randomNum;
+    servicename = 'api' + randomNum;
     createservice(servicename);
     serviceapprover();
     browser.driver.sleep(Common.mediumWait);
@@ -216,14 +216,13 @@ xdescribe('Overview', () => {
     browser.sleep(Common.shortWait);
     commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.mediumWait);
     expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
-    
+    browser.sleep(Common.miniWait);
   });
 
   it('Identifying Environment and Navigation for API', () => {
     browser.driver.sleep(Common.microWait);
     commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.mediumWait);
     jazzServices_po.getServiceHomePage().click();
-    browser.driver.sleep(Common.microWait);
     commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
     browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
     //To Navigate to the particular service and verifying the Page
@@ -431,10 +430,16 @@ xdescribe('Overview', () => {
     jazzServices_po.getMetrices().click();
     commonUtils.waitForMetricsSpinner();
     browser.sleep(Common.miniWait);
+    // jazzServices_po.getMetricesCount().isPresent().then(null, function(err){
+    //   console.log(err.name);
+    //   commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
+    //   jazzServices_po.getServiceHomePage().click();
+    // });
     commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.mediumWait);
     expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
     browser.sleep(Common.microWait);
+    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
+    jazzServices_po.getServiceHomePage().click();
   });
 
 });
-

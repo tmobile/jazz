@@ -18,8 +18,7 @@ import { Timeouts, Browser } from 'selenium-webdriver';
 import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG, SSL_OP_TLS_BLOCK_PADDING_BUG } from 'constants';
 import { Common } from '../common/commontest';
 
-
-xdescribe('Overview', () => {
+describe('Overview', () => {
   let jazzServices_po: Jazz;
   let commonUtils: Common;
   let found = 1;
@@ -31,18 +30,15 @@ xdescribe('Overview', () => {
   beforeAll(() => {
     jazzServices_po = new Jazz();
     commonUtils = new Common();
-    
+    browser.driver.sleep(Common.miniWait);
+    commonUtils.Login();
   });
   beforeEach(() => {
     if (flag == 0) {
       pending();
     }
-    // if (found == 0) {
-    //   commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.shortWait);
-    //   jazzServices_po.getServiceHomePage().click();
-    // }
-    if (found == 0){
-        pending();
+    if (found == 0) {
+      pending();
     }
   });
   afterAll(() => {
@@ -63,10 +59,8 @@ xdescribe('Overview', () => {
   function serviceapprover() {
     browser.driver.sleep(Common.miniWait);
     jazzServices_po.getSubmit().click();
-    jazzServices_po.getDone().click().then(null, function (err) {
-      flag = 0;
-    });
-    commonUtils.waitForSpinnerLogin();
+    commonUtils.fluentwaittry(jazzServices_po.getDone(), Common.shortWait);
+    jazzServices_po.getDone().click();
   }
 
   function waitforskiptest(ele, t) {
@@ -84,7 +78,7 @@ xdescribe('Overview', () => {
             flag = 0;
             return false;
           });
-    }, 240 * 1000);
+    }, 360 * 1000);
   }
 
   it('Create SLS-App Service', function () {
@@ -99,20 +93,19 @@ xdescribe('Overview', () => {
     browser.driver.switchTo().activeElement();
     browser.driver.sleep(Common.miniWait);
     //Creating Website
-    if (!jazzServices_po.getBuildCustom()){
-        flag = 0;
-    }else{
-        jazzServices_po.getBuildCustom().click();
+    if (!jazzServices_po.getBuildCustom()) {
+      flag = 0;
+    } else {
+      jazzServices_po.getBuildCustom().click();
     }
-    var min = 111111111;
-    var max = 999999999;
+    var min = 1111111;
+    var max = 9999999;
     var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
-    servicename = 'servicename' + randomNum;
+    servicename = 'slsapp' + randomNum;
     createservice(servicename);
     serviceapprover();
     browser.driver.sleep(Common.mediumWait);
     //Assert-Verifying the created service,Type and Status of the API
-    expect(jazzServices_po.getService(servicename).getText()).toEqual(servicename);
     commonUtils.fluentwaittry(jazzServices_po.getAPIType(servicename), Common.shortWait);
     expect(jazzServices_po.getAPIType(servicename).getText()).toEqual('sls-app');
     expect(jazzServices_po.getAPIStatus(servicename).getText()).toEqual('creation started');
@@ -126,6 +119,7 @@ xdescribe('Overview', () => {
     //To Navigate to the particular service and verifying the Page
     jazzServices_po.getService(servicename).click();
     commonUtils.waitForSpinnerDisappear();
+    expect(jazzServices_po.eastRegionVerify().getText()).toEqual('us-east-1');
     commonUtils.fluentwaittry(jazzServices_po.getOverviewStatus(), Common.miniWait);
     expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
     commonUtils.elementPresent(jazzServices_po.getServiceNameHeader(), Common.miniWait);
@@ -135,74 +129,7 @@ xdescribe('Overview', () => {
     commonUtils.elementPresent(jazzServices_po.getDeploymentStatus(), Common.shortWait);
     //Verifying the browser id at the Deployment Tab
     expect(jazzServices_po.getDeploymentStatus().getText()).toEqual('DEPLOYMENTS');
-    browser.driver.switchTo().activeElement();
-  });
-
-  xit('Verify METRICS Navigation for SLS-App', () => {
-    browser.sleep(Common.microWait);
-    jazzServices_po.getTestAPI().click().then(null, function (err) {
-      console.log("the error occurred is : " + err.name);
-      expect(jazzServices_po.getTestAPI().getText()).toEqual('Failed Test API');
-      browser.sleep(Common.miniWait);
-    });
-    browser.getAllWindowHandles().then(function (handles) {
-      browser.switchTo().window(handles[1]).then(function () {
-        browser.driver.sleep(Common.shortWait);
-        commonUtils.fluentwaittry(jazzServices_po.getAPIGET(), Common.mediumWait);
-        jazzServices_po.getAPIGET().click().then(null, function (err) {
-          console.log("Swagger Page is Failed to upload : " + err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getTryOut().click().then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getStringA().sendKeys('Testing').then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getStringB().sendKeys('Jazz').then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getExecute().click().then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getAPIGET().click().then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getAPIPOST().click().then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getTryOut().click().then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getExecute().click().then(null, function (err) {
-          console.log(err.name);
-          if (jazzServices_po.SwaggerFailed()) {
-            expect(jazzServices_po.SwaggerFailed().getText()).toEqual('Failed test');
-          } else if (jazzServices_po.getAPIGET()) {
-            expect(jazzServices_po.getAPIGET().getText()).toEqual('GETT');
-          } else {
-            browser.sleep(Common.longWait);
-            browser.close();
-          }
-        });
-        browser.sleep(Common.miniWait);
-        browser.close();
-
-      });
-      browser.switchTo().window(handles[0]).then(function () {
-        browser.sleep(Common.miniWait);
-        commonUtils.elementPresent(jazzServices_po.getMetrices(), Common.miniWait);
-        jazzServices_po.getMetrices().click();
-        commonUtils.waitForMetricsSpinner();
-      });
-    });
+    //browser.driver.switchTo().activeElement();
   });
 
   it('Verify SLS-App Deployments', () => {
@@ -217,17 +144,6 @@ xdescribe('Overview', () => {
   it('Verify SLS-App Logs', () => {
     commonUtils.verifyLogs();
 
-  });
-
-  xit('Verify METRICS COUNT for SLS-App', () => {
-    browser.sleep(Common.miniWait);
-    commonUtils.fluentwaittry(jazzServices_po.getMetrices(), Common.shortWait);
-    jazzServices_po.getMetrices().click();
-    commonUtils.waitForMetricsSpinner();
-    browser.sleep(Common.shortWait);
-    commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.mediumWait);
-    expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
-    
   });
 
   it('Identifying Environment and Navigation for SLS-App', () => {
@@ -361,69 +277,6 @@ xdescribe('Overview', () => {
     });
   });
 
-  xit('Verify METRICS Navigation for SLS Test Branch', () => {
-    commonUtils.fluentwaittry(jazzServices_po.getTestAPI(), Common.mediumWait);
-    expect(jazzServices_po.getTestAPI().getText()).toEqual('TEST API');
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getTestAPI()), Common.timeOutHigh);
-    jazzServices_po.getTestAPI().click();
-    browser.getAllWindowHandles().then(function (handles) {
-      browser.switchTo().window(handles[1]).then(function () {
-        browser.driver.sleep(Common.shortWait);
-        commonUtils.fluentwaittry(jazzServices_po.getAPIGET(), Common.mediumWait);
-        jazzServices_po.getAPIGET().click().then(null, function (err) {
-          console.log("Swagger Page is Failed to upload : " + err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getTryOut().click().then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getStringA().sendKeys('Testing').then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getStringB().sendKeys('Jazz').then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getExecute().click().then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getAPIGET().click().then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getAPIPOST().click().then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getTryOut().click().then(null, function (err) {
-          console.log(err.name);
-        });
-        browser.sleep(Common.microWait);
-        jazzServices_po.getExecute().click().then(null, function (err) {
-          console.log(err.name);
-          if (jazzServices_po.SwaggerFailed()) {
-            expect(jazzServices_po.SwaggerFailed().getText()).toEqual('Failed test');
-          } else if (jazzServices_po.getAPIGET()) {
-            expect(jazzServices_po.getAPIGET().getText()).toEqual('GETT');
-          } else {
-            browser.sleep(Common.longWait);
-            browser.close();
-          }
-        });
-        browser.sleep(Common.miniWait);
-        browser.close();
-      });
-      browser.switchTo().window(handles[0]).then(function () {
-        browser.sleep(Common.miniWait);
-        commonUtils.elementPresent(jazzServices_po.getMetrices(), Common.miniWait);
-        jazzServices_po.getMetrices().click();
-        commonUtils.waitForMetricsSpinner();
-      });
-    });
-  });
   it('Verify SLS-App Deployments for Test Branch', () => {
     commonUtils.verifyDelpoyment();
   });
@@ -434,17 +287,6 @@ xdescribe('Overview', () => {
 
   it('Verify SLS-App Logs for Test Branch', () => {
     commonUtils.verifyLogs();
-  });
-
-  xit('Verify METRICS COUNT for SLS-App for Test Branch', () => {
-    browser.driver.sleep(Common.microWait);
-    commonUtils.fluentwaittry(jazzServices_po.getMetrices(), Common.mediumWait);
-    jazzServices_po.getMetrices().click();
-    commonUtils.waitForMetricsSpinner();
-    browser.sleep(Common.miniWait);
-    commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.mediumWait);
-    expect(jazzServices_po.getMetricesCount().getText()).toEqual('1');
-    browser.sleep(Common.microWait);
   });
 
 });
