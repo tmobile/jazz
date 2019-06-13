@@ -34,9 +34,10 @@ export class TabsComponent implements OnInit {
 
   constructor() { }
 
-  onDropdownClick(index){
-    this.onSelected.emit(index)
-    this.selectedTab = index;
+  onTabClick(index){
+    // debugger
+    this.onSelected.emit(this.tabData[index])
+    this.selectedTab = this.tabData[index];
   }
   disabletabs(){
     var tabs;
@@ -73,3 +74,4 @@ export class TabsComponent implements OnInit {
     this.disableENVtabs();
   }
 }
+
