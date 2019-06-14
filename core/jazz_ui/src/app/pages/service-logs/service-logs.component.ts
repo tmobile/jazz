@@ -306,7 +306,6 @@ export class ServiceLogsComponent implements OnInit {
 	}
 
 	onFilterSelect(event) {
-		debugger
 		switch (event.key) {
 			case 'slider': {
 				this.getRange(event.value);
@@ -740,7 +739,6 @@ export class ServiceLogsComponent implements OnInit {
 				response.data.environment.map((item) => {
 					if (item.physical_id !== "master" && item.status === "deployment_completed") {
 						self.logsData = item.logical_id;
-						// debugger
 						self.getFilter(self.advancedFilters)
 						if (this.filterSelectedValue) {
 							self.instance_yes.filterSelected = true;

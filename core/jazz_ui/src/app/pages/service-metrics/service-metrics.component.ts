@@ -168,7 +168,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
                 self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
               }
               if(self.service.serviceType == "sls-app"){
-                debugger
                 self.assetIdentifierFilter = {
                   column: 'Filter By:',
                   label: 'ASSET IDENTIFIER',
@@ -257,7 +256,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   applyFilter(changedFilter?) {
-    debugger
     if (changedFilter) {
       let index = this.findIndexOfObjectWithKey(this.formFields, 'label', 'PERIOD');
       if (this.service.deployment_targets === 'gcp_apigee') {
@@ -348,7 +346,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     if( changedFilter && (changedFilter.label === 'ASSET IDENTIFIER')){
       this.slsLambdaselected = changedFilter.selected;
       this.setAsset();
-      this.showMetricsForSLS(changedFilter);
     }
     if (changedFilter && (changedFilter.label === 'ASSET' ||
       changedFilter.label === 'METHOD' ||
@@ -358,11 +355,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       return this.queryMetricsData();
     }
     
-  }
-
-  showMetricsForSLS(filterData){
-    debugger
-    this.graphData;
   }
 
   queryMetricsData() {
@@ -449,7 +441,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
 
   setAsset() {
-    debugger
     switch (this.serviceType) {
       case 'api':
         let method = this.filters.getFieldValueOfLabel('METHOD');
@@ -463,7 +454,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         break;
       case 'sls-app':
         if(this.queryDataRaw){
-          debugger
           for(let asset of this.queryDataRaw.assets){
             if(asset.asset_name.FunctionName.includes(this.slsLambdaselected)){
               this.selectedAsset = asset;
