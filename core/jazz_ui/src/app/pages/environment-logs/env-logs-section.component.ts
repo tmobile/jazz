@@ -60,6 +60,9 @@ export class EnvLogsSectionComponent implements OnInit {
 		},
 		asset:{
 			show:true,
+		},
+		sls_resource:{
+			show: false
 		}
 	}
 	public assetWithDefaultValue:any=[]
@@ -156,7 +159,10 @@ export class EnvLogsSectionComponent implements OnInit {
 	regList=env_internal.urls.regions;
 	accSelected:string = this.accList[0];
 	regSelected:string=this.regList[0];
-  public assetSelected:string;
+  	public assetSelected:string;
+	public resourceSelected: any;
+	lambdaResourceNameArr;
+
 	instance_yes;
 	getFilter(filterServ){
 		
@@ -164,6 +170,12 @@ export class EnvLogsSectionComponent implements OnInit {
 		this.service['isServicelogs']=true;
 		if(this.assetList){
 			this.service['assetList']=this.assetList;
+		}
+		debugger
+
+		if(this.service.serviceType == 'sls-app'){
+			this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
+			this.advanced_filter_input.sls_resource.show = true;
 		}
 
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
@@ -436,6 +448,15 @@ export class EnvLogsSectionComponent implements OnInit {
 		    let assets=_(response.data.assets).map('asset_type').uniq().value();
 			 let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 			 validAssetList.splice(0, 0, 'all');
+			 this.lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
+			for( let i = 0 ; i<this.lambdaResourceNameArr.length; i++ ){
+				let tokens = this.lambdaResourceNameArr[i].split(':');
+				let reduced = tokens[tokens.length-2];
+				let reducedTokens = reduced.split('-');
+				this.lambdaResourceNameArr[i] = reducedTokens[reducedTokens.length-1];
+			}
+			this.lambdaResourceNameArr = _.uniq(this.lambdaResourceNameArr);
+			this.lambdaResourceNameArr.splice(0,0,'All');
 			 self.assetWithDefaultValue = validAssetList;
 			 for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
 				 self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
@@ -603,7 +624,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		  case 'asset' :{
 			  this.FilterTags.notify('filter-Asset',event.value)
 				this.assetSelected=event.value;
-				if (this.assetSelected !== 'all') {
+				if (this.assetSelected !== 'all' && this.assetSelected !== 'All') {
 					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
 				}
 				else {
@@ -612,6 +633,16 @@ export class EnvLogsSectionComponent implements OnInit {
 			  this.resetPayload();
 			  break;
 		  }
+		  case "resource" : {
+			if(this.service.serviceType == 'sls-app'){
+				this.resourceSelected = event.value;
+				this.payload.asset_identifier = this.resourceSelected;
+				if(this.resourceSelected === 'all' || this.resourceSelected === "All"){
+					delete this.payload['asset_identifier'];
+				}
+				this.resetPayload();
+			}
+		}
 	
 	   
 		}
