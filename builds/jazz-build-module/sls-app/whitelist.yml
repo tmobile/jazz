@@ -462,3 +462,10 @@ plugins:
   - serverless-mocha-plugin
   - serverless-kms-secrets
     
+arnTemplate:
+  - AWS::Lambda::Function: "arn:aws:lambda:{region}:{account-id}:function:{resourceName}"
+  - AWS::S3::Bucket: "arn:aws:s3:::{resourceName}"
+  
+assetTypes:
+  - AWS::Lambda::Function
+  - AWS::S3::Bucket

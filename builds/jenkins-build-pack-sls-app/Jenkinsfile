@@ -332,35 +332,31 @@ node() {
           def envBucketKey = "${env_key}"
           echoServerlessFile()
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
-
-// Shoving deploy output lines into array
-          def deployLines = deployOutput.split('\n')
-          def resourceArns = []
-          def afterStackOutputs = false
-// Extracting all the lines that follow 'Stack Outputs'. These lines are supposed to contain arns of resources created
-          for(def line: deployLines) {
-            if(afterStackOutputs) resourceArns.add(line)
-            if(line.contains('Stack Outputs')) afterStackOutputs = true // Here we are only interested in lines that follow 'Stack Outputs' marker
-          }
-
-          for(def name2ArnString: resourceArns) {
-            def name2ArnPair = name2ArnString.split(': ') // Here we rely on the space after the ': ' so it is split properly without affecting the arn itself that is full of colons but never has a space after
-            if(name2ArnPair.size() > 1) {
-              def arn = name2ArnPair[1].trim()
-              if(arn.startsWith('arn')) {
-                 def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
-                 if(arnAsArray.size() > 2) { // Making sure that the third element exists
-                   def artifactType = arnAsArray[2]
-                   if(artifactType == 'kinesis') artifactType = 'kinesis_stream' // 'kinesis_stream' needs to be instaead of simple 'kinesis' that did not get persisted :-( by itself
-                   events.sendCompletedEvent('CREATE_ASSET',
-                                             null,
-                                             utilModule.generateAssetMap("aws",
-                                                                         arn,
-                                                                         artifactType,
-                                                                         config),
-                                             environment_logical_id)
-                   echo "Sending type $artifactType with arn $arn"
-
+          // After stack Deployment
+          def describeResources = getStackResources(environment_logical_id)
+          def resources = describeResources['StackResources']
+          if( resources != null ) {
+            for( resource in resources ) {
+              echo "Resource is : ${resource}"
+              def resourceType = resource['ResourceType']
+              if( whiteListModule.checkAssetType(resourceType)){
+                def arn = constructArn(resource['PhysicalResourceId'], resourceType)
+                echo "Arn is : ${arn}"
+                if(arn.startsWith('arn')) {
+                  def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
+                  if(arnAsArray.size() > 2) { // Making sure that the third element exists
+                    def artifactType = arnAsArray[2]
+                    echo "ArtifactType is : ${artifactType}"
+                    if(artifactType == 'kinesis') artifactType = 'kinesis_stream' // 'kinesis_stream' needs to be instaead of simple 'kinesis' that did not get persisted :-( by itself
+                    events.sendCompletedEvent('CREATE_ASSET',
+                                              null,
+                                              utilModule.generateAssetMap("aws",
+                                                                          arn,
+                                                                          artifactType,
+                                                                          config),
+                                              environment_logical_id)
+                    echo "Sending type $artifactType with arn $arn"
+                  }
                 }
               }
             }
@@ -404,6 +400,27 @@ def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetail
     echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
     error "Exception occured while serverless deployment to ${environment_logical_id} environment"
   }
+}
+
+def constructArn(resourceName, resourceType) {
+  def arn = whiteListModule.getarnTemplates(resourceType)
+  echo "Arn Templates for ${resourceType} is ${arn}"
+  if( arn != null ) {
+    arn = arn.replaceAll("\\{region\\}", "${config['region']}") 
+    arn = arn.replaceAll("\\{account-id\\}", "${config['accountId']}")
+    arn = arn.replaceAll("\\{resourceName\\}", "${resourceName}")
+  } else {
+      error "No Arn templated listed"
+  }
+  return arn
+}
+
+def getStackResources(env){
+  def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${env}"
+  def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${cfStackName} --region ${config['region']}", returnStdout: true)
+  echo "Describe Stacks are ${stackResources}"
+  def parsedResources = parseJson(stackResources)
+  return parsedResources
 }
 
 def echoServerlessFile() {
