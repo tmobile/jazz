@@ -337,16 +337,14 @@ node() {
           def resources = describeResources['StackResources']
           if( resources != null ) {
             for( resource in resources ) {
-              echo "Resource is : ${resource}"
               def resourceType = resource['ResourceType']
               if( whiteListModule.checkAssetType(resourceType)){
                 def arn = constructArn(resource['PhysicalResourceId'], resourceType)
-                echo "Arn is : ${arn}"
+                echo "Arn Template is : ${arn}"
                 if(arn.startsWith('arn')) {
                   def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
                   if(arnAsArray.size() > 2) { // Making sure that the third element exists
                     def artifactType = arnAsArray[2]
-                    echo "ArtifactType is : ${artifactType}"
                     if(artifactType == 'kinesis') artifactType = 'kinesis_stream' // 'kinesis_stream' needs to be instaead of simple 'kinesis' that did not get persisted :-( by itself
                     events.sendCompletedEvent('CREATE_ASSET',
                                               null,
@@ -403,14 +401,20 @@ def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetail
 }
 
 def constructArn(resourceName, resourceType) {
-  def arn = whiteListModule.getarnTemplates(resourceType)
-  echo "Arn Templates for ${resourceType} is ${arn}"
-  if( arn != null ) {
-    arn = arn.replaceAll("\\{region\\}", "${config['region']}") 
-    arn = arn.replaceAll("\\{account-id\\}", "${config['accountId']}")
-    arn = arn.replaceAll("\\{resourceName\\}", "${resourceName}")
-  } else {
-      error "No Arn templated listed"
+  def arn = null
+  try{
+    arn = whiteListModule.getarnTemplates(resourceType)
+    echo "Arn Templates for ${resourceType} is ${arn}"
+    if( arn != null ) {
+      arn = arn.replaceAll("\\{region\\}", "${config['region']}") 
+      arn = arn.replaceAll("\\{account-id\\}", "${config['accountId']}")
+      arn = arn.replaceAll("\\{resourceName\\}", "${resourceName}")
+    } else {
+      error "Arn Templates not found for Resource Type : ${resourceType}"
+    }
+  } catch (ex){
+    echo "Exception occured on getting Arn templates for Resource Type : ${resourceType}"
+    error "Exception occured on getting Arn templates for Resource Type : ${resourceType}"
   }
   return arn
 }
