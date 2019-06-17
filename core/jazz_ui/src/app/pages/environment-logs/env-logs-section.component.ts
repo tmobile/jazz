@@ -171,7 +171,6 @@ export class EnvLogsSectionComponent implements OnInit {
 		if(this.assetList){
 			this.service['assetList']=this.assetList;
 		}
-		debugger
 
 		if(this.service.serviceType == 'sls-app'){
 			this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;

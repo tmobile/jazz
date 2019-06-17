@@ -169,3 +169,14 @@ search-box {
   cursor: pointer;
   font-size: 1.5rem;
 }
+
+.env-filters{
+  /deep/.filter-clear-btn{
+    position: absolute;
+    top:-0.6rem;
+    right:0;
+    color:#ed008c;
+    font-size:1rem;
+    cursor: pointer;
+  }
+}
