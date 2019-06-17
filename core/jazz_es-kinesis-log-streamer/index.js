@@ -41,7 +41,6 @@ function handler(input, context, cb) {
       input.Records.forEach(eachRecord => {
         // decode input from base64
         let zippedInput = new Buffer(eachRecord.kinesis.data, 'base64');
-       // let kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
 
         zlib.gunzip(zippedInput, function (error, buffer) {
           if (error) {
