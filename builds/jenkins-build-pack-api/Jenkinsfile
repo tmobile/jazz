@@ -359,7 +359,7 @@ node() {
             }
 
             if (domain != "jazz") {
-              createSubscriptionFilters(stackName, configLoader.AWS.DEFAULTS.REGION, roleId, accountDetails, env_key, credsId);
+              createSubscriptionFilters(config, configLoader.AWS.DEFAULTS.REGION, roleId, accountDetails, env_key, credsId);
             }
 
             updateSwagger();
@@ -959,17 +959,18 @@ def updateApiDocUrl(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(stackName, region, roleId, accountDetails, env_key, credsId) {
-  def lambda = "/aws/lambda/${stackName}"
+def createSubscriptionFilters(config, region, roleId, accountDetails, env_key, credsId) {
+  def logGroupName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+  def lambda = "/aws/lambda/${logGroupName}"
   def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
   try {
-    sh "aws logs create-log-group --log-group-name ${lambda} --region ${config.region}"
+    sh "aws logs create-log-group --log-group-name ${lambda} --profile ${credsId}"
   } catch (Exception ex) { }// ignore if already existing
 
   try {
     filter_json = sh(
-      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${config.region}",
+      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --profile ${credsId}",
       returnStdout: true
     ).trim()
     echo "${filter_json}"
@@ -977,7 +978,7 @@ def createSubscriptionFilters(stackName, region, roleId, accountDetails, env_key
     filtername = resultJson.subscriptionFilters[0].filterName
     echo "removing existing filter... $filtername"
     if (filtername != "" && !filtername.equals(lambda)) {
-      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\"  --filter-name \"${filtername}\" --region ${config.region}"
+      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\"  --filter-name \"${filtername}\" --profile ${credsId}"
     }
   } catch (Exception ex) { }// ignore error if not created yet
 
@@ -992,9 +993,9 @@ def createSubscriptionFilters(stackName, region, roleId, accountDetails, env_key
                     }
                 }
                 updatePolicy(env_key, destARN);
-                sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${config.region} --profile ${credsId}"
+                sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\"  --profile ${credsId}"
             } else {
-                sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
+                sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
             }
         }
     }

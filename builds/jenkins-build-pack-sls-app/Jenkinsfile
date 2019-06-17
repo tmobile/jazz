@@ -33,7 +33,7 @@ import groovy.transform.Field
 @Field def config
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
-@Field def current_environment = ''
+@Field def environment_logical_id
 
 node() {
 
@@ -49,8 +49,6 @@ node() {
   def gitCommitOwner
   def gitCommitHash
   def context_map
-  def environment_logical_id
-  def stackName
 
   if (domain && domain != "") {
     repo_name = params.domain + "_" + params.service_name
@@ -113,10 +111,8 @@ node() {
     environment_logical_id = '';
 
     if (branch == 'master') {
-      current_environment = 'prod'
       environment_logical_id = 'prod';
     } else {
-      current_environment = 'dev'
       environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
     }
 
@@ -141,7 +137,7 @@ node() {
   def roleARN = accountDetails.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
 
   sonarModule.initialize(configLoader, config, branch)
-  stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+
 
   def requestId = utilModule.generateRequestId()
   if (requestId != null) {
@@ -641,103 +637,61 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(stackName, env_key, credsId, accountDetails) {
-  def lambda = "/aws/lambda/${stackName}"
-  def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
-  try {
-    sh "aws logs create-log-group --log-group-name ${lambda} --region ${config['region']}"
-  } catch (Exception ex) { } // ignore if already existing
+def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
+  def deploymentDescriptor = null
+  if( env_deployment_descriptor != null ){
+    deploymentDescriptor = env_deployment_descriptor
+  } else {
+    deploymentDescriptor = config['deployment_descriptor']
+  }
+  def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
+  def functionsElem = doc['functions']
+  def logGroupName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+  functionsElem.each{funcName, funcConfig ->
+    def name = funcConfig['name'] ? funcConfig['name'] : funcName
+    def lambda = "/aws/lambda/${logGroupName}-${name}"
+    def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
-  try {
-    filter_json = sh(
-      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${service_config.region} --profile ${credsId}",
-      returnStdout: true
-    ).trim()
-    echo "${filter_json}"
-    def resultJson = parseJson(filter_json)
-    filtername = resultJson.subscriptionFilters[0].filterName
-    echo "removing existing filter... $filtername"
-    if (filtername != "" && !filtername.equals(lambda)) {
-      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${service_config.region} --profile ${credsId}"
-    }
-  } catch (Exception ex) { } // ignore error if not created yet
-  try {
-    //updating the policy if the deployment account is not primary
-    for (item in configLoader.AWS.ACCOUNTS) {
-      if(item.ACCOUNTID == service_config.accountId){
+    try {
+      sh "aws logs create-log-group --log-group-name ${lambda} --profile ${credsId}"
+    } catch (Exception ex) { } // ignore if already existing
+
+    try {
+      filter_json = sh(
+        script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --profile ${credsId}",
+        returnStdout: true
+      ).trim()
+      echo "${filter_json}"
+      def resultJson = parseJson(filter_json)
+      filtername = resultJson.subscriptionFilters[0].filterName
+      echo "removing existing filter... $filtername"
+      if (filtername != "" && !filtername.equals(lambda)) {
+        sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\"  --profile ${credsId}"
+      }
+    } catch (Exception ex) { } // ignore error if not created yet
+    try {
+      for (item in configLoader.AWS.ACCOUNTS) {
+      if(item.ACCOUNTID == config.accountId){
         if(!item.PRIMARY){
           def destARN
           for (data in accountDetails.REGIONS) {
-            if(data.REGION == service_config.region){
+            if(data.REGION == config.region){
               destARN = data.LOGS.PROD
             }
           }
           updatePolicy(env_key, destARN);
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${service_config.region} --profile ${credsId}"
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\"  --profile ${credsId}"
         } else {
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
         }
       }
     }
-  } catch (Exception ex) {
-    echo "error occured: " + ex.getMessage()
+    } catch (Exception ex) {
+      echo "error occured: " + ex.getMessage()
+    }
   }
 }
-
-// def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
-//   def deploymentDescriptor = null
-//   if( env_deployment_descriptor != null ){
-//     deploymentDescriptor = env_deployment_descriptor
-//   } else {
-//     deploymentDescriptor = config['deployment_descriptor']
-//   }
-//   def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
-//   def functionsElem = doc['functions']
-//   functionsElem.each{funcName, funcConfig ->
-//     def name = funcConfig['name'] ? funcConfig['name'] : funcName
-//     def lambda = "/aws/lambda/${name}"
-//     def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
-
-//     try {
-//       sh "aws logs create-log-group --log-group-name ${lambda} --profile ${credsId}"
-//     } catch (Exception ex) { } // ignore if already existing
-
-//     try {
-//       filter_json = sh(
-//         script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --profile ${credsId}",
-//         returnStdout: true
-//       ).trim()
-//       echo "${filter_json}"
-//       def resultJson = parseJson(filter_json)
-//       filtername = resultJson.subscriptionFilters[0].filterName
-//       echo "removing existing filter... $filtername"
-//       if (filtername != "" && !filtername.equals(lambda)) {
-//         sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\"  --profile ${credsId}"
-//       }
-//     } catch (Exception ex) { } // ignore error if not created yet
-//     try {
-//       for (item in configLoader.AWS.ACCOUNTS) {
-//       if(item.ACCOUNTID == config.accountId){
-//         if(!item.PRIMARY){
-//           def destARN
-//           for (data in accountDetails.REGIONS) {
-//             if(data.REGION == config.region){
-//               destARN = data.LOGS.PROD
-//             }
-//           }
-//           updatePolicy(env_key, destARN);
-//           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\"  --profile ${credsId}"
-//         } else {
-//           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
-//         }
-//       }
-//     }
-//     } catch (Exception ex) {
-//       echo "error occured: " + ex.getMessage()
-//     }
-//   }
-// }
 
 def updatePolicy(env, destARN){
   def primaryData = utilModule.getAccountInfoPrimary();

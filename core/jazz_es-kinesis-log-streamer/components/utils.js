@@ -48,6 +48,9 @@ function getSubInfo(message, patternStr, index) {
   let result = "";
   if (message) {
     let tmp = pattern.exec(message);
+    console.log("getSubInfo: patternStr: " + patternStr)
+    console.log("getSubInfo: tmp: " + tmp)
+    console.log("getSubInfo: index:" + index)
     if (tmp && tmp[index]) {
       logger.debug("found match..:" + tmp[index]);
       result = tmp[index];
@@ -68,6 +71,7 @@ function getApiLogsData(payload) {
   let bulkRequestBody = '',
     data = {},
     indexName = "apilogs";
+    data.asset_type = "apigateway"
   data.timestamp = new Date();
   data.platform_log_group = payload.logGroup;
   data.platform_log_stream = payload.logStream;
@@ -79,7 +83,7 @@ function getApiLogsData(payload) {
   } // Cloudwatch do not have method info for get!
 
   let apiDomainAndService = getInfo(payload.logEvents, config.PATTERNS.domain_service);
-  if(data.environment === "dev") {
+  if (data.environment === "dev") {
     apiDomainAndService = apiDomainAndService.substring(apiDomainAndService.indexOf("/") + 1, apiDomainAndService.length);
   }
 
@@ -137,17 +141,34 @@ function getLambdaLogsData(payload) {
   let bulkRequestBody = '',
     data = {},
     domainAndservice = '';
+  data.asset_type = "lambda"
   data.request_id = getInfo(payload.logEvents, config.PATTERNS.lambda_request_id);
   if (data.request_id) {
-    data.environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment, 2);
-    if (data.environment === "dev") {
-      let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 2);
-      domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 1);
-      data.environment = dev_environment;
+    let lastSubstring = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment, 2);
+    if (lastSubstring === "prod" || lastSubstring === "stg" || lastSubstring === "dev") {
+      if (lastSubstring === "dev") {
+        let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 2);
+        domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 1);
+        data.environment = dev_environment;
+      } else {
+        data.environment = lastSubstring;
+        domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service, 1);
+      }
     } else {
-      domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service, 1);
+      data.asset_identifier = lastSubstring
+      let environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_in_slsapp, 2);
+      if (environment === "dev") {
+        console.log("sini.. : dev")
+        let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev_in_slsapp, 2);
+        domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev_in_slsapp, 1);
+        data.environment = dev_environment;
+      } else {
+        console.log("sini.. : not dev")
+        data.environment = environment;
+        domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service_in_slsapp, 1);
+      }
     }
-
+    console.log("sini.. : domainAndservice : " + domainAndservice)
     let domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));
     if (domain) {
       data.domain = domain;
