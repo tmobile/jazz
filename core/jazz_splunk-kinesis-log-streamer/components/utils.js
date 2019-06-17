@@ -60,7 +60,7 @@ var getCommonData = function (payload) {
     let data = {};
     data.metadata = {};
     data.asset_type = "lambda"
-    data.request_id = getInfo(payload.logEvents, global_config.PATTERNS.Lambda_request_id);
+    data.request_id = getInfo(payload.logEvents, global_config.PATTERNS.lambda_request_id);
     if (data.request_id) {
       data.provider = "aws_lambda";
       let domainAndservice;
