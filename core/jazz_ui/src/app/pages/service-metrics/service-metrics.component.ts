@@ -404,18 +404,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   filterAssetType(data) {
     return data.assets.filter((asset) => {
       return asset.type === this.assetSelected;
-
-      // if (this.serviceType === 'api') {
-      //   if (this.service.deployment_targets === "gcp_apigee") {
-      //     return asset.type === this.assetSelected;
-      //   } else {
-      //     return asset.type === this.assetSelected;
-      //   }
-      // } else if (this.serviceType === 'function') {
-      //   return asset.type === this.assetSelected;
-      // } else if (this.serviceType === 'website') {
-      //   return (asset.type === this.assetSelected) || (asset.type === this.assetSelected);
-      // }
     })
   }
 

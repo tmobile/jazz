@@ -209,7 +209,6 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     if(this.assetList){
       this.assetSelected = this.assetList[0];
     }
-    debugger
     this.lambdaResourceNameArr = this.service.lambdaResourceNameArr;
     if(this.lambdaResourceNameArr){
       this.resourceSelected = this.lambdaResourceNameArr[0];
