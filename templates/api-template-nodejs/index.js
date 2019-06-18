@@ -38,12 +38,13 @@ module.exports.handler = (event, context, cb) => {
 
     //Your GET method should be handled here
     if (event && event.method && event.method === 'GET') {
-      logger.verbose(sampleResponse);
+      logger.info("sample response in GET" + sampleResponse);
       cb(null, responseObj(sampleResponse, event.query));
     }
 
     //Your POST method should be handled here
     if (event && event.method && event.method === 'POST') {
+      logger.info("sample response in POST" + sampleResponse);
       cb(null, responseObj(sampleResponse, event.body));
     }
 

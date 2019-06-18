@@ -5,7 +5,7 @@
 </div>
 <section>
   <div class="radio-container radio-group" *ngFor="let item of radioContent">
-    <input type="radio" class='test-focus' name="runtime" [id]="item" [value]="item" [checked]="selected == item"
+    <input type="radio" class='test-focus' [name]="idName" [id]="item" [value]="item" [checked]="selected == item"
       (click)="onSelectionChange(item)">
     <label [for]="item">
       <span>

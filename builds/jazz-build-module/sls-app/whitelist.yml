@@ -462,3 +462,20 @@ plugins:
   - serverless-mocha-plugin
   - serverless-kms-secrets
     
+arnTemplate:
+  - AWS::Lambda::Function: "arn:aws:lambda:{region}:{account-id}:function:{resourceName}"
+  - AWS::S3::Bucket: "arn:aws:s3:::{resourceName}"
+  - AWS::IAM::Role: "arn:aws:iam::{account-id}:{resourceName}"
+  - AWS::DynamoDB::Table: "arn:aws:dynamodb:{region}:{account-id}:table/{resourceName}"
+  - AWS::Kinesis::Stream: "arn:aws:kinesis:{region}:{account-id}:stream/{resourceName}"
+  - AWS::SQS::Queue: "arn:aws:sqs:{region}:{account-id}:{resourceName}"
+  - AWS::Events::Rule: "arn:aws:events:{region}:{account-id}:rule/{resourceName}"
+  
+assetTypes:
+  - AWS::Lambda::Function
+  - AWS::S3::Bucket
+  - AWS::IAM::Role
+  - AWS::DynamoDB::Table
+  - AWS::Kinesis::Stream
+  - AWS::SQS::Queue
+  - AWS::Events::Rule
