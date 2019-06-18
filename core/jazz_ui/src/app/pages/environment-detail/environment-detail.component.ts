@@ -74,7 +74,6 @@ export class EnvironmentDetailComponent implements OnInit {
   }
 
   onSelectedDr(selected) {
-    // debugger
     this.selectedTab = selected;
   }
 

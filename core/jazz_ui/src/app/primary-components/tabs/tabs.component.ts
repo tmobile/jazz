@@ -35,7 +35,6 @@ export class TabsComponent implements OnInit {
   constructor() { }
 
   onTabClick(index){
-    // debugger
     this.onSelected.emit(this.tabData[index])
     this.selectedTab = this.tabData[index];
   }
