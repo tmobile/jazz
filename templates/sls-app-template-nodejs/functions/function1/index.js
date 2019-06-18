@@ -42,7 +42,6 @@ module.exports.handler = (event, context, cb) => {
 
   } catch (e) {
     //Sample Error response for internal server error
-		console.log('----e------>', e);
     return cb(JSON.stringify(errorHandler.throwInternalServerError("Sample error message")));
 
     //Sample Error response for Not Found Error
