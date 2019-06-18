@@ -40,11 +40,11 @@ def handler(event, context):
         if 'method' in event:
             if event['method'] == "POST":
                 # Handle Post response here
-                logger.verbose('Sample log inside POST')
+                logger.info('Sample log inside POST')
                 response = CustomResponse(data, event['body']).get_json()
             else:
                 # Handle Get/other response here.
-                logger.verbose('Sample log inside GET')
+                logger.info('Sample log inside GET')
                 response = CustomResponse(data, event['query']).get_json()
         return response
     except Exception as e:

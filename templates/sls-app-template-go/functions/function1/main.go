@@ -36,7 +36,8 @@ func Handler(ctx context.Context, event map[string]interface{}) (Response, error
 	 logger.VERBOSE("Generally speaking, most lines logged by your application should be written as verbose.");
 	 logger.DEBUG("Detailed information on the flow through the system.");
 	*/
-	logger.INFO("Sample log for function1")
+  logger.INFO("Interesting runtime events (Eg. connection established, data fetched etc.)")
+  logger.INFO("Sample log for function1")
 	// Initialize Config Components
 	configModule := new(components.Config)
 	configModule.LoadConfiguration(ctx, event)

@@ -62,12 +62,12 @@ func Handler(ctx context.Context, event map[string]interface{}) (Response, error
 		var payLoad map[string]interface{}
 		// Your GET method should be handled here
 		if (event["method"].(string) == "GET"){
-      logger.VERBOSE("Sample log inside GET");
+      logger.INFO("Sample log inside GET");
 			payLoad = event["query"].(map[string]interface{})
 		}
 		//Your POST method should be handled here
 		if (event["method"].(string) == "POST"){
-      logger.VERBOSE("Sample log inside POST");
+      logger.INFO("Sample log inside POST");
 			payLoad = event["body"].(map[string]interface{})
 		}
 		return Response{

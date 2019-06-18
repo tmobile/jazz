@@ -30,7 +30,7 @@ def handler(event, context):
     # logger.verbose('Generally speaking, most log lines should be verbose.')
     # logger.debug('Detailed information on the flow through the system.')
 
-    logger.debug('Sample response for function2.')
+    logger.info('Sample response for function2.')
     return {
         "message": "Your function executed successfully!",
         "event": event
