@@ -21,6 +21,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   @Input() service: any = {};
   @Output() onFilterSelect: EventEmitter<any> = new EventEmitter<any>();
   @Output() onAssetSelect: EventEmitter<any> = new EventEmitter<any>();
+  @Output() onResourceSelect: EventEmitter<any> = new EventEmitter<any>();
   @ViewChild('filters') filters;
   public assetFilter;
   public formFields: any = [];
@@ -36,7 +37,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
 
   isAsset: boolean = false;
   filterSelected: boolean = false;
-  showEnvironment: boolean = false;
+  showEnvironment: boolean = true;
 
   selectFilter: any = {}
   periodList: Array<string> = ['15 Minutes', '1 Hour', '6 Hours', '1 Day', '7 Days', '30 Days'];
@@ -61,10 +62,13 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   regList = env_internal.urls.regions;
   accSelected: string = this.accList[0];
   regSelected: string = this.regList[0];
-  assetSelected: string;
+  assetSelected: string = "all";
+  resourceSelected:string;
 
   envList: any = ['prod', 'stg'];
   envSelected: string = this.envList[0];
+
+  lambdaResourceNameArr:string;
 
   getRange(e) {
     this.selectFilter["key"] = 'slider';
@@ -110,7 +114,6 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     this.selectFilter["key"] = 'range';
     this.selectFilter["value"] = range;
     this.onFilterSelect.emit(this.selectFilter);
-
   }
 
   onTimePeriodSelected(period) {
@@ -134,6 +137,23 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     this.selectFilter["value"] = event;
     this.onAssetSelect.emit(event);
     this.onFilterSelect.emit(this.selectFilter)
+    if(event == "all"){
+        this.advanced_filter_input.sls_resource.show = false;
+        this.onResourceSelect.emit("all");
+        this.selectFilter["key"] = 'resource';
+        this.selectFilter["value"] = "all";
+        this.onFilterSelect.emit(this.selectFilter);
+    }
+    else{
+      this.advanced_filter_input.sls_resource.show = true;
+    }
+  }
+
+  getResourceType(event){
+    this.selectFilter["key"] = 'resource';
+    this.selectFilter["value"] = event;
+    this.onResourceSelect.emit(event);
+    this.onFilterSelect.emit(this.selectFilter);
   }
   onEnvSelected(envt) {
 
@@ -188,6 +208,13 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     this.assetList = this.service.assetList
     if(this.assetList){
       this.assetSelected = this.assetList[0];
+    }
+    this.lambdaResourceNameArr = this.service.lambdaResourceNameArr;
+    if(this.lambdaResourceNameArr){
+      this.resourceSelected = this.lambdaResourceNameArr[0];
+    }
+    if(this.assetSelected == "all"){
+      this.advanced_filter_input.sls_resource.show = false;
     }
     if (this.service.logsData) {
       this.envList.push(this.service.logsData);
