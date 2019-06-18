@@ -33,7 +33,7 @@ import groovy.transform.Field
 @Field def config
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
-@Field def current_environment = ''
+@Field def environment_logical_id
 
 node() {
 
@@ -49,7 +49,6 @@ node() {
   def gitCommitOwner
   def gitCommitHash
   def context_map
-  def environment_logical_id
 
   if (domain && domain != "") {
     repo_name = params.domain + "_" + params.service_name
@@ -112,10 +111,8 @@ node() {
     environment_logical_id = '';
 
     if (branch == 'master') {
-      current_environment = 'prod'
       environment_logical_id = 'prod';
     } else {
-      current_environment = 'dev'
       environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
     }
 
@@ -140,7 +137,7 @@ node() {
   def roleARN = accountDetails.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
 
   sonarModule.initialize(configLoader, config, branch)
-  stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+
 
   def requestId = utilModule.generateRequestId()
   if (requestId != null) {
@@ -640,6 +637,7 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
+
 def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
   def deploymentDescriptor = null
   if( env_deployment_descriptor != null ){
@@ -649,9 +647,10 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
   }
   def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
   def functionsElem = doc['functions']
+  def logGroupName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
   functionsElem.each{funcName, funcConfig ->
     def name = funcConfig['name'] ? funcConfig['name'] : funcName
-    def lambda = "/aws/lambda/${name}"
+    def lambda = "/aws/lambda/${logGroupName}-${name}"
     def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
     try {
