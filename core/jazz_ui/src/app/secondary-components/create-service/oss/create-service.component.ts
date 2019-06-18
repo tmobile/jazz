@@ -114,7 +114,7 @@ export class CreateServiceComponent implements OnInit {
 
   model = new ServiceFormData('','','', '','','');
   cronObj = new CronObject('0/5','*','*','*','?','*')
-  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
+  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '', '');
   eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
   private doctors = [];
   private toastmessage:any;
