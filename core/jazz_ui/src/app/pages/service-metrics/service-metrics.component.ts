@@ -157,7 +157,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
             let lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
             for( let i = 0 ; i<lambdaResourceNameArr.length; i++ ){
               let tokens = lambdaResourceNameArr[i].split(':');
-              let reduced = tokens[tokens.length-2];
+              let reduced = tokens[tokens.length-1];
               let reducedTokens = reduced.split('-');
               lambdaResourceNameArr[i] = reducedTokens[reducedTokens.length-1];
             }
