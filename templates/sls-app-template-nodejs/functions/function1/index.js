@@ -30,6 +30,8 @@ module.exports.handler = (event, context, cb) => {
     logger.debug('Detailed information on the flow through the system.');
     */
 
+   logger.info("Sample log for function1");
+
     const sampleResponse = {
       "foo": "foo-value",
       "bar": "bar-value",

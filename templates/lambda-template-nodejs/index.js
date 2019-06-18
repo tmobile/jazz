@@ -36,6 +36,7 @@ module.exports.handler = (event, context, cb) => {
       "configKeys": myVal
     };
 
+    logger.debug("Sample log for nodejs service");
     return cb(null, responseObj(sampleResponse, event));
 
   } catch (e) {
