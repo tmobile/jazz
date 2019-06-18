@@ -333,7 +333,7 @@ node() {
           echoServerlessFile()
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
           // After stack Deployment
-          def describeResources = getStackResources(environment_logical_id)
+          def describeResources = getStackResources(environment_logical_id, credsId)
           def resources = describeResources['StackResources']
           if( resources != null ) {
             def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
@@ -424,9 +424,9 @@ def constructArn(resourceName, resourceType) {
   return arn
 }
 
-def getStackResources(env){
+def getStackResources(env, credsId){
   def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${env}"
-  def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${cfStackName} --region ${config['region']}", returnStdout: true)
+  def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${cfStackName} --profile ${credsId}", returnStdout: true)
   echo "Describe Stacks are ${stackResources}"
   def parsedResources = parseJson(stackResources)
   return parsedResources
