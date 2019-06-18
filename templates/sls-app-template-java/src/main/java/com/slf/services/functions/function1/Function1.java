@@ -51,7 +51,9 @@ public class Function1 extends BaseRequestHandler {
     logger.error("Runtime errors or unexpected conditions.");
     logger.fatal("Very severe error events that will presumably lead the application to abort");
 
-        /* Sample output data */
+    logger.info("Sample log for function1");
+
+    /* Sample output data */
 		HashMap<String, String> data = new HashMap<String, String>();
 		String val = (String) body.get("key");
 		data.put("name", val);
