@@ -336,6 +336,7 @@ node() {
           def describeResources = getStackResources(environment_logical_id)
           def resources = describeResources['StackResources']
           if( resources != null ) {
+            def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
             for( resource in resources ) {
               def resourceType = resource['ResourceType']
               if( whiteListModule.checkAssetType(resourceType)){
@@ -345,12 +346,11 @@ node() {
                   def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
                   if(arnAsArray.size() > 2) { // Making sure that the third element exists
                     def artifactType = arnAsArray[2]
-                    if(artifactType == 'kinesis') artifactType = 'kinesis_stream' // 'kinesis_stream' needs to be instaead of simple 'kinesis' that did not get persisted :-( by itself
                     events.sendCompletedEvent('CREATE_ASSET',
                                               null,
                                               utilModule.generateAssetMap("aws",
                                                                           arn,
-                                                                          artifactType,
+                                                                          assetCatalogTypes[artifactType],
                                                                           config),
                                               environment_logical_id)
                     echo "Sending type $artifactType with arn $arn"
@@ -400,11 +400,16 @@ def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetail
   }
 }
 
+
+
 def constructArn(resourceName, resourceType) {
   def arn = null
   try{
     arn = whiteListModule.getarnTemplates(resourceType)
-    echo "Arn Templates for ${resourceType} is ${arn}"
+    //Get queueName from url
+    if( resourceType == "AWS::SQS::Queue"){
+      resourceName  = resourceName.substring(resourceName.lastIndexOf("/") + 1)
+    }
     if( arn != null ) {
       arn = arn.replaceAll("\\{region\\}", "${config['region']}") 
       arn = arn.replaceAll("\\{account-id\\}", "${config['accountId']}")
@@ -544,7 +549,7 @@ def buildSlsApp(String runtime, String repo_name) {
       if( size > 0) {
         for(item in dirs) {
           def functionpath = "$GOPATH/src/${repo_name}/${item}"
-          sh "env GOOS=linux GOARCH=amd64 go build -o functions/${item}/main ${functionpath}/main.go"
+          sh "env GOOS=linux GOARCH=amd64 go build -o ${item}/main ${functionpath}/main.go"
         }
       } else {
         error "No Functions Found..skipping build"
