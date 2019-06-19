@@ -57,7 +57,10 @@ export class Jazz {
   getWebsiteType(servicename) {
     return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[2]'));
   }
-  getAPIStatus(servicename) {
+  getslsType(servicename) {
+    return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[2]'));
+  }
+    getAPIStatus(servicename) {
     return element(by.xpath('//div/div[@class="table-row pointer"]/div[text()="'+servicename+'"]/parent::div/div[5]'));
   }
   getFunctionStatus(servicename) {
@@ -441,5 +444,19 @@ export class Jazz {
   westRegionVerify() { 
     return element(by.xpath('//div[contains(text(),"us-west-2")]'));  
     }
+
+
+  getJavaRuntime() {
+      return element(by.xpath('//p[contains(text(),"java8")]'));
+      //label[contains(@for,"java")]//span[contains(@class,"background")]
+  }
+  getPython27() {
+  return element(by.xpath('//p[contains(text(),"python2.7")]'));
+      //label[contains(@for,"python")]//span[contains(@class,"background")]
+  }
+  getPython36() {
+  return element(by.xpath('//p[contains(text(),"python3.6")]'));
+  
+  }
 
 }

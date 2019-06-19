@@ -90,7 +90,6 @@ describe('Overview', () => {
     browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), Common.timeOutHigh);
     jazzServices_po.getCreateService().click();
     browser.driver.switchTo().activeElement();
-    browser.driver.sleep(Common.miniWait);
     var min = 111111;
     var max = 999999;
     var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;

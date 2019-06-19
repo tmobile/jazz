@@ -91,7 +91,6 @@ describe('Overview', () => {
   browser.wait(EC.elementToBeClickable(jazzServices_po.getCreateService()), Common.timeOutHigh);
   jazzServices_po.getCreateService().click();
   browser.driver.switchTo().activeElement();
-  browser.driver.sleep(Common.miniWait);
   var min = 111111;
   var max = 999999;
   var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
@@ -119,7 +118,7 @@ describe('Overview', () => {
   //To Navigate to the particular service and verifying the Page
   jazzServices_po.getService(servicename).click();
   commonUtils.waitForSpinnerDisappear();
-  expect(jazzServices_po.eastRegionVerify().getText()).toEqual('us-west-2');
+  expect(jazzServices_po.westRegionVerify().getText()).toEqual('us-west-2');
   commonUtils.fluentwaittry(jazzServices_po.getOverviewStatus(), Common.miniWait);
   expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
   commonUtils.elementPresent(jazzServices_po.getServiceNameHeader(), Common.miniWait);

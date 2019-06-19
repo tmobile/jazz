@@ -42,8 +42,8 @@ describe('Overview', () => {
   });
 
   afterAll(() => {
-    jazzServices_po = new Jazz();
-    commonUtils = new Common();
+    // jazzServices_po = new Jazz();
+    // commonUtils = new Common();
     browser.driver.sleep(Common.miniWait);
     jazzServices_po.logoutIcon().click();
     jazzServices_po.logout().click();

@@ -42,13 +42,10 @@ describe('Overview', () => {
     }
   });
   afterAll(() => {
-    jazzServices_po = new Jazz();
-    commonUtils = new Common();
     browser.driver.sleep(Common.miniWait);
     jazzServices_po.logoutIcon().click();
     jazzServices_po.logout().click();
   });
-
 
   function createservice(servicename) {
     jazzServices_po.getServiceName().sendKeys(servicename);
@@ -81,7 +78,7 @@ describe('Overview', () => {
     }, 360 * 1000);
   }
 
-  it('Create SLS-App Service', function () {
+  it('Create SlsApp Service', function () {
     browser.driver.sleep(Common.miniWait);
     browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), Common.timeOutHigh).then(null, function (err) {
       console.log(err);
@@ -92,20 +89,17 @@ describe('Overview', () => {
     jazzServices_po.getCreateService().click();
     browser.driver.switchTo().activeElement();
     browser.driver.sleep(Common.miniWait);
-    //Creating Website
-    if (!jazzServices_po.getBuildCustom()) {
-      flag = 0;
-    } else {
-      jazzServices_po.getBuildCustom().click();
-    }
-    var min = 1111111;
-    var max = 9999999;
+    //Creating the Lambda
+    jazzServices_po.getBuildCustom().click();
+    var min = 1111;
+    var max = 9999;
     var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
     servicename = 'slsapp' + randomNum;
     createservice(servicename);
     serviceapprover();
     browser.driver.sleep(Common.mediumWait);
     //Assert-Verifying the created service,Type and Status of the API
+    expect(jazzServices_po.getService(servicename).getText()).toEqual(servicename);
     commonUtils.fluentwaittry(jazzServices_po.getAPIType(servicename), Common.shortWait);
     expect(jazzServices_po.getAPIType(servicename).getText()).toEqual('sls-app');
     expect(jazzServices_po.getAPIStatus(servicename).getText()).toEqual('creation started');

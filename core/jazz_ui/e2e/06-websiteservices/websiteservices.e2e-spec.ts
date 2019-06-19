@@ -40,6 +40,11 @@ describe('Overview', () => {
       pending();
     }
   });
+  afterAll(() => {
+    browser.driver.sleep(Common.miniWait);
+    jazzServices_po.logoutIcon().click();
+    jazzServices_po.logout().click();
+  });
 
   function createservice(servicename) {
     jazzServices_po.getServiceName().sendKeys(servicename);
