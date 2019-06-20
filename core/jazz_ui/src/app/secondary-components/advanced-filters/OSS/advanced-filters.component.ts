@@ -120,7 +120,6 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   }
 
   onTimePeriodSelected(period) {
-    debugger
     this.selectedTimePeriod = period;
     this.selectFilter["key"] = 'slider';
     this.sliderFrom = period;
