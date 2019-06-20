@@ -42,8 +42,6 @@ describe('Overview', () => {
   }
  });
  afterAll(() => {
-  jazzServices_po = new Jazz();
-  commonUtils = new Common();
   browser.driver.sleep(Common.miniWait);
   jazzServices_po.logoutIcon().click();
   jazzServices_po.logout().click();
@@ -252,39 +250,39 @@ describe('Overview', () => {
      if (webpagetitle === 'Sign in · GitLab') {
       expect(webpagetitle).toEqual('Sign in · GitLab');
       jazzServices_po.gitUsername().sendKeys(Common.config.SCM_USERNAME).then(null, function (err) {
-       console.log(err.name);
+       console.log("Invalid Username"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.gitPassword().sendKeys(Common.config.SCM_PASSWORD).then(null, function (err) {
-       console.log(err.name);
+       console.log("Invalid Password"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.gitLogin().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Login Button is not visible"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.drpGitBranchType().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Branch drop not is not working"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.selectGitBranchType().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Feature type is not available"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.gitBranchName().sendKeys(test).then(null, function (err) {
-       console.log(err.name);
+       console.log("Branch name text box is not visible"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.btnGitCreateBranch().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Create branch button is not working"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.getGitLogoutIcon().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Unable to locate Logout Icon"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.getGitLogout().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Unable to locate Logout link"+err.name);
        flag = 0;
        browser.sleep(Common.longWait);
        browser.close();
@@ -295,43 +293,43 @@ describe('Overview', () => {
      else {
       expect(webpagetitle).not.toEqual('Sign in · GitLab');
       jazzServices_po.bitUsername().sendKeys(Common.config.SCM_USERNAME).then(null, function (err) {
-       console.log(err.name);
+       console.log("Invalid Username"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.bitPassword().sendKeys(Common.config.SCM_PASSWORD).then(null, function (err) {
-       console.log(err.name);
+       console.log("Invalid Password"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.bitLogin().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Unable to locate Login button"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.createBranch().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Unable to locate create branch button"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.drp_BranchType().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Unable to locate branch type dropdown"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.select_BranchType().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Unable to locate branch type"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.branchName().sendKeys(test).then(null, function (err) {
-       console.log(err.name);
+       console.log("Unable to locate create branch textbox"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.btn_CreateBranch().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Unable to locate submit button"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.getBitLogoutIcon().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Unable to locate bitbucket logout icon"+err.name);
       });
       browser.sleep(Common.microWait);
       jazzServices_po.getBitLogout().click().then(null, function (err) {
-       console.log(err.name);
+       console.log("Unable to locate bitbucket logout button"+err.name);
        flag = 0;
        browser.sleep(Common.longWait);
        browser.close();
