@@ -24,7 +24,7 @@ export class EnvironmentDetailComponent implements OnInit {
   isFunction: boolean = false;
   breadcrumbs = [];
   api_doc_name: string = '';
-  selectedTab = 0;
+  selectedTab = 'overview';
   service: any = {};
   friendly_name: any;
   status_val: number;

@@ -33,7 +33,7 @@ import groovy.transform.Field
 @Field def config
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
-@Field def current_environment = ''
+@Field def environment_logical_id
 
 node() {
 
@@ -49,7 +49,6 @@ node() {
   def gitCommitOwner
   def gitCommitHash
   def context_map
-  def environment_logical_id
 
   if (domain && domain != "") {
     repo_name = params.domain + "_" + params.service_name
@@ -112,10 +111,8 @@ node() {
     environment_logical_id = '';
 
     if (branch == 'master') {
-      current_environment = 'prod'
       environment_logical_id = 'prod';
     } else {
-      current_environment = 'dev'
       environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
     }
 
@@ -140,7 +137,7 @@ node() {
   def roleARN = accountDetails.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
 
   sonarModule.initialize(configLoader, config, branch)
-  stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+
 
   def requestId = utilModule.generateRequestId()
   if (requestId != null) {
@@ -332,35 +329,29 @@ node() {
           def envBucketKey = "${env_key}"
           echoServerlessFile()
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
-
-// Shoving deploy output lines into array
-          def deployLines = deployOutput.split('\n')
-          def resourceArns = []
-          def afterStackOutputs = false
-// Extracting all the lines that follow 'Stack Outputs'. These lines are supposed to contain arns of resources created
-          for(def line: deployLines) {
-            if(afterStackOutputs) resourceArns.add(line)
-            if(line.contains('Stack Outputs')) afterStackOutputs = true // Here we are only interested in lines that follow 'Stack Outputs' marker
-          }
-
-          for(def name2ArnString: resourceArns) {
-            def name2ArnPair = name2ArnString.split(': ') // Here we rely on the space after the ': ' so it is split properly without affecting the arn itself that is full of colons but never has a space after
-            if(name2ArnPair.size() > 1) {
-              def arn = name2ArnPair[1].trim()
-              if(arn.startsWith('arn')) {
-                 def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
-                 if(arnAsArray.size() > 2) { // Making sure that the third element exists
-                   def artifactType = arnAsArray[2]
-                   if(artifactType == 'kinesis') artifactType = 'kinesis_stream' // 'kinesis_stream' needs to be instaead of simple 'kinesis' that did not get persisted :-( by itself
-                   events.sendCompletedEvent('CREATE_ASSET',
-                                             null,
-                                             utilModule.generateAssetMap("aws",
-                                                                         arn,
-                                                                         artifactType,
-                                                                         config),
-                                             environment_logical_id)
-                   echo "Sending type $artifactType with arn $arn"
-
+          // After stack Deployment
+          def describeResources = getStackResources(environment_logical_id, credsId)
+          def resources = describeResources['StackResources']
+          if( resources != null ) {
+            def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
+            for( resource in resources ) {
+              def resourceType = resource['ResourceType']
+              if( whiteListModule.checkAssetType(resourceType)){
+                def arn = constructArn(resource['PhysicalResourceId'], resourceType)
+                echo "Arn Template is : ${arn}"
+                if(arn.startsWith('arn')) {
+                  def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
+                  if(arnAsArray.size() > 2) { // Making sure that the third element exists
+                    def artifactType = arnAsArray[2]
+                    events.sendCompletedEvent('CREATE_ASSET',
+                                              null,
+                                              utilModule.generateAssetMap("aws",
+                                                                          arn,
+                                                                          assetCatalogTypes[artifactType],
+                                                                          config),
+                                              environment_logical_id)
+                    echo "Sending type $artifactType with arn $arn"
+                  }
                 }
               }
             }
@@ -404,6 +395,38 @@ def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetail
     echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
     error "Exception occured while serverless deployment to ${environment_logical_id} environment"
   }
+}
+
+
+
+def constructArn(resourceName, resourceType) {
+  def arn = null
+  try{
+    arn = whiteListModule.getarnTemplates(resourceType)
+    //Get queueName from url
+    if( resourceType == "AWS::SQS::Queue"){
+      resourceName  = resourceName.substring(resourceName.lastIndexOf("/") + 1)
+    }
+    if( arn != null ) {
+      arn = arn.replaceAll("\\{region\\}", "${config['region']}") 
+      arn = arn.replaceAll("\\{account-id\\}", "${config['accountId']}")
+      arn = arn.replaceAll("\\{resourceName\\}", "${resourceName}")
+    } else {
+      error "Arn Templates not found for Resource Type : ${resourceType}"
+    }
+  } catch (ex){
+    echo "Exception occured on getting Arn templates for Resource Type : ${resourceType}"
+    error "Exception occured on getting Arn templates for Resource Type : ${resourceType}"
+  }
+  return arn
+}
+
+def getStackResources(env, credsId){
+  def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${env}"
+  def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${cfStackName} --profile ${credsId}", returnStdout: true)
+  echo "Describe Stacks are ${stackResources}"
+  def parsedResources = parseJson(stackResources)
+  return parsedResources
 }
 
 def echoServerlessFile() {
@@ -523,7 +546,7 @@ def buildSlsApp(String runtime, String repo_name) {
       if( size > 0) {
         for(item in dirs) {
           def functionpath = "$GOPATH/src/${repo_name}/${item}"
-          sh "env GOOS=linux GOARCH=amd64 go build -o functions/${item}/main ${functionpath}/main.go"
+          sh "env GOOS=linux GOARCH=amd64 go build -o ${item}/main ${functionpath}/main.go"
         }
       } else {
         error "No Functions Found..skipping build"
@@ -536,8 +559,10 @@ def buildSlsApp(String runtime, String repo_name) {
  */
 def resetCredentials(credsId) {
   echo "resetting AWS credentials"
-  sh "aws configure set profile.${credsId}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-  sh "aws configure set profile.${credsId}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+  def credPath = System.getenv().HOME + "/.aws/credentials"
+  def confPath = System.getenv().HOME + "/.aws/config"
+  sh "sed -i '/${credsId}/,+2d' ${credPath}"
+  sh "sed -i '/${credsId}/,+1d' ${confPath}"
 }
 
 /** Validate basic configurations in the deployment yaml file and error if any keys are
@@ -640,6 +665,7 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
+
 def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
   def deploymentDescriptor = null
   if( env_deployment_descriptor != null ){
@@ -649,9 +675,10 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
   }
   def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
   def functionsElem = doc['functions']
+  def logGroupName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
   functionsElem.each{funcName, funcConfig ->
     def name = funcConfig['name'] ? funcConfig['name'] : funcName
-    def lambda = "/aws/lambda/${name}"
+    def lambda = "/aws/lambda/${logGroupName}-${name}"
     def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
     try {

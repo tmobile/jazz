@@ -268,7 +268,7 @@ export class ServiceLogsComponent implements OnInit {
 				 this.lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
 				for( let i = 0 ; i<this.lambdaResourceNameArr.length; i++ ){
 					let tokens = this.lambdaResourceNameArr[i].split(':');
-					let reduced = tokens[tokens.length-2];
+					let reduced = tokens[tokens.length-1];
 					let reducedTokens = reduced.split('-');
 					this.lambdaResourceNameArr[i] = reducedTokens[reducedTokens.length-1];
 				}

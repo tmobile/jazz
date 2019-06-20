@@ -1,0 +1,17 @@
+{
+  "asset_catalog_map": {
+    "iam" : "iam_role",
+    "kinesis" : "kinesis_stream",
+    "lambda" : "lambda",
+    "apigateway" : "apigateway",
+    "cloudfront" : "cloudfront",
+    "events" : "cloudwatch_event",
+    "s3" : "s3",
+    "dynamodb" : "dynamodb",
+    "swagger_url" : "swagger_url",
+    "endpoint_url" : "endpoint_url",
+    "dynamodb_stream": "dynamodb_stream",
+    "sqs" : "sqs",
+    "apigee_proxy" : "apigee_proxy"
+  }
+}

@@ -53,7 +53,7 @@ export class ServiceDetailComponent implements OnInit {
   errMessage: string = '';
   isLoadingService: boolean = false;
   isLoading: boolean = false;
-  selectedTab = 0;
+  selectedTab = 'overview';
   selected: string = 'All';
   service: any = {};
   isGraphLoading: boolean = false;
@@ -312,7 +312,7 @@ export class ServiceDetailComponent implements OnInit {
 
   refreshTab() {
     this.refreshTabClicked = true;
-    if (this.selectedTab == 0) {
+    if (this.selectedTab == 'overview') {
       this.refreshServ();
     }
     else {
