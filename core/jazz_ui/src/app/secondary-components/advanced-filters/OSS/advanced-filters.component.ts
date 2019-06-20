@@ -2,6 +2,7 @@ import { Component, ViewContainerRef, OnInit, Input, Inject, Output, EventEmitte
 import { DataCacheService } from '../../../core/services/index';
 import { RequestService } from "../../../core/services";
 import { environment as env_internal } from './../../../../environments/environment.internal';
+import { RadioGroupComponent } from './../../../primary-components/radio-group/radio-group.component'
 
 @Component({
   selector: '[advanced_filters]',
@@ -23,6 +24,8 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   @Output() onAssetSelect: EventEmitter<any> = new EventEmitter<any>();
   @Output() onResourceSelect: EventEmitter<any> = new EventEmitter<any>();
   @ViewChild('filters') filters;
+  @ViewChild('assetTypes') assetRadio : RadioGroupComponent;
+  @ViewChild('assetName') assetName : RadioGroupComponent;
   public assetFilter;
   public formFields: any = [];
   public assetList: any = [];
@@ -117,6 +120,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   }
 
   onTimePeriodSelected(period) {
+    debugger
     this.selectedTimePeriod = period;
     this.selectFilter["key"] = 'slider';
     this.sliderFrom = period;
@@ -133,6 +137,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
 
   getAssetType(event) {
     this.assetSel = event;
+    this.assetRadio.setRadio(event);
     this.selectFilter["key"] = 'asset';
     this.selectFilter["value"] = event;
     this.onAssetSelect.emit(event);
@@ -150,6 +155,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   }
 
   getResourceType(event){
+    this.assetName.setRadio(event);
     this.selectFilter["key"] = 'resource';
     this.selectFilter["value"] = event;
     this.onResourceSelect.emit(event);

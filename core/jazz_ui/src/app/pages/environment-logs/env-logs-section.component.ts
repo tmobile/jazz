@@ -164,8 +164,7 @@ export class EnvLogsSectionComponent implements OnInit {
 	lambdaResourceNameArr;
 
 	instance_yes;
-	getFilter(filterServ){
-		
+	getFilter(filterServ){		
 		this.service['islogs']=true;
 		this.service['isServicelogs']=true;
 		if(this.assetList){
@@ -189,18 +188,23 @@ export class EnvLogsSectionComponent implements OnInit {
 		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
 			comp.onFilterSelect(event);
 		});
-		this.instance_yes.onAssetSelect.subscribe(event => {
-		
+		this.instance_yes.onAssetSelect.subscribe(event => {		
 			comp.onAssetSelect(event);
+		});
+		this.instance_yes.onResourceSelect.subscribe(event => {
+			comp.onResourceSelect(event);
 		});
 
 	}
+
 	onAssetSelect(event){
 		this.FilterTags.notify('filter-Asset',event);
 		this.assetSelected=event;
-	} 
-	
-
+	} 	
+	onResourceSelect(event){
+		this.FilterTags.notifyLogs('filter-Asset-Name', event);
+		this.resourceSelected = event;
+	}
 	 onaccSelected(event){
 	  this.accSelected=event;
   
@@ -214,7 +218,6 @@ export class EnvLogsSectionComponent implements OnInit {
 			rowData['expanded'] = true;
 		}
 		this.expandText = 'Collapse all';
-
 	}
 
 	collapseall() {
@@ -541,7 +544,7 @@ export class EnvLogsSectionComponent implements OnInit {
 			
 		    break;
 		  }
-		  case 'time-range-slider':{  this.instance_yes.resetslider(1);
+		  case 'time-range-slider':{  this.instance_yes.onTimePeriodSelected(1);
 		  
 			break;
 		  }
@@ -573,15 +576,21 @@ export class EnvLogsSectionComponent implements OnInit {
 		  
 		    break;
 		  }
+		  case 'asset-iden':{	this.instance_yes.getResourceType('all');
+
+			break;
+		}
 		  case 'all':{
 		        this.instance_yes.onRangeListSelected('Day');    
 				this.instance_yes.onPeriodSelected('15 Minutes');
+				this.instance_yes.onTimePeriodSelected(1);
 				this.instance_yes.onStatisticSelected('Average');
 				this.instance_yes.onaccSelected('Acc 1');
 				this.instance_yes.onregSelected('reg 1');
 				this.instance_yes.onEnvSelected('prod');
 				this.instance_yes.onMethodListSelected('POST');
 				this.instance_yes.getAssetType('all');
+				this.instance_yes.getResourceType('all');
 				break;
 		  	}
 		}
@@ -623,7 +632,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		  case 'asset' :{
 			  this.FilterTags.notify('filter-Asset',event.value)
 				this.assetSelected=event.value;
-				if (this.assetSelected !== 'all' && this.assetSelected !== 'All') {
+				if (this.assetSelected !== 'all') {
 					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
 				}
 				else {
@@ -636,7 +645,7 @@ export class EnvLogsSectionComponent implements OnInit {
 			if(this.service.serviceType == 'sls-app'){
 				this.resourceSelected = event.value;
 				this.payload.asset_identifier = this.resourceSelected;
-				if(this.resourceSelected === 'all' || this.resourceSelected === "All"){
+				if(this.resourceSelected === 'all'){
 					delete this.payload['asset_identifier'];
 				}
 				this.resetPayload();
