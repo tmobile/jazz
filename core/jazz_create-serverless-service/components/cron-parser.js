@@ -151,7 +151,7 @@ var CronParser = function (argument) {
                     "message": "Empty Rate expression."
                 };
             };
-            intervalObj = ['Minute', 'Minutes','Hour', 'Hours', 'Day', 'Days'];
+            intervalObj = ['minute', 'minutes','hour', 'hours', 'day', 'days'];
               rateValue = rateExpression;
               rateValue = rateValue.replace(/[\(\)']+/g, ' ');
               rateValue = rateValue.split(' ');
