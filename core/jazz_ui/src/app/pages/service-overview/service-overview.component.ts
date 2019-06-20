@@ -93,7 +93,7 @@ export class ServiceOverviewComponent implements OnInit {
   serviceStatusStarted: boolean = true;
   serviceStatusStartedD: boolean = false;
   statusFailed: boolean = false;
-  rateData: any = ['Minutes', 'Hours', 'Days', 'Minute', 'Hour', 'Day'];
+  rateData: any = ['minutes', 'hours', 'days', 'minute', 'hour', 'day'];
   statusInfo: string = 'Service Creation started';
   private intervalSubscription: Subscription;
   swaggerUrl: string = '';
@@ -141,7 +141,7 @@ export class ServiceOverviewComponent implements OnInit {
   isPUTLoading: boolean = false;
   PutPayload: any;
   isPayloadAvailable: boolean = false;
-  selected: string = "Minutes";
+  selected: string = "minutes";
   eventSchedule: string = 'fixedRate';
   cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
   rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '', '');
@@ -388,7 +388,7 @@ export class ServiceOverviewComponent implements OnInit {
     this.isPUTLoading = true;
     if(this.rateExpression.type === "none"){
       this.rateExpression.duration = "5";
-      this.rateExpression.interval = "Minutes";
+      this.rateExpression.interval = "minutes";
       this.cronObj.minutes = "0/5";
       this.cronObj.hours = "*";
       this.cronObj.dayOfMonth = "*";

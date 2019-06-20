@@ -66,7 +66,7 @@ export class CreateServiceComponent implements OnInit {
   typeOfService:string = "api";
   typeOfPlatform:string = "aws";
   disablePlatform = true;
-  selected:string = "Minutes";
+  selected:string = "minutes";
   runtime:string = Object.keys(env_oss.envLists)[0];
   webtime:string = Object.keys(env_oss.webLists)[0];
   eventSchedule:string = 'fixedRate';
@@ -90,7 +90,7 @@ export class CreateServiceComponent implements OnInit {
   serviceRequestFailure = false;
   serviceRequestSuccess = false;
   serviceLink:string;
-  Currentinterval : string = 'Minutes';
+  Currentinterval : string = 'minutes';
   rateExpressionIsValid : boolean = false;
   rateExpressionError : string = '';
   cronFieldValidity : any;
@@ -295,7 +295,7 @@ export class CreateServiceComponent implements OnInit {
 
   selectedApprovers = [];
 
-  rateData = ['Minutes','Hours','Days','Minute','Hour','Day'];
+  rateData = ['minutes','hours','days','minute','hour','day'];
 
   // function for changing service type
   changeServiceType(serviceType){
