@@ -99,7 +99,9 @@ export class CreateServiceComponent implements OnInit {
   isDescriptorEmpty: boolean = false;
   resMessage:string='';
   cdnConfigSelected:boolean = false;
+  public lineNumberCount: any = new Array(8);
   isfunction: boolean = true;
+  linenumber:number;
   focusindex:any = -1;
   scrollList:any = '';
   toast : any;
@@ -138,6 +140,7 @@ export class CreateServiceComponent implements OnInit {
   webKeys : any;
   isstartNew: boolean = false;
   deploymentTargetSelected: any;
+  public lineNumberCounting: any = new Array(5);
 
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
@@ -194,7 +197,6 @@ export class CreateServiceComponent implements OnInit {
     this.dynamoStreamString = "arn:aws:dynamo:" + this.regionSelected + ":" + this.accountSelected + ":table/";
   }
 
-
   chkDynamodb() {
     this.focusDynamo.emit(true);
     return this.eventExpression.type === 'dynamodb';
@@ -239,6 +241,18 @@ export class CreateServiceComponent implements OnInit {
     this.onClose.emit(false);
   }
 
+  lineNumbers() {
+    let lines;
+    if(this.deploymentDescriptorText)
+    {
+      lines = this.deploymentDescriptorText.split(/\r*\n/);
+      let line_numbers = lines.length;
+      if(line_numbers < 5){
+        line_numbers = 5;
+      }
+      this.lineNumberCounting = new Array(line_numbers);
+    }
+  }
 
   onFilterSelected(event){
     if(event == "Function Template"){
@@ -1022,4 +1036,5 @@ export class CreateServiceComponent implements OnInit {
       return this.rateExpression.cronStr;
     }
   };
+  
 }
