@@ -110,7 +110,7 @@
       <div id='slid-table'>
         <table-template *ngIf="envResponseTrue" class="table-container env-deployment-log" [header]="tableHeader2"
             (onSort)="onSort($event)" [showPaginationtable]="pageSelected" (paginatePage)="paginatePage($event)"
-            [totalPageNum]="totalPagesTable">
+            [totalPageNum]="totalPagesTable" [isSort]="!isSort">
             <div class="table-row" [class.hide]="serviceListEmpty" *ngFor="let row of deployedList; let i = index">
               <!-- (click)="onRowClicked() -->
               <div class="column primary-txt-color pointer"><a (click)="openBuildUrl(buildurl[i])">{{buildNo[i]}}</a>

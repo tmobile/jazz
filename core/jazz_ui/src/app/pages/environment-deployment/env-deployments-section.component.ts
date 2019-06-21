@@ -24,6 +24,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
   filterloglevel:string = 'INFO';
   loadingState:string='default';
   envObj:any;
+  isSort:boolean = false;
   disableRetry:boolean = false;
   paginationSelected: Boolean = true;
 	totalPagesTable: number = 7;

@@ -33,6 +33,7 @@ var validateGeneralFields = (input) => {
       .then(() => validateAllRequiredFieldsValue(input, required_fields))
       .then(() => validateDate(input.start_time, input.end_time))
       .then(() => validateInterval(input.interval))
+      .then(() => validateAssetType(input))
       .then(() => validateMetricsInput(input))
       .then(res => {
         resolve(res);
@@ -182,6 +183,19 @@ var validateMetricsInput = (data) => {
     resolve(data);
   });
 };
+
+var validateAssetType = (input) => {
+  return new Promise((resolve, reject) => {
+    if(input.asset_type && global_config.ASSET_TYPES.indexOf(input.asset_type) === -1) {
+      reject({
+        result: "inputError",
+        message: `${input.asset_type} asset type is not supported.`
+      });
+    } else {
+      resolve(input);
+    }
+  });
+}
 
 module.exports = {
   validateGeneralFields

@@ -52,6 +52,7 @@
     "api": "build-pack-api",
     "function": "build-pack-lambda",
     "website": "build-pack-website",
+    "sls-app": "build-pack-sls-app",
     "ui": "jazz_ui"
   }
 }

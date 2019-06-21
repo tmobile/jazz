@@ -1,9 +1,10 @@
 import { Component, EventEmitter, Input, OnInit, Output, ViewChild } from '@angular/core';
 // import {IonRangeSliderModule} from 'ng2-ion-range-slider';
-import { CheckboxGroupComponent } from './../../primary-components/checkbox-group/checkbox-group.component'
-import { CheckboxGroupRegionComponent } from './../../primary-components/checkbox-group-region/checkbox-group-region.component'
+import { CheckboxGroupComponent } from './../../primary-components/checkbox-group/checkbox-group.component';
+import { CheckboxGroupRegionComponent } from './../../primary-components/checkbox-group-region/checkbox-group-region.component';
 
 import * as _ from "lodash";
+
 
 @Component({
   selector: 'filter-modal',
@@ -14,6 +15,7 @@ export class FilterModalComponent implements OnInit {
   @Output() formChange = new EventEmitter();
   @Input() fields;
   @Input() options;
+  @Input() assetList;
   // @ViewChild('sliderElement') sliderElement: IonRangeSliderModule;
   @ViewChild('checkboxGroup') checkboxGroup: CheckboxGroupComponent;
   @ViewChild('checkboxGroupRegion') checkboxGroupRegion: CheckboxGroupRegionComponent;
@@ -28,6 +30,7 @@ export class FilterModalComponent implements OnInit {
     columns: []
   };
   public opened = false;
+  public data: any;
 
   constructor() {
   }
@@ -35,8 +38,6 @@ export class FilterModalComponent implements OnInit {
   getRange(e) {
 
   }
-
-
   reOrderFilterColumns() {
     let columnA = this.form.columns[0];
     let columnB = this.form.columns[1];
@@ -98,20 +99,33 @@ export class FilterModalComponent implements OnInit {
 
   }
 
+  setFields(value) {
+    this.fields = value;
+    let columns = _(this.fields)
+      .groupBy('column')
+      .map((column, key, array) => {
+        return {
+          label: key,
+          fields: column
+        }
+      })
+      .value();
+    this.form.columns = columns;
+  }
+
   changeFilter(filterSelected, filterField) {
     filterField.selected = filterSelected;
     this.formChange.emit(filterField);
   }
 
   changeCheckboxFilter(filterSelected, filterField) {
-    /* debugger */
     filterField.selected = filterSelected;
     this.formChange.emit(filterField);
-    /* debugger */
   }
   getFieldValueOfLabel(fieldLabel) {
     try {
       let foundField = this.getAllFields().find((field) => {
+
         return field.label === fieldLabel
       });
       let value = foundField.values[foundField.options.findIndex((option) => {

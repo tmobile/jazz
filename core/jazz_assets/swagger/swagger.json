@@ -97,6 +97,45 @@
         "produces": [
           "application/json"
         ],
+        "parameters": [{
+            "name": "environment",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "asset_type",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "provider",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "provider_id",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "type": "integer",
+            "format": "int32"
+          }
+        ],
         "responses": {
           "200": {
             "description": "Successful Execution",
@@ -201,11 +240,9 @@
             }
           }
         },
-        "security": [
-          {
-            "{envPrefix}-{domain}-cognito-authorizer": []
-          }
-        ],
+        "security": [{
+          "{envPrefix}-{domain}-cognito-authorizer": []
+        }],
         "x-amazon-apigateway-integration": {
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
           "passthroughBehavior": "when_no_templates",
@@ -289,8 +326,7 @@
       },
       "post": {
         "description": "create an asset",
-        "parameters": [
-          {
+        "parameters": [{
             "name": "param",
             "in": "body",
             "description": "post body parameter.",
@@ -418,11 +454,9 @@
             }
           }
         },
-        "security": [
-          {
-            "{envPrefix}-{domain}-cognito-authorizer": []
-          }
-        ],
+        "security": [{
+          "{envPrefix}-{domain}-cognito-authorizer": []
+        }],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -512,8 +546,7 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [
-          {
+        "parameters": [{
             "name": "id",
             "in": "path",
             "required": true,
@@ -603,8 +636,7 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [
-          {
+        "parameters": [{
             "name": "id",
             "in": "path",
             "required": true,
@@ -721,11 +753,9 @@
             }
           }
         },
-        "security": [
-          {
-            "{envPrefix}-{domain}-cognito-authorizer": []
-          }
-        ],
+        "security": [{
+          "{envPrefix}-{domain}-cognito-authorizer": []
+        }],
         "x-amazon-apigateway-integration": {
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
           "passthroughBehavior": "when_no_templates",
@@ -809,8 +839,7 @@
       },
       "put": {
         "description": "update details of an asset",
-        "parameters": [
-          {
+        "parameters": [{
             "name": "id",
             "in": "path",
             "required": true,
@@ -944,11 +973,9 @@
             }
           }
         },
-        "security": [
-          {
-            "{envPrefix}-{domain}-cognito-authorizer": []
-          }
-        ],
+        "security": [{
+          "{envPrefix}-{domain}-cognito-authorizer": []
+        }],
         "x-amazon-apigateway-integration": {
           "type": "aws",
           "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -1248,8 +1275,7 @@
       }
     },
     "AssetsObj": {
-      "allOf": [
-        {
+      "allOf": [{
           "$ref": "#/definitions/CreateAssetsObj"
         },
         {
@@ -1267,8 +1293,7 @@
       ]
     },
     "AssetsListObj": {
-      "allOf": [
-        {
+      "allOf": [{
           "$ref": "#/definitions/CreateAssetsObj"
         },
         {
@@ -1335,11 +1360,9 @@
           "type": "array",
           "description": "The response payload",
           "items": {
-            "allOf": [
-              {
-                "$ref": "#/definitions/AssetsObj"
-              }
-            ]
+            "allOf": [{
+              "$ref": "#/definitions/AssetsObj"
+            }]
           }
         },
         "input": {
@@ -1361,11 +1384,9 @@
               "type": "array",
               "description": "The response payload",
               "items": {
-                "allOf": [
-                  {
-                    "$ref": "#/definitions/AssetsObj"
-                  }
-                ]
+                "allOf": [{
+                  "$ref": "#/definitions/AssetsObj"
+                }]
               }
             }
           }
