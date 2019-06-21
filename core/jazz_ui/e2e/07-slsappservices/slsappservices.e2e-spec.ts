@@ -15,18 +15,17 @@
 import { browser, element, by, protractor, $ } from 'protractor';
 import { Jazz } from '../page-objects/jazzservices.po';
 import { Timeouts, Browser } from 'selenium-webdriver';
-import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG } from 'constants';
+import { SSL_OP_SSLEAY_080_CLIENT_DH_BUG, SSL_OP_TLS_BLOCK_PADDING_BUG } from 'constants';
 import { Common } from '../common/commontest';
-
 
 describe('Overview', () => {
   let jazzServices_po: Jazz;
   let commonUtils: Common;
+  let found = 1;
   let flag = 1;
   const EC = protractor.ExpectedConditions;
   let winhandle;
   let servicename;
-  let test;
 
   beforeAll(() => {
     jazzServices_po = new Jazz();
@@ -34,13 +33,14 @@ describe('Overview', () => {
     browser.driver.sleep(Common.miniWait);
     commonUtils.Login();
   });
-
   beforeEach(() => {
     if (flag == 0) {
       pending();
     }
+    if (found == 0) {
+      pending();
+    }
   });
-
   afterAll(() => {
     browser.driver.sleep(Common.miniWait);
     jazzServices_po.logoutIcon().click();
@@ -75,11 +75,10 @@ describe('Overview', () => {
             flag = 0;
             return false;
           });
-    }, 240 * 1000);
+    }, 360 * 1000);
   }
 
-  it('Create Lambda Service', () => {
-    browser.driver.switchTo().activeElement();
+  it('Create SlsApp Service', function () {
     browser.driver.sleep(Common.miniWait);
     browser.wait(EC.visibilityOf(jazzServices_po.getCreateService()), Common.timeOutHigh).then(null, function (err) {
       console.log(err);
@@ -91,118 +90,72 @@ describe('Overview', () => {
     browser.driver.switchTo().activeElement();
     browser.driver.sleep(Common.miniWait);
     //Creating the Lambda
-    jazzServices_po.getLambda().click();
-    var min = 111;
-    var max = 999;
+    jazzServices_po.getBuildCustom().click();
+    var min = 1111;
+    var max = 9999;
     var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
-    servicename = 'lambda' + randomNum;
+    servicename = 'slsapp' + randomNum;
     createservice(servicename);
-    jazzServices_po.getEventScheduleFixedRate().click();
     serviceapprover();
     browser.driver.sleep(Common.mediumWait);
-    //Verifying the Lambda is correct
+    //Assert-Verifying the created service,Type and Status of the API
     expect(jazzServices_po.getService(servicename).getText()).toEqual(servicename);
-    expect(jazzServices_po.getFunctionType(servicename).getText()).toEqual('function');
-    expect(jazzServices_po.getFunctionStatus(servicename).getText()).toEqual('creation started');
+    commonUtils.fluentwaittry(jazzServices_po.getAPIType(servicename), Common.shortWait);
+    expect(jazzServices_po.getAPIType(servicename).getText()).toEqual('sls-app');
+    expect(jazzServices_po.getAPIStatus(servicename).getText()).toEqual('creation started');
     waitforskiptest(jazzServices_po.serviceStatus(servicename), Common.xxlWait);
-
   });
 
-  it('Verify Function', () => {
+  it('Verify SLS-App Service and Navigation', () => {
+    browser.driver.sleep(Common.microWait);
     commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
     browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
     //To Navigate to the particular service and verifying the Page
     jazzServices_po.getService(servicename).click();
+    commonUtils.waitForSpinnerDisappear();
+    expect(jazzServices_po.eastRegionVerify().getText()).toEqual('us-east-1');
     commonUtils.fluentwaittry(jazzServices_po.getOverviewStatus(), Common.miniWait);
     expect(jazzServices_po.getOverviewStatus().getText()).toEqual('OVERVIEW');
-    commonUtils.fluentwaittry(jazzServices_po.getServiceNameHeader(), Common.miniWait);
-    //To get the corresponding environment[Prod]
-    waitforskiptest(jazzServices_po.getProdName(), Common.xlWait);
+    commonUtils.elementPresent(jazzServices_po.getServiceNameHeader(), Common.miniWait);
+    waitforskiptest(jazzServices_po.getProdName(), Common.xxlWait);
     jazzServices_po.getProdName().click();
     commonUtils.waitForSpinnerDisappear();
-    commonUtils.refreshbutton(jazzServices_po.getDeploymentStatus(), Common.miniWait);
-    commonUtils.refreshbutton(jazzServices_po.getProdHeader(), Common.miniWait);
+    commonUtils.elementPresent(jazzServices_po.getDeploymentStatus(), Common.shortWait);
     //Verifying the browser id at the Deployment Tab
     expect(jazzServices_po.getDeploymentStatus().getText()).toEqual('DEPLOYMENTS');
-    browser.driver.switchTo().activeElement();
-
+    //browser.driver.switchTo().activeElement();
   });
 
-  it('Verify METRICS Navigation for Lambda', () => {
-    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
-    jazzServices_po.getServiceHomePage().click();
-    browser.sleep(Common.microWait);
-    browser.driver.switchTo().activeElement();
-    commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
-    // // Navigation to services
-    browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
-    // //To Navigate to the particular service and verifying the Page
-    jazzServices_po.getService(servicename).click();
-    commonUtils.fluentwaittry(jazzServices_po.getServiceNameHeader(), Common.miniWait);
-    commonUtils.elementPresent(jazzServices_po.getProdName(), Common.shortWait);
-    jazzServices_po.getProdName().click();
-    commonUtils.waitForSpinnerDisappear();
-    commonUtils.refreshbutton(jazzServices_po.getProdHeader(), Common.miniWait);
-    browser.driver.switchTo().activeElement();
-    commonUtils.refreshbutton(jazzServices_po.getMetrices(), Common.miniWait);
-    jazzServices_po.getMetrices().click();
-    commonUtils.waitForMetricsSpinner();
-    commonUtils.refreshbutton(jazzServices_po.getDeploymentStatus(), Common.miniWait);
-    jazzServices_po.getDeploymentStatus().click();
-    commonUtils.waitForSpinnerDisappear();
-    commonUtils.fluentwaittry(jazzServices_po.getTestFunction(), Common.miniWait);
-    expect(jazzServices_po.getTestFunction().getText()).toEqual('TEST FUNCTION');
-    jazzServices_po.getTestFunction().click();
-    browser.wait(EC.visibilityOf(jazzServices_po.getTestArea()), Common.timeOutHigh);
-    jazzServices_po.getTestArea().sendKeys('{');
-    jazzServices_po.getTestArea().sendKeys(' ');
-    jazzServices_po.getTestArea().sendKeys('}');
-    browser.wait(EC.visibilityOf(jazzServices_po.getTestButton()), Common.timeOutHigh);
-    jazzServices_po.getTestButton().click();
-    browser.driver.sleep(Common.miniWait);
-    browser.wait(EC.visibilityOf(jazzServices_po.getClose()), Common.timeOutHigh);
-    jazzServices_po.getClose().click();
-    commonUtils.refreshbutton(jazzServices_po.getMetrices(), Common.miniWait);
-    jazzServices_po.getMetrices().click();
-    commonUtils.waitForSpinnerDisappear();
-  });
-
-  it('Verify Lambda Deployments', () => {
+  it('Verify SLS-App Deployments', () => {
     commonUtils.verifyDelpoyment();
   });
 
-  it('Verify Lambda Asset', () => {
+  it('Verify SLS-App Asset', () => {
     commonUtils.verifyAsset();
+
   });
 
-  it('Verify Lambda Logs', () => {
+  it('Verify SLS-App Logs', () => {
     commonUtils.verifyLogs();
+
   });
 
-
-  it('Verify METRICS COUNT for Lambda', () => {
-    browser.sleep(Common.microWait);
-    commonUtils.refreshbutton(jazzServices_po.getMetrices(), Common.miniWait);
-    jazzServices_po.getMetrices().click();
-    commonUtils.waitForMetricsSpinner();
-    commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.miniWait);
-    expect(jazzServices_po.getMetricesCount().getText()).not.toEqual('-');
-    browser.sleep(Common.microWait);
-  });
-
-  it('Identifying Environment and Navigation for Lambda', () => {
+  it('Identifying Environment and Navigation for SLS-App', () => {
     browser.driver.sleep(Common.microWait);
-    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
+    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.mediumWait);
     jazzServices_po.getServiceHomePage().click();
+    browser.driver.sleep(Common.microWait);
     commonUtils.fluentwaittry(jazzServices_po.getService(servicename), Common.miniWait);
     browser.wait(EC.elementToBeClickable(jazzServices_po.getService(servicename)), Common.timeOutHigh);
     //To Navigate to the particular service and verifying the Page
     jazzServices_po.getService(servicename).click();
+    expect(jazzServices_po.getRepo().getText()).toEqual('Repository');
     browser.wait(EC.visibilityOf(jazzServices_po.getRepository()), Common.timeOutHigh);
     jazzServices_po.getRepository().click();
     browser.sleep(Common.miniWait);
   });
-  it('Create the Test Branch for Lambda', () => {
+
+  it('Create the Test Branch for SLS-App', () => {
     browser.getAllWindowHandles().then(function (handles) {
       browser.sleep(Common.microWait);
       var min = 11;
@@ -317,45 +270,18 @@ describe('Overview', () => {
       });
      });
   });
-  it('Verify METRICS Navigation for Lambda for Test Branch', () => {
-    browser.sleep(Common.microWait);
-    commonUtils.fluentwaittry(jazzServices_po.getTestFunction(), Common.mediumWait);
-    expect(jazzServices_po.getTestFunction().getText()).toEqual('TEST FUNCTION');
-    jazzServices_po.getTestFunction().click();
-    browser.wait(EC.visibilityOf(jazzServices_po.getTestArea()), Common.timeOutHigh);
-    jazzServices_po.getTestArea().sendKeys('{');
-    jazzServices_po.getTestArea().sendKeys(' ');
-    jazzServices_po.getTestArea().sendKeys('}');
-    browser.wait(EC.visibilityOf(jazzServices_po.getTestButton()), Common.timeOutHigh);
-    jazzServices_po.getTestButton().click();
-    browser.driver.sleep(Common.miniWait);
-    browser.wait(EC.visibilityOf(jazzServices_po.getClose()), Common.timeOutHigh);
-    jazzServices_po.getClose().click();
-    commonUtils.refreshbutton(jazzServices_po.getMetrices(), Common.miniWait);
-    jazzServices_po.getMetrices().click();
-    commonUtils.waitForSpinnerDisappear();
-  });
 
-  it('Verify Lambda Deployments for Test Branch', () => {
+  it('Verify SLS-App Deployments for Test Branch', () => {
     commonUtils.verifyDelpoyment();
   });
 
-  it('Verify Lambda Asset for Test Branch', () => {
+  it('Verify SLS-App Asset for Test Branch', () => {
     commonUtils.verifyAsset();
   });
 
-  it('Verify Lambda Logs for Test Branch', () => {
+  it('Verify SLS-App Logs for Test Branch', () => {
     commonUtils.verifyLogs();
   });
-  it('Verify METRICS COUNT for Lambda in Test Branch', () => {
-    browser.sleep(Common.microWait);
-    commonUtils.fluentwaittry(jazzServices_po.getMetrices(), Common.mediumWait);
-    jazzServices_po.getMetrices().click();
-    commonUtils.waitForMetricsSpinner();
-    commonUtils.refreshbutton(jazzServices_po.getMetricesCount(), Common.shortWait);
-    expect(jazzServices_po.getMetricesCount().getText()).not.toEqual('-');
-    browser.sleep(Common.microWait);
-    commonUtils.fluentwaittry(jazzServices_po.getServiceHomePage(), Common.miniWait);
-    jazzServices_po.getServiceHomePage().click();
-  });
+
 });
+
