@@ -66,7 +66,7 @@ export class CreateServiceComponent implements OnInit {
   typeOfService:string = "api";
   typeOfPlatform:string = "aws";
   disablePlatform = true;
-  selected:string = "Minutes";
+  selected:string = "minutes";
   runtime:string = Object.keys(env_oss.envLists)[0];
   webtime:string = Object.keys(env_oss.webLists)[0];
   eventSchedule:string = 'fixedRate';
@@ -82,6 +82,7 @@ export class CreateServiceComponent implements OnInit {
   isLoading: boolean = false;
   slackChannelLoader: boolean = false;
   serviceAvailable : boolean = false;
+  validrate: boolean = false;
   serviceNotAvailable : boolean = false;
   isDomainDefined : boolean = false;
   invalidttl : boolean = false;
@@ -89,7 +90,7 @@ export class CreateServiceComponent implements OnInit {
   serviceRequestFailure = false;
   serviceRequestSuccess = false;
   serviceLink:string;
-  Currentinterval : string = 'Minutes';
+  Currentinterval : string = 'minutes';
   rateExpressionIsValid : boolean = false;
   rateExpressionError : string = '';
   cronFieldValidity : any;
@@ -114,7 +115,7 @@ export class CreateServiceComponent implements OnInit {
 
   model = new ServiceFormData('','','', '','','');
   cronObj = new CronObject('0/5','*','*','*','?','*')
-  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
+  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '', '');
   eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
   private doctors = [];
   private toastmessage:any;
@@ -294,7 +295,7 @@ export class CreateServiceComponent implements OnInit {
 
   selectedApprovers = [];
 
-  rateData = ['Minutes','Hours','Days'];
+  rateData = ['minutes','hours','days','minute','hour','day'];
 
   // function for changing service type
   changeServiceType(serviceType){
@@ -359,6 +360,7 @@ export class CreateServiceComponent implements OnInit {
     if(val !== `none`){
       this.eventExpression.type = 'awsEventsNone';
     }
+    this.generateExpression(this.rateExpression);
   }
   onAWSEventChange(val){
     this.invalidEventName = false;
@@ -522,12 +524,20 @@ export class CreateServiceComponent implements OnInit {
       payload["deployment_targets"] = {
         "function": "aws_lambda"
       }
-      if(this.rateExpression.type != 'none'){
+      if(this.rateExpression.type === 'cron' && this.rateExpression.cronStr !== undefined){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
         if (this.rateExpression.cronStr == 'invalid') {
             return;
         } else if (this.rateExpression.cronStr !== undefined) {
             payload["rateExpression"] = this.rateExpression.cronStr;
+        }
+      }
+      if (this.rateExpression.type === 'rate' && this.rateExpression.rateStr !== undefined) {
+        this.rateExpression.rateStr = `${this.rateExpression.duration} ${this.rateExpression.interval}`
+        if (this.rateExpression.rateStr == 'invalid') {
+          return;
+        } else if (this.rateExpression.rateStr !== undefined) {
+          payload["rateInterval"] =  this.rateExpression.rateStr;
         }
       }
 
@@ -969,6 +979,25 @@ export class CreateServiceComponent implements OnInit {
       }
     }
 
+    validRate(val,int){
+      if (val === 1) {
+        if (int.includes('s')) {
+          this.validrate = false;
+        }
+        else {
+          this.validrate = true;
+        }
+      }
+      else if(val > 1)
+      {
+        if(int.includes('s')){
+          this.validrate = true;
+        }
+        else{
+          this.validrate = false;
+        }
+      }
+    }
 
   generateExpression(rateExpression){
     if (this.rateExpression !== undefined) {
@@ -980,20 +1009,14 @@ export class CreateServiceComponent implements OnInit {
       var duration, interval;
       duration = rateExpression['duration'];
       interval = rateExpression['interval'];
+      this.validRate(duration, interval);
+      this.rateExpression.rateStr = `${duration} ${interval}`
 
-      if (duration === undefined || duration === null || duration <= 0) {
+      if (duration === undefined || duration === null || duration <= 0 || this.validrate === false) {
         this.rateExpression.isValid = false;
-        this.rateExpression.error = 'Please enter a valid duration';
+        this.rateExpression.error = 'Please enter a valid rate expression';
       } else {
-        if (interval == 'Minutes') {
-          this.cronObj = new CronObject(('0/' + duration),'*','*','*','?','*');
-        } else if (interval == 'Hours') {
-          this.cronObj = new CronObject('0', ('0/' + duration),'*','*','?','*');
-        } else if (interval == 'Days') {
-          this.cronObj = new CronObject('0', '0', ('1/' + duration), '*', '?', '*');
-        }
         this.rateExpression.isValid = true;
-        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
       }
     } else if (rateExpression['type'] == 'cron') {
       var cronExpression;
@@ -1014,8 +1037,11 @@ export class CreateServiceComponent implements OnInit {
       return undefined;
     } else if (this.rateExpression.isValid === false) {
       return 'invalid';
-    } else if (this.rateExpression.isValid === true) {
+    } else if (this.rateExpression.isValid === true && this.rateExpression.type === 'cron') {
       return this.rateExpression.cronStr;
+    }
+    else if (this.rateExpression.isValid === true  && this.rateExpression.type === 'rate') {
+      return this.rateExpression.rateStr;
     }
   };
 }
