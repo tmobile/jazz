@@ -56,6 +56,7 @@ export class CreateServiceComponent implements OnInit {
   isyamlValid:boolean = true;
   typeform:boolean=false;
   typeevents:boolean=false;
+  version: string = ">=1.0.0 <2.0.0";
   deploymentDescriptorFilterData = ["Function Template", "Start New"];
   selectedList:string='Function Template';
   sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";

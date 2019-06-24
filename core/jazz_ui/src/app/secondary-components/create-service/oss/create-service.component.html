@@ -356,7 +356,7 @@
                                             </div>
                                             <div class="services-name">
                                                 <p class="parameter">frameworkVersion:</p>
-                                                <p class="magenta">">=1.0.0 <2.0.0"</p> 
+                                                <p class="magenta">{{version}}</p> 
                                             </div> 
                                             <p class="parameter">provider:</p>
                                                 <div class="services-name">
@@ -378,10 +378,11 @@
                                     </div>
                                     </div>
                                     </div>
-                                        <div *ngIf="isstartNew">
+                                        <div *ngIf="isstartNew" class="startnew">
                                         <textarea rows="2" cols="50"  name="deploymentDescriptorText" type="text" class="textForm deployment"  [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
-                                        </div>
                                         <p class="descriptorError" *ngIf="isDescriptorEmpty">Please enter the valid Deployment Descriptor.</p>
+                                    </div>
+    
                                     </div>
                                 </div>
                                 <div class="form-error" *ngIf="!isyamlValid">Invalid Yaml Text</div>
