@@ -6,15 +6,15 @@
   "mappings" : {
     "applicationlogs" : {
        "properties" : {
-			"timestamp" : { "type":"date","format":"dateOptionalTime" },
-			"request_id" : { "type": "string", "index": "not_analyzed" },
-			"platform_log_group" : { "type":"string","index":"not_analyzed" },
-			"platform_log_stream" : { "type":"string","index":"not_analyzed" },
-			"servicename" : { "type": "string", "index": "not_analyzed" },
-			"domain" : { "type": "string", "index": "not_analyzed" },
-      "environment" : { "type": "string", "index": "not_analyzed" },
-      "log_level" : { "type": "string", "index": "not_analyzed" },
-			"message" : { "type": "string", "index": "not_analyzed" }
+                        "timestamp" : { "type":"date","format":"dateOptionalTime" },
+                        "request_id" : { "type": "keyword", "index": "false" },
+                        "platform_log_group" : { "type":"keyword","index":"false" },
+                        "platform_log_stream" : { "type":"keyword","index":"false" },
+                        "servicename" : { "type": "keyword", "index": "false" },
+                        "domain" : { "type": "keyword", "index": "false" },
+                        "environment" : { "type": "keyword", "index": "false" },
+                        "log_level" : { "type": "keyword", "index": "false" },
+                        "message" : { "type": "keyword", "index": "false" }
        }
     }
   }
