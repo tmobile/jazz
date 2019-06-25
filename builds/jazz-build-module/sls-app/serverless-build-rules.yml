@@ -734,6 +734,15 @@ event:
           sbr-render: user-only
           sbr-value:
             sbr-example: false
+        integration:
+          sbr-type: enum
+          sbr-render: user-only
+          sbr-constraint:
+            sbr-enum:
+              - lambda
+              - http
+              - lambda-proxy
+
         private:
           sbr-type: bool
           sbr-render: user-only
@@ -881,6 +890,14 @@ resource:
         sbr-whitelist: resources
       sbr-value:
         sbr-example: AWS::DynamoDB::Table
+    DeletionPolicy:
+      sbr-type: enum
+      sbr-render: user-only
+      sbr-constraint:
+        sbr-enum:
+          - Retain
+          - Delete
+          - Snapshot
     Properties:
       sbr-type: "[aws-var-name:aws-var-value]"
       sbr-render: user-only

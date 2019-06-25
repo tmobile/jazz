@@ -408,7 +408,7 @@ def constructArn(resourceName, resourceType) {
       resourceName  = resourceName.substring(resourceName.lastIndexOf("/") + 1)
     }
     if( arn != null ) {
-      arn = arn.replaceAll("\\{region\\}", "${config['region']}") 
+      arn = arn.replaceAll("\\{region\\}", "${config['region']}")
       arn = arn.replaceAll("\\{account-id\\}", "${config['accountId']}")
       arn = arn.replaceAll("\\{resourceName\\}", "${resourceName}")
     } else {
