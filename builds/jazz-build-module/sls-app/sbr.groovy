@@ -327,6 +327,15 @@ class LayerArnValidator implements TypeValidator {
   }
 }
 
+class LambdaArnValidator implements TypeValidator {
+  public void isValid(def aValue) {
+    def pattern = "^arn:aws:lambda::\\d{12}:function:?[a-zA-Z0-9-_]+"
+    def match = aValue ==~ pattern
+    if(!match)
+    throw new IllegalArgumentException("Invalid SQS Arn: " + aValue );
+  }
+}
+
 class SqsArnValidator implements TypeValidator {
   public void isValid(def aValue) {
     def pattern = "^arn:aws:sqs::\\d{12}:?[a-zA-Z0-9-_]+"
@@ -432,6 +441,7 @@ enum SBR_Type {
    AWS_ID("aws-id", new AwsIdValidator()),
    ARN_SNS("arn-sns", new SnsArnValidator()),
    ARN_LAYER("arn-layer", new LayerArnValidator()),
+   ARN_LAMBDA("arn-lambda", new LambdaArnValidator()),
    ARN_SQS("arn-sqs", new SqsArnValidator()),
    ARN_IAM_POLICY("arn-iam-policy", new IamPolicyArnValidator()), // TODO Must provide a validator
    ARN_KINESIS("arn-kinesis", new KinesisArnValidator()),
