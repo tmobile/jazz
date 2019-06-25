@@ -29,10 +29,10 @@ service:
     sbr-mandatory: true
 
   awsKmsKeyArn:
-      sbr-type: arn-kms
-      sbr-render: user-only
-      sbr-value:
-        sbr-example: 'arn:aws:kms:us-east-1:XXXXXX:key/some-hash'
+    sbr-type: arn-kms
+    sbr-render: user-only
+    sbr-value:
+      sbr-example: 'arn:aws:kms:us-east-1:XXXXXX:key/some-hash'
 
 frameworkVersion:
   sbr-type: str
