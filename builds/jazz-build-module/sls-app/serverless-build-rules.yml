@@ -36,8 +36,9 @@ service:
 
 frameworkVersion:
   sbr-type: str
-  sbr-render: user-only
+  sbr-render: config-wins
   sbr-value:
+    sbr-formula: ${context.serverless_framework_version}
     sbr-example: '>=1.0.0 <2.0.0'
 
 custom:
@@ -551,7 +552,7 @@ function:
       sbr-type: aws-description
       sbr-render: user-wins
       sbr-value:
-        srb-formula: Description for ${context.asterisk0} function
+        sbr-formula: Description for ${context.asterisk0} function
 
     memorySize: # memorySize for this specific function.
       sbr-type: int

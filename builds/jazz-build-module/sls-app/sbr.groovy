@@ -1131,7 +1131,8 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
 		context =["environment_logical_id": env,
 						"INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
 						"REGION": aConfig.region,
-						"cloud_provider": "aws"]
+						"cloud_provider": "aws",
+            "serverless_framework_version": ">=1.0.0 <2.0.0"]
 
 		def rules = readYaml(text: sbrContent)
 		def resultingDoc = processServerless(doc,
