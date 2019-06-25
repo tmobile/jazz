@@ -1119,50 +1119,53 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
   } else {
     deploymentDescriptor = aConfig['deployment_descriptor']
   }
-	try {
-		def appContent = readFile('application.yml').trim()
-		if(!appContent.isEmpty()) deploymentDescriptor = appContent
-		} catch(e) {
-			echo "Error occured while reading application.yml. The default value from config will be used. Exception is $e"
-		}
+  try {
+    def appContent = readFile('application.yml').trim()
+    if(!appContent.isEmpty()) deploymentDescriptor = appContent
+    } catch(e) {
+      echo "Error occured while reading application.yml. The default value from config will be used. Exception is $e"
+    }
 
-		def doc = deploymentDescriptor  ? readYaml(text: deploymentDescriptor ) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
+    def doc = deploymentDescriptor  ? readYaml(text: deploymentDescriptor ) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
 
-		context =["environment_logical_id": env,
-						"INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
-						"REGION": aConfig.region,
-						"cloud_provider": "aws",
+    context =["environment_logical_id": env,
+            "INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
+            "REGION": aConfig.region,
+            "cloud_provider": "aws",
             "serverless_framework_version": ">=1.0.0 <2.0.0"]
 
-		def rules = readYaml(text: sbrContent)
-		def resultingDoc = processServerless(doc,
+    if (doc['service']) doc.remove('service')
+    if (doc['frameworkVersion']) doc.remove('frameworkVersion')
+
+    def rules = readYaml(text: sbrContent)
+    def resultingDoc = processServerless(doc,
                                           rules,
                                           aConfig,
                                           context)
 
 // Supplying the Outputs element to render all arns for all 'resources/Resources that got listed'
-		def smallResourcesElem = resultingDoc['resources']
-		if(smallResourcesElem) {
-			def bigResourcesElem = smallResourcesElem['Resources']
-			if(bigResourcesElem) {
-				def bigOutputsElem = smallResourcesElem['Outputs']
-				if(!bigOutputsElem) {
-					bigOutputsElem = [:]
-					smallResourcesElem['Outputs'] = bigOutputsElem
-				}
-				def resourceKeys = bigResourcesElem.collect{key, val -> key}
-				/* Forming a record that extracts the arn from resulting item for each of resource key extracted from resources:
-				UsersTableArn:\n
-				Value:\n
-				\"Fn::GetAtt\": [ usersTable, Arn ]\n
-				*/
-				resourceKeys.collect{name ->
-				bigOutputsElem[name+'Arn']=["Value":["Fn::GetAtt":[name, "Arn"]]]
-			}
-		}
-	}
+    def smallResourcesElem = resultingDoc['resources']
+    if(smallResourcesElem) {
+      def bigResourcesElem = smallResourcesElem['Resources']
+      if(bigResourcesElem) {
+        def bigOutputsElem = smallResourcesElem['Outputs']
+        if(!bigOutputsElem) {
+          bigOutputsElem = [:]
+          smallResourcesElem['Outputs'] = bigOutputsElem
+        }
+        def resourceKeys = bigResourcesElem.collect{key, val -> key}
+        /* Forming a record that extracts the arn from resulting item for each of resource key extracted from resources:
+        UsersTableArn:\n
+        Value:\n
+        \"Fn::GetAtt\": [ usersTable, Arn ]\n
+        */
+        resourceKeys.collect{name ->
+        bigOutputsElem[name+'Arn']=["Value":["Fn::GetAtt":[name, "Arn"]]]
+      }
+    }
+  }
 
-	return resultingDoc
+  return resultingDoc
 }
 
 
