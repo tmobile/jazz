@@ -37,7 +37,7 @@ export class ServicesComponent implements OnInit {
   tableHeader = [{"name" : "Name","field" : "name"},{"name" : "Type","field" : "type"},{"name" : "Namespace","field" : "domain"},{"name" : "Last modified","field" : "lastModified"},{"name" : "Health","field" : "health"},{"name" : "Status","field" : "status"}];
   //'Name','Type','Namespace','Last modified','health','status'
   statusData = ['Status (All)','Status (Active)','Status (Pending)','Status (Stopped)'];
-  tabData = ['All','Api','Function','Website'];
+  tabData = ['All','Api','Function','Website','sls app'];
   recentActivities = [
   {
        title : 'Production deployment',

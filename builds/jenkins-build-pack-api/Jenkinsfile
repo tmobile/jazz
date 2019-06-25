@@ -104,7 +104,8 @@ node() {
     config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
   }
 
-  def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
+  def coreDomain = "jazz";
+  def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
   if(domain && domain != "jazz"){
     auth_token = setCredentials()
@@ -358,7 +359,7 @@ node() {
             }
 
             if (domain != "jazz") {
-              createSubscriptionFilters(stackName, configLoader.AWS.DEFAULTS.REGION, roleId, accountDetails, env_key, credsId);
+              createSubscriptionFilters(config, configLoader.AWS.DEFAULTS.REGION, roleId, accountDetails, env_key, credsId);
             }
 
             updateSwagger();
@@ -423,13 +424,13 @@ def updateSwagger(){
                 // initialize aws credentials
                 def randomStringPrimary = utilModule.generateRequestId();
                 primaryCredsId = "jazzprimary-${randomStringPrimary}";
-                                
+
                 sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
                 sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
                 sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
 
                 sh "aws s3 cp swagger/ s3://${configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --profile ${primaryCredsId} --region ${config.region} --recursive "
-				        echo "completed deployment........."                
+				        echo "completed deployment........."
 
                 } catch(ex){
                 send_status_email(config, 'FAILED', '')
@@ -476,10 +477,6 @@ def getLambdaARN(stackName, credsId) {
     ARN = ARN.substring(0, ARN.lastIndexOf(':'));
   }
   return [arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias]
-}
-
-def getApiIDName(accountDetails) {
-	return awsAPIGatewayModule.getApiGatewayCore(accountDetails)
 }
 
 def getApiIDNameUserService(stage, service_config, accountDetails) {
@@ -962,17 +959,18 @@ def updateApiDocUrl(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(stackName, region, roleId, accountDetails, env_key, credsId) {
-  def lambda = "/aws/lambda/${stackName}"
+def createSubscriptionFilters(config, region, roleId, accountDetails, env_key, credsId) {
+  def logGroupName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+  def lambda = "/aws/lambda/${logGroupName}"
   def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
   try {
-    sh "aws logs create-log-group --log-group-name ${lambda} --region ${config.region}"
+    sh "aws logs create-log-group --log-group-name ${lambda} --profile ${credsId}"
   } catch (Exception ex) { }// ignore if already existing
 
   try {
     filter_json = sh(
-      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${config.region}",
+      script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --profile ${credsId}",
       returnStdout: true
     ).trim()
     echo "${filter_json}"
@@ -980,7 +978,7 @@ def createSubscriptionFilters(stackName, region, roleId, accountDetails, env_key
     filtername = resultJson.subscriptionFilters[0].filterName
     echo "removing existing filter... $filtername"
     if (filtername != "" && !filtername.equals(lambda)) {
-      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\"  --filter-name \"${filtername}\" --region ${config.region}"
+      sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\"  --filter-name \"${filtername}\" --profile ${credsId}"
     }
   } catch (Exception ex) { }// ignore error if not created yet
 
@@ -995,9 +993,9 @@ def createSubscriptionFilters(stackName, region, roleId, accountDetails, env_key
                     }
                 }
                 updatePolicy(env_key, destARN);
-                sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${config.region} --profile ${credsId}"
+                sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\"  --profile ${credsId}"
             } else {
-                sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
+                sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
             }
         }
     }
@@ -1024,7 +1022,7 @@ def updatePolicy(env, destARN){
               // initialize aws credentials
               def randomStringPrimary = utilModule.generateRequestId();
               primaryCredsId = "jazzprimary-${randomStringPrimary}";
-                            
+
               sh "aws configure set profile.${primaryCredsId}.region ${primaryRegionValue}"
               sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
               sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
@@ -1169,7 +1167,7 @@ def clearVirtualEnv() {
 def updatePlatformServiceTemplate(config, roleARN, roleId, environment_logical_id, repo_name)	{
   echo "loadServerlessConfig......."
   def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-  serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, environment_logical_id, repo_name, utilModule)
+  serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, environment_logical_id, repo_name, utilModule, awsAPIGatewayModule)
   serviceConfigdata.loadServiceConfigurationData()
 }
 

@@ -18,6 +18,7 @@ export class RadioGroupComponent implements OnInit {
   @Input() IsEnvList:boolean=false;
 
   @Input() selected;
+  @Input() idName;
   @Input() public statusFilter: Function;
   @Output() onRadioSelected:EventEmitter<boolean> = new EventEmitter<boolean>();
 
@@ -34,7 +35,6 @@ export class RadioGroupComponent implements OnInit {
   constructor() { }
 
   ngOnInit() {
-
   }
 
 

@@ -3,51 +3,26 @@
   </div>
   <div class="jz-modal-content">
     <div class="jz-row">
-      <div class="jz-column" [class.multi-columns]="multiColumns" style="min-width: 200px;" *ngFor="let column of form.columns;">
+      <div class="jz-column" [class.multi-columns]="multiColumns" style="min-width: 200px;"
+        *ngFor="let column of form.columns;">
         <div class="jz-text-subtle">
           {{column.label}}
         </div>
 
-        <div *ngFor="let field of column.fields;"
-             class="jz-formgroup">
+        <div *ngFor="let field of column.fields;" class="jz-formgroup">
           <div class="jz-formfield">
             <div class="jz-formfield-label">
               {{field.label}}
             </div>
-            <div *ngIf="field.type == 'checkbox' && field.label == 'Account'">
-              <checkbox-group
-              #checkboxGroup
-              [filterObject]="field"
-              [checkboxContent]="field.options"
-              [selected]="field.selected"
-              (onCheckBoxSelected)="changeCheckboxFilter($event, field)">
-              </checkbox-group>
+            <div *ngIf="field.label === 'ASSET TYPE' || field.label === 'ASSET IDENTIFIER'">
+              <radio-group [idName]="field.label" [radioContent]="field.options" [selected]="field.selected"
+                (onRadioSelected)="changeFilter($event, field)"></radio-group>
             </div>
 
-            <div *ngIf="field.type == 'checkbox' && field.label == 'Region'">
-              <checkbox-group-region
-              #checkboxGroupRegion
-              [filterObject]="field"
-              [checkboxContent]="field.options"
-              [selected]="field.selected"
-              (onCheckBoxSelected)="changeCheckboxFilter($event, field)">
-              </checkbox-group-region>
+            <div *ngIf="field.label !== 'ASSET TYPE'  && field.label !== 'ASSET IDENTIFIER'">
+              <dropdown [dropdwnContent]="field.options" [selected]="field.selected"
+                (onSelected)="changeFilter($event, field)"></dropdown>
             </div>
-
-            <div *ngIf="field.type == 'radio'">
-              <radio-group [radioContent]="field.options"
-                [selected]="field.selected"
-                (onRadioSelected)="changeFilter($event, field)">
-              </radio-group>
-            </div>
-            <div *ngIf="field.type == 'select'">
-              <dropdown [dropdwnContent]="field.options" [selected]="field.selected" (onSelected)="changeFilter($event, field)"> </dropdown>
-            </div>
-            <div [class.show]="field.type == 'range'" class="slider-wrap hide">
-              <!-- <ion-range-slider #sliderElement id='sliderElement'  min=1 [max]='sliderMax' [from]=1 (onFinish)='getRange($event)' (onChange)="onClickFilter()"></ion-range-slider> -->
-
-            </div>
-
           </div>
         </div>
       </div>
@@ -56,4 +31,3 @@
   <div class="jz-modal-footer">
   </div>
 </div>
-

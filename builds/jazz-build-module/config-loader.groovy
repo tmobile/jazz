@@ -18,12 +18,13 @@ echo "the module, 'config-loader', loaded successfully... congratulations..."
  */
 def loadConfigData(aws_credential_id, region, instance_prefix) {
   def table_name = "${instance_prefix}_JazzConfig"
+  def credsId
   try {
     withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID',
 		credentialsId: aws_credential_id , secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
       	UUID uuid = UUID.randomUUID()
         def randomString = uuid.toString();
-        def credsId = "jazz-${randomString}";
+        credsId = "jazz-${randomString}";
         sh "aws configure set profile.${credsId}.region ${region}"
         sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
         sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
@@ -44,8 +45,10 @@ def loadConfigData(aws_credential_id, region, instance_prefix) {
         error "No configurations defined in the config catalog."
       }
     }
-  }catch(ex) {
+  } catch(ex) {
     error "Failed to fetch the configuration details."
+  } finally {
+    resetCredentials(credsId)
   }
 }
 
@@ -90,6 +93,14 @@ def parseJson(jsonString) {
   def m = [:]
   m.putAll(lazyMap)
   return m
+}
+
+def resetCredentials(credsId) {
+  echo "resetting AWS credentials"
+  def credPath = System.getenv().HOME + "/.aws/credentials"
+  def confPath = System.getenv().HOME + "/.aws/config"
+  sh "sed -i '/${credsId}/,+2d' ${credPath}"
+  sh "sed -i '/${credsId}/,+1d' ${confPath}"
 }
 
 return this

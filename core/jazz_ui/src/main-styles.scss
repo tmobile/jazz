@@ -34,17 +34,18 @@ li {
 
 .step-title {
     margin: 0;
-    font-size: 12px;
+    font-size: 14px;
     font-weight: bold;
     color: #222222;
-    padding-bottom: 16px;
+    padding-bottom: 11px;
 }
 
 .step-details {
-    font-size: 11px;
+    font-size: 12px;
     color: #555555;
     width: 60%;
     min-width: 180px;
+    margin: 0 0 16px 0;
 }
 
 .each-step-wrap {
@@ -65,8 +66,8 @@ li {
 
 .custom-cb label {
     cursor: pointer;
-    width: 18px;
-    height: 18px;
+    width: 16px;
+    height: 16px;
     position: absolute;
     top: 0;
     background: transparent;
@@ -202,14 +203,16 @@ input[type="radio"] + label span {
     border: 1px solid #cccccc;
     &.background {
         position: absolute;
-        left: 4px;
+        // left: 4px;
         // top: 4px;
-        bottom: 4px;
+        // bottom: 4px;
         border: none;
         width: 11px;
         height: 11px;
         background-color: #fff;
         margin: 0;
+        display: flex;
+        transform: translate(3px,3px);
     }
 }
 
@@ -546,6 +549,31 @@ search-box{
     opacity:0.75;
 }
 
+.flex{
+    display: flex;
+}
+.flex-col{
+    display: flex;
+    flex-direction: column;
+}
+
+.justify-center{
+    display: flex;
+    justify-content: center;
+}
+
+.space-between{
+    display: flex;
+    justify-content: space-between;
+}
+
+.align-center{
+    align-self: center;
+}
+.align-self{
+    display: flex;
+    align-self: center;
+}
 .animate-filter{
     max-height: 1000px !important;
   overflow: visible !important;

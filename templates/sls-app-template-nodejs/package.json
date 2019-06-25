@@ -1,0 +1,16 @@
+{
+  "name": "sls-app-nodejs-template",
+  "version": "0.0.1",
+  "description": "Nodejs Serverless Application (Deployment Descriptor) Template project",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha functions/*/test"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^v3.0.0"
+  }
+}

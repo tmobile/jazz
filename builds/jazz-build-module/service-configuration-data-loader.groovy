@@ -19,11 +19,12 @@ echo "Service configuration module loaded successfully"
 @Field def es_hostname
 @Field def service_name
 @Field def utilModule
+@Field def awsAPIGatewayModule
 
 /**
  * Initialize the module
  */
-def initialize(configLoader, role_arn, region, accountId, jenkins_url, current_environment, service_name, utilModule) {
+def initialize(configLoader, role_arn, region, accountId, jenkins_url, current_environment, service_name, utilModule, awsAPIGatewayModule) {
     config_loader = configLoader
     setRoleARN(role_arn)
     setRegion(region)
@@ -32,42 +33,7 @@ def initialize(configLoader, role_arn, region, accountId, jenkins_url, current_e
     setCurrentEnvironment(current_environment)
     setServiceName(service_name)
     setUtilModule(utilModule)
-}
-
-def getApigatewayInfoCore(domain, stage){
-  def gatewayValue
-  for (item in config_loader.AWS.ACCOUNTS) {
-		if(item.PRIMARY){
-			for (data in item.REGIONS) {
-        if(data.PRIMARY){
-          gatewayValue = data.API_GATEWAY
-        }
-      }
-		}
-	}
-
-  if(stage && (stage.endsWith('DEV')) || (stage.endsWith('dev'))) {
-		return getAPIIdNameMapping(gatewayValue.DEV, domain)
-	} else if (stage && (stage == 'STG') || (stage == 'stg')) {
-		return getAPIIdNameMapping(gatewayValue.STG, domain)
-	} else if (stage && (stage == 'PROD') || (stage == 'prod')) {
-		return getAPIIdNameMapping(gatewayValue.PROD, domain)
-	}
-	
-}
-
-def getAPIIdNameMapping(apiIdMapping, namespace) {
-	if (!apiIdMapping) {
-		error "No mapping document provided to lookup API !"
-	}
-
-	if (apiIdMapping["${namespace}"]) {
-		return apiIdMapping["${namespace}"];
-	} else if (apiIdMapping["${namespace}_*"]) {
-		return apiIdMapping["${namespace}_*"];
-	} else {
-		apiIdMapping["*"];
-	}
+    setAWSAPIGatewayModule(awsAPIGatewayModule)
 }
 
 /**
@@ -343,6 +309,7 @@ def loadServiceConfigurationData() {
       def apiOptions = ""
       def functionOptions = ""
       def websiteOptions = ""
+      def slsAppOptions = ""
 
       for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS.API) {
         apiOptions += '"' + item + '",'
@@ -359,9 +326,10 @@ def loadServiceConfigurationData() {
       }
       websiteOptions = websiteOptions.substring(0, websiteOptions.length() - 1)
 
-      updateConfigValue("{api_token}", utilModule.getApiToken())
-      updateConfigValue("{api_token}", utilModule.getApiToken())
-      updateConfigValue("{api_token}", utilModule.getApiToken())
+      for (String item: config_loader.JAZZ.DEPLOYMENT_TARGETS['SLS-APP']) {
+        slsAppOptions += '"' + item + '",'
+      }
+      slsAppOptions = slsAppOptions.substring(0, slsAppOptions.length() - 1)
 
       sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/dev-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_api}\"/$apiOptions/g' ./config/stg-config.json"
@@ -377,7 +345,13 @@ def loadServiceConfigurationData() {
       sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/stg-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/prod-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/test-config.json"
+
+      sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/dev-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/stg-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/prod-config.json"
+      sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/test-config.json"
     }
+
   } catch (e) {
     echo "error occured while loading service configuration: " + e.getMessage()
     error "error occured while loading service configuration: " + e.getMessage()
@@ -417,6 +391,10 @@ def setServiceName(serviceName){
 def setUtilModule(util){
   utilModule = util
 }
+def setAWSAPIGatewayModule(awsAPIGateway){
+  awsAPIGatewayModule = awsAPIGateway;
+}
+
 def setKinesisStream(config){
     if ((config['service'].trim() == "services-handler") || (config['service'].trim() == "events-handler") ||
         (config['service'] == "environment-event-handler") || (config['service'] == "deployments-event-handler") ||
@@ -456,4 +434,10 @@ def setLogStreamPermission(config){
     }
   }
 }
+
+def getApigatewayInfoCore(domain, stage){
+  def accountDetailsPrimary = utilModule.getAccountInfoPrimary();
+   return awsAPIGatewayModule.getApigatewayInfoCore(stage, domain, accountDetailsPrimary);
+}
+
 return this

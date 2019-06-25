@@ -49,31 +49,32 @@
         </div>
             <tabs [beforeEnv]= "!isENVavailable" [type]="'env'" [tabData]="tabData" [selectedTab]="selectedTab" [tabChanged]="tabChanged" [isAdminAccess]="isAdminAccess" (onSelected)="onSelectedDr($event)"></tabs>
 
-
-            <section class="page-content" *ngIf="selectedTab == 0">
+            <section class="page-content" *ngIf="selectedTab == 'overview'">
                 <env-overview-section #selectedTabComponent #envoverview (open_sidebar)='sidebar($event)' (frndload)='frndload($event)' (envLoad)='EnvLoad($event)' (onload)='env($event)' [service]="service" [isAdminAccess]="isAdminAccess"></env-overview-section>
             </section>
 
-
-            <section class="page-content" *ngIf="selectedTab == 1">
+            <section class="page-content" *ngIf="selectedTab == 'deployments'">
                 <env-deployments-section #selectedTabComponent #envdeployments [service]="service" [isDeployAccess]="isDeployAccess"></env-deployments-section>
             </section>
-
-            <section class="page-content" *ngIf="selectedTab == 2">
-                <env-assets-section #selectedTabComponent [service]="service"></env-assets-section>
+            
+            <section class="page-content" *ngIf="selectedTab == 'code quality'">
+                <env-codequality-section #selectedTabComponent [service]="service"></env-codequality-section>
             </section>
 
-        <section class="page-content" *ngIf="selectedTab == 3">
-          <service-metrics #selectedTabComponent [service]="service"></service-metrics>
-        </section>
-
-            <section class="page-content" *ngIf="selectedTab == 4">
-            <env-codequality-section #selectedTabComponent [service]="service"></env-codequality-section>
+            <section class="page-content" *ngIf="selectedTab == 'assets'">
+                <env-assets-section  #selectedTabComponent [service]="service"></env-assets-section>
             </section>
 
-            <section class="page-content" *ngIf="selectedTab == 5">
+            <section class="page-content" *ngIf="selectedTab == 'logs'">
                 <env-logs-section #selectedTabComponent [service]="service"></env-logs-section>
             </section>
+
+            
+            <section class="page-content" *ngIf="selectedTab == 'metrics'">
+                <service-metrics #selectedTabComponent [service]="service"></service-metrics>
+            </section>
+
+            
         </div>
     </div>
     <section *ngIf='isError403'>
