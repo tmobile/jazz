@@ -37,6 +37,7 @@ service:
 frameworkVersion:
   sbr-type: str
   sbr-render: config-wins
+  sbr-mandatory: true
   sbr-value:
     sbr-formula: ${context.serverless_framework_version}
     sbr-example: '>=1.0.0 <2.0.0'
