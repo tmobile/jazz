@@ -21,17 +21,14 @@
 #                  only primary config-only, config-wins and merge rendered fields can have a mandatory status
 
 service:
-  sbr-type: str
-  sbr-render: config-only
-  sbr-template:
-    name:
-      sbr-type: aws-artifact-name
-      sbr-render: config-only
-      sbr-value:
-        sbr-formula: ${context.INSTANCE_PREFIX}-${config.domain}-${config.service}
-      sbr-mandatory: true
+  name:
+    sbr-type: aws-artifact-name
+    sbr-render: config-only
+    sbr-value:
+      sbr-formula: ${context.INSTANCE_PREFIX}-${config.domain}-${config.service}
+    sbr-mandatory: true
 
-    awsKmsKeyArn:
+  awsKmsKeyArn:
       sbr-type: arn-kms
       sbr-render: user-only
       sbr-value:
@@ -42,6 +39,14 @@ frameworkVersion:
   sbr-render: user-only
   sbr-value:
     sbr-example: '>=1.0.0 <2.0.0'
+
+custom:
+  sbr-type: "[aws-var-name:aws-tag-value]"
+  sbr-render: user-only
+  sbr-value:
+    sbr-example:
+      key1: value1
+      key2: value2
 
 provider:
   name:
@@ -899,13 +904,8 @@ resource:
       sbr-value:
         sbr-example: AWS::DynamoDB::Table
     DeletionPolicy:
-      sbr-type: enum
+      sbr-type: str
       sbr-render: user-only
-      sbr-constraint:
-        sbr-enum:
-          - Retain
-          - Delete
-          - Snapshot
     Properties:
       sbr-type: "[aws-var-name:aws-var-value]"
       sbr-render: user-only
