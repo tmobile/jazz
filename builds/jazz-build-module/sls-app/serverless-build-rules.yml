@@ -734,6 +734,11 @@ event:
           sbr-render: user-only
           sbr-value:
             sbr-example: false
+        async:
+          sbr-type: bool
+          sbr-render: user-only
+          sbr-value:
+            sbr-example: false
         integration:
           sbr-type: enum
           sbr-render: user-only
