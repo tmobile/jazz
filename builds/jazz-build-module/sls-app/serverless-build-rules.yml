@@ -21,18 +21,21 @@
 #                  only primary config-only, config-wins and merge rendered fields can have a mandatory status
 
 service:
-  name:
-    sbr-type: aws-artifact-name
-    sbr-render: config-only
-    sbr-value:
-      sbr-formula: ${context.INSTANCE_PREFIX}-${config.domain}-${config.service}
-    sbr-mandatory: true
+  sbr-type: str
+  sbr-render: config-only
+  sbr-template:
+    name:
+      sbr-type: aws-artifact-name
+      sbr-render: config-only
+      sbr-value:
+        sbr-formula: ${context.INSTANCE_PREFIX}-${config.domain}-${config.service}
+      sbr-mandatory: true
 
-  awsKmsKeyArn:
-    sbr-type: arn-kms
-    sbr-render: user-only
-    sbr-value:
-      sbr-example: 'arn:aws:kms:us-east-1:XXXXXX:key/some-hash'
+    awsKmsKeyArn:
+      sbr-type: arn-kms
+      sbr-render: user-only
+      sbr-value:
+        sbr-example: 'arn:aws:kms:us-east-1:XXXXXX:key/some-hash'
 
 frameworkVersion:
   sbr-type: str
