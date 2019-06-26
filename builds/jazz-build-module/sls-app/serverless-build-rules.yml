@@ -25,7 +25,7 @@ service:
     sbr-type: aws-artifact-name
     sbr-render: config-only
     sbr-value:
-      sbr-formula: ${context.INSTANCE_PREFIX}-${config.service}
+      sbr-formula: ${context.INSTANCE_PREFIX}-${config.domain}-${config.service}
     sbr-mandatory: true
 
   awsKmsKeyArn:
@@ -350,7 +350,7 @@ provider:
         - arn:aws:iam:*****:policy/some-managed-policy
 
   iamRoleStatements: # IAM role statements so that services can be accessed in the AWS account
-    sbr-type: "[aws-policy]"
+    sbr-type: "[arn-iam-policy]"
     sbr-render: user-only
     sbr-value:
       sbr-example:

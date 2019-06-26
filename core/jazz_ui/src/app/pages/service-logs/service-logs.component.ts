@@ -80,6 +80,9 @@ export class ServiceLogsComponent implements OnInit {
 		},
 		asset: {
 			show: true,
+		},
+		sls_resource:{
+			show: false
 		}
 	}
 	selectFilter: any = {};
@@ -94,6 +97,7 @@ export class ServiceLogsComponent implements OnInit {
 	errMessage: any;
 	public assetList: any = [];
 	public assetSelected: any;
+	public resourceSelected: any;
 	private toastmessage: any;
 	loadingState: string = 'default';
 	private subscription: any;
@@ -175,6 +179,7 @@ export class ServiceLogsComponent implements OnInit {
 	prevActivePage: number = 1;
 	limitValue: number = 20;
 	offsetValue: number = 0;
+	lambdaResourceNameArr;
 
 	envList = ['prod', 'stg'];
 
@@ -191,6 +196,10 @@ export class ServiceLogsComponent implements OnInit {
 		this.service['ismetrics'] = false;
 		this.service['logsData'] = this.logsData
 		this.service['assetList'] = this.assetList
+		if(this.service.serviceType == 'sls-app'){
+			this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
+			this.advanced_filter_input.sls_resource.show = true;
+		}
 
 		let filtertypeObj = filterServ.addDynamicComponent({ "service": this.service, "advanced_filter_input": this.advanced_filter_input });
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
@@ -218,6 +227,12 @@ export class ServiceLogsComponent implements OnInit {
 		this.assetEvent = event
 		this.FilterTags.notify('filter-Asset', event);
 		this.assetSelected = event;
+	}
+	
+	onResourceSelect(event){
+		this.assetEvent = event
+		this.FilterTags.notify('filter-Asset', event);
+		this.resourceSelected = event;
 	}
 
 	refresh() {
@@ -247,6 +262,15 @@ export class ServiceLogsComponent implements OnInit {
 				let assets = _(response.data.assets).map('asset_type').uniq().value();
 				let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 				validAssetList.splice(0,0,'all');
+				 this.lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
+				for( let i = 0 ; i<this.lambdaResourceNameArr.length; i++ ){
+					let tokens = this.lambdaResourceNameArr[i].split(':');
+					let reduced = tokens[tokens.length-1];
+					let reducedTokens = reduced.split('-');
+					this.lambdaResourceNameArr[i] = reducedTokens[reducedTokens.length-1];
+				}
+				this.lambdaResourceNameArr = _.uniq(this.lambdaResourceNameArr);
+				this.lambdaResourceNameArr.splice(0,0,'All');
 				self.assetWithDefaultValue = validAssetList;
 				for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
 					self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
@@ -320,13 +344,24 @@ export class ServiceLogsComponent implements OnInit {
 			case "asset": {
 				this.FilterTags.notifyLogs('filter-Asset', event.value);
 				this.assetSelected = event.value;
-				if (this.assetSelected !== 'all') {
+				if (this.assetSelected !== 'all' && this.assetSelected !== 'All') {
 					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
 				}
 				else {
 					delete this.payload['asset_type'];
 				}
 				this.resetPayload();
+				break;
+			}
+			case "resource" : {
+				if(this.service.serviceType == 'sls-app'){
+					this.resourceSelected = event.value;
+					this.payload.asset_identifier = this.resourceSelected;
+					if(this.resourceSelected === 'all' || this.resourceSelected === "All"){
+						delete this.payload['asset_identifier'];
+					}
+					this.resetPayload();
+				}
 			}
 		}
 	}
@@ -344,6 +379,7 @@ export class ServiceLogsComponent implements OnInit {
 		$(".pagination.justify-content-center li:nth-child(2)")[0].click();
 		this.callLogsFunc();
 	}
+
 
 	getRangefunc(e) {
 		this.FilterTags.notifyLogs('filter-TimeRangeSlider', e);

@@ -240,6 +240,7 @@ export class CreateServiceComponent implements OnInit {
     this.serviceRequestFailure = false;
     this.serviceRequestSuccess = false;
     this.onClose.emit(false);
+    this.onFilterSelected(this.selectedList);
   }
 
   lineNumbers() {
@@ -659,6 +660,7 @@ export class CreateServiceComponent implements OnInit {
     this.serviceRequested = false;
     this.serviceRequestSuccess = false;
     this.serviceRequestFailure = false;
+    this.onFilterSelected(this.selectedList);
 
   }
 

@@ -33,7 +33,7 @@ import groovy.transform.Field
 @Field def config
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
-@Field def current_environment = ''
+@Field def environment_logical_id
 
 node() {
 
@@ -49,7 +49,6 @@ node() {
   def gitCommitOwner
   def gitCommitHash
   def context_map
-  def environment_logical_id
 
   if (domain && domain != "") {
     repo_name = params.domain + "_" + params.service_name
@@ -112,10 +111,8 @@ node() {
     environment_logical_id = '';
 
     if (branch == 'master') {
-      current_environment = 'prod'
       environment_logical_id = 'prod';
     } else {
-      current_environment = 'dev'
       environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
     }
 
@@ -140,7 +137,7 @@ node() {
   def roleARN = accountDetails.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
 
   sonarModule.initialize(configLoader, config, branch)
-  stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+
 
   def requestId = utilModule.generateRequestId()
   if (requestId != null) {
@@ -223,17 +220,18 @@ node() {
       echo 'The packaging state'
       // As per 'Every stage should send started, failed, success events in each stage'
       events.sendStartedEvent('PACKAGE', 'Packaging starts', context_map, environment_logical_id)
+      def credsId = null
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
         try {
           def randomString = utilModule.generateRequestId();
-          def credsId = "jazz-${randomString}";
+          credsId = "jazz-${randomString}";
           sh "aws configure set profile.${credsId}.region ${config.region}"
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-          sh "serverless package --stage ${environment_logical_id} -v > output.log"
+          sh "serverless package --stage ${environment_logical_id} --profile ${credsId} -v > output.log"
           // Printing out the resulting stdout and the cloud-formation template
           def outputLog = readFile('output.log').trim()
           echo "serverless packaging log $outputLog"
@@ -247,6 +245,9 @@ node() {
           def outputLog = readFile('output.log').trim()
           echo "serverless packaging log $outputLog"
           error ex.getMessage()
+        } finally {
+          // reset Credentials
+          resetCredentials(credsId)
         }
 
       }
@@ -256,17 +257,18 @@ node() {
       echo 'The template validation state'
       // As per 'Every stage should send started, failed, success events in each stage'
       events.sendStartedEvent('TEMPLATE_VALIDATION', 'Template validation starts', context_map, environment_logical_id)
+      def credsId = null
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
         try {
           def randomString = utilModule.generateRequestId();
-          def credsId = "jazz-${randomString}";
+          credsId = "jazz-${randomString}";
           sh "aws configure set profile.${credsId}.region ${config.region}"
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
           // Please refer to https://docs.aws.amazon.com/cli/latest/reference/cloudformation/validate-template.html
-          sh "aws cloudformation validate-template --template-body file://.serverless/cloudformation-template-update-stack.json --region ${config['region']} > output.log"
+          sh "aws cloudformation validate-template --template-body file://.serverless/cloudformation-template-update-stack.json --profile ${credsId} > output.log"
           def outputLog = readFile('output.log').trim()
           echo "template validation log $outputLog"
 
@@ -296,6 +298,9 @@ node() {
           def outputLog = readFile('output.log').trim()
           echo "template validation log $outputLog"
           error ex.getMessage() // raising an exception thus propagating the message to the Jenkins
+        } finally {
+          // reset Credentials
+          resetCredentials(credsId)
         }
       }
     }
@@ -306,14 +311,14 @@ node() {
 
       echo "starts Deployment to ${env_key} Env"
       events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
-
+      def credsId = null
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
         try {
           // initialize aws credentials
           def randomString = utilModule.generateRequestId();
-          def credsId = "jazz-${randomString}";
+          credsId = "jazz-${randomString}";
           sh "aws configure set profile.${credsId}.region ${config.region}"
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
@@ -323,36 +328,30 @@ node() {
 
           def envBucketKey = "${env_key}"
           echoServerlessFile()
-          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey)
-
-// Shoving deploy output lines into array
-          def deployLines = deployOutput.split('\n')
-          def resourceArns = []
-          def afterStackOutputs = false
-// Extracting all the lines that follow 'Stack Outputs'. These lines are supposed to contain arns of resources created
-          for(def line: deployLines) {
-            if(afterStackOutputs) resourceArns.add(line)
-            if(line.contains('Stack Outputs')) afterStackOutputs = true // Here we are only interested in lines that follow 'Stack Outputs' marker
-          }
-
-          for(def name2ArnString: resourceArns) {
-            def name2ArnPair = name2ArnString.split(': ') // Here we rely on the space after the ': ' so it is split properly without affecting the arn itself that is full of colons but never has a space after
-            if(name2ArnPair.size() > 1) {
-              def arn = name2ArnPair[1].trim()
-              if(arn.startsWith('arn')) {
-                 def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:102707241671:table/jazzUsersTable53
-                 if(arnAsArray.size() > 2) { // Making sure that the third element exists
-                   def artifactType = arnAsArray[2]
-                   if(artifactType == 'kinesis') artifactType = 'kinesis_stream' // 'kinesis_stream' needs to be instaead of simple 'kinesis' that did not get persisted :-( by itself
-                   events.sendCompletedEvent('CREATE_ASSET',
-                                             null,
-                                             utilModule.generateAssetMap("aws",
-                                                                         arn,
-                                                                         artifactType,
-                                                                         config),
-                                             environment_logical_id)
-                   echo "Sending type $artifactType with arn $arn"
-
+          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
+          // After stack Deployment
+          def describeResources = getStackResources(environment_logical_id, credsId)
+          def resources = describeResources['StackResources']
+          if( resources != null ) {
+            def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
+            for( resource in resources ) {
+              def resourceType = resource['ResourceType']
+              if( whiteListModule.checkAssetType(resourceType)){
+                def arn = constructArn(resource['PhysicalResourceId'], resourceType)
+                echo "Arn Template is : ${arn}"
+                if(arn.startsWith('arn')) {
+                  def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
+                  if(arnAsArray.size() > 2) { // Making sure that the third element exists
+                    def artifactType = arnAsArray[2]
+                    events.sendCompletedEvent('CREATE_ASSET',
+                                              null,
+                                              utilModule.generateAssetMap("aws",
+                                                                          arn,
+                                                                          assetCatalogTypes[artifactType],
+                                                                          config),
+                                              environment_logical_id)
+                    echo "Sending type $artifactType with arn $arn"
+                  }
                 }
               }
             }
@@ -361,8 +360,6 @@ node() {
           if (domain != "jazz") {
             createSubscriptionFilters(config, accountDetails, env_key, credsId);
           }
-					// reset Credentials
-          resetCredentials(credsId)
 
           def svc_response = echoServiceInfo(environment_logical_id)
           send_status_email(config, 'COMPLETED', svc_response)
@@ -373,6 +370,9 @@ node() {
           events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
           events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
           error ex.getMessage()
+        } finally {
+          // reset Credentials
+          resetCredentials(credsId)
         }
 
         def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
@@ -386,15 +386,47 @@ node() {
   }
 }
 
-def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, config){
+def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, config, credsId){
   def s3bucketvalue = getS3BucketValue(accountDetails , config, envBucketKey)
   echoServerlessFile()
-  sh "serverless remove --stage $environment_logical_id -v --bucket ${s3bucketvalue}"
-  def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+  sh "serverless remove --stage $environment_logical_id -v --bucket ${s3bucketvalue} --profile ${credsId}"
+  def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
   if (redeployOutput != 'success') {
     echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
     error "Exception occured while serverless deployment to ${environment_logical_id} environment"
   }
+}
+
+
+
+def constructArn(resourceName, resourceType) {
+  def arn = null
+  try{
+    arn = whiteListModule.getarnTemplates(resourceType)
+    //Get queueName from url
+    if( resourceType == "AWS::SQS::Queue"){
+      resourceName  = resourceName.substring(resourceName.lastIndexOf("/") + 1)
+    }
+    if( arn != null ) {
+      arn = arn.replaceAll("\\{region\\}", "${config['region']}") 
+      arn = arn.replaceAll("\\{account-id\\}", "${config['accountId']}")
+      arn = arn.replaceAll("\\{resourceName\\}", "${resourceName}")
+    } else {
+      error "Arn Templates not found for Resource Type : ${resourceType}"
+    }
+  } catch (ex){
+    echo "Exception occured on getting Arn templates for Resource Type : ${resourceType}"
+    error "Exception occured on getting Arn templates for Resource Type : ${resourceType}"
+  }
+  return arn
+}
+
+def getStackResources(env, credsId){
+  def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${env}"
+  def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${cfStackName} --profile ${credsId}", returnStdout: true)
+  echo "Describe Stacks are ${stackResources}"
+  def parsedResources = parseJson(stackResources)
+  return parsedResources
 }
 
 def echoServerlessFile() {
@@ -402,10 +434,10 @@ def echoServerlessFile() {
   echo "serverless file data $serverlessyml"
 }
 
-def servelessDeploy(env, envBucketKey){
+def servelessDeploy(env, envBucketKey, credsId){
   try {
     def s3bucketvalue = getS3BucketValue(accountDetails, config, envBucketKey)
-    sh "serverless deploy --stage ${env} -v --bucket ${s3bucketvalue} > output.log"
+    sh "serverless deploy --stage ${env} -v --bucket ${s3bucketvalue} --profile ${credsId} > output.log"
     def outputLog = readFile('output.log').trim()
     echo "serverless deployment log $outputLog"
     return outputLog
@@ -509,12 +541,12 @@ def buildSlsApp(String runtime, String repo_name) {
       sh "mkdir -p $GOPATH/src"
       sh "rsync -a --exclude='.*' $GOPATH/" + repo_name + " $GOPATH/src"
       sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
-      dirs = readDir("${env.WORKSPACE}/src/${repo_name}/functions")
+      dirs = readDir()
       def size = dirs.size()
       if( size > 0) {
         for(item in dirs) {
-          def functionpath = "$GOPATH/src/${repo_name}/functions/${item}"
-          sh "env GOOS=linux GOARCH=amd64 go build -o functions/${item}/main ${functionpath}/main.go"
+          def functionpath = "$GOPATH/src/${repo_name}/${item}"
+          sh "env GOOS=linux GOARCH=amd64 go build -o ${item}/main ${functionpath}/main.go"
         }
       } else {
         error "No Functions Found..skipping build"
@@ -527,8 +559,10 @@ def buildSlsApp(String runtime, String repo_name) {
  */
 def resetCredentials(credsId) {
   echo "resetting AWS credentials"
-  sh "aws configure set profile.${credsId}.aws_access_key_id XXXXXXXXXXXXXXXXXXXXXXXXXX"
-  sh "aws configure set profile.${credsId}.aws_secret_access_key XXXXXXXXXXXXXXXXXXXXXX"
+  def credPath = System.getenv().HOME + "/.aws/credentials"
+  def confPath = System.getenv().HOME + "/.aws/config"
+  sh "sed -i '/${credsId}/,+2d' ${credPath}"
+  sh "sed -i '/${credsId}/,+1d' ${confPath}"
 }
 
 /** Validate basic configurations in the deployment yaml file and error if any keys are
@@ -631,6 +665,7 @@ def echoServiceInfo(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
+
 def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
   def deploymentDescriptor = null
   if( env_deployment_descriptor != null ){
@@ -640,18 +675,19 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
   }
   def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
   def functionsElem = doc['functions']
+  def logGroupName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
   functionsElem.each{funcName, funcConfig ->
     def name = funcConfig['name'] ? funcConfig['name'] : funcName
-    def lambda = "/aws/lambda/${name}"
+    def lambda = "/aws/lambda/${logGroupName}-${name}"
     def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
     try {
-      sh "aws logs create-log-group --log-group-name ${lambda} --region ${config.region}"
+      sh "aws logs create-log-group --log-group-name ${lambda} --profile ${credsId}"
     } catch (Exception ex) { } // ignore if already existing
 
     try {
       filter_json = sh(
-        script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --region ${config['region']} --profile ${credsId}",
+        script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --profile ${credsId}",
         returnStdout: true
       ).trim()
       echo "${filter_json}"
@@ -659,7 +695,7 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
       filtername = resultJson.subscriptionFilters[0].filterName
       echo "removing existing filter... $filtername"
       if (filtername != "" && !filtername.equals(lambda)) {
-        sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\" --region ${config['region']} --profile ${credsId}"
+        sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\"  --profile ${credsId}"
       }
     } catch (Exception ex) { } // ignore error if not created yet
     try {
@@ -673,9 +709,9 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
             }
           }
           updatePolicy(env_key, destARN);
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\" --region ${config['region']} --profile ${credsId}"
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\"  --profile ${credsId}"
         } else {
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\" --region ${region} --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
         }
       }
     }
@@ -869,14 +905,16 @@ def runValidation(String runtime) {
   }
 }
 
-@NonCPS
-def readDir(dirPath) {
-  def  dirsl = []
-  new File(dirPath).eachDir() {
-    dirs -> println dirs.getName()
-    dirsl.add(dirs.getName())
+def readDir() {
+  sh "ls -al"
+  def targetPaths
+  try {
+    targetPaths = sh(returnStdout: true, script: 'ls -d functions/*').split("\n")
+    echo "completed : $targetPaths"
+  } catch (ex) {
+      echo "Error Occured while Fetching functions... $ex"
   }
-  dirsl
+  return targetPaths
 }
 
 

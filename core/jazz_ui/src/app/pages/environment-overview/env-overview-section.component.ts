@@ -13,7 +13,7 @@ import { environment as env_internal } from './../../../environments/environment
   providers: [RequestService,MessageService,DataService],
   styleUrls: ['./env-overview-section.component.scss']
 })
-export class EnvOverviewSectionComponent implements OnInit, AfterViewInit {
+export class EnvOverviewSectionComponent implements OnInit {
   
   @Output() onload:EventEmitter<any> = new EventEmitter<any>();
   @Output() envLoad:EventEmitter<any> = new EventEmitter<any>();
@@ -167,8 +167,6 @@ popup(state){
       this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
             .subscribe(
                 (Response)=>{
-                  let textElement = document.getElementsByClassName('text-area')[0];
-                  textElement.setAttribute('style', 'height:' + (textElement.scrollHeight) + 'px')
                   let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
                   this.toast_pop('success',"",successMessage);
 
@@ -531,14 +529,6 @@ form_endplist(){
       this.data.currentMessage.subscribe(message => this.message = message)
   }
 
-  ngAfterViewInit(){
-    setTimeout(function(){
-      let textElement = document.getElementsByClassName('text-area')[0];
-      if(textElement){
-        textElement.setAttribute('style', 'height:' + (textElement.scrollHeight) + 'px')
-      }
-      },3500)  
-  }
 
   ngOnChanges(x:any) {
     this.route.params.subscribe(

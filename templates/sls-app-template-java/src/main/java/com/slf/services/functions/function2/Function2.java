@@ -32,6 +32,7 @@ public class Function2 extends BaseRequestHandler {
 			throw new BadRequestException("Invalid or empty input payload");
 		}
 
+    logger.info("Sample log for function2");
         /* Sample output data */
 		HashMap<String, String> data = new HashMap<String, String>();
 		String val = (String) body.get("key");
