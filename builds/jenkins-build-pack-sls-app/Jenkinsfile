@@ -108,7 +108,6 @@ node() {
     gitCommitHash = scmModule.getRepoCommitHash()
     gitCommitOwner = scmModule.getRepoCommitterInfo(gitCommitHash)
     context_map = [created_by: config['created_by'], deployed_by: gitCommitOwner]
-    environment_logical_id = '';
 
     if (branch == 'master') {
       environment_logical_id = 'prod';
@@ -330,6 +329,8 @@ node() {
           echoServerlessFile()
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
           // After stack Deployment
+          createAssetForHttpEvents(accountDetails, deployOutput)
+
           def describeResources = getStackResources(environment_logical_id, credsId)
           def resources = describeResources['StackResources']
           if( resources != null ) {
@@ -338,7 +339,6 @@ node() {
               def resourceType = resource['ResourceType']
               if( whiteListModule.checkAssetType(resourceType)){
                 def arn = constructArn(resource['PhysicalResourceId'], resourceType)
-                echo "Arn Template is : ${arn}"
                 if(arn.startsWith('arn')) {
                   def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
                   if(arnAsArray.size() > 2) { // Making sure that the third element exists
@@ -350,7 +350,6 @@ node() {
                                                                           assetCatalogTypes[artifactType],
                                                                           config),
                                               environment_logical_id)
-                    echo "Sending type $artifactType with arn $arn"
                   }
                 }
               }
@@ -397,7 +396,38 @@ def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetail
   }
 }
 
+def createAssetForHttpEvents (accountDetails, deployOutput) {
+  def api_id = getApiId(accountDetails)
+  def deployLines = deployOutput.split('\n')
+  def resourceArns = []
+  def afterStackOutputs = false
 
+  for(def line: deployLines) {
+    if(line.contains('functions:')) break;
+    if(afterStackOutputs) resourceArns.add(line)
+    if(line.contains('endpoints')) afterStackOutputs = true
+  }
+  echo "resourceArns: $resourceArns"
+
+  for(def resource: resourceArns) {
+    def endpoints = resource.split(" - ")
+    def method = endpoints[0].trim()
+    def endpoint = endpoints[1].trim()
+    def path = endpoint.replaceAll(".*com", "")
+    echo "methodPaths path1: $path"
+    path = environment_logical_id == 'prod' ? path.replaceAll("/prod", "/prod/${method}") : "/dev/${method}${path}")
+    echo "methodPaths path2: $path"
+    def apigatewayArn = "arn:aws:execute-api:${config['region']}:${config['accountId']}:${api_id}${path}"
+
+    events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", apigatewayArn, "apigateway", config), environment_logical_id)
+    events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpoint, "endpoint_url", config), environment_logical_id)
+  }
+}
+
+def getApiId(accountDetails) {
+  def stage = environment_logical_id == 'prod'? 'PROD' : 'DEV'
+  return awsAPIGatewayModule.getApigatewayInfo(stage, config['domain'], config['service'], accountDetails, config)
+}
 
 def constructArn(resourceName, resourceType) {
   def arn = null
