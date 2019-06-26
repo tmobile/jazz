@@ -9,8 +9,10 @@ import { AdvancedFilterService } from './../../advanced-filter.service';
 import { AdvFilters } from './../../adv-filter.directive';
 import { environment } from './../../../environments/environment.internal';
 import { environment as env_internal } from './../../../environments/environment.internal';
-
-
+import { environment as env_oss} from './../../../environments/environment.oss';
+import * as moment from 'moment';
+import * as _ from 'lodash';
+declare let Promise;
 
 
 @Component({
@@ -21,24 +23,27 @@ import { environment as env_internal } from './../../../environments/environment
 })
 export class EnvAssetsSectionComponent implements OnInit {
 
-	 state: string = 'default';
-	 showPaginationtable:boolean = true;
-	 currentlyActive: number = 1;
-	 totalPageNum: number = 12;
-	 offset:number = 0;
-	 offsetval:number = 0;
-
+	state: string = 'default';
+  showPaginationtable: boolean = false;
+  currentlyActive: number = 1;
+	totalPageNum: number = 12;
+	offset:number = 0;
+	offsetval:number = 0;
+	public assetList:any = [];
 	private env:any;
 	private http:any;
 	private subscription:any;
+	public serviceType;
+	public assetWithDefaultValue:any=[];
+  public environmentFilter;
 	@ViewChild('filtertags') FilterTags: FilterTagsComponent;
-
+  @ViewChild('filters') filters;
 	@ViewChild(AdvFilters) advFilters: AdvFilters;
+	public assetType:any;
 	componentFactoryResolver:ComponentFactoryResolver;
-
+	filterSelected: boolean = false;
 	fromassets:boolean = true;
-
-
+  public assetFilter: any;
 	advanced_filter_input:any = {
 		time_range:{
 			show:false,
@@ -66,17 +71,21 @@ export class EnvAssetsSectionComponent implements OnInit {
 		},
 		region:{
 			show:true,
+		},
+		asset:{
+			show:true,
 		}
 	}
 
 	assetsList: any = [];
+	public formFields: any = [];
 
 	accList=env_internal.urls.accounts;
-		regList=env_internal.urls.regions;
-			accSelected:string = this.accList[0];
-		regSelected:string=this.regList[0];
+	regList=env_internal.urls.regions;
+	accSelected:string = this.accList[0];
+	regSelected:string=this.regList[0];
 	type: any = [];
-
+  public asset_type:any=[]
 	length: any;
 	// image: any = [];
 	slNumber: any = [];
@@ -110,7 +119,9 @@ export class EnvAssetsSectionComponent implements OnInit {
 	lastCommitted: any;
 	islink:boolean = false;
 	count: any = [];
+	public assetSelected:any;
 	relativeUrl:string = '/jazz/assets';
+	payload:any = {}
 	errMessage: string = "Something went wrong while fetching your data"
 
 	@Input() service: any = {};
@@ -138,10 +149,14 @@ export class EnvAssetsSectionComponent implements OnInit {
     this.envResponseEmpty = false;
     this.envResponseError = false;
     this.envResponseTrue = false;
-    this.callServiceEnvAssets();
-  }
+		this.callServiceEnvAssets();
+	}
 
-
+ngOnInit()
+{
+	this.serviceType = this.service.type || this.service.serviceType;
+  this.getAssetType();
+}
 	 getFilter(filterServ){
 
 	}
@@ -154,14 +169,53 @@ export class EnvAssetsSectionComponent implements OnInit {
 	onregSelected(event){
     this.FilterTags.notify('filter-Region',event);
     this.regSelected=event;
-   }
+	 }
 
+	applyFilter(value){
+		this.isLoading = true;
+		this.assetSelected=value.selected.replace(/ /g,"_");
+		this.getAssetType(value);
+	 }
+	getAssetType(data?){
+		let self=this;
+    return self.http.get('/jazz/assets',{
+      domain: self.service.domain,
+			service:self.service.name,
+			environment:self.env
+    },self.service.id).toPromise().then((response:any)=>{
+      if(response&&response.data&&response.data.assets){
+				let assets=_(response.data.assets).map('asset_type').uniq().value();
+				self.assetWithDefaultValue=assets;
+				self.assetWithDefaultValue.splice(0,0,'all');
+        for(var i=0;i<self.assetWithDefaultValue.length;i++){
+        self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
+        }
+        self.assetFilter={
+            column: 'Filter By:',
+            label: 'ASSET TYPE',
+            options: self.assetList,
+            values: assets,
+            selected:assets[0].replace(/_/g," ")
+				};
+				if(!data){
+					self.assetSelected=assets[0];
+				}
+       let assetField = self.filters.getFieldValueOfLabel('ASSET TYPE');
+        if (!assetField) {
+					self.formFields.splice(0, 0, self.assetFilter);
+					self.filters.setFields(self.formFields);
+				}
+			self.callServiceEnvAssets();
+    }
+    })
+    .catch((error) => {
+      return Promise.reject(error);
+    })
+  }
    onFilterSelect(event){
-	switch(event.key){
-
-
+	 switch(event.key){
 	  case 'account':{
-		  this.FilterTags.notify('filter-Account',event.value);
+		this.FilterTags.notify('filter-Account',event.value);
 		this.accSelected=event.value;
 		break;
 	  }
@@ -185,19 +239,21 @@ export class EnvAssetsSectionComponent implements OnInit {
     if ( this.subscription ) {
       this.subscription.unsubscribe();
 		}
+		this.payload['service'] = this.service.name;
+		this.payload['domain'] = this.service.domain;
+		this.payload['environment'] = this.env;
+		this.payload['limit'] = this.limitValue;
+		this.payload['offset'] = this.offsetval;
+		if (this.assetSelected !== 'all') {
+			this.payload['asset_type'] = this.assetSelected;
+		}	else {
+			delete this.payload['asset_type'];
+		}
 
-
-    var payload = {
-      service: this.service.name,
-      domain: this.service.domain,
-      environment: this.env,
-      limit: this.limitValue,
-      offset: this.offsetval
-    };
-    this.subscription = this.http.get(this.relativeUrl, payload, this.service.id).subscribe(
+    this.subscription = this.http.get(this.relativeUrl, this.payload, this.service.id).subscribe(
       (response) => {
 
-        if((response.data == undefined) || (response.data.length == 0)){
+        if((response.data == undefined) || (response.data.count == 0)){
           this.envResponseEmpty = true;
           this.isLoading = false;
         }
@@ -205,11 +261,13 @@ export class EnvAssetsSectionComponent implements OnInit {
         {
           var pageCount = response.data.count;
 
-
         if(pageCount){
 					this.totalPageNum = Math.ceil(pageCount/this.limitValue);
 					if(this.totalPageNum === 1){
 						this.showPaginationtable = false;
+					}
+					else {
+						this.showPaginationtable = true;
 					}
         }
         else{
@@ -220,9 +278,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 
         this.envResponseTrue = true;
         this.length = response.data.assets.length;
-
-        this.assetsList = response.data.assets;
-
+				this.assetsList = response.data.assets;
         for(var i=0; i < this.length ; i++){
           this.type[i] = response.data.assets[i].asset_type;
           this.slNumber[i] = this.offsetval + (i+1);
@@ -290,7 +346,7 @@ export class EnvAssetsSectionComponent implements OnInit {
         this.getTime();
         this.errorURL = window.location.href;
         this.errorAPI = env_internal.baseurl+"jazz/assets/search";
-        this.errorRequest = payload;
+        this.errorRequest = this.payload;
         this.errorUser = this.authenticationservice.getUserId();
         this.errorResponse = JSON.parse(error._body);
         this.errMessage = this.toastmessage.errorMessage(error, "getAssetResponse");
@@ -411,11 +467,10 @@ export class EnvAssetsSectionComponent implements OnInit {
 		 window.open(url , '_blank');
 	 }
 
-	 ngOnInit() {
 
-	}
 	limitValue : number = 10;
-  prevActivePage: number = 0;
+	prevActivePage: number = 0;
+
 
 	paginatePage(currentlyActivePage){
     if(this.prevActivePage != currentlyActivePage){
@@ -463,7 +518,6 @@ export class EnvAssetsSectionComponent implements OnInit {
 				this.env = "prod";
 			}
     });
-    this.callServiceEnvAssets();
 }
 
 refreshCostData(event){
@@ -483,6 +537,5 @@ public goToAbout(hash){
       default:
         return 'Provider ID';
     }
-  }
-
+	}
 }

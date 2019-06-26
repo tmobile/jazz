@@ -1,7 +1,8 @@
 <div class="tabs-wrap">
     <ul>
-        <li *ngFor="let option of tabData;let i=index" [class.disable]='(disableobj[option.toLowerCase()]) || (beforeEnv)' (click)="onDropdownClick(i)" [ngClass]="{'active': selectedTab == i}" class="x caps">
+        <li *ngFor="let option of tabData;let i=index" [class.disable]='(disableobj[option.toLowerCase()]) || (beforeEnv)' (click)="onTabClick(i)" [ngClass]="{'active': selectedTab == tabData[i]}" class="x caps">
             {{option}}
         </li>
     </ul>
 </div>
+

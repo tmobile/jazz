@@ -9,7 +9,8 @@
         "test": "mocha"
     },
     "dependencies": {
-        "amazon-cognito-identity-js": "^1.19.0"
+        "amazon-cognito-identity-js": "^1.19.0",
+        "node-fetch": "^2.6.0"
     },
     "devDependencies": {
         "aws-lambda-mock-context": "^3.1.1",

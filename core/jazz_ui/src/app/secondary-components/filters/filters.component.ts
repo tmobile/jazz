@@ -61,7 +61,7 @@ export class FiltersComponent implements OnInit {
   }
 
   ngOnInit() {
-   
+  
   	if (this.filtersList) {
 
   		for (var i = 0; i < this.filtersList.length; ++i) {

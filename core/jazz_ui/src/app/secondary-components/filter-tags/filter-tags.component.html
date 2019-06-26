@@ -36,12 +36,23 @@
         {{filterTags[7].key}}: <b>{{filterTags[7].value}}</b>
         <span class='icon-icon-close' title='Remove Filter' (click)='clearall("method")'></span>
     </div>
+    <div class='eachTag' *ngIf='filterTags[8].value != filter_Asset_default' >
+        {{filterTags[8].key}}: <b>{{filterTags[8].value}}</b>
+        <span class='icon-icon-close' title='Remove Filter' (click)='clearall("asset")'></span>
+    </div>
+    <div class='eachTag' *ngIf='filterTags[9].value != filter_AssetIden_default' >
+        {{filterTags[9].key}}: <b>{{filterTags[9].value}}</b>
+        <span class='icon-icon-close' title='Remove Filter' (click)='clearall("asset-iden")'></span>
+    </div>
     <span class='clr-all'><a (click)='clearall("all")' *ngIf='(filterTags[0].value != filter_TimeRange_default) ||
                                               (filterTags[1].value != filter_TimeRangeSlider_default) ||
                                               (filterTags[2].value != filter_Period_default) ||
                                               (filterTags[3].value != filter_Statistic_default) || (filterTags[4].value != filter_Account_default)
                                               || (filterTags[5].value != filter_Region_default)
                                               || (filterTags[6].value != filter_Env_default)
-                                              || (filterTags[7].value != filter_Method_default)         
+                                              || (filterTags[7].value != filter_Method_default)||
+                                              (filterTags[8].value != filter_Asset_default) ||
+                                              (filterTags[9].value != filter_AssetIden_default)
+
         '>CLEAR ALL</a></span>
 </div>

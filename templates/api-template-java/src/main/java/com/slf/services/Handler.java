@@ -14,7 +14,7 @@ import com.slf.exceptions.BadRequestException;
 	This is a java template for developing and deploying functions. The template is based on the
 	predefined interfaces provided by the AWS Lambda Java core library to create your function handler.
 
-	@Author: 
+	@Author:
 	@version: 1.0
 	@Date:
 
@@ -29,7 +29,7 @@ public class Handler extends BaseJazzRequestHandler {
      * processing logic to serve the request from User
   	*/
 	public Response execute(Map<String, Object> input, Context context) {
-        
+
         /* Read environment specific configurations from properties file */
         String configStr = configObject.getConfig("config_key");
         LOGGER.info("You are using the env key: " + configStr);
@@ -48,6 +48,7 @@ public class Handler extends BaseJazzRequestHandler {
         Map<String, String> data = new HashMap();
 
         if ("GET".equalsIgnoreCase(this.method)) {
+            LOGGER.info("Sample log inside GET");
             data.put("message", "GET executed successfully");
             return new Response(data, this.query);
         } else if ("POST".equalsIgnoreCase(this.method)) {

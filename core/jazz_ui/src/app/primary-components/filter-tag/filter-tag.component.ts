@@ -38,8 +38,6 @@ export class FilterTagComponent implements OnInit {
         this.checkboxFilterTags.splice(i, 1);
       }
     }
-    // debugger
-    console.log('emit item,',item)
     this.filterCancelled.emit(item);
   }
 

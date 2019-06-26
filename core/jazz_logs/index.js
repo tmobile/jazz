@@ -18,7 +18,7 @@
 API to get the application logs
 @author:
 @version: 1.0
- **/
+**/
 
 'use strict';
 const _ = require("lodash");
@@ -33,186 +33,200 @@ var utils = formats('apis');
 
 module.exports.handler = (event, context, cb) => {
 
-	//Initializations
-	var errorHandler = errorHandlerModule();
-	var config = configModule.getConfig(event, context);
-	logger.init(event, context);
+  //Initializations
+  var errorHandler = errorHandlerModule();
+  var config = configModule.getConfig(event, context);
+  logger.init(event, context);
 
-	try {
+  try {
 
-		if (event && event.method && event.method === 'POST') {
+    if (event && event.method && event.method === 'POST') {
 
-			if (!event.body) {
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("Service inputs not defined!")));
-			}
+      if (!event.body) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("Service inputs not defined!")));
+      }
 
-			if (!event.body.service) {
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter service name.")));
-			}
-			if (!event.body.domain) {
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter domain.")));
-			}
-			if (!event.body.environment) {
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter environment.")));
-			}
-			if (!event.body.category) {
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter category.")));
-			}
+      if (!event.body.service) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter service name.")));
+      }
+      if (!event.body.domain) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter domain.")));
+      }
+      if (!event.body.environment) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter environment.")));
+      }
+      if (!event.body.category) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter category.")));
+      }
 
-			if (!event.body.type || !_.includes(config.VALID_LOGTYPES, event.body.type.toLowerCase())) {
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + config.VALID_LOGTYPES.join(", "))));
-			}
+      if (!event.body.type || !_.includes(config.VALID_LOGTYPES, event.body.type.toLowerCase())) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + config.VALID_LOGTYPES.join(", "))));
+      }
 
-			if (!_.includes(config.VALID_CATEGORIES, event.body.category.toLowerCase())) {
-				return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for category - " + config.VALID_CATEGORIES.join(", "))));
-			}
+      if (!_.includes(config.VALID_CATEGORIES, event.body.category.toLowerCase())) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for category - " + config.VALID_CATEGORIES.join(", "))));
+      }
 
-			var service = event.body.service,
-				domain = event.body.domain,
-				env = event.body.environment.toLowerCase(),
-				categoryType = event.body.category.toLowerCase(),
-				logType = event.body.type.toUpperCase(),
-				page = event.body.offset ? event.body.offset : 0,
-				startTime = event.body.start_time ? event.body.start_time : utils.setStartDate(config.DEFAULT_TIME_IN_DAYS),
-				endTime = event.body.end_time ? event.body.end_time : new Date(),
-				size = event.body.size ? event.body.size : config.DEFAULT_SIZE,
-				querys = [];
+      if (event.body.asset_type && config.VALID_ASSET_TYPES.indexOf(event.body.asset_type) === -1) {
+        return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for asset type - " + config.VALID_ASSET_TYPES.join(", "))));
+      }
 
-			//Appending service name with Domain, Env and Jazz_type
-			service = domain + "-" + service
+      var service = event.body.service,
+        domain = event.body.domain,
+        env = event.body.environment.toLowerCase(),
+        categoryType = event.body.category.toLowerCase(),
+        assetType = event.body.asset_type ? event.body.asset_type.toLowerCase() : "",
+        logType = event.body.type.toUpperCase(),
+        page = event.body.offset ? event.body.offset : 0,
+        startTime = event.body.start_time ? event.body.start_time : utils.setStartDate(config.DEFAULT_TIME_IN_DAYS),
+        endTime = event.body.end_time ? event.body.end_time : new Date(),
+        size = event.body.size ? event.body.size : config.DEFAULT_SIZE,
+        querys = [];
 
-			logger.info("Service name to fetch logs :" + service);
+      //Appending service name with Domain, Env and Jazz_type
+      service = domain + "-" + service
+      if (event.body.asset_identifier) {
+        querys.push(utils.setQuery("asset_identifier", event.body.asset_identifier));
+      }
 
-			querys.push(utils.setQuery("servicename", service));
-			querys.push(utils.setQuery("environment", env));
+      if (event.body.asset_type) {
+        querys.push(utils.setQuery("asset_type", event.body.asset_type));
+      }
 
-			//Query to filter Control messages
-			querys.push(utils.setQuery("!message", "START*"));
-			querys.push(utils.setQuery("!message", "END*"));
-			querys.push(utils.setQuery("!message", "REPORT*"));
+      logger.info("Service name to fetch logs :" + service);
 
-			if (logType) {
-				var log_type_config = [];
+      querys.push(utils.setQuery("servicename", service));
+      querys.push(utils.setQuery("environment", env));
 
-				log_type_config = config.LOG_LEVELS.map(logLevel => logLevel.Type);
+      //Query to filter Control messages
+      querys.push(utils.setQuery("!message", "START*"));
+      querys.push(utils.setQuery("!message", "END*"));
+      querys.push(utils.setQuery("!message", "REPORT*"));
 
-				if (_.includes(log_type_config, logType.toLowerCase())) {
-					querys.push(utils.setLogLevelQuery(config.LOG_LEVELS, "log_level", logType.toLowerCase()));
-				} else {
-					logger.info("Only following values are allowed for logger type - " + log_type_config.join(", "));
-					return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + log_type_config.join(", "))));
-				}
-			}
+      if (logType) {
+        var log_type_config = [];
 
-			logger.info("QueryObj: " + JSON.stringify(querys));
+        log_type_config = config.LOG_LEVELS.map(logLevel => logLevel.Type);
 
-			var servCategory = [];
+        if (_.includes(log_type_config, logType.toLowerCase())) {
+          querys.push(utils.setLogLevelQuery(config.LOG_LEVELS, "log_level", logType.toLowerCase()));
+        } else {
+          logger.info("Only following values are allowed for logger type - " + log_type_config.join(", "));
+          return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + log_type_config.join(", "))));
+        }
+      }
 
-			if (categoryType.toLowerCase() == 'api') {
-				servCategory = ["apilogs", "applicationlogs"];
-			} else if (categoryType.toLowerCase() == 'function') {
-				servCategory = ["applicationlogs"];
-			}
+      logger.info("QueryObj: " + JSON.stringify(querys));
+      var servCategory = [];
+      if (assetType) {
+        let indexMap = config.ASSET_INDEX_MAP.filter(assetObj => (assetObj.asset_type === assetType));
+        if (indexMap.length) {
+          servCategory = indexMap[0].es_index;
+        } else {
+          let response = {
+            count: 0,
+            logs: []
+          };
+          return cb(null, responseObj(response, event.body));
+        }
+      }
 
-			var req = utils.requestLoad;
-			req.url = config.BASE_URL + "/_plugin/kibana/elasticsearch/_msearch";
-			req.body = setRequestBody(servCategory, env, querys, startTime, endTime, size, page);
+      var req = utils.requestLoad;
+      req.url = config.BASE_URL + "/_plugin/kibana/elasticsearch/_msearch";
+      req.body = setRequestBody(servCategory, env, querys, startTime, endTime, size, page);
 
-			request(req, function (err, res, body) {
-				if (err) {
-					logger.error("Error occured : " + JSON.stringify(err));
-					return cb(JSON.stringify(errorHandler.throwInternalServerError("Internal Error")));
-				} else {
-					// Success response
-					if (res.statusCode == 200) {
-						var responsebody = res.body,
-							responsebodyToJSON = JSON.parse(responsebody),
-							count = responsebodyToJSON.responses[0].hits.total,
-							hits = responsebodyToJSON.responses[0].hits.hits,
-							logs = [];
+      request(req, function (err, res, body) {
+        if (err) {
+          logger.error("Error occured : " + JSON.stringify(err));
+          return cb(JSON.stringify(errorHandler.throwInternalServerError("Internal Error")));
+        } else {
+          // Success response
+          if (res.statusCode == 200) {
+            var responsebody = res.body,
+              responsebodyToJSON = JSON.parse(responsebody),
+              count = responsebodyToJSON.responses[0].hits.total,
+              hits = responsebodyToJSON.responses[0].hits.hits,
+              logs = [];
 
-						for (var idx in hits) {
-							var log = {};
-							log.request_id = hits[idx]._source.request_id;
-							log.source = hits[idx]._index;
-							log.timestamp = hits[idx]._source.timestamp;
-							log.message = hits[idx]._source.message;
-							log.type = hits[idx]._source.log_level;
-							logs.push(log);
-						}
+            for (var idx in hits) {
+              var log = {};
+              log.request_id = hits[idx]._source.request_id;
+              log.source = hits[idx]._index;
+              log.timestamp = hits[idx]._source.timestamp;
+              log.message = hits[idx]._source.message;
+              log.type = hits[idx]._source.log_level;
+              logs.push(log);
+            }
 
-						utils.responseModel.count = count;
-						utils.responseModel.logs = logs;
+            utils.responseModel.count = count;
+            utils.responseModel.logs = logs;
 
-						// TODO: Remove as this is hack for UI fix
-						var ret = { "data": utils.responseModel };
+            logger.info('Output :' + JSON.stringify(utils.responseModel));
+            return cb(null, responseObj(utils.responseModel, event.body));
 
-						logger.info('Output :' + JSON.stringify(utils.responseModel));
-						return cb(null, responseObj(ret, event.body));
+          } else {
+            var error_message = 'Unknown error occured';
+            var bodyToJSON = JSON.parse(res.body);
+            if (typeof bodyToJSON.errors !== 'undefined') {
+              error_message = bodyToJSON.errors[0].message;
+            }
+            logger.error("Exception occured :" + error_message);
+            return cb(JSON.stringify(errorHandler.throwInternalServerError("Error while processing the request :" + error_message)));
+          }
+        }
+      });
+    } else {
+      return cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid request to process for logs API")));
+    }
+  } catch (e) {
+    //Sample Error response for internal server error
+    return cb(JSON.stringify(errorHandler.throwInternalServerError("Exception occured while processing the request : " + JSON.stringify(e))));
+  }
 
-					} else {
-						var error_message = 'Unknown error occured';
-						var bodyToJSON = JSON.parse(res.body);
-						if (typeof bodyToJSON.errors !== 'undefined') {
-							error_message = bodyToJSON.errors[0].message;
-						}
-						logger.error("Exception occured :" + error_message);
-						return cb(JSON.stringify(errorHandler.throwInternalServerError("Error while processing the request :" + error_message)));
-					}
-				}
-			});
-		} else {
-			return cb(JSON.stringify(errorHandler.throwInputValidationError("Invalid request to process for logs API")));
-		}
-	} catch (e) {
-		//Sample Error response for internal server error
-		return cb(JSON.stringify(errorHandler.throwInternalServerError("Exception occured while processing the request : " + JSON.stringify(e))));
-	}
+  function setRequestBody(category, type, querys, startTime, endTime, size, page) {
+    var index = {
+      "index": category,
+      "type": type,
+      "ignore_unavailable": true
+    };
 
-	function setRequestBody(category, type, querys, startTime, endTime, size, page) {
-		var index = {
-			"index": category,
-			"type": type,
-			"ignore_unavailable": true
-		};
-
-		var params = {
-			"size": size,
-			"from": page,
-			"sort": [{
-				"timestamp": {
-					"order": "desc"
-				}
-			}],
-			"query": {
-				"bool": {
-					"must": [querys, {
-						"range": {
-							"timestamp": {
-								"gte": utils.toTimestamp(startTime),
-								"lte": utils.toTimestamp(endTime),
-								"format": "epoch_millis"
-							}
-						}
-					}],
-					"must_not": [{
-						"match": {
-							"application_logs_id": {
-								"query": "_incomplete_req",
-								"type": "phrase"
-							}
-						}
-					}]
-				}
-			},
-			"_source": {
-				"excludes": []
-			},
-			"stored_fields": ["*"],
-			"script_fields": {}
-		};
-		var reqBody = JSON.stringify(index) + "\n" + JSON.stringify(params) + "\n";
-		logger.info("Request Payload : " + JSON.stringify(reqBody));
-		return reqBody;
-	}
+    var params = {
+      "size": size,
+      "from": page,
+      "sort": [{
+        "timestamp": {
+          "order": "desc"
+        }
+      }],
+      "query": {
+        "bool": {
+          "must": [querys, {
+            "range": {
+              "timestamp": {
+                "gte": utils.toTimestamp(startTime),
+                "lte": utils.toTimestamp(endTime),
+                "format": "epoch_millis"
+              }
+            }
+          }],
+          "must_not": [{
+            "match": {
+              "application_logs_id": {
+                "query": "_incomplete_req",
+                "type": "phrase"
+              }
+            }
+          }]
+        }
+      },
+      "_source": {
+        "excludes": []
+      },
+      "stored_fields": ["*"],
+      "script_fields": {}
+    };
+    var reqBody = JSON.stringify(index) + "\n" + JSON.stringify(params) + "\n";
+    logger.info("Request Payload : " + JSON.stringify(reqBody));
+    return reqBody;
+  }
 };

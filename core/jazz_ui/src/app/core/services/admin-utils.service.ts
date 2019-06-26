@@ -6,7 +6,6 @@ import {RequestService} from "./request.service";
 @Injectable()
 export class AdminUtilsService {
   private http;
-
   constructor(private request: RequestService) {
     this.http = this.request;
   }
@@ -17,6 +16,15 @@ export class AdminUtilsService {
       .then((response) => {
         if (response && response.data && response.data.config)
           return response.data.config;
+      })
+  }
+  getAdminUsers(pageToken) {
+    let pageLimit = 10;
+    return this.http.get(`/jazz/usermanagement`)
+      .toPromise()
+      .then((response) => {
+        if (response && response.data && response.data.users)
+          return response.data;
       })
   }
 }

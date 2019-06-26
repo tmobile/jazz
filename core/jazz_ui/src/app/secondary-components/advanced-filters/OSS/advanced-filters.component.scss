@@ -14,7 +14,13 @@
   background: none;
   background-color: #fff;
 }
+.env-logs{
+  width: 170px;
+}
 
 .filter-icon{
   margin: 0;
+}
+.eachFilter > div{
+  white-space: nowrap;
 }
