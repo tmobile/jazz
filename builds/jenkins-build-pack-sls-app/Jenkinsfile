@@ -415,7 +415,7 @@ def createAssetForHttpEvents (accountDetails, deployOutput) {
     def endpoint = endpoints[1].trim()
     def path = endpoint.replaceAll(".*com", "")
     echo "methodPaths path1: $path"
-    path = environment_logical_id == 'prod' ? path.replaceAll("/prod", "/prod/${method}") : "/dev/${method}${path}")
+    path = environment_logical_id == 'prod' ? path.replaceAll("/prod", "/prod/${method}") : "/dev/${method}${path}"
     echo "methodPaths path2: $path"
     def apigatewayArn = "arn:aws:execute-api:${config['region']}:${config['accountId']}:${api_id}${path}"
 
