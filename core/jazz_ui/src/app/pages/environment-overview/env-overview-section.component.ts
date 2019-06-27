@@ -189,7 +189,7 @@ fetchfunction(){
     var errMsgBody;
     if(this.textChanged === true){
       this.put_payload.deployment_descriptor= this.yaml;
-      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
+      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload,this.service.id)
             .subscribe(
                 (Response)=>{
                   let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
