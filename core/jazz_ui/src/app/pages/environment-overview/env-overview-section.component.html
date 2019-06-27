@@ -321,7 +321,7 @@
 				<div *ngFor="let value of lineNumberCounting; let i = index">{{i + 9}}</div>
 			</div>
 			<textarea class="textChange" [disabled]="textarea"  (ngModelChange)="textChanged  && lineNumbersCount()"
-		 [(ngModel)]="yaml" id="field" name="yaml" (blur)='checkYaml()'></textarea>
+		 [(ngModel)]="yaml" id="field" name="yaml" (keyup)='checkYaml()'></textarea>
 		</div>
 		</div>
 	</div>
