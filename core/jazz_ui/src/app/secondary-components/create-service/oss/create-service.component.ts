@@ -102,6 +102,7 @@ export class CreateServiceComponent implements OnInit {
   cdnConfigSelected:boolean = false;
   public lineNumberCount: any = new Array(8);
   isfunction: boolean = true;
+  is_function: boolean = false;
   linenumber:number;
   focusindex:any = -1;
   scrollList:any = '';
@@ -261,11 +262,13 @@ export class CreateServiceComponent implements OnInit {
       this.startNew = false;
       this.isfunction = true;
       this.isstartNew = false;
+      this.is_function = true;
       this.onSelectionChange(this.runtime);
     }
     else if(event == "Start New"){
       this.startNew = true;
       this.isstartNew = true;
+      this.is_function = false;
       this.isfunction = false;
       this.deploymentDescriptorText = "";
     }
@@ -584,6 +587,7 @@ export class CreateServiceComponent implements OnInit {
       payload["deployment_targets"]={"sls-app":"aws_sls-app"};
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
+      payload["is_function_template"] = this.is_function;
     }
     if(this.slackSelected){
         payload["slack_channel"] = this.model.slackName;
@@ -949,6 +953,7 @@ export class CreateServiceComponent implements OnInit {
     this.selectAccountsRegions();
     this.getData();
     this.loadMaxLength();
+    this.onFilterSelected('Function Template')
     if(env_oss.slack_support) this.SlackEnabled=true;
   };
 

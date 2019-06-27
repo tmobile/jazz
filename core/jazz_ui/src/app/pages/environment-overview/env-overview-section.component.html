@@ -279,7 +279,7 @@
 			<btn-jazz-secondary  class='btn-edit-overview' [disablebtn]="invalid || disableSave" *ngIf='saveButton' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" [disablebtn]='disableEditBtn()'  (click)='descriptor()'></btn-jazz-secondary>
 		</div>
 	</div>
-	<div class="text-area-div" >
+	<div class="text-area-div"  *ngIf="startnew === true" >
 		<div class="textbox">
 			<div class="line-numbers">
 					<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
@@ -288,6 +288,44 @@
 		 [(ngModel)]="yaml" id="yaml" name="yaml" (blur)='checkYaml()'></textarea>
 	   </div>
 	</div>
+	<div *ngIf="is_function === true" class ="input-wrapper">
+			<div class="main-div">
+		<div class="div-line">
+			<div class="line-num border opac">
+			 <div  *ngFor="let value of lineNumberCounts;let i = index">{{i + 1}}</div>                                                
+			</div>
+			<div class="myservice opac">
+				<p class="parameter">service:</p>
+				<div class="services-name">
+					<p class="service">name:</p>
+					<p class="magenta">{{serviceName}}</p>
+				</div>
+				<div class="services-name">
+					<p class="parameter">frameworkVersion:</p>
+					<p class="magenta">{{version}}</p> 
+				</div> 
+				<p class="parameter">provider:</p>
+					<div class="services-name">
+						<p class="service">name:</p>
+						<p class="magenta">{{provider}}</p>
+					</div>
+					<div class="services-name">
+						<p class="service">runtime:</p>
+						<p class="magenta">{{runtime}}</p>
+					</div>
+				</div>
+			</div>
+			<div class= "text-line">
+				<div class="text-box">
+					<div class="line-num radius">
+				<div *ngFor="let value of lineNumberCounting; let i = index">{{i + 9}}</div>
+			</div>
+			<textarea class="textChange" [disabled]="textarea"  (ngModelChange)="textChanged  && lineNumbersCount()"
+		 [(ngModel)]="yaml" id="field" name="yaml" (blur)='checkYaml()'></textarea>
+		</div>
+		</div>
+	</div>
+		</div>
 	<div class="valid" *ngIf="isCancel">
 		<p class="validation" *ngIf="isvalid">Valid Yaml file.</p>
 		<p class="invalidation" *ngIf="!isvalid">Invalid Yaml file.</p>
