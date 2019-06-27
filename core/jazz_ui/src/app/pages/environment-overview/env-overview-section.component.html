@@ -282,11 +282,21 @@
 	<div class="text-area-div"  *ngIf="startnew === true" >
 		<div class="textbox">
 			<div class="line-numbers">
-					<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
-				  </div>
-		<textarea class="text-area" [disabled]="textarea"  (ngModelChange)="textChanged  && lineNumbers()"
-		 [(ngModel)]="yaml" id="yaml" name="yaml" (blur)='checkYaml()'></textarea>
-	   </div>
+				<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
+			</div>
+			<textarea
+				class="text-area"
+				id="yaml"
+				spellcheck="false"
+				[disabled]="textarea"
+				[ngClass]="{'large': lineNumberCount > 15}"
+				(ngModelChange)="textChanged && lineNumbers()"
+				[(ngModel)]="yaml"
+				name="yaml"
+				(keyup)='checkYaml()'>
+				<!-- TODO: Consider debouncing -->
+			</textarea>
+		</div>
 	</div>
 	<div *ngIf="is_function === true" class ="input-wrapper">
 			<div class="main-div">
@@ -327,8 +337,8 @@
 	</div>
 		</div>
 	<div class="valid" *ngIf="isCancel">
-		<p class="validation" *ngIf="isvalid">Valid Yaml file.</p>
-		<p class="invalidation" *ngIf="!isvalid">Invalid Yaml file.</p>
+		<p class="validation" *ngIf="isvalid">YAML is valid.</p>
+		<p class="invalidation" *ngIf="!isvalid">Oops! Incorrect YAML syntax.</p>
 	</div>
 </div>
 <div class="loading-outer-div" [class.show]="isLoading">
