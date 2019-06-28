@@ -258,7 +258,7 @@ node {
 				stage('Undeploy Service') {
 					for (_envId in environmentIds) {
 						current_environment_id = _envId
-						loadServerlessYml(service_config, _envId)
+            def has_serverless_yml = 	loadServerlessYml(service_config, _envId)
 						try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
@@ -271,7 +271,8 @@ node {
 							echo 'undeploying function for environment: ' + _envId
 
 							cleanupEventSourceMapping(_envId)
-							unDeployService(_envId)
+              if (has_serverless_yml) unDeployService(_envId)
+              else unDeployCloudformationStack(_envId)
 
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()
@@ -449,7 +450,12 @@ def unDeployService(stage) {
 			}
 			def envBucketKey = "${env_key}${configLoader.JAZZ.PLATFORM.AWS.S3.BUCKET_NAME_SUFFIX}"
 			def bucketObject = utilModule.getAccountBucketName(service_config);
-			sh "serverless remove --stage ${stage} --verbose  --bucket ${bucketObject[env_key]} --profile ${credsId}"
+			try {
+          sh "serverless remove --stage ${stage} --verbose  --bucket ${bucketObject[env_key]} --profile ${credsId}"
+      } catch (ex) {
+        echo "Serverless stack removal failed. "
+        unDeployCloudformationStack(stage)
+      }
 
 			echo "Service undeployed"
 		} catch (ex) {
@@ -458,6 +464,21 @@ def unDeployService(stage) {
 			resetCredentials(credsId)
 		}
 	}
+}
+
+def unDeployCloudformationStack(env) {
+  echo "Manualy removing the stack by using aws cli."
+  withCredentials([
+		[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: service_config.credentialId]
+	]) {
+    def cfStackName = "${instance_prefix}-${service_config['domain']}-${service_config['service']}-${env}"
+    try {
+      def res = sh(script: "aws cloudformation delete-stack --stack-name ${cfStackName} --region ${service_config['region']} ", returnStdout: true)
+      echo "Delete stack resp: ${res}"
+    } catch (ex) {
+      echo "Error occured while deleting cloudformation stack ${cfStackName} : ${ex}"
+    }
+  }
 }
 
 /**
@@ -1097,9 +1118,15 @@ def loadServerlessYml(config, env){
 	environmentMetadataLoader.setEnvironmentLogicalId(env) //set Current Environment
 	//Get deployment descriptor from environments
   env_deployment_descriptor = environmentMetadataLoader.getEnvDeploymentDescriptor()
-	def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader, env_deployment_descriptor) // Generating the deployment descriptor
-	echo "prepareServerlessYml = ${deploymentDescriptor}"
-	writeYaml(file: './serverless.yml', data: deploymentDescriptor)
+  try {
+    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader, env_deployment_descriptor) // Generating the deployment descriptor
+	  echo "prepareServerlessYml = ${deploymentDescriptor}"
+	  writeYaml(file: './serverless.yml', data: deploymentDescriptor)
+    return true
+  } catch (ex) {
+    echo "Failed to load the serverless.yml for ${env} environment."
+    return false
+  }
 }
 
 def loadServerlessConfig() {
