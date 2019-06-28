@@ -170,12 +170,12 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
               if(self.service.serviceType == "sls-app"){
                 self.assetIdentifierFilter = {
                   column: 'Filter By:',
-                  label: 'ASSET IDENTIFIER',
+                  label: 'ASSET NAME',
                   options: lambdaResourceNameArr,
                   values: lambdaResourceNameArr,
                   selected: lambdaResourceNameArr[0]
                 };
-                let resourceField = self.filters.getFieldValueOfLabel('ASSET IDENTIFIER');
+                let resourceField = self.filters.getFieldValueOfLabel('ASSET NAME');
                 if(!resourceField){
                   self.formFields.splice(0, 0, self.assetIdentifierFilter);
                   self.filters.setFields(self.formFields);
