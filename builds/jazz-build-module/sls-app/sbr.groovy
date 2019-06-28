@@ -1134,8 +1134,8 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
             "cloud_provider": "aws",
             "serverless_framework_version": ">=1.0.0 <2.0.0"]
 
-    if (doc['service']) doc.remove('service')
-    if (doc['frameworkVersion']) doc.remove('frameworkVersion')
+    if (doc && doc instanceof Map && doc['service']) doc.remove('service')
+    if (doc && doc instanceof Map && doc['frameworkVersion']) doc.remove('frameworkVersion')
 
     def rules = readYaml(text: sbrContent)
     def resultingDoc = processServerless(doc,
