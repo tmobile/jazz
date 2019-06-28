@@ -30,6 +30,9 @@ export class EnvOverviewSectionComponent implements OnInit {
   
   private http:any;
   private sub:any;
+  provider: any = '';
+  serviceName: any = '';
+  runtime: any = '';
   private env:any;
   branchname: any;
   friendlyChanged:boolean = false;
@@ -50,6 +53,8 @@ export class EnvOverviewSectionComponent implements OnInit {
   showCncl:boolean=false;
   environmnt:any;
   isDiv:boolean=true;
+  startnew: boolean = true;
+  version: string = ">=1.0.0 <2.0.0";
   isvalid:boolean=false;
   envResponseEmpty:boolean = false;
   envResponseTrue:boolean = false;
@@ -76,8 +81,13 @@ export class EnvOverviewSectionComponent implements OnInit {
   slsapp:boolean = false;
   desc_temp:any;
   toastmessage:any;
+  is_function:boolean;
   copyLink:string="Copy Link";
   disableSave:boolean = true;
+  public lineNumberCounts: any = new Array(8);
+  isfunction: boolean = true;
+  linenumber:number;
+  public lineNumberCounting: any = new Array(5);
  
   errMessage: string = "Something went wrong while fetching your data";
   message:string="lalalala"
@@ -143,7 +153,22 @@ popup(state){
     this.saveBtn=true;
     this.editBtn=false;
   }
-
+fetchfunction(){
+  this.isLoading = true;
+  this.http.get('/jazz/services/' + this.service.id, null, this.service.id).subscribe(response => {
+    this.is_function = response.data.metadata.is_function_template;
+    if(this.is_function === true && this.is_function !== undefined){
+      this.startnew = false;
+      this.provider = response.data.deployment_accounts[0].provider;
+      this.serviceName = this.service.name;
+      this.runtime = this.service.runtime; 
+    }
+    else {
+      this.startnew = true;
+    }
+    this.isLoading = false;
+  })
+}
   onEditAppClick(){
     this.yaml = this.yamlName;
     this.showCncl = true;
@@ -164,7 +189,7 @@ popup(state){
     var errMsgBody;
     if(this.textChanged === true){
       this.put_payload.deployment_descriptor= this.yaml;
-      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
+      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload,this.service.id)
             .subscribe(
                 (Response)=>{
                   let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
@@ -206,6 +231,18 @@ popup(state){
         line_numbers = 7;
       }
       this.lineNumberCount = new Array(line_numbers);
+    }
+  }
+  lineNumbersCount() {
+    let lines;
+    if(this.yaml)
+    {
+      lines = this.yaml.split(/\r*\n/);
+      let line_numbers = lines.length;
+      if(line_numbers < 5){
+        line_numbers = 5;
+      }
+      this.lineNumberCounting = new Array(line_numbers);
     }
   }
   checkYaml(){
@@ -263,6 +300,7 @@ popup(state){
     }
     
   }
+  
   onCancel(){
     this.showCncl = false;
     this.saveButton = false;
@@ -324,8 +362,6 @@ popup(state){
 
 }
    callServiceEnv() {
-    
-    
     if ( this.subscription ) {
       this.subscription.unsubscribe();
     }
@@ -333,7 +369,6 @@ popup(state){
     this.subscription = this.http.get('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
       // this.http.get('/jazz/environments/prd?domain=jazz-testing&service=test-create').subscribe(
         (response) => {
-
           if(response.data == (undefined || '')){
            
             this.envResponseEmpty = true; 
@@ -358,10 +393,10 @@ popup(state){
             this.lastCommitted = envResponse.last_updated;
             this.frndload.emit(this.friendlyName);
             this.formatLastCommit(); 
-            this.lineNumbers();              
+            this.lineNumbers();
+            this.fetchfunction();             
             this.envResponseTrue = true;
             this.envResponseEmpty = false;
-            this.isLoading = false;
           }
         },
         (error) => {
@@ -528,7 +563,6 @@ form_endplist(){
       this.callServiceEnv();
       this.data.currentMessage.subscribe(message => this.message = message)
   }
-
 
   ngOnChanges(x:any) {
     this.route.params.subscribe(
