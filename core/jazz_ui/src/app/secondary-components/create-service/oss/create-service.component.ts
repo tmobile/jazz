@@ -174,7 +174,7 @@ export class CreateServiceComponent implements OnInit {
   scrollTo(id) {
     const ele = document.getElementById(id);
     if(ele){
-      ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
+      ele.scrollIntoView({ behavior: 'smooth', block: 'start'});
     }
   }
   selectAccountsRegions(){
@@ -323,14 +323,14 @@ export class CreateServiceComponent implements OnInit {
   // function for changing service type
   changeServiceType(serviceType){
     this.typeOfService = serviceType;
-    this.scrollTo('platform-type');
+    this.scrollTo('deployment-type-section');
   }
 
 
 
   changeDeploymentTarget(deploymentTarget){
     this.selectedDeploymentTarget =  deploymentTarget;
-    this.scrollTo('runtime-type');
+    this.scrollTo('jz-runtime-container');
   }
 
   changeRuntimeType(runtimeType){
@@ -344,10 +344,10 @@ export class CreateServiceComponent implements OnInit {
       this.typeOfPlatform = platformType;
     }
     if(document.getElementById('deployment-type')){
-      this.scrollTo('deployment-type');
+      this.scrollTo('deployment-type-section');
     }
     else{
-      this.scrollTo('runtime-type');
+      this.scrollTo('jz-runtime-container');
     }
 
   }
@@ -582,7 +582,7 @@ export class CreateServiceComponent implements OnInit {
       }
     }
     else if(this.typeOfService == 'sls-app'){
-      payload["service_type"] = "sls-app";        
+      payload["service_type"] = "sls-app";
       payload["deployment_descriptor"] = this.deploymentDescriptorText;
       payload["deployment_targets"]={"sls-app":"aws_sls-app"};
       payload["runtime"] = this.runtime;
@@ -881,7 +881,7 @@ export class CreateServiceComponent implements OnInit {
       this.isDescriptorEmpty = false;
     }
   }
- 
+
 
 
   onScroll(event){
@@ -1044,5 +1044,5 @@ export class CreateServiceComponent implements OnInit {
       return this.rateExpression.cronStr;
     }
   };
-  
+
 }
