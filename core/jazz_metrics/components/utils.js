@@ -130,13 +130,14 @@ function extractValueFromString(string, keyword) {
 
 function getApiName(string) {
   var value;
-  if (Object.keys(global_config.APINAME).indexOf(string) > -1) {
-    value = global_config.APINAME[string];
+  if( string == "stg"){
+    value = global_config.STACK_PREFIX + "-stg"
+  } else if( string == "prod"){
+    value = global_config.STACK_PREFIX + "-prod"
   } else {
-    value = "*"
+    value = global_config.STACK_PREFIX + "-dev"
   }
   return value;
-
 };
 
 function getAssetsObj(assetsArray, userStatistics) {
@@ -320,11 +321,12 @@ function updateApigatewayAsset(newAssetObj, relativeId, assetEnvironment) {
 
   var parts = relativeId.split("/");
 
-  var apiId = parts[0];
-  newAssetObj.asset_name.ApiName = getApiName(apiId);
+  //var apiId = parts[0];
 
   var stgValue = parts[1] === '*' ? assetEnvironment : parts[1];
   newAssetObj.asset_name.Stage = stgValue || "*";
+
+  newAssetObj.asset_name.ApiName = getApiName(stgValue);
 
   var methodValue = parts[2];
   newAssetObj.asset_name.Method = methodValue;
