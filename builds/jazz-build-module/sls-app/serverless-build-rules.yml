@@ -567,7 +567,7 @@ function:
 
     runtime:
       sbr-type: enum
-      sbr-render: user-wins
+      sbr-render: config-wins
       sbr-constraint:
         sbr-enum:
           - nodejs8.10

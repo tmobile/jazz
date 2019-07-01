@@ -35,8 +35,7 @@
     "iam_role",
     "sqs",
     "kinesis_stream",
-    "apigee_proxy",
-    "http"
+    "apigee_proxy"
   ],
   "ASSET_STATUS": [
     "active",
