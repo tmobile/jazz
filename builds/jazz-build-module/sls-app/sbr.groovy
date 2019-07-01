@@ -1122,8 +1122,8 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
   try {
     def appContent = readFile('application.yml').trim()
     if(!appContent.isEmpty()) deploymentDescriptor = appContent
-    } catch(e) {
-      echo "Error occured while reading application.yml. The default value from config will be used. Exception is $e"
+    } catch(e) { // TODO to catch the type error
+      echo "The application.yml does not exist in the code. So the default value from config will be used.$e"
     }
 
     def doc = deploymentDescriptor  ? readYaml(text: deploymentDescriptor ) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below

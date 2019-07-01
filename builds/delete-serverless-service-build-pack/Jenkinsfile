@@ -450,12 +450,8 @@ def unDeployService(stage) {
 			}
 			def envBucketKey = "${env_key}${configLoader.JAZZ.PLATFORM.AWS.S3.BUCKET_NAME_SUFFIX}"
 			def bucketObject = utilModule.getAccountBucketName(service_config);
-			try {
-          sh "serverless remove --stage ${stage} --verbose  --bucket ${bucketObject[env_key]} --profile ${credsId}"
-      } catch (ex) {
-        echo "Serverless stack removal failed. "
-        unDeployCloudformationStack(stage)
-      }
+
+      sh "serverless remove --stage ${stage} --verbose  --bucket ${bucketObject[env_key]} --profile ${credsId}"
 
 			echo "Service undeployed"
 		} catch (ex) {
