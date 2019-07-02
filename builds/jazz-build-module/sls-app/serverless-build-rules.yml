@@ -241,6 +241,7 @@ provider:
       sbr-enum:
         - AES-256
         - AWS-KMS
+        - REGIONAL
     sbr-value:
       sbr-example: regional
 

@@ -329,7 +329,8 @@ node() {
           echoServerlessFile()
           def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
           // After stack Deployment
-          createAssetForHttpEvents(accountDetails, deployOutput)
+
+          createAssetForHttpEvents(deployOutput)
 
           def describeResources = getStackResources(environment_logical_id, credsId)
           def resources = describeResources['StackResources']
@@ -396,8 +397,7 @@ def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetail
   }
 }
 
-def createAssetForHttpEvents (accountDetails, deployOutput) {
-  def api_id = getApiId(accountDetails)
+def createAssetForHttpEvents (deployOutput) {
   def deployLines = deployOutput.split('\n')
   def resourceArns = []
   def afterStackOutputs = false
@@ -413,18 +413,15 @@ def createAssetForHttpEvents (accountDetails, deployOutput) {
     def endpoints = resource.split(" - ")
     def method = endpoints[0].trim()
     def endpoint = endpoints[1].trim()
+    def apigatewayRestApiId = endpoint.substring(0, endpoint.indexOf('.execute-api'))
+    apigatewayRestApiId = apigatewayRestApiId.replaceAll(".*://", "")
     def path = endpoint.replaceAll(".*com", "")
     path = environment_logical_id == 'prod' ? path.replaceAll("/prod", "/prod/${method}") : "/dev/${method}${path}"
-    def apigatewayArn = "arn:aws:execute-api:${config['region']}:${config['accountId']}:${api_id}${path}"
+    def apigatewayArn = "arn:aws:execute-api:${config['region']}:${config['accountId']}:${apigatewayRestApiId}${path}"
 
     events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", apigatewayArn, "apigateway", config), environment_logical_id)
     events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpoint, "endpoint_url", config), environment_logical_id)
   }
-}
-
-def getApiId(accountDetails) {
-  def stage = environment_logical_id == 'prod'? 'PROD' : 'DEV'
-  return awsAPIGatewayModule.getApigatewayInfo(stage, config['domain'], config['service'], accountDetails, config)
 }
 
 def constructArn(resourceName, resourceType) {
