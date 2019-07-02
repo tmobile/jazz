@@ -234,7 +234,7 @@ export class ServiceCostComponent implements OnInit {
       }
       case 'environment':{
 				var envt = event.value;
-				this.FilterTags.notify('filter-Env',envt);
+				this.FilterTags.notify('filter-Environment',envt);
 				this.costGraphData.environment=envt;
 				var env_list=this.cache.get('envList');
 				var fName = env_list.friendly_name;
@@ -341,7 +341,7 @@ export class ServiceCostComponent implements OnInit {
 	
 		
 	onEnvSelected(envt){
-		this.FilterTags.notify('filter-Env',envt);
+		this.FilterTags.notify('filter-Environment',envt);
 		this.costGraphData.environment=envt;
 		var env_list=this.cache.get('envList');
 		var fName = env_list.friendly_name;

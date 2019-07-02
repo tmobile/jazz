@@ -24,7 +24,7 @@ export class EnvironmentDetailComponent implements OnInit {
   isFunction: boolean = false;
   breadcrumbs = [];
   api_doc_name: string = '';
-  selectedTab = 0;
+  selectedTab = 'overview';
   service: any = {};
   friendly_name: any;
   status_val: number;
@@ -35,7 +35,7 @@ export class EnvironmentDetailComponent implements OnInit {
   status_inactive: boolean = false;
   swagger_error: boolean = false;
 
-  tabData = ['overview', 'deployments', 'code quality', 'assets', 'logs'];
+  tabData = ['overview', 'deployments', 'code quality', 'assets', 'logs', 'metrics'];
   envSelected: string = '';
   endpoint_env: string = '';
   environment = {

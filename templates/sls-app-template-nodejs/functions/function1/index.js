@@ -30,6 +30,8 @@ module.exports.handler = (event, context, cb) => {
     logger.debug('Detailed information on the flow through the system.');
     */
 
+   logger.info("Sample log for function1");
+
     const sampleResponse = {
       "foo": "foo-value",
       "bar": "bar-value",
@@ -40,7 +42,6 @@ module.exports.handler = (event, context, cb) => {
 
   } catch (e) {
     //Sample Error response for internal server error
-		console.log('----e------>', e);
     return cb(JSON.stringify(errorHandler.throwInternalServerError("Sample error message")));
 
     //Sample Error response for Not Found Error

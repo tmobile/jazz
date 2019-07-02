@@ -10,6 +10,9 @@ echo "whitelist-validator-module has been successfully loaded"
 @Field def allowedActions
 @Field def allowedEvents
 @Field def allowedPlugins
+@Field def arnTemplates
+@Field def assetTypes
+@Field def assetCatalogTypes
 
 def initialize() {
   whitelistContent = readFile("sls-app/whitelist.yml")
@@ -19,6 +22,19 @@ def initialize() {
   allowedActions = whiteList['actions'].collect{key, val -> val.collect{action -> "$key:$action".toString()}}.flatten()
   allowedEvents = whiteList['events'].keySet()
   allowedPlugins = whiteList['plugins']
+  def arnMaps = whiteList['arnTemplate']
+  assetTypes = whiteList['assetTypes']
+  arnTemplates = parsedArnTemplate(arnMaps)
+  def props = readJSON file: 'sls-app/whitelist-util.json'
+  assetCatalogTypes = props['asset_catalog_map']
+}
+
+def parsedArnTemplate(arrayofMap) {
+  def singleMap = [:]
+  for (map in arrayofMap){
+    singleMap.putAll(map)
+  }
+  return singleMap
 }
 
 def validate(cftJson) {
@@ -190,6 +206,22 @@ def getPluginsfromYaml(deploymentDescriptor) {
   } else {
     return []
   }
+}
+
+def getassetCatalogTypes(){
+  return assetCatalogTypes
+}
+
+def getarnTemplates( resourceType ) {
+  return  arnTemplates.get(resourceType).toString()
+}
+
+def checkAssetType( resourceType ) {
+  def status = false
+  if( assetTypes.contains(resourceType)) {
+    status = true
+  }
+  return status
 }
 
 return this

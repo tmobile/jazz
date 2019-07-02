@@ -2,6 +2,7 @@ import { Component, ViewContainerRef, OnInit, Input, Inject, Output, EventEmitte
 import { DataCacheService } from '../../../core/services/index';
 import { RequestService } from "../../../core/services";
 import { environment as env_internal } from './../../../../environments/environment.internal';
+import { RadioGroupComponent } from './../../../primary-components/radio-group/radio-group.component'
 
 @Component({
   selector: '[advanced_filters]',
@@ -21,7 +22,10 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   @Input() service: any = {};
   @Output() onFilterSelect: EventEmitter<any> = new EventEmitter<any>();
   @Output() onAssetSelect: EventEmitter<any> = new EventEmitter<any>();
+  @Output() onResourceSelect: EventEmitter<any> = new EventEmitter<any>();
   @ViewChild('filters') filters;
+  @ViewChild('assetTypes') assetRadio : RadioGroupComponent;
+  @ViewChild('assetName') assetName : RadioGroupComponent;
   public assetFilter;
   public formFields: any = [];
   public assetList: any = [];
@@ -36,7 +40,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
 
   isAsset: boolean = false;
   filterSelected: boolean = false;
-  showEnvironment: boolean = false;
+  showEnvironment: boolean = true;
 
   selectFilter: any = {}
   periodList: Array<string> = ['15 Minutes', '1 Hour', '6 Hours', '1 Day', '7 Days', '30 Days'];
@@ -61,10 +65,13 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   regList = env_internal.urls.regions;
   accSelected: string = this.accList[0];
   regSelected: string = this.regList[0];
-  assetSelected: string;
+  assetSelected: string = "all";
+  resourceSelected:string;
 
   envList: any = ['prod', 'stg'];
   envSelected: string = this.envList[0];
+
+  lambdaResourceNameArr:string;
 
   getRange(e) {
     this.selectFilter["key"] = 'slider';
@@ -110,7 +117,6 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     this.selectFilter["key"] = 'range';
     this.selectFilter["value"] = range;
     this.onFilterSelect.emit(this.selectFilter);
-
   }
 
   onTimePeriodSelected(period) {
@@ -130,10 +136,29 @@ export class AdvancedFiltersComponentOSS implements OnInit {
 
   getAssetType(event) {
     this.assetSel = event;
+    this.assetRadio.setRadio(event);
     this.selectFilter["key"] = 'asset';
     this.selectFilter["value"] = event;
     this.onAssetSelect.emit(event);
     this.onFilterSelect.emit(this.selectFilter)
+    if(event == "all"){
+        this.advanced_filter_input.sls_resource.show = false;
+        this.onResourceSelect.emit("all");
+        this.selectFilter["key"] = 'resource';
+        this.selectFilter["value"] = "all";
+        this.onFilterSelect.emit(this.selectFilter);
+    }
+    else{
+      this.advanced_filter_input.sls_resource.show = true;
+    }
+  }
+
+  getResourceType(event){
+    this.assetName.setRadio(event);
+    this.selectFilter["key"] = 'resource';
+    this.selectFilter["value"] = event;
+    this.onResourceSelect.emit(event);
+    this.onFilterSelect.emit(this.selectFilter);
   }
   onEnvSelected(envt) {
 
@@ -188,6 +213,13 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     this.assetList = this.service.assetList
     if(this.assetList){
       this.assetSelected = this.assetList[0];
+    }
+    this.lambdaResourceNameArr = this.service.lambdaResourceNameArr;
+    if(this.lambdaResourceNameArr){
+      this.resourceSelected = this.lambdaResourceNameArr[0];
+    }
+    if(this.assetSelected == "all"){
+      this.advanced_filter_input.sls_resource.show = false;
     }
     if (this.service.logsData) {
       this.envList.push(this.service.logsData);

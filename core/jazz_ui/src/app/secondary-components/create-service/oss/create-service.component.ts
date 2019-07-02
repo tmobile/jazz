@@ -56,6 +56,7 @@ export class CreateServiceComponent implements OnInit {
   isyamlValid:boolean = true;
   typeform:boolean=false;
   typeevents:boolean=false;
+  version: string = ">=1.0.0 <2.0.0";
   deploymentDescriptorFilterData = ["Function Template", "Start New"];
   selectedList:string='Function Template';
   sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
@@ -100,6 +101,9 @@ export class CreateServiceComponent implements OnInit {
   isDescriptorEmpty: boolean = false;
   resMessage:string='';
   cdnConfigSelected:boolean = false;
+  public lineNumberCount: any = new Array(8);
+  isfunction: boolean = true;
+  linenumber:number;
   focusindex:any = -1;
   scrollList:any = '';
   toast : any;
@@ -136,7 +140,9 @@ export class CreateServiceComponent implements OnInit {
   webObject : any;
   selectedDescriptorField: any;
   webKeys : any;
+  isstartNew: boolean = false;
   deploymentTargetSelected: any;
+  public lineNumberCounting: any = new Array(5);
 
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
@@ -193,7 +199,6 @@ export class CreateServiceComponent implements OnInit {
     this.dynamoStreamString = "arn:aws:dynamo:" + this.regionSelected + ":" + this.accountSelected + ":table/";
   }
 
-
   chkDynamodb() {
     this.focusDynamo.emit(true);
     return this.eventExpression.type === 'dynamodb';
@@ -236,22 +241,38 @@ export class CreateServiceComponent implements OnInit {
     this.serviceRequestFailure = false;
     this.serviceRequestSuccess = false;
     this.onClose.emit(false);
+    this.onFilterSelected(this.selectedList);
   }
 
+  lineNumbers() {
+    let lines;
+    if(this.deploymentDescriptorText)
+    {
+      lines = this.deploymentDescriptorText.split(/\r*\n/);
+      let line_numbers = lines.length;
+      if(line_numbers < 5){
+        line_numbers = 5;
+      }
+      this.lineNumberCounting = new Array(line_numbers);
+    }
+  }
 
   onFilterSelected(event){
     if(event == "Function Template"){
       this.startNew = false;
+      this.isfunction = true;
+      this.isstartNew = false;
       this.onSelectionChange(this.runtime);
     }
     else if(event == "Start New"){
       this.startNew = true;
+      this.isstartNew = true;
+      this.isfunction = false;
       this.deploymentDescriptorText = "";
     }
     this.selectedDescriptorField = event[0];
     this.isDescriptorEmpty = false;
   }
-
   onaccountSelected(event){
     this.accountMap.map((item,index)=>{
       if((item.account + ' (' + item.accountName + ')') === event){
@@ -649,6 +670,7 @@ export class CreateServiceComponent implements OnInit {
     this.serviceRequested = false;
     this.serviceRequestSuccess = false;
     this.serviceRequestFailure = false;
+    this.onFilterSelected(this.selectedList);
 
   }
 
@@ -865,6 +887,7 @@ export class CreateServiceComponent implements OnInit {
       this.isDescriptorEmpty = false;
     }
   }
+ 
 
 
   onScroll(event){
@@ -930,8 +953,6 @@ export class CreateServiceComponent implements OnInit {
 
       }
     }
-
-
   }
 
   ngOnInit() {
@@ -1044,4 +1065,5 @@ export class CreateServiceComponent implements OnInit {
       return this.rateExpression.rateStr;
     }
   };
+  
 }

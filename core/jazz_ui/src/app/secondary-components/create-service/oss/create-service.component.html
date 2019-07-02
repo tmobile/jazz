@@ -342,9 +342,47 @@
                                 <filters  class="filters" [filtersList]="deploymentDescriptorFilterData" [multiple]="false" [selectedList]="selectedList" (onSelected)="onFilterSelected($event)"></filters>
 
                                 <div  class="input-field-container">
-                                    <div class="input-wrapper">
-                                        <textarea rows="2" cols="50" name="deploymentDescriptorText" type="text" class="textForm descriptor" id="deploymentDescriptorText" [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
+                                    <div class="input-wrapper">           
+                                        <div class="main-div" *ngIf="!isstartNew">
+                                        <div class="div-line">
+                                        <div class="line-num border opac">
+                                         <div  *ngFor="let value of lineNumberCount;let i = index">{{i + 1}}</div>                                                
+                                        </div>
+                                        <div class="myservice opac">
+                                            <p class="parameter">service:</p>
+                                            <div class="services-name">
+                                                <p class="service">name:</p>
+                                                <p class="magenta">{{model.serviceName}}</p>
+                                            </div>
+                                            <div class="services-name">
+                                                <p class="parameter">frameworkVersion:</p>
+                                                <p class="magenta">{{version}}</p> 
+                                            </div> 
+                                            <p class="parameter">provider:</p>
+                                                <div class="services-name">
+                                                    <p class="service">name:</p>
+                                                    <p class="magenta">{{typeOfPlatform}}</p>
+                                                </div>
+                                                <div class="services-name">
+                                                    <p class="service">runtime:</p>
+                                                    <p class="magenta">{{runtime}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class= "text-line">
+                                            <div class="textbox">
+                                                <div class="line-num radius">
+                                            <div *ngFor="let value of lineNumberCounting; let i = index">{{i + 9}}</div>
+                                        </div>
+                                        <textarea rows="2" cols="50" id="field" name="deploymentDescriptorText" type="text" class="text-area"  [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"(ngModelChange)="lineNumbers()"></textarea>
+                                    </div>
+                                    </div>
+                                    </div>
+                                        <div *ngIf="isstartNew" class="startnew">
+                                        <textarea rows="2" cols="50"  name="deploymentDescriptorText" type="text" class="textForm deployment"  [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
                                         <p class="descriptorError" *ngIf="isDescriptorEmpty">Please enter the valid Deployment Descriptor.</p>
+                                    </div>
+    
                                     </div>
                                 </div>
                                 <div class="form-error" *ngIf="!isyamlValid">Invalid Yaml Text</div>

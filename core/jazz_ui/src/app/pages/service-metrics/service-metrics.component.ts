@@ -25,6 +25,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public allData: any;
   public serviceType;
   public assetFilter;
+  public assetIdentifierFilter;
   public environmentFilter;
   public assetList: any = [];
   public formFields: any = [
@@ -85,6 +86,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   errMessage: any;
   private toastmessage: any = '';
+  private slsLambdaselected;
   constructor(private request: RequestService,
     private utils: UtilsService,
     private messageservice: MessageService,
@@ -92,6 +94,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     this.http = this.request;
     this.toastmessage = messageservice;
   }
+
 
   ngAfterViewInit() {
     this.sectionStatus = 'loading';
@@ -151,11 +154,36 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           if(assets){
             self.assetWithDefaultValue = assets;
             let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
-            validAssetList.splice(0,0,'all');
+            let lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
+            for( let i = 0 ; i<lambdaResourceNameArr.length; i++ ){
+              let tokens = lambdaResourceNameArr[i].split(':');
+              let reduced = tokens[tokens.length-1];
+              let reducedTokens = reduced.split('-');
+              lambdaResourceNameArr[i] = reducedTokens[reducedTokens.length-1];
+            }
+            lambdaResourceNameArr = _.uniq(lambdaResourceNameArr);
             self.assetWithDefaultValue = validAssetList;
             if(validAssetList.length){
               for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
                 self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
+              }
+              if(self.service.serviceType == "sls-app"){
+                self.assetIdentifierFilter = {
+                  column: 'Filter By:',
+                  label: 'ASSET NAME',
+                  options: lambdaResourceNameArr,
+                  values: lambdaResourceNameArr,
+                  selected: lambdaResourceNameArr[0]
+                };
+                let resourceField = self.filters.getFieldValueOfLabel('ASSET NAME');
+                if(!resourceField){
+                  self.formFields.splice(0, 0, self.assetIdentifierFilter);
+                  self.filters.setFields(self.formFields);
+  
+                }
+              }
+              else{
+                
               }
               self.assetFilter = {
                 column: 'Filter By:',
@@ -164,6 +192,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
                 values: validAssetList,
                 selected: validAssetList[0].replace(/_/g, " ")
               };
+              
               if (!data) {
                 self.assetSelected = validAssetList[0].replace(/_/g, " ");
               }
@@ -314,6 +343,10 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         this.assetSelected = changedFilter.selected.replace(/ /g, "_")
       }
     }
+    if( changedFilter && (changedFilter.label === 'ASSET IDENTIFIER')){
+      this.slsLambdaselected = changedFilter.selected;
+      this.setAsset();
+    }
     if (changedFilter && (changedFilter.label === 'ASSET' ||
       changedFilter.label === 'METHOD' ||
       changedFilter.label === 'PATH')) {
@@ -321,8 +354,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     } else {
       return this.queryMetricsData();
     }
+    
   }
-
 
   queryMetricsData() {
     this.sectionStatus = 'loading';
@@ -370,17 +403,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
   filterAssetType(data) {
     return data.assets.filter((asset) => {
-      if (this.serviceType === 'api') {
-        if (this.service.deployment_targets === "gcp_apigee") {
-          return asset.type === 'apigee_proxy';
-        } else {
-          return asset.type === 'apigateway';
-        }
-      } else if (this.serviceType === 'function') {
-        return asset.type === 'lambda';
-      } else if (this.serviceType === 'website') {
-        return (asset.type === 's3') || (asset.type === 'cloudfront');
-      }
+      return asset.type === this.assetSelected;
     })
   }
 
@@ -416,6 +439,18 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         break;
       case 'function':
         this.selectedAsset = this.queryDataRaw.assets[0];
+        break;
+      case 'sls-app':
+        if(this.queryDataRaw){
+          for(let asset of this.queryDataRaw.assets){
+            if(asset.asset_name.FunctionName.includes(this.slsLambdaselected)){
+              this.selectedAsset = asset;
+            }
+          }
+          this.selectedAsset = this.queryDataRaw.assets[0];
+
+        }
+        
         break;
       case 'website':
         let assetType = this.filters.getFieldValueOfLabel('ASSET');

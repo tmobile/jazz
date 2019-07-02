@@ -119,10 +119,8 @@ export class FilterModalComponent implements OnInit {
   }
 
   changeCheckboxFilter(filterSelected, filterField) {
-    /* debugger */
     filterField.selected = filterSelected;
     this.formChange.emit(filterField);
-    /* debugger */
   }
   getFieldValueOfLabel(fieldLabel) {
     try {

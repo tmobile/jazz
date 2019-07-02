@@ -46,7 +46,7 @@ func Handler(ctx context.Context, event map[string]interface{}) (Response, error
 	// Initialize Config Components
 	configModule := new(Config)
 	configModule.LoadConfiguration(ctx , event )
-	// Get Config values 
+	// Get Config values
 	configValue := viper.Get("configKey").(string) // returns string
 
 	sampleResponse :=map[string]string {
@@ -62,10 +62,12 @@ func Handler(ctx context.Context, event map[string]interface{}) (Response, error
 		var payLoad map[string]interface{}
 		// Your GET method should be handled here
 		if (event["method"].(string) == "GET"){
+      logger.INFO("Sample log inside GET");
 			payLoad = event["query"].(map[string]interface{})
 		}
 		//Your POST method should be handled here
 		if (event["method"].(string) == "POST"){
+      logger.INFO("Sample log inside POST");
 			payLoad = event["body"].(map[string]interface{})
 		}
 		return Response{
@@ -80,5 +82,5 @@ func Handler(ctx context.Context, event map[string]interface{}) (Response, error
 func main() {
 	//Start function to trigger Lambda
 	lambda.Start(Handler)
-	
+
 }

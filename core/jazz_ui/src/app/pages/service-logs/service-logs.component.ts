@@ -80,6 +80,9 @@ export class ServiceLogsComponent implements OnInit {
 		},
 		asset: {
 			show: true,
+		},
+		sls_resource:{
+			show: false
 		}
 	}
 	selectFilter: any = {};
@@ -94,6 +97,7 @@ export class ServiceLogsComponent implements OnInit {
 	errMessage: any;
 	public assetList: any = [];
 	public assetSelected: any;
+	public resourceSelected: any;
 	private toastmessage: any;
 	loadingState: string = 'default';
 	private subscription: any;
@@ -175,6 +179,7 @@ export class ServiceLogsComponent implements OnInit {
 	prevActivePage: number = 1;
 	limitValue: number = 20;
 	offsetValue: number = 0;
+	lambdaResourceNameArr;
 
 	envList = ['prod', 'stg'];
 
@@ -191,6 +196,10 @@ export class ServiceLogsComponent implements OnInit {
 		this.service['ismetrics'] = false;
 		this.service['logsData'] = this.logsData
 		this.service['assetList'] = this.assetList
+		if(this.service.serviceType == 'sls-app'){
+			this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
+			this.advanced_filter_input.sls_resource.show = true;
+		}
 
 		let filtertypeObj = filterServ.addDynamicComponent({ "service": this.service, "advanced_filter_input": this.advanced_filter_input });
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
@@ -209,6 +218,10 @@ export class ServiceLogsComponent implements OnInit {
 
 			comp.onAssetSelect(event);
 		});
+		this.instance_yes.onResourceSelect.subscribe(event => {
+
+			comp.onResourceSelect(event);
+		});
 		this.instance_yes.onFilterClick.subscribe(event => {
 			this.filterSelectedValue = event
 		})
@@ -217,7 +230,12 @@ export class ServiceLogsComponent implements OnInit {
 	onAssetSelect(event) {
 		this.assetEvent = event
 		this.FilterTags.notify('filter-Asset', event);
-		this.assetSelected = event;
+		this.assetSelected = event;	
+	}
+	
+	onResourceSelect(event){
+		this.FilterTags.notifyLogs('filter-Asset-Name', event);
+		this.resourceSelected = event;
 	}
 
 	refresh() {
@@ -247,6 +265,15 @@ export class ServiceLogsComponent implements OnInit {
 				let assets = _(response.data.assets).map('asset_type').uniq().value();
 				let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 				validAssetList.splice(0,0,'all');
+				 this.lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
+				for( let i = 0 ; i<this.lambdaResourceNameArr.length; i++ ){
+					let tokens = this.lambdaResourceNameArr[i].split(':');
+					let reduced = tokens[tokens.length-1];
+					let reducedTokens = reduced.split('-');
+					this.lambdaResourceNameArr[i] = reducedTokens[reducedTokens.length-1];
+				}
+				this.lambdaResourceNameArr = _.uniq(this.lambdaResourceNameArr);
+				this.lambdaResourceNameArr.splice(0,0,'all');
 				self.assetWithDefaultValue = validAssetList;
 				for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
 					self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
@@ -267,7 +294,7 @@ export class ServiceLogsComponent implements OnInit {
 
 
 	onEnvSelected(envt) {
-		this.FilterTags.notify('filter-Env', envt);
+		this.FilterTags.notify('filter-Environment', envt);
 		// this.logsSearch.environment = env;
 		if (env === 'prod') {
 			env = 'prod'
@@ -327,11 +354,23 @@ export class ServiceLogsComponent implements OnInit {
 					delete this.payload['asset_type'];
 				}
 				this.resetPayload();
+				break;
+			}
+			case "resource" : {
+				this.FilterTags.notifyLogs('filter-Asset-Name', event.value);
+
+				if(this.service.serviceType == 'sls-app'){
+					this.resourceSelected = event.value;
+					this.payload.asset_identifier = this.resourceSelected;
+					if(this.resourceSelected === 'all'){
+						delete this.payload['asset_identifier'];
+					}
+					this.resetPayload();
+				}
 			}
 		}
 	}
 	getRange(e) {
-		this.FilterTags.notifyLogs('filter-TimeRangeSlider', e.from);
 		this.sliderFrom = e.from;
 		this.sliderPercentFrom = e.from_percent;
 		var resetdate = this.getStartDate(this.selectedTimeRange, this.sliderFrom);
@@ -345,9 +384,8 @@ export class ServiceLogsComponent implements OnInit {
 		this.callLogsFunc();
 	}
 
-	getRangefunc(e) {
-		this.FilterTags.notifyLogs('filter-TimeRangeSlider', e);
 
+	getRangefunc(e) {
 		this.sliderFrom = e;
 		this.sliderPercentFrom = e;
 		var resetdate = this.getStartDate(this.selectedTimeRange, this.sliderFrom);
@@ -362,7 +400,7 @@ export class ServiceLogsComponent implements OnInit {
 				break;
 			}
 			case 'time-range-slider': {
-				this.instance_yes.resetslider(1);
+				this.instance_yes.onTimePeriodSelected(1);
 
 				break;
 			}
@@ -397,20 +435,24 @@ export class ServiceLogsComponent implements OnInit {
 				break;
 			}
 			case 'asset': {
-
 				this.instance_yes.getAssetType('all');
-
+				break;
+			}
+			case 'asset-iden':{
+				this.instance_yes.getResourceType('all');
 				break;
 			}
 			case 'all': {
 				this.instance_yes.onRangeListSelected('Day');
 				this.instance_yes.onPeriodSelected('15 Minutes');
+				this.instance_yes.onTimePeriodSelected(1);
 				this.instance_yes.onStatisticSelected('Average');
 				this.instance_yes.onaccSelected('Acc 1');
 				this.instance_yes.onregSelected('reg 1');
 				this.instance_yes.onEnvSelected('prod');
 				this.instance_yes.onMethodListSelected('POST');
 				this.instance_yes.getAssetType('all');
+				this.instance_yes.getResourceType('all');
 				break;
 			}
 		}
