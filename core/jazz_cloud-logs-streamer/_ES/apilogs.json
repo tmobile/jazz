@@ -1,31 +1,88 @@
 {
-  "template" : "apilogs",
-  "settings" : {
-    "index.refresh_interval" : "10s"
+  "template": "apilogs",
+  "settings": {
+    "index.refresh_interval": "10s"
   },
-  "mappings" : {
-    "apilogs" : {
-       "properties" : {
-                        "timestamp" : { "type":"date","format":"dateOptionalTime" },
-                        "platform_log_group" : { "type":"keyword","index":"false" },
-                        "platform_log_stream" : { "type":"keyword","index":"false" },
-                        "environment" : { "type": "keyword", "index": "false" },
-                        "request_id" : { "type": "keyword", "index": "false" },
-                        "method" : { "type": "keyword", "index": "false" },
-                        "domain" : { "type": "keyword", "index": "false" },
-                        "servicename" : { "type": "keyword", "index": "false" },
-                        "path" : { "type": "keyword", "index": "false" },
-                        "user_agent" : { "type": "keyword", "index": "false" },
-                        "application_logs_id" : { "type": "keyword", "index": "false" },
-                        "origin" : { "type": "keyword", "index": "false" },
-                        "host" : { "type": "keyword", "index": "false" },
-                        "x_forwarded_port" : { "type": "keyword", "index": "false" },
-                        "x_forwarded_for" : { "type": "keyword", "index": "false" },
-                        "x_amzn_trace_id" : { "type": "keyword", "index": "false" },
-                        "content_type" : { "type": "keyword", "index": "false" },
-                        "cache_control" : { "type": "keyword", "index": "false" },
-                        "status" : { "type": "keyword", "index": "false" }
-       }
+  "mappings": {
+    "apilogs": {
+      "properties": {
+        "timestamp": {
+          "type": "date",
+          "format": "dateOptionalTime"
+        },
+        "platform_log_group": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "platform_log_stream": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "environment": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "request_id": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "method": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "domain": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "servicename": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "path": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "user_agent": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "application_logs_id": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "origin": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "host": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "x_forwarded_port": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "x_forwarded_for": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "x_amzn_trace_id": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "content_type": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "cache_control": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "status": {
+          "type": "keyword",
+          "index": "true"
+        }
+      }
     }
   }
 }

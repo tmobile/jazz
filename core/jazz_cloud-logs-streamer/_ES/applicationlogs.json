@@ -1,21 +1,48 @@
 {
-  "template" : "applicationlogs",
-  "settings" : {
-    "index.refresh_interval" : "10s"
+  "template": "applicationlogs",
+  "settings": {
+    "index.refresh_interval": "10s"
   },
-  "mappings" : {
-    "applicationlogs" : {
-       "properties" : {
-                        "timestamp" : { "type":"date","format":"dateOptionalTime" },
-                        "request_id" : { "type": "keyword", "index": "false" },
-                        "platform_log_group" : { "type":"keyword","index":"false" },
-                        "platform_log_stream" : { "type":"keyword","index":"false" },
-                        "servicename" : { "type": "keyword", "index": "false" },
-                        "domain" : { "type": "keyword", "index": "false" },
-                        "environment" : { "type": "keyword", "index": "false" },
-                        "log_level" : { "type": "keyword", "index": "false" },
-                        "message" : { "type": "keyword", "index": "false" }
-       }
+  "mappings": {
+    "applicationlogs": {
+      "properties": {
+        "timestamp": {
+          "type": "date",
+          "format": "dateOptionalTime"
+        },
+        "request_id": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "platform_log_group": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "platform_log_stream": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "servicename": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "domain": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "environment": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "log_level": {
+          "type": "keyword",
+          "index": "true"
+        },
+        "message": {
+          "type": "keyword",
+          "index": "true"
+        }
+      }
     }
   }
 }
