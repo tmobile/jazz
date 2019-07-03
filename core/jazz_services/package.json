@@ -6,14 +6,17 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "dependencies": {
     "guid": "0.0.12",
     "async": "*",
     "deasync": "*",
     "moment": "*",
-    "lodash": "*"
+    "lodash": "*",
+    "snyk": "^1.189.0"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.1.1",
@@ -24,5 +27,6 @@
     "lambda-local": "^1.4.2",
     "mocha": "^v3.0.0",
     "sinon": "^1.17.7"
-  }
+  },
+  "snyk": true
 }
