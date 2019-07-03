@@ -239,8 +239,8 @@ provider:
     sbr-render: user-only
     sbr-constraint:
       sbr-enum:
-        - AES-256
-        - AWS-KMS
+        - EDGE
+        - REGIONAL
     sbr-value:
       sbr-example: regional
 
