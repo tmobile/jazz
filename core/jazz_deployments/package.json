@@ -1,27 +1,31 @@
 {
-    "name": "jazz_deployments",
-    "version": "0.0.1",
-    "description": "CRUD APIs for Deployments",
-    "main": "index.js",
-    "private": true,
-    "author": {
-        "name": "Jazz"
-    },
-    "scripts": {
-        "test": "mocha"
-    },
-    "dependencies": {
-        "lodash": "*",
-        "moment": "*",
-        "request": "*",
-        "uuid": "*"
-    },
-    "devDependencies": {
-        "aws-lambda-mock-context": "^3.1.1",
-        "aws-sdk": "^2.245.1",
-        "aws-sdk-mock": "^2.0.0",
-        "chai": "^3.5.0",
-        "mocha": "^v3.0.0",
-        "sinon": "^5.0.7"
-    }
+  "name": "jazz_deployments",
+  "version": "0.0.1",
+  "description": "CRUD APIs for Deployments",
+  "main": "index.js",
+  "private": true,
+  "author": {
+    "name": "Jazz"
+  },
+  "scripts": {
+    "test": "mocha",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
+  },
+  "dependencies": {
+    "lodash": "*",
+    "moment": "*",
+    "request": "*",
+    "uuid": "*",
+    "snyk": "^1.189.0"
+  },
+  "devDependencies": {
+    "aws-lambda-mock-context": "^3.1.1",
+    "aws-sdk": "^2.245.1",
+    "aws-sdk-mock": "^2.0.0",
+    "chai": "^3.5.0",
+    "mocha": "^v3.0.0",
+    "sinon": "^5.0.7"
+  },
+  "snyk": true
 }
