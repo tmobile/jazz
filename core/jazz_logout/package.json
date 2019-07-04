@@ -6,10 +6,13 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "dependencies": {
-    "amazon-cognito-identity-js": "^1.19.0"
+    "amazon-cognito-identity-js": "^1.19.0",
+    "snyk": "^1.189.0"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.1.1",
@@ -18,5 +21,6 @@
     "chai": "^3.5.0",
     "mocha": "^v3.0.0",
     "sinon": "^1.17.7"
-  }
+  },
+  "snyk": true
 }
