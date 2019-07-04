@@ -9,12 +9,15 @@
   },
   "scripts": {
     "test": "mocha",
-    "jshint": "jshint --exclude ./node_modules ."
+    "jshint": "jshint --exclude ./node_modules .",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "dependencies": {
     "lodash": "*",
     "request": "*",
-    "request-promise-native": "^1.0.5"
+    "request-promise-native": "^1.0.5",
+    "snyk": "^1.189.0"
   },
   "devDependencies": {
     "amazon-cognito-identity-js": "^3.0.2",
@@ -29,5 +32,6 @@
   },
   "engines": {
     "node": "6.10"
-  }
+  },
+  "snyk": true
 }
