@@ -266,6 +266,9 @@ ngOnInit()
 					if(this.totalPageNum === 1){
 						this.showPaginationtable = false;
 					}
+					else {
+						this.showPaginationtable = true;
+					}
         }
         else{
           this.totalPageNum = 0;

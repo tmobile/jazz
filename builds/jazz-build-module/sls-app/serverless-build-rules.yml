@@ -36,9 +36,19 @@ service:
 
 frameworkVersion:
   sbr-type: str
+  sbr-render: config-wins
+  sbr-mandatory: true
+  sbr-value:
+    sbr-formula: ${context.serverless_framework_version}
+    sbr-example: '>=1.0.0 <2.0.0'
+
+custom:
+  sbr-type: "[aws-var-name:aws-tag-value]"
   sbr-render: user-only
   sbr-value:
-    sbr-example: '>=1.0.0 <2.0.0'
+    sbr-example:
+      key1: value1
+      key2: value2
 
 provider:
   name:
@@ -543,7 +553,7 @@ function:
       sbr-type: aws-description
       sbr-render: user-wins
       sbr-value:
-        srb-formula: Description for ${context.asterisk0} function
+        sbr-formula: Description for ${context.asterisk0} function
 
     memorySize: # memorySize for this specific function.
       sbr-type: int
@@ -713,6 +723,80 @@ event:
               sbr-value:
                 sbr-example: .jpg
 
+    - http:
+        path:
+          sbr-type: path
+          sbr-render: user-only
+          sbr-value:
+            sbr-example: 'path/to/function'
+        method:
+          sbr-type: enum
+          sbr-render: user-only
+          sbr-constraint:
+            sbr-enum:
+              - GET
+              - PUT
+              - POST
+              - DELETE
+              - OPTIONS
+        cors:
+          sbr-type: bool
+          sbr-render: user-only
+          sbr-value:
+            sbr-example: false
+        async:
+          sbr-type: bool
+          sbr-render: user-only
+          sbr-value:
+            sbr-example: false
+        integration:
+          sbr-type: enum
+          sbr-render: user-only
+          sbr-constraint:
+            sbr-enum:
+              - lambda
+              - http
+              - lambda-proxy
+
+        private:
+          sbr-type: bool
+          sbr-render: user-only
+          sbr-value:
+            sbr-example: false
+        authorizer:
+          name:
+            sbr-type: aws-artifact-name
+            sbr-render: user-only
+            sbr-value:
+              sbr-example: 'customauthorizer'
+          arn:
+            sbr-type: arn-lambda
+            sbr-render: user-only
+            sbr-value:
+              sbr-example: arn:aws:lambda:region:XXXXXX:function:myfunc
+          resultTtlInSeconds:
+            sbr-type: int
+            sbr-render: user-only
+            sbr-value:
+              sbr-example: 0
+          identitySource:
+            sbr-type: str
+            sbr-render: user-only
+            sbr-value:
+              sbr-example: method.request.header.Authorization
+          identityValidationExpression:
+            sbr-type: str
+            sbr-render: user-only
+            sbr-value:
+              sbr-example: someRegex
+          type:
+            sbr-type: enum
+            sbr-render: user-only
+            sbr-constraint:
+              sbr-enum:
+                - token
+                - request
+
     - schedule:
         name:
           sbr-type: aws-artifact-name
@@ -821,6 +905,9 @@ resource:
         sbr-whitelist: resources
       sbr-value:
         sbr-example: AWS::DynamoDB::Table
+    DeletionPolicy:
+      sbr-type: str
+      sbr-render: user-only
     Properties:
       sbr-type: "[aws-var-name:aws-var-value]"
       sbr-render: user-only
