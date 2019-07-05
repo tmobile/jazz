@@ -37,7 +37,6 @@ export class CheckboxGroupRegionComponent implements OnInit {
   }
 
   onAllSelected(){
-    debugger
     if(this.allselected){
       this.display_Count = this.checkboxContent.length;
       for(let i=0;i<this.checkboxContent.length;i++){
@@ -59,8 +58,6 @@ export class CheckboxGroupRegionComponent implements OnInit {
   }
 
   onCheckboxSelect(item){
-
-    /* debugger */
     if(this.allselected){
       for(let i=0; i<this.checkboxContent.length; i++){
           this.selectionObj[this.checkboxContent[i]] = false;
@@ -111,12 +108,10 @@ export class CheckboxGroupRegionComponent implements OnInit {
 
 
   resetRegion(value,content){
-    debugger
     this.selectionObj = value;
     this.checkboxContent = content;
 
     for(let i = 0; i < this.checkboxContent.length; i++){
-      debugger
       console.log('this.checkboxContent[i]',this.checkboxContent[i])
       let ele = document.getElementById(this.checkboxContent[i]);
       if(ele){
