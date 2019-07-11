@@ -135,7 +135,7 @@ node ()  {
   stage('Checking out Jazz_UI repo') {
     dir('jazz_ui') {
 
-      checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz_ui")]]])
+      checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz_ui")]]])
       def jazz_prod_api_id = getApiGatewayCore()
 
       if(config_loader.UI_CONFIG.service_tabs.overview)   sh "sed -i 's/{overview}/overview/g' ./src/environments/environment.oss.ts";
@@ -197,7 +197,7 @@ node ()  {
       if (config_loader.APIGEE.ENABLE_APIGEE && config_loader.APIGEE.ENABLE_APIGEE.toString() == "true") sh "sed -i 's/{apigee_support}/true/g' ./src/environments/environment.oss.ts"
       else sh "sed -i 's/{apigee_support}/false/g' ./src/environments/environment.oss.ts"
 
-      def envFile = readFile('./src/environments/environment.oss.ts');
+      def envFile = readFile("./src/environments/environment.oss.ts");
       echo "displaying env file : ${envFile}"
     }
   }
@@ -209,7 +209,7 @@ node ()  {
     rm -rf node_modules
     npm install
     ng set --global warnings.versionMismatch=false
-    ng build --env=${environment} --${environment} --aot=false
+    ng build --env=oss --${environment} --aot=false
     cd ..
     """
   }
