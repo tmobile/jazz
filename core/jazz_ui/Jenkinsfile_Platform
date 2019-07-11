@@ -127,7 +127,6 @@ def aws_configure() {
 */
 
 node ()  {
-
   stage('Loading Config-Loader') {
     def jazzBuildModuleURL = getBuildModuleUrl()
     loadBuildModules(jazzBuildModuleURL)
@@ -242,6 +241,11 @@ node ()  {
       def url = "https://${cloudfrontName}"
       echo "Please find the cloudfront created : ${url}"
     }
+  }
+  } catch (err) {
+   throw err
+  } finally {
+   deleteDir()
   }
 }
 
