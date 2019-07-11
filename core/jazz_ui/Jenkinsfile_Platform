@@ -26,7 +26,7 @@ import groovy.transform.Field
 def getCloudfrontDistributionId() {
   def distributionId
   try {
-    def cf_list_dists = sh (script: "aws  cloudfront list-distributions --query \"DistributionList.Items[?Origins.Items[?Id=='${config_loader.INSTANCE_PREFIX}-originid-${environment}']].{Id: Id}\" --output json --profile ${credsId}" , returnStdout: true).trim()
+    def cf_list_dists = sh (script: "aws  cloudfront list-distributions --query \"DistributionList.Items[?Origins.Items[?Id=='${config_loader.INSTANCE_PREFIX}-${environment}-static-website-origin-jazz_ui']].{Id: Id}\" --output json --profile ${credsId}" , returnStdout: true).trim()
     echo "cf_list_dists is: $cf_list_dists"
     def config_parser = new groovy.json.JsonSlurper()
     def cf_dists = config_parser.parseText(cf_list_dists)

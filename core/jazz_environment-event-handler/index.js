@@ -565,7 +565,7 @@ function triggerBuildJob(payload, serviceDetails, configData) {
     var type;
     if (payload.service === 'ui' && payload.domain === 'jazz') {
       type = 'ui';
-      buildQuery = `/build?token=${configData.JOB_TOKEN}`;
+      buildQuery = `/buildWithParameters?token=${configData.JOB_TOKEN}&scm_branch=${payload.physical_id}`;
     } else {
       type = serviceDetails.type;
       buildQuery = `/buildWithParameters?token=${configData.JOB_TOKEN}&service_name=${payload.service}&domain=${payload.domain}&scm_branch=${payload.physical_id}`;
