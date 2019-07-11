@@ -16,20 +16,67 @@ import groovy.transform.Field
 @Field def scmModule
 @Field def utilModule
 
+@Field def credsId
+@Field def environment
+
 /*
 * Get CloudFront DistID
 */
-def get_cloudfront_ID() {
+def getCloudfrontDistributionId() {
   try {
-    def cf_list_dists = sh (script: "aws  cloudfront list-distributions --query \"DistributionList.Items[?Origins.Items[?Id=='${config_loader.INSTANCE_PREFIX}-originid']].{Id: Id}\" --output json --profile cloud-api" , returnStdout: true).trim()
+    def cf_list_dists = sh (script: "aws  cloudfront list-distributions --query \"DistributionList.Items[?Origins.Items[?Id=='${config_loader.INSTANCE_PREFIX}-originid-${environment}']].{Id: Id}\" --output json --profile ${credsId}" , returnStdout: true).trim()
     echo "cf_list_dists is: $cf_list_dists"
     def config_parser = new groovy.json.JsonSlurper()
     def cf_dists = config_parser.parseText(cf_list_dists)
     return cf_dists[0].Id
   }catch(ex) {
-    error "Failed while get_cloudfront_ID " + ex.toString()
+    error "Failed while getCloudfrontDistributionId " + ex.toString()
     return null;
   }
+}
+
+def getOrCreateCloudfrontDistribution() {
+  echo "Fetching distribution list"
+  def distributionId = getCloudfrontDistributionId()
+  echo "distributionId...$distributionId"
+  if (distributionId == null || distributionId == "") {
+    echo "No Distribution present for ${environment}. So creating new distribution."
+    loadDistributionConfig()
+    echo "Generating distribution configuration."
+    generateDistributionConfig()
+    createCloudfrontDistribution()
+    distributionId = getCloudfrontDistributionId()
+  }
+
+  return distributionId
+}
+
+def createCloudfrontDistribution() {
+  try {
+    sh "aws cloudfront create-distribution-with-tags --distribution-config-with-tags --output json  file://distribution_config_with_tags.json --profile ${credsId}"
+  } catch(ex) {
+    error "Exception occured while creating the cloudfront distribution for ${environment}" + ex
+  }
+}
+
+def loadDistributionConfig() {
+  checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url:  scmModule.getCoreRepoCloneUrl("website-distribution-pack")]]])
+}
+
+def generateDistributionConfig() {
+  def originAccessIdentity = accountDetails.CLOUDFRONT.CLOUDFRONT_ORIGIN_ID.split("/");
+      originAccessIdentity = originAccessIdentity[originAccessIdentity.length - 1];
+  def cloudFrontOriginAccessIdentity = "origin-access-identity/cloudfront/"+originAccessIdentity
+  sh "sed -i -- 's/{service_name}/jazz_ui/g' distribution_config_with_tags.json"
+  sh "sed -i -- 's/{env}/${environment}/g' distribution_config_with_tags.json"
+  sh "sed -i -- 's/{conf_s3bucketname}/${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB}/g' distribution_config_with_tags.json"
+  sh "sed -i -- 's/{conf_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' distribution_config_with_tags.json"
+  sh "sed -i -- 's:{conf_origin_id}:${cloudFrontOriginAccessIdentity}:g' distribution_config_with_tags.json"
+  sh "sed -i -- 's/{origin_path}/${environment}/g' distribution_config_with_tags.json"
+  sh "sed -i -- 's/{owner}/serverless@t-mobile.com/g' distribution_config_with_tags.json"
+  sh "sed -i -- 's/{domain_name}/jazz/g' distribution_config_with_tags.json"
+  def distribution_config_with_tags = readFile('distribution_config_with_tags.json').trim()
+  echo(distribution_config_with_tags)
 }
 
 /*
@@ -40,7 +87,7 @@ def invalidate_cloudfront(cf_id) {
   //Using Jenkins build ID to form a unique callerReference
     def caller_reference = "JazzWeb_"+ env.BUILD_ID
     def invalidate_config= "{\"Paths\":{\"Quantity\":1,\"Items\":[\"/*\"]},\"CallerReference\":\"$caller_reference\"}"
-    def invalidate_status = sh (script: "aws cloudfront create-invalidation --distribution-id $cf_id --invalidation-batch '$invalidate_config' --output json --profile cloud-api" , returnStdout: true).trim()
+    def invalidate_status = sh (script: "aws cloudfront create-invalidation --distribution-id $cf_id --invalidation-batch '$invalidate_config' --output json --profile ${credsId}" , returnStdout: true).trim()
     echo "Invalidated Cloud Front Cache:$invalidate_status"
   }catch(ex) {
     error "Failed while invalidate_cloudfront " + ex.toString()
@@ -53,28 +100,36 @@ def invalidate_cloudfront(cf_id) {
 def aws_configure() {
   withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: config_loader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
     try {
-    sh "aws configure set profile.cloud-api.region ${config_loader.AWS.DEFAULTS.REGION}"
-    sh "aws configure set profile.cloud-api.aws_access_key_id $AWS_ACCESS_KEY_ID"
-    sh "aws configure set profile.cloud-api.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+      def randomString = utilModule.generateRequestId();
+      credsId = "jazz-${randomString}";
+      sh "aws configure set profile.${credsId}.region ${config_loader.AWS.DEFAULTS.REGION}"
+      sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+      sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
     } catch(ex) {
-    error "Failed while configuring AWS CLI " + ex.toString()
+      error "Failed while configuring AWS CLI " + ex.toString()
     }
   }
 }
 /*
 * Start the Pipeline stages
 */
+
 node ()  {
+
   stage('Loading Config-Loader') {
     def jazzBuildModuleURL = getBuildModuleUrl()
     loadBuildModules(jazzBuildModuleURL)
+    echo "Build triggered via branch: " + params.scm_branch
+
+    def branch = params.scm_branch
+    environment = (branch == 'master') ? 'prod' : 'dev'
   }
   stage('Configure AWS CLI') {
     aws_configure()
   }
 
   stage('Checking out Jazz_UI repo') {
-    dir('jazz_ui') {    
+    dir('jazz_ui') {
 
       checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz_ui")]]])
       def jazz_prod_api_id = getApiGatewayCore()
@@ -143,31 +198,40 @@ node ()  {
     }
   }
   stage('Building the UI - NPM build') {
-    sh '''
+    sh """
     #Generate build file from jazz_ui
     npm update
     cd jazz_ui
     rm -rf node_modules
     npm install
     ng set --global warnings.versionMismatch=false
-    ng build --env=oss --prod --aot=false
+    ng build --env=${environment} --${environment} --aot=false
     cd ..
-    '''
+    """
   }
   stage('Getting CloudFront DistID') {
-    cf_id = get_cloudfront_ID()
+    cf_id = (environment == 'prod') ? getCloudfrontDistributionId() : getOrCreateCloudfrontDistribution()
     echo "$cf_id"
   }
   stage('Copying generated NPM build files to Jazz-Web S3 bucket') {
     sh """
-    aws s3 ls ${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB} --profile cloud-api
-    aws s3 cp jazz_ui/dist s3://${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB} --recursive --include "*" --profile cloud-api
-    aws s3 ls ${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB} --profile cloud-api
+    aws s3 ls ${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB} --profile ${credsId}
+    aws s3 cp jazz_ui/dist s3://${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB}/${environment} --recursive --include "*" --profile ${credsId}
+    aws s3 ls ${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB}/${environment} --profile ${credsId}
     """
   }
   stage('Invalidating CloudFront') {
     invalidate_cloudfront(cf_id)
   }
+}
+
+//TODO to call in finally block
+def resetCredentials() {
+  echo "resetting AWS credentials"
+	def credPath = System.getenv().HOME + "/.aws/credentials"
+  def confPath = System.getenv().HOME + "/.aws/config"
+  sh "sed -i '/${credsId}/,+2d' ${credPath}"
+  sh "sed -i '/${credsId}/,+1d' ${confPath}"
 }
 
 def getApiGatewayCore(){
