@@ -18,19 +18,22 @@ import groovy.transform.Field
 
 @Field def credsId
 @Field def environment
+@Field def accountDetails
 
 /*
 * Get CloudFront DistID
 */
 def getCloudfrontDistributionId() {
+  def distributionId
   try {
     def cf_list_dists = sh (script: "aws  cloudfront list-distributions --query \"DistributionList.Items[?Origins.Items[?Id=='${config_loader.INSTANCE_PREFIX}-originid-${environment}']].{Id: Id}\" --output json --profile ${credsId}" , returnStdout: true).trim()
     echo "cf_list_dists is: $cf_list_dists"
     def config_parser = new groovy.json.JsonSlurper()
     def cf_dists = config_parser.parseText(cf_list_dists)
-    return cf_dists[0].Id
+    distributionId = (cf_dists) ? cf_dists[0].Id : null
+    return distributionId
   }catch(ex) {
-    error "Failed while getCloudfrontDistributionId " + ex.toString()
+    echo "No distribution defined for ${environment}" + ex
     return null;
   }
 }
@@ -123,6 +126,7 @@ node ()  {
 
     def branch = params.scm_branch
     environment = (branch == 'master') ? 'prod' : 'dev'
+    accountDetails = utilModule.getAccountInfoPrimary();
   }
   stage('Configure AWS CLI') {
     aws_configure()
