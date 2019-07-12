@@ -26,12 +26,22 @@ import groovy.transform.Field
 def getCloudfrontDistributionId() {
   def distributionId
   try {
-    def cf_list_dists = sh (script: "aws  cloudfront list-distributions --query \"DistributionList.Items[?Origins.Items[?Id=='${config_loader.INSTANCE_PREFIX}-${environment}-static-website-origin-jazz_ui']].{Id: Id}\" --output json --profile ${credsId}" , returnStdout: true).trim()
+    def cf_dists = getCloudFrontDetails()
+    distributionId = (cf_dists) ? cf_dists[0].Id : null
+    return distributionId
+  }catch(ex) {
+    echo "No distribution defined for ${environment}" + ex
+    return null;
+  }
+}
+
+def getCloudFrontDetails() {
+  try {
+    def cf_list_dists = sh (script: "aws  cloudfront list-distributions --query \"DistributionList.Items[?Origins.Items[?Id=='${config_loader.INSTANCE_PREFIX}-${environment}-static-website-origin-jazz_ui']].{Distribution:DomainName,Id: Id}\" --output json --profile ${credsId}" , returnStdout: true).trim()
     echo "cf_list_dists is: $cf_list_dists"
     def config_parser = new groovy.json.JsonSlurper()
     def cf_dists = config_parser.parseText(cf_list_dists)
-    distributionId = (cf_dists) ? cf_dists[0].Id : null
-    return distributionId
+    return cf_dists
   }catch(ex) {
     echo "No distribution defined for ${environment}" + ex
     return null;
@@ -50,7 +60,6 @@ def getOrCreateCloudfrontDistribution() {
     createCloudfrontDistribution()
     distributionId = getCloudfrontDistributionId()
   }
-
   return distributionId
 }
 
@@ -214,6 +223,7 @@ node ()  {
     """
   }
   stage('Getting CloudFront DistID') {
+    //Since cloudfront already created for prod environment, we just getting its id only.
     cf_id = (environment == 'prod') ? getCloudfrontDistributionId() : getOrCreateCloudfrontDistribution()
     echo "$cf_id"
   }
@@ -226,6 +236,12 @@ node ()  {
   }
   stage('Invalidating CloudFront') {
     invalidate_cloudfront(cf_id)
+    def cloudFrontDistributionDetails = getCloudFrontDetails()
+    if(cloudFrontDistributionDetails ) {
+      def cloudfrontName = cloudFrontDistributionDetails[0].Distribution
+      def url = "https://${cloudfrontName}"
+      echo "Please find the cloudfront created : ${url}"
+    }
   }
 }
 
