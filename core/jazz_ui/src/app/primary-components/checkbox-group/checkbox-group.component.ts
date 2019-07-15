@@ -37,7 +37,6 @@ export class CheckboxGroupComponent implements OnInit {
   }
 
   onAllSelected(){
-    debugger
     if(this.allselected){
       this.displayCount = this.checkboxContent.length;
       for(let i=0;i<this.checkboxContent.length;i++){
@@ -60,7 +59,6 @@ export class CheckboxGroupComponent implements OnInit {
 
   onCheckboxSelect(item){
 
-    /* debugger */
     if(this.allselected){
       for(let i=0; i<this.checkboxContent.length; i++){
           this.selectionObj[this.checkboxContent[i]] = false;
@@ -109,7 +107,6 @@ export class CheckboxGroupComponent implements OnInit {
 
 
   reset(value,content){
-    debugger
     this.selectionObj = value;
     this.checkboxContent = content
     for(let i = 0; i < this.checkboxContent.length; i++){
