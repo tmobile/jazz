@@ -24,6 +24,7 @@ import groovy.json.JsonOutput
 
 
 node {
+ try {
  echo "Starting the Job with Params ${params}"
  inputParams = params.input
  // Load the config
@@ -53,7 +54,7 @@ node {
  if (finalAccounts.size() > 0) {
   //Parse the Accounts and delete IAM,APIGateway,s3Buckets
   for (account in finalAccounts) {
-   credentialId = account['CREDENTIAL_ID'] 
+   credentialId = account['CREDENTIAL_ID']
    def accountID = account['ACCOUNTID'];
    def iamRoles = account["IAM"]
   def cloudFront = account["CLOUDFRONT"]
@@ -61,7 +62,7 @@ node {
     withCredentials([
       [$class: 'AmazonWebServicesCredentialsBinding', credentialsId: "${credentialId}"]
     ]) {
-       
+
         // Get all Regions
         def allregions = account["REGIONS"]
         for (awsregion in allregions) {
@@ -90,6 +91,11 @@ node {
   }
  } else {
   echo "No Accounts available for Deletion"
+ }
+ } catch (err) {
+  throw err
+ } finally {
+  deleteDir()
  }
 }
 
@@ -159,7 +165,7 @@ def deleteIam(roleName) {
   }
   // If Iam exists delete it
   if (status) {
-   //check and delete Custom Policies attached 
+   //check and delete Custom Policies attached
    deleteInlinePolicies(roleName)
    //check and delete if policies attached
    detachIamPolicies(roleName)
@@ -319,7 +325,7 @@ def deletes3Bucket(bucketName) {
 
 /**
   Function for Deleting Primary Account Role Policy
-  Accepts credentialId 
+  Accepts credentialId
   Check if policy exists and delete it
 **/
 def deletePrimaryAccountPolicy(accountId, accountsArray){
@@ -335,7 +341,7 @@ def deletePrimaryAccountPolicy(accountId, accountsArray){
             echo "${instance_prefix}_NonPrimaryAssumePolicy not exists"
             status = false
           }
-          
+
           if (status) {
             sh "aws iam delete-role-policy --role-name ${instance_prefix}_platform_services --policy-name ${instance_prefix}_${accountId}_NonPrimaryAssumePolicy"
             sleep(time: 10, unit: "SECONDS")
@@ -386,7 +392,7 @@ def deleteUserServices(regionAws) {
 /**
 * Delete cloudformation Stack
 **/
-def deleteStack(stackName, regionAws) { 
+def deleteStack(stackName, regionAws) {
   try {
     def status = true;
     try {
@@ -439,7 +445,7 @@ def parseOriginAccessIdentity(id){
   } else {
      parsed_id = "origin-access-identity/cloudfront/${id}"
   }
-  
+
   return parsed_id
 }
 
@@ -451,7 +457,7 @@ def checkAndDeleteCloudFront(id) {
         // Disable the CloudFront Distribution
         echo "Distribution is enabled"
         disableCloudFront(id, config)
-      } 
+      }
       deleteCloudFront(id)
     } catch (ex) {
         echo "{ex.message}"
@@ -513,7 +519,7 @@ def getDistributionConfig(id) {
     } catch (ex) {
         echo "${ex.message}"
     }
-    return config  
+    return config
 }
 
 /**

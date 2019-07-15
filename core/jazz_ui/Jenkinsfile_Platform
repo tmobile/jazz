@@ -65,6 +65,7 @@ def aws_configure() {
 * Start the Pipeline stages
 */
 node ()  {
+  try {
   stage('Loading Config-Loader') {
     def jazzBuildModuleURL = getBuildModuleUrl()
     loadBuildModules(jazzBuildModuleURL)
@@ -74,7 +75,7 @@ node ()  {
   }
 
   stage('Checking out Jazz_UI repo') {
-    dir('jazz_ui') {    
+    dir('jazz_ui') {
 
       checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz_ui")]]])
       def jazz_prod_api_id = getApiGatewayCore()
@@ -167,6 +168,11 @@ node ()  {
   }
   stage('Invalidating CloudFront') {
     invalidate_cloudfront(cf_id)
+  }
+  } catch (err) {
+   throw err
+  } finally {
+   deleteDir()
   }
 }
 
