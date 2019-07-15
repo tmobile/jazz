@@ -127,129 +127,130 @@ def aws_configure() {
 */
 
 node ()  {
-  stage('Loading Config-Loader') {
-    def jazzBuildModuleURL = getBuildModuleUrl()
-    loadBuildModules(jazzBuildModuleURL)
-    echo "Build triggered via branch: " + params.scm_branch
+  try {
+    stage('Loading Config-Loader') {
+      def jazzBuildModuleURL = getBuildModuleUrl()
+      loadBuildModules(jazzBuildModuleURL)
+      echo "Build triggered via branch: " + params.scm_branch
 
-    def branch = params.scm_branch
-    environment = (branch == 'master') ? 'prod' : 'dev'
-    accountDetails = utilModule.getAccountInfoPrimary();
-  }
-  stage('Configure AWS CLI') {
-    aws_configure()
-  }
+      def branch = params.scm_branch
+      environment = (branch == 'master') ? 'prod' : 'dev'
+      accountDetails = utilModule.getAccountInfoPrimary();
+    }
+    stage('Configure AWS CLI') {
+      aws_configure()
+    }
 
-  stage('Checking out Jazz_UI repo') {
-    dir('jazz_ui') {
+    stage('Checking out Jazz_UI repo') {
+      dir('jazz_ui') {
 
-      checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz_ui")]]])
-      def jazz_prod_api_id = getApiGatewayCore()
+        checkout([$class: 'GitSCM', branches: [[name: '*/' + params.scm_branch]], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, url: scmModule.getCoreRepoCloneUrl("jazz_ui")]]])
+        def jazz_prod_api_id = getApiGatewayCore()
 
-      if(config_loader.UI_CONFIG.service_tabs.overview)   sh "sed -i 's/{overview}/overview/g' ./src/environments/environment.oss.ts";
-      if(config_loader.UI_CONFIG.service_tabs.access_control)   sh "sed -i 's/{access control}/access control/g' ./src/environments/environment.oss.ts";
-      if(config_loader.UI_CONFIG.service_tabs.metrics)   sh "sed -i 's/{metrics}/metrics/g' ./src/environments/environment.oss.ts";
-      if(config_loader.UI_CONFIG.service_tabs.cost)   sh "sed -i 's/{cost}/cost/g' ./src/environments/environment.oss.ts";
-      if(config_loader.UI_CONFIG.service_tabs.logs)       sh "sed -i 's/{logs}/logs/g' ./src/environments/environment.oss.ts";
-      if(config_loader.UI_CONFIG.environment_tabs.overview) sh "sed -i 's/{env_overview}/overview/g' ./src/environments/environment.oss.ts";
-      if(config_loader.UI_CONFIG.environment_tabs.deployments)  sh "sed -i 's/{deployments}/deployments/g' ./src/environments/environment.oss.ts";
-      if( config_loader.UI_CONFIG.environment_tabs.code_quality == "true" )  sh "sed -i 's/{code quality}/code quality/g' ./src/environments/environment.oss.ts";
-      if(config_loader.UI_CONFIG.environment_tabs.assets)  sh "sed -i 's/{assets}/assets/g' ./src/environments/environment.oss.ts";
-      if(config_loader.UI_CONFIG.environment_tabs.logs)  sh "sed -i 's/{env_logs}/logs/g' ./src/environments/environment.oss.ts";
+        if(config_loader.UI_CONFIG.service_tabs.overview)   sh "sed -i 's/{overview}/overview/g' ./src/environments/environment.oss.ts";
+        if(config_loader.UI_CONFIG.service_tabs.access_control)   sh "sed -i 's/{access control}/access control/g' ./src/environments/environment.oss.ts";
+        if(config_loader.UI_CONFIG.service_tabs.metrics)   sh "sed -i 's/{metrics}/metrics/g' ./src/environments/environment.oss.ts";
+        if(config_loader.UI_CONFIG.service_tabs.cost)   sh "sed -i 's/{cost}/cost/g' ./src/environments/environment.oss.ts";
+        if(config_loader.UI_CONFIG.service_tabs.logs)       sh "sed -i 's/{logs}/logs/g' ./src/environments/environment.oss.ts";
+        if(config_loader.UI_CONFIG.environment_tabs.overview) sh "sed -i 's/{env_overview}/overview/g' ./src/environments/environment.oss.ts";
+        if(config_loader.UI_CONFIG.environment_tabs.deployments)  sh "sed -i 's/{deployments}/deployments/g' ./src/environments/environment.oss.ts";
+        if( config_loader.UI_CONFIG.environment_tabs.code_quality == "true" )  sh "sed -i 's/{code quality}/code quality/g' ./src/environments/environment.oss.ts";
+        if(config_loader.UI_CONFIG.environment_tabs.assets)  sh "sed -i 's/{assets}/assets/g' ./src/environments/environment.oss.ts";
+        if(config_loader.UI_CONFIG.environment_tabs.logs)  sh "sed -i 's/{env_logs}/logs/g' ./src/environments/environment.oss.ts";
 
-      sh "sed -i 's/{api_doc_name}/${config_loader.JAZZ.PLATFORM.AWS.S3.API_DOC}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{account_number}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${jazz_prod_api_id}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{inst_region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{multi_env}/${config_loader.UI_CONFIG.feature.multi_env}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{api_doc_name}/${config_loader.JAZZ.PLATFORM.AWS.S3.API_DOC}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{account_number}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{API_GATEWAY_KEY_PROD}/${jazz_prod_api_id}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{inst_region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{multi_env}/${config_loader.UI_CONFIG.feature.multi_env}/g' ./src/environments/environment.oss.ts"
 
-      if(config_loader.SLACK.ENABLE_SLACK == "true") sh "sed -i 's/{slack_support}/true/g' ./src/environments/environment.oss.ts";
-      else sh "sed -i 's/{slack_support}/false/g' ./src/environments/environment.oss.ts";
+        if(config_loader.SLACK.ENABLE_SLACK == "true") sh "sed -i 's/{slack_support}/true/g' ./src/environments/environment.oss.ts";
+        else sh "sed -i 's/{slack_support}/false/g' ./src/environments/environment.oss.ts";
 
-      sh "sed -i s!{swagger_editor}!${config_loader.JAZZ.SWAGGER.EDITOR_URL}!g ./src/environments/environment.oss.ts"
+        sh "sed -i s!{swagger_editor}!${config_loader.JAZZ.SWAGGER.EDITOR_URL}!g ./src/environments/environment.oss.ts"
 
-      /* Getting the accounts and regions */
-      def accountMap = [:];
-      def eachAccountMap = [];
-      def regions = [];
-      for (item in config_loader.AWS.ACCOUNTS) {
-          regions = [];
-          for(data in item.REGIONS){
-              regions.push(data.REGION)
-          }
-          accountMap = [:]
-          if(item.PRIMARY){
-              accountMap.put('primary', true)
-          } else {
-              accountMap.put('primary', false)
-          }
-          accountMap.put('account', item.ACCOUNTID);
-          accountMap.put('regions', regions);
-          accountMap.put('accountName', item.ACCOUNTNAME);
-          eachAccountMap.push(accountMap);
+        /* Getting the accounts and regions */
+        def accountMap = [:];
+        def eachAccountMap = [];
+        def regions = [];
+        for (item in config_loader.AWS.ACCOUNTS) {
+            regions = [];
+            for(data in item.REGIONS){
+                regions.push(data.REGION)
+            }
+            accountMap = [:]
+            if(item.PRIMARY){
+                accountMap.put('primary', true)
+            } else {
+                accountMap.put('primary', false)
+            }
+            accountMap.put('account', item.ACCOUNTID);
+            accountMap.put('regions', regions);
+            accountMap.put('accountName', item.ACCOUNTNAME);
+            eachAccountMap.push(accountMap);
+        }
+        def uiAccountMap = JsonOutput.toJson(eachAccountMap)
+        sh "sed -i 's/{accountMap}/${uiAccountMap}/g' ./src/environments/environment.oss.ts"
+
+        /* Getting the deployment targets */
+        sh "sed -i 's/{api_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.API_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+
+        sh "sed -i 's/{function_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.FUNCTION_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{website_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.WEBSITE_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+
+        def uiConfig = JsonOutput.toJson(config_loader.UI_CONFIG)
+        def importUICommand = "sed -i 's/{INSTALLER_VARS}/$uiConfig/g' ./src/environments/environment.oss.ts"
+        sh importUICommand
+
+        if (config_loader.APIGEE.ENABLE_APIGEE && config_loader.APIGEE.ENABLE_APIGEE.toString() == "true") sh "sed -i 's/{apigee_support}/true/g' ./src/environments/environment.oss.ts"
+        else sh "sed -i 's/{apigee_support}/false/g' ./src/environments/environment.oss.ts"
+
+        def envFile = readFile("./src/environments/environment.oss.ts");
+        echo "displaying env file : ${envFile}"
       }
-      def uiAccountMap = JsonOutput.toJson(eachAccountMap)
-      sh "sed -i 's/{accountMap}/${uiAccountMap}/g' ./src/environments/environment.oss.ts"
-
-      /* Getting the deployment targets */
-      sh "sed -i 's/{api_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.API_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
-
-      sh "sed -i 's/{function_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.FUNCTION_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
-      sh "sed -i 's/{website_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.WEBSITE_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
-
-      def uiConfig = JsonOutput.toJson(config_loader.UI_CONFIG)
-      def importUICommand = "sed -i 's/{INSTALLER_VARS}/$uiConfig/g' ./src/environments/environment.oss.ts"
-      sh importUICommand
-
-      if (config_loader.APIGEE.ENABLE_APIGEE && config_loader.APIGEE.ENABLE_APIGEE.toString() == "true") sh "sed -i 's/{apigee_support}/true/g' ./src/environments/environment.oss.ts"
-      else sh "sed -i 's/{apigee_support}/false/g' ./src/environments/environment.oss.ts"
-
-      def envFile = readFile("./src/environments/environment.oss.ts");
-      echo "displaying env file : ${envFile}"
     }
-  }
-  stage('Building the UI - NPM build') {
-    sh """
-    #Generate build file from jazz_ui
-    npm update
-    cd jazz_ui
-    rm -rf node_modules
-    npm install
-    ng set --global warnings.versionMismatch=false
-    ng build --env=oss --${environment} --aot=false
-    cd ..
-    """
-  }
-  stage('Getting CloudFront DistID') {
-    //Since cloudfront already created for prod environment, we just getting its id only.
-    cf_id = (environment == 'prod') ? getCloudfrontDistributionId() : getOrCreateCloudfrontDistribution()
-    echo "$cf_id"
-  }
-  stage('Copying generated NPM build files to Jazz-Web S3 bucket') {
-    sh """
-    aws s3 ls ${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB} --profile ${credsId}
-    aws s3 cp jazz_ui/dist s3://${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB}/${environment} --recursive --include "*" --profile ${credsId}
-    aws s3 ls ${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB}/${environment} --profile ${credsId}
-    """
-  }
-  stage('Invalidating CloudFront') {
-    invalidate_cloudfront(cf_id)
-    def cloudFrontDistributionDetails = getCloudFrontDetails()
-    if(cloudFrontDistributionDetails ) {
-      def cloudfrontName = cloudFrontDistributionDetails[0].Distribution
-      def url = "https://${cloudfrontName}"
-      echo "Please find the cloudfront created : ${url}"
+    stage('Building the UI - NPM build') {
+      sh """
+      #Generate build file from jazz_ui
+      npm update
+      cd jazz_ui
+      rm -rf node_modules
+      npm install
+      ng set --global warnings.versionMismatch=false
+      ng build --env=oss --${environment} --aot=false
+      cd ..
+      """
     }
-  }
+    stage('Getting CloudFront DistID') {
+      //Since cloudfront already created for prod environment, we just getting its id only.
+      cf_id = (environment == 'prod') ? getCloudfrontDistributionId() : getOrCreateCloudfrontDistribution()
+      echo "$cf_id"
+    }
+    stage('Copying generated NPM build files to Jazz-Web S3 bucket') {
+      sh """
+      aws s3 ls ${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB} --profile ${credsId}
+      aws s3 cp jazz_ui/dist s3://${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB}/${environment} --recursive --include "*" --profile ${credsId}
+      aws s3 ls ${config_loader.JAZZ.PLATFORM.AWS.S3.BUCKET_WEB}/${environment} --profile ${credsId}
+      """
+    }
+    stage('Invalidating CloudFront') {
+      invalidate_cloudfront(cf_id)
+      def cloudFrontDistributionDetails = getCloudFrontDetails()
+      if(cloudFrontDistributionDetails ) {
+        def cloudfrontName = cloudFrontDistributionDetails[0].Distribution
+        def url = "https://${cloudfrontName}"
+        echo "Please find the cloudfront created : ${url}"
+      }
+    }
   } catch (err) {
-   throw err
+    throw err
   } finally {
-   deleteDir()
+    resetCredentials()
+    deleteDir()
   }
 }
 
-//TODO to call in finally block
 def resetCredentials() {
   echo "resetting AWS credentials"
 	def credPath = System.getenv().HOME + "/.aws/credentials"
