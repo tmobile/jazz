@@ -32,7 +32,7 @@
         "environments": {
             "dev": "environments/environment.dev.ts",
             "internal": "environments/environment.internal.ts",
-            "prod": "environments/environment.prod.ts",
+            "oss": "environments/environment.oss.ts",
             "local": "environments/environment.local.ts"
 
         }
