@@ -253,7 +253,7 @@ node ()  {
 
 def resetCredentials() {
   echo "resetting AWS credentials"
-	def credPath = System.getenv().HOME + "/.aws/credentials"
+  def credPath = System.getenv().HOME + "/.aws/credentials"
   def confPath = System.getenv().HOME + "/.aws/config"
   sh "sed -i '/${credsId}/,+2d' ${credPath}"
   sh "sed -i '/${credsId}/,+1d' ${confPath}"
@@ -274,17 +274,17 @@ def getApiGatewayCore(){
 }
 
 def getAPIIdNameMapping(apiIdMapping, namespace) {
-	if (!apiIdMapping) {
-		error "No mapping document provided to lookup API !"
-	}
+  if (!apiIdMapping) {
+    error "No mapping document provided to lookup API !"
+  }
 
-	if (apiIdMapping["${namespace}"]) {
-		return apiIdMapping["${namespace}"];
-	} else if (apiIdMapping["${namespace}_*"]) {
-		return apiIdMapping["${namespace}_*"];
-	} else {
-		apiIdMapping["*"];
-	}
+  if (apiIdMapping["${namespace}"]) {
+    return apiIdMapping["${namespace}"];
+  } else if (apiIdMapping["${namespace}_*"]) {
+    return apiIdMapping["${namespace}_*"];
+  } else {
+    apiIdMapping["*"];
+  }
 }
 
 /*
@@ -315,10 +315,10 @@ def loadBuildModules(buildModuleUrl){
 }
 
 def getBuildModuleUrl() {
-    if (scm_type && scm_type != "bitbucket") {
-      // right now only bitbucket has this additional tag scm in its git clone path
-      return "http://${repo_base}/${repo_core}/jazz-build-module.git"
-    } else {
-      return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
-    }
+  if (scm_type && scm_type != "bitbucket") {
+    // right now only bitbucket has this additional tag scm in its git clone path
+    return "http://${repo_base}/${repo_core}/jazz-build-module.git"
+  } else {
+    return "http://${repo_base}/scm/${repo_core}/jazz-build-module.git"
+  }
 }
