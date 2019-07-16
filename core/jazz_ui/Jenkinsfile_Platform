@@ -239,7 +239,7 @@ node ()  {
       def cloudFrontDistributionDetails = getCloudFrontDetails()
       if(cloudFrontDistributionDetails ) {
         def cloudfrontName = cloudFrontDistributionDetails[0].Distribution
-        def url = "https://${cloudfrontName}"
+        def url = "http://${cloudfrontName}"
         echo "Please find the cloudfront created : ${url}"
       }
     }
