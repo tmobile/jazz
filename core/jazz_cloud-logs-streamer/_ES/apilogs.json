@@ -12,75 +12,75 @@
         },
         "platform_log_group": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "platform_log_stream": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "environment": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "request_id": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "method": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "domain": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "servicename": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "path": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "user_agent": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "application_logs_id": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "origin": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "host": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "x_forwarded_port": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "x_forwarded_for": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "x_amzn_trace_id": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "content_type": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "cache_control": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "status": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         }
       }
     }

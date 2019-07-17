@@ -12,35 +12,35 @@
         },
         "request_id": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "platform_log_group": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "platform_log_stream": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "servicename": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "domain": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "environment": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "log_level": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         },
         "message": {
           "type": "keyword",
-          "index": "true"
+          "index": true
         }
       }
     }
