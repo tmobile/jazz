@@ -67,11 +67,13 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   regSelected: string = this.regList[0];
   assetSelected: string = "all";
   resourceSelected:string;
+  isAllSelected: boolean = true;
 
   envList: any = ['prod', 'stg'];
   envSelected: string = this.envList[0];
 
   lambdaResourceNameArr:string;
+  allAssetsNameArray:any;
 
   getRange(e) {
     this.selectFilter["key"] = 'slider';
@@ -141,8 +143,20 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     this.selectFilter["value"] = event;
     this.onAssetSelect.emit(event);
     this.onFilterSelect.emit(this.selectFilter)
+    if(event !== 'all'){
+      this.isAllSelected = false;
+      this.lambdaResourceNameArr = this.service.lambdaResourceNameArr;
+      if(this.lambdaResourceNameArr){
+        this.resourceSelected = this.lambdaResourceNameArr[0];
+      }
+    }
     if(event == "all"){
-        this.advanced_filter_input.sls_resource.show = false;
+       this.isAllSelected = true;
+        this.advanced_filter_input.sls_resource.show = true;
+        this.allAssetsNameArray = this.service.allAssetsNameArray;
+      if (this.allAssetsNameArray) {
+        this.resourceSelected = this.allAssetsNameArray[0];
+      }
         this.onResourceSelect.emit("all");
         this.selectFilter["key"] = 'resource';
         this.selectFilter["value"] = "all";
@@ -161,7 +175,6 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     this.onFilterSelect.emit(this.selectFilter);
   }
   onEnvSelected(envt) {
-
     this.envSelected = envt;
     this.selectFilter["key"] = 'environment';
     this.selectFilter["value"] = envt;
@@ -214,12 +227,13 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     if(this.assetList){
       this.assetSelected = this.assetList[0];
     }
-    this.lambdaResourceNameArr = this.service.lambdaResourceNameArr;
-    if(this.lambdaResourceNameArr){
-      this.resourceSelected = this.lambdaResourceNameArr[0];
-    }
     if(this.assetSelected == "all"){
-      this.advanced_filter_input.sls_resource.show = false;
+      this.isAllSelected = true;
+      this.allAssetsNameArray = this.service.allAssetsNameArray;
+      if (this.allAssetsNameArray) {
+        this.resourceSelected = this.allAssetsNameArray[0];
+      }
+      this.advanced_filter_input.sls_resource.show = true;
     }
     if (this.service.logsData) {
       this.envList.push(this.service.logsData);

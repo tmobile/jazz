@@ -19,6 +19,7 @@
   .page-section {
     padding: 1rem 1.6rem;
   }
+  
   .oneasset {
     min-height: 0;
     .asset-wrp {
@@ -146,6 +147,10 @@
   }
   .arn-value {
     word-wrap: break-word;
+  }
+  .endpoint-url {
+    width: 70%;
+    color: #1495bb !important;
   }
   .feedback-overlay {
     position: fixed;

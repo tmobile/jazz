@@ -16,6 +16,7 @@ export class FilterModalComponent implements OnInit {
   @Input() fields;
   @Input() options;
   @Input() assetList;
+  @Input() slsapp;
   // @ViewChild('sliderElement') sliderElement: IonRangeSliderModule;
   @ViewChild('checkboxGroup') checkboxGroup: CheckboxGroupComponent;
   @ViewChild('checkboxGroupRegion') checkboxGroupRegion: CheckboxGroupRegionComponent;

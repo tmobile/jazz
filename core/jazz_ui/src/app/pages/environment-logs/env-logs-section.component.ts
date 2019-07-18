@@ -16,6 +16,7 @@ import { environment as env_oss} from './../../../environments/environment.oss';
 import { environment as env_internal } from './../../../environments/environment.internal';
 import { EnvAssetsSectionComponent } from '../environment-assets/env-assets-section.component';
 import * as _ from 'lodash';
+import { THROW_IF_NOT_FOUND } from '@angular/core/src/di/injector';
 declare let Promise;
 @Component({
 	selector: 'env-logs-section',
@@ -143,6 +144,9 @@ export class EnvLogsSectionComponent implements OnInit {
 	errorTime: any;
 	errorURL: any;
 	errorAPI: any;
+	selectedAssetName: any;
+	assetsNameArray:any = [];
+	allAssetsNameArray: any = [];
 	errorRequest: any = {};
 	errorResponse: any = {};
 	errorUser: any;
@@ -162,6 +166,7 @@ export class EnvLogsSectionComponent implements OnInit {
   	public assetSelected:string;
 	public resourceSelected: any;
 	lambdaResourceNameArr;
+	lambdaResource;
 
 	instance_yes;
 	getFilter(filterServ){		
@@ -170,12 +175,11 @@ export class EnvLogsSectionComponent implements OnInit {
 		if(this.assetList){
 			this.service['assetList']=this.assetList;
 		}
-
 		if(this.service.serviceType == 'sls-app'){
-			this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
+			this.service['allAssetsNameArray'] = this.allAssetsNameArray;
 			this.advanced_filter_input.sls_resource.show = true;
 		}
-
+		
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
 		var comp = this;
@@ -190,6 +194,11 @@ export class EnvLogsSectionComponent implements OnInit {
 		});
 		this.instance_yes.onAssetSelect.subscribe(event => {		
 			comp.onAssetSelect(event);
+			if(this.service.serviceType == 'sls-app' && event !== 'all'){
+				this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
+				this.advanced_filter_input.sls_resource.show = true;
+				(<AdvancedFiltersComponent>componentRef.instance).data = {"service" : this.service, "advanced_filter_input" : this.advanced_filter_input};
+			}
 		});
 		this.instance_yes.onResourceSelect.subscribe(event => {
 			comp.onResourceSelect(event);
@@ -200,6 +209,9 @@ export class EnvLogsSectionComponent implements OnInit {
 	onAssetSelect(event){
 		this.FilterTags.notify('filter-Asset',event);
 		this.assetSelected=event;
+		if(event !== 'all'){
+		this.setAssetName(this.assetsNameArray,this.assetSelected);	
+		}
 	} 	
 	onResourceSelect(event){
 		this.FilterTags.notifyLogs('filter-Asset-Name', event);
@@ -218,6 +230,47 @@ export class EnvLogsSectionComponent implements OnInit {
 			rowData['expanded'] = true;
 		}
 		this.expandText = 'Collapse all';
+	}
+
+	setAssetName(val, selected) {
+		if (this.service.serviceType === "sls-app") {
+			let assetObj = [];
+			this.lambdaResourceNameArr = [];
+			val[0].data.assets.map((item) => {
+				assetObj.push({ type: item.asset_type, name: item.provider_id });
+			})
+			if (selected === 'all') {
+				assetObj.map((item) => {
+					let tokens = item.name.split(':');
+					this.selectedAssetName = tokens[tokens.length - 1];
+					if(this.selectedAssetName.startsWith("//")) {
+						this.selectedAssetName = this.selectedAssetName.replace("//",'')
+					}
+					this.allAssetsNameArray.push(this.selectedAssetName);
+					this.allAssetsNameArray.map((item,index)=>{
+						if(item === 'All'){
+							this.allAssetsNameArray.splice(index,1)
+						}
+					})
+					this.allAssetsNameArray.splice(0,0,'All')
+				})
+			}
+			else {
+				assetObj.map((item) => {
+					if (item.type === selected) {
+						let tokens = item.name.split(':');
+						this.selectedAssetName = tokens[tokens.length - 1];
+						this.lambdaResourceNameArr.push(this.selectedAssetName);
+						this.lambdaResourceNameArr.map((item,index)=>{
+							if(item === 'All'){
+								this.lambdaResourceNameArr.splice(index,1)
+							}
+						})
+						this.lambdaResourceNameArr.splice(0,0,'All')
+					}
+				})
+			}
+		}
 	}
 
 	collapseall() {
@@ -447,18 +500,17 @@ export class EnvLogsSectionComponent implements OnInit {
 				   service: self.service.name,              
    }, self.service.id).toPromise().then((response:any)=>{
 	   if(response&&response.data&&response.data.assets){
+		    this.assetsNameArray.push(response);
 		    let assets=_(response.data.assets).map('asset_type').uniq().value();
 			 let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 			 validAssetList.splice(0, 0, 'all');
-			 this.lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
-			for( let i = 0 ; i<this.lambdaResourceNameArr.length; i++ ){
-				let tokens = this.lambdaResourceNameArr[i].split(':');
-				let reduced = tokens[tokens.length-1];
-				let reducedTokens = reduced.split('-');
-				this.lambdaResourceNameArr[i] = reducedTokens[reducedTokens.length-1];
+			 if(self.service.serviceType === 'sls-app'){
+				validAssetList.map((item,index)=>{
+					if(item === 'dynamodb'){
+						validAssetList.splice(index,1)
+					}
+				})
 			}
-			this.lambdaResourceNameArr = _.uniq(this.lambdaResourceNameArr);
-			this.lambdaResourceNameArr.splice(0,0,'All');
 			 self.assetWithDefaultValue = validAssetList;
 			 for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
 				 self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
@@ -468,6 +520,7 @@ export class EnvLogsSectionComponent implements OnInit {
 				 self.assetSelected = validAssetList[0].replace(/_/g, " ");
 			 }
 			self.callLogsFunc();
+			self.setAssetName(self.assetsNameArray,self.assetSelected);
 			self.getFilter(self.advancedFilters);
 			self.instance_yes.showAsset = true;
 			self.instance_yes.assetSelected = validAssetList[0].replace(/_/g ," ");
@@ -486,6 +539,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		}
 		this.subscription = this.http.post('/jazz/logs', this.payload, this.service.id).subscribe(
 			response => {
+				if(response.data.logs !== undefined) {
 				this.logs = response.data.logs  || response.data.data.logs;
 				if(this.logs != undefined)
 				if (this.logs && this.logs.length != 0) {
@@ -506,8 +560,8 @@ export class EnvLogsSectionComponent implements OnInit {
 
 				} else {
 					this.loadingState = 'empty';
+						}
 				}
-
 			},
 			err => {
 				this.loadingState = 'error';
@@ -648,13 +702,10 @@ export class EnvLogsSectionComponent implements OnInit {
 				if(this.resourceSelected === 'all'){
 					delete this.payload['asset_identifier'];
 				}
-				this.resetPayload();
+					this.resetPayload();
+				}
 			}
 		}
-	
-	   
-		}
-		
 	}
 	getTime() {
 		var now = new Date();

@@ -96,6 +96,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 	status: any = [];
 	time: any = [];
 	url : any = [];
+	arrayList = [];
 	endpoint : any = [];
 	envResponseEmpty:boolean = false;
   envResponseTrue:boolean = false;
@@ -252,7 +253,6 @@ ngOnInit()
 
     this.subscription = this.http.get(this.relativeUrl, this.payload, this.service.id).subscribe(
       (response) => {
-
         if((response.data == undefined) || (response.data.count == 0)){
           this.envResponseEmpty = true;
           this.isLoading = false;
@@ -303,9 +303,14 @@ ngOnInit()
           this.url[i] = response.data.assets[i].swagger_url;
           }
           if( response.data.assets[i].provider_id == undefined ){
-            this.arn[i] = "-"
+			this.arn[i] = "-";
           }else{
-          this.arn[i] = response.data.assets[i].provider_id;
+				this.arn[i] = response.data.assets[i].provider_id;
+			  if (response.data.assets[i].provider_id.includes("http") || response.data.assets[i].provider_id.includes("https")) {
+				  this.arrayList.push({value:true});
+			  } else {
+				 this.arrayList.push({value:false});
+			  }
           }
 
           this.lastCommitted = response.data.assets[i].timestamp;

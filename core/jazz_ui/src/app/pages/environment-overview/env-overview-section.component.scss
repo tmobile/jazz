@@ -657,8 +657,7 @@ transform: rotateY(-50%)
 }
 .valid{
   font-size: .8em;
-  padding-top: 0.5em;
-  margin-top: 10px;
+  margin-bottom: 5px;
   text-align: center;
   .validation {
     color: #5cae01;
@@ -668,6 +667,32 @@ transform: rotateY(-50%)
     color: #d0021b;
     margin-bottom: 0;
   }
+}
+.parent-div:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+.tooltip {
+  visibility: hidden;
+  background: #000;
+  color: #fff;
+  padding: 0.2em 1em;
+  border-radius: 0.5em;
+  position: absolute;
+  opacity: 0.8;
+  width: 22em;
+  left: 10em;
+  top: -6em
+}
+.parent-div .tooltip::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #555 transparent transparent transparent;
 }
 .line-numbers {
   background: #f8f8f8;

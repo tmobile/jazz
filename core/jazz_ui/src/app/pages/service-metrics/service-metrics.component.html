@@ -8,7 +8,7 @@
         <span class="icon-icon-filter-unselected"></span>
       </button>
       <div class="jz-absolute filter-modal-position">
-        <filter-modal #filters [fields]="formFields" (formChange)="applyFilter($event)"></filter-modal>
+        <filter-modal #filters [fields]="formFields" [slsapp]="slsapp" (formChange)="applyFilter($event)"></filter-modal>
       </div>
     </div>
     <div [ngSwitch]="sectionStatus" class="jz-flex-expand" style="z-index: 0">
