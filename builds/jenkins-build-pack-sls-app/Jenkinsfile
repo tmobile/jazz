@@ -37,7 +37,7 @@ import groovy.transform.Field
 
 node() {
   try {
-  sh 'rm -rf *'
+  
   def jazzBuildModuleURL = getBuildModuleUrl()
   loadBuildModules(jazzBuildModuleURL)
 
