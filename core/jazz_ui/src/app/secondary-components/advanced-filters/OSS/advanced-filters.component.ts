@@ -68,6 +68,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   assetSelected: string = "all";
   resourceSelected:string;
   isAllSelected: boolean = true;
+  isSlsapp: boolean = false;
 
   envList: any = ['prod', 'stg'];
   envSelected: string = this.envList[0];
@@ -227,8 +228,14 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     if(this.assetList){
       this.assetSelected = this.assetList[0];
     }
-    if(this.assetSelected == "all"){
+    if(this.service.serviceType !== 'sls-app') {
+      
+      this.advanced_filter_input.sls_resource.show = false;
+      this.isSlsapp = false;
+    }
+    if(this.assetSelected == "all" && this.service.serviceType === 'sls-app'){
       this.isAllSelected = true;
+      this.isSlsapp = true;
       this.allAssetsNameArray = this.service.allAssetsNameArray;
       if (this.allAssetsNameArray) {
         this.resourceSelected = this.allAssetsNameArray[0];

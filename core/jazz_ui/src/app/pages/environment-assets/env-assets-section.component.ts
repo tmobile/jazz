@@ -302,8 +302,8 @@ ngOnInit()
           }else{
           this.url[i] = response.data.assets[i].swagger_url;
           }
-          if( response.data.assets[i].provider_id == undefined ){
-			this.arn[i] = "-";
+          if( response.data.assets[i].provider_id == undefined ) {
+			this.arn[i] = "-"
           }else{
 				this.arn[i] = response.data.assets[i].provider_id;
 			  if (response.data.assets[i].provider_id.includes("http") || response.data.assets[i].provider_id.includes("https")) {

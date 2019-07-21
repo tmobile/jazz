@@ -79,6 +79,7 @@ export class EnvLogsSectionComponent implements OnInit {
 	errBody: any;
 	parsedErrBody: any;
 	errMessage: any;
+	responseArray: any = [];
 	private toastmessage: any;
 	private env: any;
 	refreshData: any;
@@ -210,7 +211,8 @@ export class EnvLogsSectionComponent implements OnInit {
 		this.FilterTags.notify('filter-Asset',event);
 		this.assetSelected=event;
 		if(event !== 'all'){
-		this.setAssetName(this.assetsNameArray,this.assetSelected);	
+		this.setAssetName(this.responseArray,this.assetSelected);
+		this.onResourceSelect('all');	
 		}
 	} 	
 	onResourceSelect(event){
@@ -236,15 +238,15 @@ export class EnvLogsSectionComponent implements OnInit {
 		if (this.service.serviceType === "sls-app") {
 			let assetObj = [];
 			this.lambdaResourceNameArr = [];
-			val[0].data.assets.map((item) => {
+			val.map((item) => {
 				assetObj.push({ type: item.asset_type, name: item.provider_id });
 			})
 			if (selected === 'all') {
 				assetObj.map((item) => {
 					let tokens = item.name.split(':');
 					this.selectedAssetName = tokens[tokens.length - 1];
-					if(this.selectedAssetName.startsWith("//")) {
-						this.selectedAssetName = this.selectedAssetName.replace("//",'')
+					if (item.type === 'apigateway') {
+						this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 4).join('/');
 					}
 					this.allAssetsNameArray.push(this.selectedAssetName);
 					this.allAssetsNameArray.map((item,index)=>{
@@ -260,6 +262,9 @@ export class EnvLogsSectionComponent implements OnInit {
 					if (item.type === selected) {
 						let tokens = item.name.split(':');
 						this.selectedAssetName = tokens[tokens.length - 1];
+						if(item.type === 'apigateway'){
+					     this.selectedAssetName = this.selectedAssetName.split('/').splice(2,4).join('/');
+						}
 						this.lambdaResourceNameArr.push(this.selectedAssetName);
 						this.lambdaResourceNameArr.map((item,index)=>{
 							if(item === 'All'){
@@ -500,8 +505,8 @@ export class EnvLogsSectionComponent implements OnInit {
 				   service: self.service.name,              
    }, self.service.id).toPromise().then((response:any)=>{
 	   if(response&&response.data&&response.data.assets){
-		    this.assetsNameArray.push(response);
-		    let assets=_(response.data.assets).map('asset_type').uniq().value();
+			this.assetsNameArray.push(response);
+			let assets=_(response.data.assets).map('asset_type').uniq().value();		
 			 let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 			 validAssetList.splice(0, 0, 'all');
 			 if(self.service.serviceType === 'sls-app'){
@@ -511,6 +516,7 @@ export class EnvLogsSectionComponent implements OnInit {
 					}
 				})
 			}
+			this.responseArray = this.assetsNameArray[0].data.assets.filter(asset=>(validAssetList.indexOf(asset.asset_type)>-1));
 			 self.assetWithDefaultValue = validAssetList;
 			 for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
 				 self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
@@ -520,7 +526,7 @@ export class EnvLogsSectionComponent implements OnInit {
 				 self.assetSelected = validAssetList[0].replace(/_/g, " ");
 			 }
 			self.callLogsFunc();
-			self.setAssetName(self.assetsNameArray,self.assetSelected);
+			self.setAssetName(self.responseArray ,self.assetSelected);
 			self.getFilter(self.advancedFilters);
 			self.instance_yes.showAsset = true;
 			self.instance_yes.assetSelected = validAssetList[0].replace(/_/g ," ");
@@ -688,6 +694,8 @@ export class EnvLogsSectionComponent implements OnInit {
 				this.assetSelected=event.value;
 				if (this.assetSelected !== 'all') {
 					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
+					var inputValue = (<HTMLInputElement>document.getElementById('Allidentifier')).checked = true;
+					delete this.payload['asset_identifier']
 				}
 				else {
 					delete this.payload['asset_type'];
@@ -699,7 +707,7 @@ export class EnvLogsSectionComponent implements OnInit {
 			if(this.service.serviceType == 'sls-app'){
 				this.resourceSelected = event.value;
 				this.payload.asset_identifier = this.resourceSelected;
-				if(this.resourceSelected === 'all'){
+				if(this.resourceSelected === 'All'){
 					delete this.payload['asset_identifier'];
 				}
 					this.resetPayload();

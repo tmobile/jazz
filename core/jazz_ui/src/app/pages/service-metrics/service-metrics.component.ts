@@ -150,7 +150,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     if(this.service.serviceType === "sls-app"){
       this.slsapp = true;
       let assetObj = [];
-      let abc = [];
+      let assetNameObject = [];
       val[0].data.assets.map((item)=>{
        assetObj.push({type: item.asset_type, name: item.provider_id});
      })
@@ -158,18 +158,21 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
        if(item.type === selected){
         let tokens = item.name.split(':');
         this.selectedAssetName = tokens[tokens.length - 1];
+        if(item.type==='apigateway'){
+          this.selectedAssetName = this.selectedAssetName.split('/').slice(2,4).join('/');
+        }
         if(this.selectedAssetName.startsWith("table/")){
          this.selectedAssetName = this.selectedAssetName.replace('table/','');
         }
-        abc.push(this.selectedAssetName);
+        assetNameObject.push(this.selectedAssetName);
        }
      })
       assetIdentifierFilter = {
           column: 'Filter By:',
           label: 'ASSET NAME',
-          options:abc,
-          values: abc,
-          selected: abc[0]
+          options:assetNameObject,
+          values: assetNameObject,
+          selected: assetNameObject[0]
         };
      this.applyFilter(assetIdentifierFilter);
     }

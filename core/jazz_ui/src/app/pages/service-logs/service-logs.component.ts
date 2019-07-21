@@ -184,6 +184,7 @@ export class ServiceLogsComponent implements OnInit {
 	offsetValue: number = 0;
 	lambdaResourceNameArr;
 	lambdaResource;
+	responseArray: any = [];
 
 	envList = ['prod', 'stg'];
 
@@ -240,8 +241,9 @@ export class ServiceLogsComponent implements OnInit {
 		this.assetEvent = event
 		this.FilterTags.notify('filter-Asset', event);
 		this.assetSelected = event;	
-		if (event !== 'all') {
-			this.setAssetName(this.assetsNameArray, this.assetSelected);
+		if (event !== 'all'&& this.service.serviceType === 'sls-app') {
+			this.setAssetName(this.responseArray, this.assetSelected);
+			this.onResourceSelect('all');	
 		}
 	}
 	
@@ -271,15 +273,15 @@ export class ServiceLogsComponent implements OnInit {
 		if (this.service.serviceType === "sls-app") {
 			let assetObj = [];
 			this.lambdaResourceNameArr = [];
-			val[0].data.assets.map((item) => {
+			val.map((item) => {
 				assetObj.push({ type: item.asset_type, name: item.provider_id });
 			})
 			if (selected === 'all') {
 				assetObj.map((item) => {
 					let tokens = item.name.split(':');
 					this.selectedAssetName = tokens[tokens.length - 1];
-					if(this.selectedAssetName.startsWith("//")) {
-						this.selectedAssetName = this.selectedAssetName.replace("//",'')
+					if(item.type === 'apigateway'){
+						this.selectedAssetName = this.selectedAssetName.split('/').splice(2,4).join('/');						
 					}
 					this.allAssetsNameArray.push(this.selectedAssetName);
 					this.allAssetsNameArray.map((item,index)=>{
@@ -295,6 +297,9 @@ export class ServiceLogsComponent implements OnInit {
 					if (item.type === selected) {
 						let tokens = item.name.split(':');
 						this.selectedAssetName = tokens[tokens.length - 1];
+						if(item.type === 'apigateway'){
+							this.selectedAssetName = this.selectedAssetName.split('/').splice(2,4).join('/');						
+						}
 						this.lambdaResourceNameArr.push(this.selectedAssetName);
 						this.lambdaResourceNameArr.map((item,index)=>{
 							if(item === 'All'){
@@ -325,7 +330,7 @@ export class ServiceLogsComponent implements OnInit {
 						}
 					})
 				}
-				
+				this.responseArray = this.assetsNameArray[0].data.assets.filter(asset => (validAssetList.indexOf(asset.asset_type) > -1));
 				self.assetWithDefaultValue = validAssetList;
 				for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
 					self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
@@ -336,7 +341,7 @@ export class ServiceLogsComponent implements OnInit {
 				}
 				self.assetSelected = validAssetList[0].replace(/_/g, " ");
 				self.callLogsFunc();
-				self.setAssetName(self.assetsNameArray,self.assetSelected);
+				self.setAssetName(self.responseArray,self.assetSelected);
 				self.getFilter(self.advancedFilters);
 			}
 		})
@@ -402,6 +407,8 @@ export class ServiceLogsComponent implements OnInit {
 				this.assetSelected = event.value;
 				if (this.assetSelected !== 'all') {
 					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
+					var inputValue = (<HTMLInputElement>document.getElementById('Allidentifier')).checked = true;
+					delete this.payload['asset_identifier']
 				}
 				else {
 					delete this.payload['asset_type'];
@@ -662,7 +669,7 @@ export class ServiceLogsComponent implements OnInit {
 		}
 		this.subscription = this.http.post('/jazz/logs', this.payload, this.service.id).subscribe(
 			response => {
-
+				if(response.data.logs !== undefined) {
 				this.logs = response.data.logs || response.data.data.logs;
 				if (this.logs != undefined)
 					if (this.logs.length != 0) {
@@ -685,8 +692,7 @@ export class ServiceLogsComponent implements OnInit {
 						this.loadingState = 'empty';
 					}
 				this.trim_Message();
-
-
+				}
 			},
 			err => {
 				this.loadingState = 'error';
