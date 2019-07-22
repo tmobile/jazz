@@ -16,7 +16,6 @@ import { environment as env_oss} from './../../../environments/environment.oss';
 import { environment as env_internal } from './../../../environments/environment.internal';
 import { EnvAssetsSectionComponent } from '../environment-assets/env-assets-section.component';
 import * as _ from 'lodash';
-import { THROW_IF_NOT_FOUND } from '@angular/core/src/di/injector';
 declare let Promise;
 @Component({
 	selector: 'env-logs-section',

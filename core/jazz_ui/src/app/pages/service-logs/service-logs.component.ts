@@ -421,7 +421,7 @@ export class ServiceLogsComponent implements OnInit {
 				if(this.service.serviceType == 'sls-app'){
 					this.resourceSelected = event.value;
 					this.payload.asset_identifier = this.resourceSelected;
-					if(this.resourceSelected === 'all'){
+					if(this.resourceSelected === 'All'){
 						delete this.payload['asset_identifier'];
 					}
 					this.resetPayload();
