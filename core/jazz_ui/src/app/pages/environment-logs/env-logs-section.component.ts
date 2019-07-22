@@ -209,7 +209,7 @@ export class EnvLogsSectionComponent implements OnInit {
 	onAssetSelect(event){
 		this.FilterTags.notify('filter-Asset',event);
 		this.assetSelected=event;
-		if(event !== 'all'){
+		if(event !== 'all' && this.service.serviceType === 'sls-app'){
 		this.setAssetName(this.responseArray,this.assetSelected);
 		this.onResourceSelect('all');	
 		}
