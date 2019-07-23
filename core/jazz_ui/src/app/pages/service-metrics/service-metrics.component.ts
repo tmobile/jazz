@@ -24,10 +24,13 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   payload: any = {};
   public allData: any;
   public serviceType;
+  assetsNameArray: any = [];
   public assetFilter;
-  public assetIdentifierFilter;
+  lambdaResourceNameArr:any;
+  //public assetIdentifierFilter;
   public environmentFilter;
   public assetList: any = [];
+  selectedAssetName: any;
   public formFields: any = [
     {
       column: 'View By:',
@@ -83,7 +86,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   private http;
   public assetType = [];
   public assetSelected: any;
-
+  slsapp: boolean = false;
   errMessage: any;
   private toastmessage: any = '';
   private slsLambdaselected;
@@ -142,6 +145,38 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   refresh() {
     this.ngAfterViewInit();
   }
+  setAssetName(val,selected){
+    let assetIdentifierFilter = {};
+    if(this.service.serviceType === "sls-app"){
+      this.slsapp = true;
+      let assetObj = [];
+      let assetNameObject = [];
+      val[0].data.assets.map((item)=>{
+       assetObj.push({type: item.asset_type, name: item.provider_id});
+     })
+     assetObj.map((item)=>{
+       if(item.type === selected){
+        let tokens = item.name.split(':');
+        this.selectedAssetName = tokens[tokens.length - 1];
+        if(item.type==='apigateway'){
+          this.selectedAssetName = this.selectedAssetName.split('/').slice(2,4).join('/');
+        }
+        if(this.selectedAssetName.startsWith("table/")){
+         this.selectedAssetName = this.selectedAssetName.replace('table/','');
+        }
+        assetNameObject.push(this.selectedAssetName);
+       }
+     })
+      assetIdentifierFilter = {
+          column: 'Filter By:',
+          label: 'ASSET NAME',
+          options:assetNameObject,
+          values: assetNameObject,
+          selected: assetNameObject[0]
+        };
+     this.applyFilter(assetIdentifierFilter);
+    }
+  }
   getAssetType(data?) {
     try{
       let self = this;
@@ -152,38 +187,16 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         if (response && response.data && response.data.assets) {
           let assets = _(response.data.assets).map('asset_type').uniq().value();
           if(assets){
+            this.assetsNameArray = [];
             self.assetWithDefaultValue = assets;
+            this.assetsNameArray.push(response);
             let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
-            let lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
-            for( let i = 0 ; i<lambdaResourceNameArr.length; i++ ){
-              let tokens = lambdaResourceNameArr[i].split(':');
-              let reduced = tokens[tokens.length-1];
-              let reducedTokens = reduced.split('-');
-              lambdaResourceNameArr[i] = reducedTokens[reducedTokens.length-1];
-            }
-            lambdaResourceNameArr = _.uniq(lambdaResourceNameArr);
+            this.lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
+            this.lambdaResourceNameArr = _.uniq(this.lambdaResourceNameArr);
             self.assetWithDefaultValue = validAssetList;
             if(validAssetList.length){
               for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
                 self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
-              }
-              if(self.service.serviceType == "sls-app"){
-                self.assetIdentifierFilter = {
-                  column: 'Filter By:',
-                  label: 'ASSET NAME',
-                  options: lambdaResourceNameArr,
-                  values: lambdaResourceNameArr,
-                  selected: lambdaResourceNameArr[0]
-                };
-                let resourceField = self.filters.getFieldValueOfLabel('ASSET NAME');
-                if(!resourceField){
-                  self.formFields.splice(0, 0, self.assetIdentifierFilter);
-                  self.filters.setFields(self.formFields);
-  
-                }
-              }
-              else{
-                
               }
               self.assetFilter = {
                 column: 'Filter By:',
@@ -203,6 +216,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
                 self.formFields.splice(0, 0, self.assetFilter);
                 self.filters.setFields(self.formFields);
               }
+              self.setAssetName(self.assetsNameArray, self.assetSelected);
             }
             
           }          
@@ -341,7 +355,20 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       }
       if (changedFilter.label === 'ASSET TYPE') {
         this.assetSelected = changedFilter.selected.replace(/ /g, "_")
+        this.setAssetName(this.assetsNameArray,this.assetSelected);
       }
+      if (changedFilter.label === 'ASSET NAME') {
+        let lambda = changedFilter.selected;
+          this.formFields.map((item,index)=>{
+            if(item.label === "ASSET NAME"){
+              this.formFields.splice(index,1);
+            }
+          })
+          this.formFields.splice(0, 0, changedFilter);
+          this.filters.setFields(this.formFields); 
+      }
+        
+      
     }
     if( changedFilter && (changedFilter.label === 'ASSET IDENTIFIER')){
       this.slsLambdaselected = changedFilter.selected;

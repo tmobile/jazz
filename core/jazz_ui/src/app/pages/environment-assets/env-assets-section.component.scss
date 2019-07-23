@@ -19,6 +19,7 @@
   .page-section {
     padding: 1rem 1.6rem;
   }
+  
   .oneasset {
     min-height: 0;
     .asset-wrp {
@@ -87,6 +88,16 @@
       padding-bottom: 1rem;
     }
   }
+  .assetsdata {
+    width: 100%;
+    display: flex;
+  }
+  .left-column {
+    width: 65% !important;
+  }
+  .right-column {
+    width: 35% !important;
+  }
   .det-label {
     width: 10rem;
     flex-shrink: 0;
@@ -146,6 +157,10 @@
   }
   .arn-value {
     word-wrap: break-word;
+  }
+  .endpoint-url {
+    width: 70%;
+    color: #1495bb !important;
   }
   .feedback-overlay {
     position: fixed;

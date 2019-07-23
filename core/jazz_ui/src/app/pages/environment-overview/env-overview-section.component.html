@@ -271,12 +271,22 @@
 </div>
 </div>
 <div class="service-details-application relative" *ngIf= "slsapp">
-	<div>
 	<span class="app-label">Application Definition</span>
+	<span class ="parent-div">
+			<span  class="icon-icon-info icon-info-wrap information"></span>
+			<div class="absolute tooltip">The Application Definition deployed may differ from the following 
+				to work with Jazz framework and remove or replace any unsupported configurations.</div>
+	</span>
+
 	<div   class='edit-service-overview-btn'>
 			<a  *ngIf='showCncl'  (click)='onCancel()'>CANCEL</a>
 			<btn-jazz-secondary class='btn-edit-overview'  *ngIf="editButton" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditAppClick()'></btn-jazz-secondary>
 			<btn-jazz-secondary  class='btn-edit-overview' [disablebtn]="invalid || disableSave" *ngIf='saveButton' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" [disablebtn]='disableEditBtn()'  (click)='descriptor()'></btn-jazz-secondary>
+		</div>
+	<div>
+		<div class="valid" *ngIf="isCancel">
+			<p class="validation" *ngIf="isvalid">YAML is valid.</p>
+			<p class="invalidation" *ngIf="!isvalid">Oops! Incorrect YAML syntax.</p>
 		</div>
 	</div>
 	<div class="text-area-div"  *ngIf="startnew === true" >
@@ -336,10 +346,6 @@
 		</div>
 	</div>
 		</div>
-	<div class="valid" *ngIf="isCancel">
-		<p class="validation" *ngIf="isvalid">YAML is valid.</p>
-		<p class="invalidation" *ngIf="!isvalid">Oops! Incorrect YAML syntax.</p>
-	</div>
 </div>
 <div class="loading-outer-div" [class.show]="isLoading">
 		<div class="loading-circle circle"></div>
