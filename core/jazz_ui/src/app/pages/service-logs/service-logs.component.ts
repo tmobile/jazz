@@ -218,6 +218,10 @@ export class ServiceLogsComponent implements OnInit {
 
 			comp.onAssetSelect(event);
 		});
+		this.instance_yes.onResourceSelect.subscribe(event => {
+
+			comp.onResourceSelect(event);
+		});
 		this.instance_yes.onFilterClick.subscribe(event => {
 			this.filterSelectedValue = event
 		})
@@ -226,12 +230,11 @@ export class ServiceLogsComponent implements OnInit {
 	onAssetSelect(event) {
 		this.assetEvent = event
 		this.FilterTags.notify('filter-Asset', event);
-		this.assetSelected = event;
+		this.assetSelected = event;	
 	}
 	
 	onResourceSelect(event){
-		this.assetEvent = event
-		this.FilterTags.notify('filter-Asset', event);
+		this.FilterTags.notifyLogs('filter-Asset-Name', event);
 		this.resourceSelected = event;
 	}
 
@@ -270,7 +273,7 @@ export class ServiceLogsComponent implements OnInit {
 					this.lambdaResourceNameArr[i] = reducedTokens[reducedTokens.length-1];
 				}
 				this.lambdaResourceNameArr = _.uniq(this.lambdaResourceNameArr);
-				this.lambdaResourceNameArr.splice(0,0,'All');
+				this.lambdaResourceNameArr.splice(0,0,'all');
 				self.assetWithDefaultValue = validAssetList;
 				for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
 					self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
@@ -291,7 +294,7 @@ export class ServiceLogsComponent implements OnInit {
 
 
 	onEnvSelected(envt) {
-		this.FilterTags.notify('filter-Env', envt);
+		this.FilterTags.notify('filter-Environment', envt);
 		// this.logsSearch.environment = env;
 		if (env === 'prod') {
 			env = 'prod'
@@ -344,7 +347,7 @@ export class ServiceLogsComponent implements OnInit {
 			case "asset": {
 				this.FilterTags.notifyLogs('filter-Asset', event.value);
 				this.assetSelected = event.value;
-				if (this.assetSelected !== 'all' && this.assetSelected !== 'All') {
+				if (this.assetSelected !== 'all') {
 					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
 				}
 				else {
@@ -354,10 +357,12 @@ export class ServiceLogsComponent implements OnInit {
 				break;
 			}
 			case "resource" : {
+				this.FilterTags.notifyLogs('filter-Asset-Name', event.value);
+
 				if(this.service.serviceType == 'sls-app'){
 					this.resourceSelected = event.value;
 					this.payload.asset_identifier = this.resourceSelected;
-					if(this.resourceSelected === 'all' || this.resourceSelected === "All"){
+					if(this.resourceSelected === 'all'){
 						delete this.payload['asset_identifier'];
 					}
 					this.resetPayload();
@@ -366,7 +371,6 @@ export class ServiceLogsComponent implements OnInit {
 		}
 	}
 	getRange(e) {
-		this.FilterTags.notifyLogs('filter-TimeRangeSlider', e.from);
 		this.sliderFrom = e.from;
 		this.sliderPercentFrom = e.from_percent;
 		var resetdate = this.getStartDate(this.selectedTimeRange, this.sliderFrom);
@@ -382,8 +386,6 @@ export class ServiceLogsComponent implements OnInit {
 
 
 	getRangefunc(e) {
-		this.FilterTags.notifyLogs('filter-TimeRangeSlider', e);
-
 		this.sliderFrom = e;
 		this.sliderPercentFrom = e;
 		var resetdate = this.getStartDate(this.selectedTimeRange, this.sliderFrom);
@@ -398,7 +400,7 @@ export class ServiceLogsComponent implements OnInit {
 				break;
 			}
 			case 'time-range-slider': {
-				this.instance_yes.resetslider(1);
+				this.instance_yes.onTimePeriodSelected(1);
 
 				break;
 			}
@@ -433,20 +435,24 @@ export class ServiceLogsComponent implements OnInit {
 				break;
 			}
 			case 'asset': {
-
 				this.instance_yes.getAssetType('all');
-
+				break;
+			}
+			case 'asset-iden':{
+				this.instance_yes.getResourceType('all');
 				break;
 			}
 			case 'all': {
 				this.instance_yes.onRangeListSelected('Day');
 				this.instance_yes.onPeriodSelected('15 Minutes');
+				this.instance_yes.onTimePeriodSelected(1);
 				this.instance_yes.onStatisticSelected('Average');
 				this.instance_yes.onaccSelected('Acc 1');
 				this.instance_yes.onregSelected('reg 1');
 				this.instance_yes.onEnvSelected('prod');
 				this.instance_yes.onMethodListSelected('POST');
 				this.instance_yes.getAssetType('all');
+				this.instance_yes.getResourceType('all');
 				break;
 			}
 		}
