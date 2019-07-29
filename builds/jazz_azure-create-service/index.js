@@ -1,5 +1,4 @@
 
-const responseObj = require("./components/response.js");
 const CommandMapping = require("./components/CommandMapping.js");
 const fs = require('fs');
 
@@ -13,13 +12,13 @@ module.exports = async () => {
     let obj = JSON.parse(text);
     let commandMapping = new CommandMapping();
     result = await commandMapping.process(obj);
-    console.log(JSON.stringify(responseObj({
+    console.log(JSON.stringify({
       result: result
-    })));
+    }));
   } catch (error) {
-    console.log(JSON.stringify(responseObj({
+    console.log(JSON.stringify({
       error: error.toString()
-    })));
+    }));
   }
 
 }

@@ -49,7 +49,7 @@ def sendAssetCompletedEvent(serviceInfo, assetList) {
   data.tagValue = serviceInfo.stackName
   def output = azureUtil.invokeAzureService(data, "getResourcesByServiceName")
 
-  for (item in output.data.result) {
+  for (item in output.result) {
     def assetType = item.kind
     def id = item.id
     switch (item.type) {
@@ -132,7 +132,7 @@ def invokeAzureCreation(serviceInfo){
           createFunctionApp(data)
 
           def output = azureUtil.invokeAzureService(data, "getMasterKey")
-          masterKey = output.data.result.key
+          masterKey = output.result.key
           deployFunction(data, zip, type)
           sendAssetCompletedEvent(serviceInfo, assetList)
           return masterKey

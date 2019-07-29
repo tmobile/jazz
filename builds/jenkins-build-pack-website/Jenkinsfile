@@ -32,6 +32,7 @@ import groovy.transform.Field
 @Field def asset_info
 @Field def asset_name
 @Field def service_config
+@Field def websiteType
 
 node()  {
 	def jazzBuildModuleURL = getBuildModuleUrl()
@@ -87,6 +88,12 @@ node()  {
  	if(!service_config.provider) {
    		service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
  	}
+
+	if(service_config['framework'] == null){
+		websiteType = 'static'
+	} else {
+		websiteType = service_config['framework']
+	}
 
 	accountDetails = utilModule.getAccountInfo(service_config);
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
@@ -179,7 +186,7 @@ node()  {
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map)
 		}
 
-		stage("Build ${service_config['framework']}") {
+		stage("Build ${websiteType}") {
 			if(service_config['framework'] == 'angular' || service_config['framework'] == 'react') {
 				events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
 				try {
@@ -233,7 +240,7 @@ node()  {
           events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
           events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
 
-          createWebsite(appname, resourcegroup, storageName)
+          createWebsite(appname, resourcegroup, storageName, service_config['framework'])
 
           def origin_endpoint_url = "https://${storageName}.azureedge.net"
           def cdn_endpoint_url = "https://${storageName}.z22.web.core.windows.net"
@@ -976,6 +983,9 @@ def loadBuildModules(buildModuleUrl){
 		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
     	awsAPIGatewayModule.initialize()
 
+		events = load "events-module.groovy"
+    echo "Event module loaded successfully."
+
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
 		echo "SCM module loaded successfully."
@@ -994,8 +1004,15 @@ def loadBuildModules(buildModuleUrl){
 
 
 
-def createWebsite(stackName, resourceGroup, storageName){
-  sh "cd ./app && zip -qr ../content.zip *  && cd .."
+def createWebsite(stackName, resourceGroup, storageName, framework){
+  sh "cd ./app && rm -rf node_modules package-lock.json && cd .."
+	if(framework == 'angular'){
+		sh "cd ./app/dist && zip -qr ../../content.zip *  && cd ../../"
+	} else if(framework == 'react'){
+		sh "cd ./app/build && zip -qr ../../content.zip *  && cd ../../"
+	} else {
+		sh "cd ./app && zip -qr ../content.zip *  && cd .."
+	}
   def zip = sh(script: 'readlink -f ./content.zip', returnStdout: true).trim()
 
 
