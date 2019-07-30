@@ -384,7 +384,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
               this.formFields.splice(index,1);
             }
           })
-          this.formFields.splice(0, 0, changedFilter);
+          this.formFields.splice(2, 0, changedFilter);
           this.filters.setFields(this.formFields); 
       }
       if (changedFilter.label === 'ENVIRONMENT') {
