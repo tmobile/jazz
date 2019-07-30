@@ -25,6 +25,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public allData: any;
   public serviceType;
   assetsNameArray: any = [];
+  metricsLoaded: boolean = false;
+  selectedEnv: any;
   public assetFilter;
   lambdaResourceNameArr:any;
   //public assetIdentifierFilter;
@@ -128,6 +130,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.serviceType = this.service.type || this.service.serviceType;
+    if(this.service.assets){
+      this.selectedEnv = this.service.assets[0].environment;
+    }
     this.setPeriodFilters();
   }
   setPeriodFilters() {
@@ -152,12 +157,16 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       let assetObj = [];
       let assetNameObject = [];
       val[0].data.assets.map((item)=>{
-       assetObj.push({type: item.asset_type, name: item.provider_id});
+       assetObj.push({type: item.asset_type, name: item.provider_id ,env: item.environment});
      })
      assetObj.map((item)=>{
-       if(item.type === selected){
+       if(item.type === selected && item.env === this.selectedEnv){
         let tokens = item.name.split(':');
         this.selectedAssetName = tokens[tokens.length - 1];
+        if(item.type === 'lambda') {
+          let value = this.selectedAssetName.split('-');
+          this.selectedAssetName = value[value.length - 1];
+        }
         if(item.type==='apigateway'){
           this.selectedAssetName = this.selectedAssetName.split('/').slice(2,4).join('/');
         }
@@ -167,13 +176,25 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         assetNameObject.push(this.selectedAssetName);
        }
      })
+     if(assetNameObject.length !== 0) {
       assetIdentifierFilter = {
-          column: 'Filter By:',
-          label: 'ASSET NAME',
-          options:assetNameObject,
-          values: assetNameObject,
-          selected: assetNameObject[0]
-        };
+        column: 'Filter By:',
+        label: 'ASSET NAME',
+        options:assetNameObject,
+        values: assetNameObject,
+        selected: assetNameObject[0]
+      };
+     }
+     else {
+       let value = 'all'.split('0')
+      assetIdentifierFilter = {
+        column: 'Filter By:',
+        label: 'ASSET NAME',
+        options: value,
+        values: value,
+        selected: value
+      };
+     }
      this.applyFilter(assetIdentifierFilter);
     }
   }
@@ -234,7 +255,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   getEnvironments() {
     return this.http.get('/jazz/environments', {
-
       domain: this.service.domain,
       service: this.service.name
     }, this.service.id).toPromise()
@@ -249,7 +269,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
             values: serviceEnvironments,
             selected: 'prod'
           };
-
+          this.selectedEnv = this.environmentFilter.selected;
           let environmentField = this.filters.getFieldValueOfLabel('ENVIRONMENT');
           if (!environmentField) {
             this.formFields.splice(0, 0, this.environmentFilter);
@@ -367,8 +387,10 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           this.formFields.splice(0, 0, changedFilter);
           this.filters.setFields(this.formFields); 
       }
-        
-      
+      if (changedFilter.label === 'ENVIRONMENT') {
+          this.selectedEnv = changedFilter.selected;
+          this.setAssetName(this.assetsNameArray,this.assetSelected);
+      }     
     }
     if( changedFilter && (changedFilter.label === 'ASSET IDENTIFIER')){
       this.slsLambdaselected = changedFilter.selected;
@@ -376,7 +398,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     }
     if (changedFilter && (changedFilter.label === 'ASSET' ||
       changedFilter.label === 'METHOD' ||
-      changedFilter.label === 'PATH')) {
+      changedFilter.label === 'PATH' || changedFilter.label === 'ASSET NAME')) {
       this.setAsset();
     } else {
       return this.queryMetricsData();
@@ -405,6 +427,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       .toPromise()
       .then((response) => {
         this.sectionStatus = 'empty';
+        this.metricsLoaded = true;
         if (response && response.data && response.data.length) {
           this.queryDataRaw = response.data;
           this.getAllData(response.data);
@@ -425,7 +448,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       this.setAsset();
     }
     else {
-      this.sectionStatus = 'empty';
+      if(this.metricsLoaded = true) {
+        this.sectionStatus = 'empty';
+      }
     }
   }
   filterAssetType(data) {
@@ -490,7 +515,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       this.setMetric();
       this.sectionStatus = 'resolved';
     } else {
-      this.sectionStatus = 'empty';
+      if(this.metricsLoaded === true) {
+        this.sectionStatus = 'empty';
+      }
     }
   }
 
