@@ -210,6 +210,13 @@ node ()  {
         echo "displaying env file : ${envFile}"
       }
     }
+    if (fileExists('build.website')) {
+      stage('Execute Pre Build Hooks') {
+        sh "echo ${config_loader.JAZZ.PLATFORM.AWS.S3.API_DOC} > .store"
+        def websiteBuild = readTrusted 'build.website'
+        sh (script:websiteBuild)
+      }
+    }
     stage('Building the UI - NPM build') {
       sh """
       #Generate build file from jazz_ui
