@@ -149,24 +149,28 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     if(event !== 'all'){
       this.isAllSelected = false;
       this.lambdaResourceNameArr = this.service.lambdaResourceNameArr;
-      if(this.lambdaResourceNameArr){
+      if(this.lambdaResourceNameArr.length !== 0){
         this.resourceSelected = this.lambdaResourceNameArr[0];
+        this.advanced_filter_input.sls_resource.show = true;
+      }
+      else {
+        this.advanced_filter_input.sls_resource.show = false;
       }
     }
     if(event == "all"){
        this.isAllSelected = true;
-        this.advanced_filter_input.sls_resource.show = true;
         this.allAssetsNameArray = this.service.allAssetsNameArray;
-      if (this.allAssetsNameArray) {
+      if (this.allAssetsNameArray.length !== 0) {
         this.resourceSelected = this.allAssetsNameArray[0];
+        this.advanced_filter_input.sls_resource.show = true;
+      }
+      else {
+        this.advanced_filter_input.sls_resource.show = false;
       }
         this.onResourceSelect.emit("all");
         this.selectFilter["key"] = 'resource';
         this.selectFilter["value"] = "all";
         this.onFilterSelect.emit(this.selectFilter);
-    }
-    else{
-      this.advanced_filter_input.sls_resource.show = true;
     }
   }
 

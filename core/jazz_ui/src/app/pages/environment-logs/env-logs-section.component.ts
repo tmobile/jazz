@@ -251,7 +251,7 @@ export class EnvLogsSectionComponent implements OnInit {
 						this.selectedAssetName = value[value.length - 1];
 					  }
 					if (item.type === 'apigateway') {
-						this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 4).join('/');
+						this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 5).join('/');
 					}
 					this.allAssetsNameArray.push(this.selectedAssetName);
 					this.allAssetsNameArray.map((item,index)=>{
@@ -272,7 +272,7 @@ export class EnvLogsSectionComponent implements OnInit {
 							this.selectedAssetName = value[value.length - 1];
 						  }
 						if(item.type === 'apigateway'){
-					     this.selectedAssetName = this.selectedAssetName.split('/').splice(2,4).join('/');
+					     this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 5).join('/');
 						}
 						this.lambdaResourceNameArr.push(this.selectedAssetName);
 						this.lambdaResourceNameArr.map((item,index)=>{
@@ -702,7 +702,10 @@ export class EnvLogsSectionComponent implements OnInit {
 				this.assetSelected=event.value;
 				if (this.assetSelected !== 'all') {
 					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
-					var inputValue = (<HTMLInputElement>document.getElementById('Allidentifier')).checked = true;
+					var value = (<HTMLInputElement>document.getElementById('Allidentifier'))
+					if(value != null) {
+						var inputValue = value.checked = true;
+					}
 					delete this.payload['asset_identifier']
 				}
 				else {

@@ -168,7 +168,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           this.selectedAssetName = value[value.length - 1];
         }
         if(item.type==='apigateway'){
-          this.selectedAssetName = this.selectedAssetName.split('/').slice(2,4).join('/');
+          this.selectedAssetName = this.selectedAssetName.split('/').slice(2,5).join('/');
         }
         if(this.selectedAssetName.startsWith("table/")){
          this.selectedAssetName = this.selectedAssetName.replace('table/','');
@@ -379,6 +379,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       }
       if (changedFilter.label === 'ASSET NAME') {
         let lambda = changedFilter.selected;
+        this.slsLambdaselected = changedFilter.selected;
           this.formFields.map((item,index)=>{
             if(item.label === "ASSET NAME"){
               this.formFields.splice(index,1);
@@ -392,10 +393,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           this.setAssetName(this.assetsNameArray,this.assetSelected);
       }     
     }
-    if( changedFilter && (changedFilter.label === 'ASSET IDENTIFIER')){
-      this.slsLambdaselected = changedFilter.selected;
-      this.setAsset();
-    }
+  
     if (changedFilter && (changedFilter.label === 'ASSET' ||
       changedFilter.label === 'METHOD' ||
       changedFilter.label === 'PATH' || changedFilter.label === 'ASSET NAME')) {
@@ -435,6 +433,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       })
       .catch((error) => {
         this.sectionStatus = 'error';
+        this.metricsLoaded = true;
         // comment following 2 lines if there are any issues?
         this.errorData['response'] = error;
         this.errMessage = this.toastmessage.errorMessage(error, "metricsResponse");
@@ -494,11 +493,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         break;
       case 'sls-app':
         if(this.queryDataRaw){
-          for(let asset of this.queryDataRaw.assets){
-            if(asset.asset_name.FunctionName.includes(this.slsLambdaselected)){
-              this.selectedAsset = asset;
-            }
-          }
           this.selectedAsset = this.queryDataRaw.assets[0];
 
         }
