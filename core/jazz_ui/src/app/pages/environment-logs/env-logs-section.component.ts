@@ -238,6 +238,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		if (this.service.serviceType === "sls-app") {
 			let assetObj = [];
 			this.lambdaResourceNameArr = [];
+			this.allAssetsNameArray = [];
 			val.map((item) => {
 				assetObj.push({ type: item.asset_type, name: item.provider_id, env: item.environment });
 			})
