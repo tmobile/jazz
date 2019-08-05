@@ -15,7 +15,7 @@ import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import { ServicesListComponent } from "../../../pages/services-list/services-list.component";
 import { environment as env_oss } from './../../../../environments/environment.oss';
-import { environment } from "../../../../environments/environment";
+import { environment } from "../../../../environments/environment.oss";
 import { nodejsTemplate } from "../../../../config/templates/nodejs-yaml";
 import { javaTemplate } from "../../../../config/templates/java-yaml";
 import { goTemplate } from "../../../../config/templates/go-yaml";

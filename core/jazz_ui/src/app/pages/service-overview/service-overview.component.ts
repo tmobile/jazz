@@ -12,7 +12,7 @@ import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
 import { Subscription } from 'rxjs/Subscription';
 import { ServiceDetailComponent } from '../service-detail/service-detail.component'
-import { environment } from './../../../environments/environment';
+import { environment } from './../../../environments/environment.oss';
 import { environment as env_internal } from './../../../environments/environment.internal';
 import { environment as env_oss } from './../../../environments/environment.oss';
 import { ServiceFormData, RateExpression, CronObject, EventExpression } from './../../secondary-components/create-service/service-form-data';
@@ -129,6 +129,7 @@ export class ServiceOverviewComponent implements OnInit {
   createloader: boolean = true;
   showbar: boolean = false;
   friendly_name: any;
+  azureService: boolean = false;
   list: any = {};
   publicSelected: boolean = this.service.is_public_endpoint;
   publicInitial: boolean = this.service.is_public_endpoint;
@@ -1150,7 +1151,9 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   refresh_env() {
-    this.envComponent.refresh();
+    if(this.envComponent !== undefined){
+      this.envComponent.refresh();
+    }
   }
 
 
