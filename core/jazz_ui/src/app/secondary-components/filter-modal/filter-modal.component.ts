@@ -94,7 +94,6 @@ export class FilterModalComponent implements OnInit {
       if (columns.length > 2) {
         this.multiColumns = true;
       }
-      this.reOrderFilterColumns();
     }
 
 

@@ -183,6 +183,7 @@ export class ServiceLogsComponent implements OnInit {
 	limitValue: number = 20;
 	offsetValue: number = 0;
 	lambdaResourceNameArr;
+	selectedEnv: any;
 	lambdaResource;
 	responseArray: any = [];
 
@@ -220,7 +221,6 @@ export class ServiceLogsComponent implements OnInit {
 			comp.onFilterSelect(event);
 		});
 		this.instance_yes.onAssetSelect.subscribe(event => {
-
 			comp.onAssetSelect(event);
 			if(this.service.serviceType == 'sls-app' && event !== 'all'){
 				this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
@@ -229,8 +229,20 @@ export class ServiceLogsComponent implements OnInit {
 			}
 		});
 		this.instance_yes.onResourceSelect.subscribe(event => {
-
 			comp.onResourceSelect(event);
+		});
+		this.instance_yes.onEnvSelected.subscribe(event => {
+			comp.onEnvSelected(event);
+			this.service['assetSelectedValue'] = this.assetSelected;
+			if(this.assetSelected === 'all') {
+			this.service['allAssetsNameArray'] = this.allAssetsNameArray;
+			this.advanced_filter_input.sls_resource.show = true;
+			}
+			else {
+				this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
+				this.advanced_filter_input.sls_resource.show = true;
+			}
+			(<AdvancedFiltersComponent>componentRef.instance).data = { "service": this.service, "advanced_filter_input": this.advanced_filter_input };
 		});
 		this.instance_yes.onFilterClick.subscribe(event => {
 			this.filterSelectedValue = event
@@ -272,16 +284,22 @@ export class ServiceLogsComponent implements OnInit {
 	setAssetName(val, selected) {
 		if (this.service.serviceType === "sls-app") {
 			let assetObj = [];
+			this.allAssetsNameArray = []
 			this.lambdaResourceNameArr = [];
 			val.map((item) => {
-				assetObj.push({ type: item.asset_type, name: item.provider_id });
+				assetObj.push({ type: item.asset_type, name: item.provider_id, env: item.environment });
 			})
 			if (selected === 'all') {
 				assetObj.map((item) => {
+					if(item.env === this.selectedEnv) {
 					let tokens = item.name.split(':');
 					this.selectedAssetName = tokens[tokens.length - 1];
+					if(item.type === 'lambda') {
+						let value = this.selectedAssetName.split('-');
+						this.selectedAssetName = value[value.length - 1];
+					  }
 					if(item.type === 'apigateway'){
-						this.selectedAssetName = this.selectedAssetName.split('/').splice(2,4).join('/');						
+						this.selectedAssetName = this.selectedAssetName.split('/').splice(2,5).join('/');						
 					}
 					this.allAssetsNameArray.push(this.selectedAssetName);
 					this.allAssetsNameArray.map((item,index)=>{
@@ -290,15 +308,21 @@ export class ServiceLogsComponent implements OnInit {
 						}
 					})
 					this.allAssetsNameArray.splice(0,0,'All')
-				})
+				}
+			})
 			}
 			else {
+				this.lambdaResourceNameArr = [];
 				assetObj.map((item) => {
-					if (item.type === selected) {
+					if (item.type === selected && item.env === this.selectedEnv) {
 						let tokens = item.name.split(':');
 						this.selectedAssetName = tokens[tokens.length - 1];
+						if(item.type === 'lambda') {
+							let value = this.selectedAssetName.split('-');
+							this.selectedAssetName = value[value.length - 1];
+						  }
 						if(item.type === 'apigateway'){
-							this.selectedAssetName = this.selectedAssetName.split('/').splice(2,4).join('/');						
+							this.selectedAssetName = this.selectedAssetName.split('/').splice(2,5).join('/');						
 						}
 						this.lambdaResourceNameArr.push(this.selectedAssetName);
 						this.lambdaResourceNameArr.map((item,index)=>{
@@ -340,7 +364,6 @@ export class ServiceLogsComponent implements OnInit {
 					self.assetSelected = validAssetList[0].replace(/_/g, " ");
 				}
 				self.assetSelected = validAssetList[0].replace(/_/g, " ");
-				self.callLogsFunc();
 				self.setAssetName(self.responseArray,self.assetSelected);
 				self.getFilter(self.advancedFilters);
 			}
@@ -362,6 +385,8 @@ export class ServiceLogsComponent implements OnInit {
 		var index = fName.indexOf(envt);
 		var env = env_list.env[index];
 		this.environment = envt;
+		this.selectedEnv = envt;
+		this.setAssetName(this.responseArray,this.assetSelected)
 		this.payload.environment = env;
 		this.resetPayload();
 	}
@@ -407,7 +432,10 @@ export class ServiceLogsComponent implements OnInit {
 				this.assetSelected = event.value;
 				if (this.assetSelected !== 'all') {
 					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
-					var inputValue = (<HTMLInputElement>document.getElementById('Allidentifier')).checked = true;
+					var value = (<HTMLInputElement>document.getElementById('Allidentifier'))
+					if(value != null) {
+						var inputValue = value.checked = true;
+					}
 					delete this.payload['asset_identifier']
 				}
 				else {
@@ -421,7 +449,7 @@ export class ServiceLogsComponent implements OnInit {
 				if(this.service.serviceType == 'sls-app'){
 					this.resourceSelected = event.value;
 					this.payload.asset_identifier = this.resourceSelected;
-					if(this.resourceSelected === 'All'){
+					if(this.resourceSelected.toLowerCase() === 'all'){
 						delete this.payload['asset_identifier'];
 					}
 					this.resetPayload();
@@ -483,7 +511,7 @@ export class ServiceLogsComponent implements OnInit {
 				break;
 			}
 			case 'env': {
-				this.instance_yes.onEnvSelected('prod');
+				this.instance_yes.onEnvSelect('prod');
 
 				break;
 			}
@@ -508,7 +536,7 @@ export class ServiceLogsComponent implements OnInit {
 				this.instance_yes.onStatisticSelected('Average');
 				this.instance_yes.onaccSelected('Acc 1');
 				this.instance_yes.onregSelected('reg 1');
-				this.instance_yes.onEnvSelected('prod');
+				this.instance_yes.onEnvSelect('prod');
 				this.instance_yes.onMethodListSelected('POST');
 				this.instance_yes.getAssetType('all');
 				this.instance_yes.getResourceType('all');
@@ -844,7 +872,7 @@ export class ServiceLogsComponent implements OnInit {
 			"end_time": (new Date().toISOString()).toString(),
 			"start_time": new Date(todayDate.setDate(todayDate.getDate() - this.sliderFrom)).toISOString()
 		}
+		this.selectedEnv = this.environment;
 		this.callLogsFunc();
-
 	}
 }

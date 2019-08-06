@@ -21,6 +21,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   @Input() assets: boolean = false;
   @Input() service: any = {};
   @Output() onFilterSelect: EventEmitter<any> = new EventEmitter<any>();
+  @Output() onEnvSelected: EventEmitter<any> = new EventEmitter<any>();
   @Output() onAssetSelect: EventEmitter<any> = new EventEmitter<any>();
   @Output() onResourceSelect: EventEmitter<any> = new EventEmitter<any>();
   @ViewChild('filters') filters;
@@ -33,6 +34,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
 
   slider: any;
   sliderFrom = 1;
+  assetSelectedValue: any;
   sliderPercentFrom = 0;
   sliderMax: number = 7;
   showAsset: boolean = false;
@@ -147,24 +149,28 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     if(event !== 'all'){
       this.isAllSelected = false;
       this.lambdaResourceNameArr = this.service.lambdaResourceNameArr;
-      if(this.lambdaResourceNameArr){
+      if(this.lambdaResourceNameArr.length !== 0){
         this.resourceSelected = this.lambdaResourceNameArr[0];
+        this.advanced_filter_input.sls_resource.show = true;
+      }
+      else {
+        this.advanced_filter_input.sls_resource.show = false;
       }
     }
     if(event == "all"){
        this.isAllSelected = true;
-        this.advanced_filter_input.sls_resource.show = true;
         this.allAssetsNameArray = this.service.allAssetsNameArray;
-      if (this.allAssetsNameArray) {
+      if (this.allAssetsNameArray.length !== 0) {
         this.resourceSelected = this.allAssetsNameArray[0];
+        this.advanced_filter_input.sls_resource.show = true;
+      }
+      else {
+        this.advanced_filter_input.sls_resource.show = false;
       }
         this.onResourceSelect.emit("all");
         this.selectFilter["key"] = 'resource';
         this.selectFilter["value"] = "all";
         this.onFilterSelect.emit(this.selectFilter);
-    }
-    else{
-      this.advanced_filter_input.sls_resource.show = true;
     }
   }
 
@@ -175,12 +181,35 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     this.onResourceSelect.emit(event);
     this.onFilterSelect.emit(this.selectFilter);
   }
-  onEnvSelected(envt) {
+  onEnvSelect(envt) {
     this.envSelected = envt;
     this.selectFilter["key"] = 'environment';
     this.selectFilter["value"] = envt;
+    this.onEnvSelected.emit(envt);
     this.onFilterSelect.emit(this.selectFilter);
-
+    if(this.service.assetSelectedValue === 'all') {
+        this.isAllSelected = true;
+        this.allAssetsNameArray = this.service.allAssetsNameArray;
+      if (this.allAssetsNameArray.length !== 0) {
+        this.resourceSelected = this.allAssetsNameArray[0];
+        this.advanced_filter_input.sls_resource.show = true;
+      }
+      else {
+        this.advanced_filter_input.sls_resource.show = false;
+      }
+    }
+    else {
+      this.isAllSelected = false;
+      this.lambdaResourceNameArr = this.service.lambdaResourceNameArr;
+      if(this.lambdaResourceNameArr.length !== 0){
+        this.resourceSelected = this.lambdaResourceNameArr[0];
+        this.advanced_filter_input.sls_resource.show = true;
+      }
+      else {
+        this.advanced_filter_input.sls_resource.show = false;
+      }
+    }
+    
   }
 
   onStatisticSelected(statistics) {
@@ -237,10 +266,13 @@ export class AdvancedFiltersComponentOSS implements OnInit {
       this.isAllSelected = true;
       this.isSlsapp = true;
       this.allAssetsNameArray = this.service.allAssetsNameArray;
-      if (this.allAssetsNameArray) {
+      if (this.allAssetsNameArray.length !== 0) {
         this.resourceSelected = this.allAssetsNameArray[0];
+        this.advanced_filter_input.sls_resource.show = true;
       }
-      this.advanced_filter_input.sls_resource.show = true;
+      else {
+        this.advanced_filter_input.sls_resource.show = false;
+      }
     }
     if (this.service.logsData) {
       this.envList.push(this.service.logsData);

@@ -150,6 +150,7 @@ export class EnvLogsSectionComponent implements OnInit {
 	errorRequest: any = {};
 	errorResponse: any = {};
 	errorUser: any;
+	selectedEnv: any;
 	errorChecked: boolean = true;
 	errorInclude: any = "";
 	json: any = {};
@@ -237,15 +238,21 @@ export class EnvLogsSectionComponent implements OnInit {
 		if (this.service.serviceType === "sls-app") {
 			let assetObj = [];
 			this.lambdaResourceNameArr = [];
+			this.allAssetsNameArray = [];
 			val.map((item) => {
-				assetObj.push({ type: item.asset_type, name: item.provider_id });
+				assetObj.push({ type: item.asset_type, name: item.provider_id, env: item.environment });
 			})
 			if (selected === 'all') {
 				assetObj.map((item) => {
+					if(item.env === this.selectedEnv) {
 					let tokens = item.name.split(':');
 					this.selectedAssetName = tokens[tokens.length - 1];
+					if(item.type === 'lambda') {
+						let value = this.selectedAssetName.split('-');
+						this.selectedAssetName = value[value.length - 1];
+					  }
 					if (item.type === 'apigateway') {
-						this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 4).join('/');
+						this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 5).join('/');
 					}
 					this.allAssetsNameArray.push(this.selectedAssetName);
 					this.allAssetsNameArray.map((item,index)=>{
@@ -254,15 +261,19 @@ export class EnvLogsSectionComponent implements OnInit {
 						}
 					})
 					this.allAssetsNameArray.splice(0,0,'All')
-				})
+				}})
 			}
 			else {
 				assetObj.map((item) => {
-					if (item.type === selected) {
+					if (item.type === selected && item.env === this.selectedEnv) {
 						let tokens = item.name.split(':');
 						this.selectedAssetName = tokens[tokens.length - 1];
+						if(item.type === 'lambda') {
+							let value = this.selectedAssetName.split('-');
+							this.selectedAssetName = value[value.length - 1];
+						  }
 						if(item.type === 'apigateway'){
-					     this.selectedAssetName = this.selectedAssetName.split('/').splice(2,4).join('/');
+					     this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 5).join('/');
 						}
 						this.lambdaResourceNameArr.push(this.selectedAssetName);
 						this.lambdaResourceNameArr.map((item,index)=>{
@@ -524,7 +535,6 @@ export class EnvLogsSectionComponent implements OnInit {
 			 if (!data) {
 				 self.assetSelected = validAssetList[0].replace(/_/g, " ");
 			 }
-			self.callLogsFunc();
 			self.setAssetName(self.responseArray ,self.assetSelected);
 			self.getFilter(self.advancedFilters);
 			self.instance_yes.showAsset = true;
@@ -693,7 +703,10 @@ export class EnvLogsSectionComponent implements OnInit {
 				this.assetSelected=event.value;
 				if (this.assetSelected !== 'all') {
 					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
-					var inputValue = (<HTMLInputElement>document.getElementById('Allidentifier')).checked = true;
+					var value = (<HTMLInputElement>document.getElementById('Allidentifier'))
+					if(value != null) {
+						var inputValue = value.checked = true;
+					}
 					delete this.payload['asset_identifier']
 				}
 				else {
@@ -706,7 +719,7 @@ export class EnvLogsSectionComponent implements OnInit {
 			if(this.service.serviceType == 'sls-app'){
 				this.resourceSelected = event.value;
 				this.payload.asset_identifier = this.resourceSelected;
-				if(this.resourceSelected === 'All'){
+				if(this.resourceSelected.toLowerCase() === 'all'){
 					delete this.payload['asset_identifier'];
 				}
 					this.resetPayload();
@@ -749,6 +762,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		if( this.assetSelected !== 'all') {
 			this.payload["asset_type"] = this.assetSelected;
 		}
+		this.selectedEnv = this.env;
 		this.callLogsFunc();
 		this.filter = new Filter(this.logs);
 		this.sort = new Sort(this.logs);
