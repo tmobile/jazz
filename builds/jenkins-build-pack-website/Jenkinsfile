@@ -33,6 +33,7 @@ import groovy.transform.Field
 @Field def service_config
 
 node()  {
+  try {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
 
@@ -292,6 +293,11 @@ node()  {
 			}
 		}
 	}
+	} catch (err) {
+   throw err
+  } finally {
+   deleteDir()
+  }
 }
 
 def generateAssetUrl(){

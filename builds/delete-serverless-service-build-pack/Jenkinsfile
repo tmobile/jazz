@@ -41,6 +41,7 @@ import groovy.json.JsonSlurperClassic
 @Field def accountInfo;
 
 node {
+  try {
 	echo "Starting delete service job with params : $params"
 
 	jazzBuildModuleURL = getBuildModuleUrl()
@@ -329,6 +330,11 @@ node {
 			events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
 		}
 	}
+  } catch (err) {
+   throw err
+  } finally {
+   deleteDir()
+  }
 }
 
 def deletePolicies(serviceId, authToken, aclUrl) {
