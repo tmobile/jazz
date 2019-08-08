@@ -62,6 +62,7 @@ import {ServiceMetricsComponent} from "../pages/service-metrics/service-metrics.
 import {MetricsCarouselComponent} from "../secondary-components/metrics-carousel/metrics-carousel.component";
 import {RouterModule} from "@angular/router";
 import { Error403Component } from "../pages/error403/error403.component";
+import {AzureOverviewComponent} from "../pages/azure-overview/azure-overview.component"
 import {RadioCheckboxComponent} from "../primary-components/radio-checkbox/radio-checkbox.component";
 
 let specificComponents:any
@@ -135,6 +136,7 @@ for (let i in specificComponents) {
     ChartjsLinegraphComponent,
     FilterModalComponent,
     ServiceMetricsComponent,
+    AzureOverviewComponent,
     RadioGroupComponent,
     CheckboxGroupComponent,
     CheckboxGroupRegionComponent,
@@ -189,6 +191,7 @@ for (let i in specificComponents) {
     ChartjsLinegraphComponent,
     FilterModalComponent,
     ServiceMetricsComponent,
+    AzureOverviewComponent,
     Error403Component,
     RadioCheckboxComponent,
     ...declarationsArray

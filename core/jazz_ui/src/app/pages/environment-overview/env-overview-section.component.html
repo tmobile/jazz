@@ -28,7 +28,7 @@
 		</div>
 	</div>
 </div>
-<div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined && !isLoading && !envResponseError' >
+<div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined && !isLoading && !envResponseError && !azureService' >
 	<ul class=" col-md-12 col-sm-12">
 		<li class='det-wrp'>
 			<!-- *ngIf='service.endpoints.dev != undefined' -->
@@ -54,7 +54,7 @@
 </div>
 
 
-<div class="service-details row env-details relative">
+<div class="service-details row env-details relative  bottom-10'" *ngIf="!azureService">
 	<div *ngIf='envResponseTrue'>
 		<div   class='edit-service-overview-btn'>
 			<!-- <btn-jazz-secondary class='btn-edit-overview' *ngIf='showCancel'  text='CANCEL' (click)='onCancelClick()' ></btn-jazz-secondary> -->
@@ -367,3 +367,4 @@
 		</div>
 	</div>
 </div>
+<azure-overview *ngIf="azureService" [service]="service"></azure-overview>

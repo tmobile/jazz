@@ -36,6 +36,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   tempFriendlyName:string;
   friendlyName : string;
   lastCommitted: any;
+  azureService: boolean = false;
   editBtn:boolean = true;
   saveBtn:boolean = false;
   showCancel:boolean = false;
