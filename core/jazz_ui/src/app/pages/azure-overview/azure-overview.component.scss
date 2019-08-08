@@ -1,0 +1,130 @@
+@import './../../secondary-components/create-service/create-service.component.scss';
+@import './../../../main-styles.scss';
+@import './../service-overview/service-overview.component.scss';
+.list {
+    width: 31%;
+    margin: 0px 10px;
+}
+.det-label {
+    width: 11rem;
+    flex-shrink: 0;
+    font-size: 13px;
+    font-weight: bold;
+    color: #000000;
+    text-transform: capitalize;
+}
+.det-value {
+    color: #000000;
+}
+.service-detail {
+box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+}
+.block-column {
+    color: white;
+}
+.metadata-heading {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 1.4rem;
+    font-weight: bold;
+    padding: 7px;
+    background-color: #AEB2BB;
+    color: #ffffff;
+}
+.general-block {
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11); 
+}
+.metadata-row-body {
+    display: flex;
+    justify-content: space-between;
+    .metadata-column-body {
+        width: 33%;
+        background: white;
+    }
+    li {
+        display: flex;
+        margin: 1rem;
+    }
+}
+.list-dropdown {
+    margin-bottom: 5px;
+}
+.secret-list-dropdown {
+    padding: 0px 10px 10px 10px;
+    margin: 5px;
+}
+.popupcopy .tooltip-content {
+    visibility: hidden;
+    width: 185px;
+    background-color: #D5D7D9;
+    color: #4a4a4a;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 150%;
+    right: -36%;
+    font-size: 12px;
+  }
+  .popupcopy .tooltip-content::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: 56px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #D5D7D9 transparent transparent transparent;
+}
+.popupcopy:hover .tooltip-content{
+    visibility: visible;
+    -webkit-animation: fadeIn 2s;
+    animation: fadeIn 2s;
+}
+.endpoint-url{
+    color:#000000 !important;
+    flex: 1;
+    margin-top: 4px;
+    width: auto !important;
+    img{
+        width:25px;
+        height:25px;
+        // background-color: #ed008c;
+        border-radius: 50%;
+        padding:3px;
+        cursor: pointer;
+        margin:0 5px;
+        transform: rotate(-45deg);
+    }
+}
+.copylink{
+    opacity: 0;
+    position: absolute;
+    z-index: -100000;
+}
+.secret-list-item {
+    padding: 0px 10px 10px 10px;
+    margin: 5px;
+}
+.block-element {
+    height: 30%;
+    margin-bottom: 10px;
+    background-color: #ffffff;
+}
+.last-block {
+    height: 34.5%;
+    background-color: #ffffff
+}
+.secret-column {
+    background-color: #ffffff;
+    width: 33%;
+}
+.popupcopy {
+    display: flex;
+    justify-content: space-between;
+} 
+.main-div {
+    margin-bottom: 20px;
+}

@@ -137,6 +137,7 @@ export class ServiceOverviewComponent implements OnInit {
   saveClicked: boolean = false;
   advancedSaveClicked: boolean = false;
   isSlackAvailable: boolean = true;
+  azureService: boolean = false;
   isPUTLoading: boolean = false;
   PutPayload: any;
   isPayloadAvailable: boolean = false;
@@ -1150,7 +1151,9 @@ export class ServiceOverviewComponent implements OnInit {
   }
 
   refresh_env() {
-    this.envComponent.refresh();
+    if(this.envComponent !== undefined){
+      this.envComponent.refresh();
+    }
   }
 
 

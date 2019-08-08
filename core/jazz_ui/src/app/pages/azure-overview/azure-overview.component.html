@@ -1,0 +1,221 @@
+<section class="main-div relative">
+    <div>
+      <div>
+        <div class="metadata-row-body relative">
+          <div class="metadata-column-body general-block block-column">
+            <div class="metadata-heading" [ngClass]="showGeneralField ? 'update-color' : ''">
+              <div>General</div>
+              <div class="edit-div" *ngIf="!showGeneralField"  (click)="onGeneralEditClick()">
+                <img class="pre-image" src="/assets/erser/icon-edit.svg"/>
+              </div>
+              <div *ngIf="showGeneralField" class="down-btn-wrap">
+                <div class="custom-save-btn-wrap">
+                <div [ngClass]="generalAdvanceDisable ? 'disableBTN' : ''">
+                  <btn-jazz-primary class="save-btn-wrap" [ngClass]="generalAdvanceDisable ? 'disabledPrimary' : '' " [disablePrimaryBtn]="generalAdvanceDisable"
+                    text="SAVE"></btn-jazz-primary>
+                  </div>
+                  <a (click)="onGeneralCancelClick()">CANCEL</a>
+                </div>
+              </div>
+            </div>
+            <ul>
+              <li>
+                <div class="det-label">Namespace</div>
+                <div class="det-value">Active
+
+                </div>
+              </li>
+              <li>
+                <div class="det-label">Platform</div>
+                <div class="det-value">Azure</div>
+              </li>
+              <li>
+                <div class="det-label">
+                    Service
+                </div>
+                <div  class="det-value" >
+                  t.mo
+                </div>
+              </li>
+              <li>
+                <div class="det-label">Runtime</div>
+                <div class="det-value" >API</div>
+              </li>
+              <li>
+                <div class="det-label">Deployment</div>
+                <div class="det-value" >Python</div>
+              </li>
+              <li>
+                <div class="det-label">Description</div>
+                <div class="det-value wrap">Azure Service     
+                </div>
+                <!-- <textarea *ngIf="showGeneralField" [(ngModel)]="desc_temp" (ngModelChange)="onTextAreaChange(desc_temp)"
+                  class="det-value-input-txtarea" placeholder="Provide a description of your service."></textarea> -->
+              </li>
+              <li>
+                <div class="det-label">serviceType</div>
+                <div class="det-value">
+                    Python
+                </div>
+              </li>
+              <p class="limitWrapper" [class.hide]="hide_slack_error"  *ngIf="isCancelClicked">
+                Slack channel is not available. Please provide a valid slack channel.
+              </p>
+              <li>
+                <div class="det-label">CreatedBy</div>
+                <div class="det-value">Python</div>
+              </li>
+              <li>
+                <div class="det-label">Status</div>
+                <div class="det-value">Python</div>
+              </li>
+            </ul>
+          </div>
+          <div class="list">
+            <div class="metadata general-block block-element block-column">
+              <div class="metadata-heading" [ngClass]="!editSecurity ? 'update-color' : ''">
+                <div>Security</div>
+                <div class="edit-div" *ngIf="editSecurity" (click)="onEditSecurityClick()">
+                  <img class="pre-image" src="/assets/erser/icon-edit.svg" />
+                </div>
+                <div class="down-btn-wrap" *ngIf="!editSecurity">
+                  <div class="custom-save-btn-wrap">
+                  <div>
+                    <btn-jazz-primary class="save-btn-wrap"
+                      text="SAVE" ></btn-jazz-primary>
+                    </div>
+                    <a (click)="onCancelSecurityClick()">CANCEL</a>
+                  </div>
+                </div>
+              </div>
+              <ul class="toggled-ul">
+                <li>
+                  <div class="det-label">
+                    Status
+                  </div>
+                  <div  class="det-value">
+                    Active
+                  </div>
+                </li>
+                <li>
+                  <div class="det-label">Domain</div>
+                  <div  class="det-value">
+                    t.mo
+                  </div>
+                </li>
+              </ul>
+            </div>
+            <div class="metadata general-block block-element block-column">
+                <div class="metadata-heading" [ngClass]="!editApproval ? 'update-color' : ''">
+                  <div>Approvals</div>
+                  <div class="edit-div" *ngIf="editApproval" (click)="onEditApprovalsClick()">
+                    <img class="pre-image" src="/assets/erser/icon-edit.svg" />
+                  </div>
+                  <div class="down-btn-wrap" *ngIf="!editApproval">
+                    <div class="custom-save-btn-wrap">
+                    <div>
+                      <btn-jazz-primary class="save-btn-wrap"
+                        text="SAVE" ></btn-jazz-primary>
+                      </div>
+                      <a (click)="onCancelApprovalsClick()">CANCEL</a>
+                    </div>
+                  </div>
+                </div>
+                <ul class="toggled-ul">
+                  <li>
+                    <div class="det-label">
+                      Status
+                    </div>
+                    <div  class="det-value">
+                      Active
+                    </div>
+                  </li>
+                  <li>
+                    <div class="det-label">Domain</div>
+                    <div  class="det-value">
+                      t.mo
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div class="metadata general-block last-block block-column">
+                <div class="metadata-heading">
+                  <div>Platform</div>
+                </div>
+                <ul class="toggled-ul">
+                  <li>
+                    <div class="det-label">
+                      Provider
+                    </div>
+                    <div  class="det-value">
+                      Azure
+                    </div>
+                  </li>
+                  <li>
+                    <div class="det-label">Subscription ID</div>
+                    <div  class="det-value">
+                      ABC102-21
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <div class="metadata-column general-block secret-column">
+                <div class="metadata-heading">
+                   <div>Secret</div>
+                 </div>
+                 <div class="secret-list-dropdown">
+                   <div class="list-dropdown">
+                   <span class="det-label">Link New Secret</span>
+                   <select>
+                    <option value="" disabled selected>Choose from list</option>
+                </select>
+              </div>
+                <span class="det-label">Linked Secrets</span>
+                 </div>
+                 <div *ngFor="let secret of secretList" class="secret-list-item">
+                    <div class='det-value endpoint-url align-slf'>
+                        <div class="popupcopy"  (click)='copyClipboard(secret.value)'>
+                            <div>
+                                {{secret.value}}
+                            </div>
+                            <div class='relative'>
+                                <img src="./../../../assets/images/icons/icon-link.png"/>
+                                <div class="tooltip-content" >
+                                    <span id="copyPopup">{{copylinkmsg}}</span>
+                                </div>
+                            </div>
+                        </div>
+                        <textarea id="{{secret.value}}" class="copylink">{{secret.value}}</textarea>
+                    </div>
+                 </div>
+             </div>
+          </div>         
+        </div>
+      </div>
+
+    <!-- TODO: Move to separate component -->
+    <div
+      class="confirm-overlay"
+      (click)="cancelAdvanceSave();"
+      *ngIf="saveClicked || advancedSaveClicked"
+    >
+      <div class="confirm-overlay-inner-wrap" (click)="$event.stopPropagation();">
+        <a class="icon-icon-close" (click)="outSidePopup()"></a>
+        <div class="overlay-header">Submitting Changes</div>
+        <div class='overlay-body'>
+          <div *ngIf="!isPUTLoading" class="overlay-text">Are you sure you want to make this edit?</div>
+          <div *ngIf="isPUTLoading" class="loading-row-confirm show" [class.show]="isPUTLoading">
+              <div class="loading-circle"></div>
+          </div>
+        </div>
+        <div class="overlay-btns" *ngIf="!isPUTLoading">
+          <btn-jazz-primary text="CONFIRM" [disablePrimaryBtn]="!isPayloadAvailable" (click)="onCompleteClick()"></btn-jazz-primary>
+        </div>
+      </div>
+    </div>
+    <!-- End TODO -->
+    <div class="loading-row-edit" [class.show]="isLoadingService">
+      <div class="loading-circle"></div>
+    </div>
+  </section>
