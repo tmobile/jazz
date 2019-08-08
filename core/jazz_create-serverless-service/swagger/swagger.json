@@ -319,9 +319,13 @@
         },
         "require_internal_access": {
           "type": "boolean",
-          "description": "Does service require access to internal SLF network and resources"
+          "description": "Does service require access to internal SLF network and resources?"
         },
-        "deployment-descriptor": {
+        "is_function_template": {
+          "type": "boolean",
+          "description": "Does the deployment descriptor come from the function template?"
+        },
+        "deployment_descriptor": {
           "type": "string",
           "description": "Deployment descriptor using serverless.yml format (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)"
         },
