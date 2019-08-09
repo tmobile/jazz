@@ -36,6 +36,7 @@ export class ServiceOverviewComponent implements OnInit {
 
   flag: boolean = false;
   @Input() service: any = {};
+  @Input() azureService;
   @Input() isLoadingService: boolean = false;
   @Input() isAdminAccess:boolean = false;
   private subscription: any;
@@ -137,7 +138,6 @@ export class ServiceOverviewComponent implements OnInit {
   saveClicked: boolean = false;
   advancedSaveClicked: boolean = false;
   isSlackAvailable: boolean = true;
-  azureService: boolean = false;
   isPUTLoading: boolean = false;
   PutPayload: any;
   isPayloadAvailable: boolean = false;
@@ -1094,7 +1094,6 @@ export class ServiceOverviewComponent implements OnInit {
         this.multiENV = false;
     if (environment.multi_env) this.is_multi_env = true;
     if (environment.envName == 'oss') this.internal_build = false;
-
     this.service.accounts = env_internal.urls.accounts;
     this.service.regions = env_internal.urls.regions;
     this.createloader = true;

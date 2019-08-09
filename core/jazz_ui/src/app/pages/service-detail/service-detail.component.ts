@@ -52,6 +52,7 @@ export class ServiceDetailComponent implements OnInit {
   deleteServiceVal: boolean;
   id: string;
   errMessage: string = '';
+  isAzureService: boolean = false;
   isLoadingService: boolean = false;
   isLoading: boolean = false;
   selectedTab = 0;
@@ -232,6 +233,12 @@ export class ServiceDetailComponent implements OnInit {
     this.isLoadingService = true;
     this.http.get('/jazz/services/' + id, null, id).subscribe(response => {
       let service = response.data;
+      if(service.platform === 'azure'){
+        this.isAzureService = true;
+      }
+      else {
+        this.isAzureService = false;
+      }
       this.cache.set(id, service);
       this.onDataFetched(service);
       this.isGraphLoading = false;

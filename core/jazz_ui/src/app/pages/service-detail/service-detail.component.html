@@ -20,7 +20,7 @@
 
         <div *ngIf='!err_flag'>
             <section class="page-content" *ngIf="selectedTab == 0">
-                <service-overview #selectedTabComponent (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isAdminAccess]= "isAdminAccess" [isLoadingService]="isLoadingService"></service-overview>
+                <service-overview #selectedTabComponent (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isAdminAccess]= "isAdminAccess" [isLoadingService]="isLoadingService" [azureService]="isAzureService"></service-overview>
             </section>
             <section class="page-content" *ngIf="selectedTab == 1">
                 <service-access-control #selectedTabComponent [service]="service" (updateAdminAccess)='setAdminAccess($event)' [isAdminAccess]= "isAdminAccess" ></service-access-control>

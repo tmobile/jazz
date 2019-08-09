@@ -18,6 +18,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   @Output() onload:EventEmitter<any> = new EventEmitter<any>();
   @Output() envLoad:EventEmitter<any> = new EventEmitter<any>();
   @Output() open_sidebar:EventEmitter<any> = new EventEmitter<any>();
+  @Input() azureService;
 
   accList=env_internal.urls.accounts;
 	regList=env_internal.urls.regions;
@@ -36,7 +37,6 @@ export class EnvOverviewSectionComponent implements OnInit {
   tempFriendlyName:string;
   friendlyName : string;
   lastCommitted: any;
-  azureService: boolean = false;
   editBtn:boolean = true;
   saveBtn:boolean = false;
   showCancel:boolean = false;

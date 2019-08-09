@@ -51,7 +51,7 @@
 
 
             <section class="page-content" *ngIf="selectedTab == 0">
-                <env-overview-section #selectedTabComponent #envoverview (open_sidebar)='sidebar($event)' (frndload)='frndload($event)' (envLoad)='EnvLoad($event)' (onload)='env($event)' [service]="service" [isAdminAccess]="isAdminAccess"></env-overview-section>
+                <env-overview-section #selectedTabComponent #envoverview (open_sidebar)='sidebar($event)' (frndload)='frndload($event)' (envLoad)='EnvLoad($event)' (onload)='env($event)' [service]="service" [isAdminAccess]="isAdminAccess" [azureService]="isAzureService"></env-overview-section>
             </section>
 
 

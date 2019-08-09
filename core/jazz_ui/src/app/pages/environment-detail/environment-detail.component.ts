@@ -34,6 +34,7 @@ export class EnvironmentDetailComponent implements OnInit {
   isLoadingService: boolean = true;
   status_inactive: boolean = false;
   swagger_error: boolean = false;
+  isAzureService: boolean = false;
 
   tabData = ['overview', 'deployments', 'code quality', 'assets', 'logs'];
   envSelected: string = '';
@@ -168,6 +169,12 @@ export class EnvironmentDetailComponent implements OnInit {
         this.service.accounts = env_internal.urls.accounts;
         this.service.regions = env_internal.urls.regions;
         this.service = response.data.data;
+        if(response.data.platform === 'azure'){
+          this.isAzureService = true;
+        }
+        else {
+          this.isAzureService = false;
+        }
         if (environment.envName == 'oss') this.service = response.data;
         this.isFunction = this.service.type === "function";
         if (this.service.policies && this.service.policies.length) {
