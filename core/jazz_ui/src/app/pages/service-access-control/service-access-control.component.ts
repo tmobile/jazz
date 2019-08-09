@@ -352,7 +352,6 @@ addgroup(category){
    this.getUsersList()
    this.getAclPolicies(this.selectedServiceId);
    this.isValidData();
-
  }
 
  // restructure the response

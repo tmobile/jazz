@@ -1129,6 +1129,7 @@ details summary::-webkit-details-marker {
 }
 .secret-container {
     margin-top: 20px;
+    padding: 3px;
 }
 .popupcopy {
     display: flex;
@@ -1233,6 +1234,9 @@ details summary::-webkit-details-marker {
     opacity: 0;
     position: absolute;
     z-index: -100000;
+}
+.column-style {
+    width: 100% !important;
 }
 .secretList {
     img{

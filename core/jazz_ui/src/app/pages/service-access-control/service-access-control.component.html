@@ -312,7 +312,7 @@
       </div>
     </div>
 </div>
-<div class="access-control-wrap relative">
+<div class="access-control-wrap relative" *ngIf="service.serviceType === 'api'">
         <section class="each-step-wrap header-sec">
             <h1>Secret Management</h1>
             <btn-jazz-primary newclass="loginbutton savechangesbtn" text="EDIT" *ngIf="showSecretDisplay" (click)="onSecretEditClick()"></btn-jazz-primary>
