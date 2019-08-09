@@ -424,6 +424,7 @@ export class ServiceLogsComponent implements OnInit {
 				this.FilterTags.notifyLogs('filter-Environment', event.value);
 				this.environment = event.value;
 				this.payload.environment = event.value;
+				this.assetsModify();
 				this.resetPayload();
 				break;
 			}
@@ -470,7 +471,18 @@ export class ServiceLogsComponent implements OnInit {
 		$(".pagination.justify-content-center li:nth-child(2)")[0].click();
 		this.callLogsFunc();
 	}
-
+	assetsModify(){
+		var value = (<HTMLInputElement>document.getElementById('allasset'))
+		var resValue = (<HTMLInputElement>document.getElementById('Allidentifier'))
+		if(value != null) {
+			var inputValue = value.checked = true;
+		}
+		if(resValue != null) {
+			var input = resValue.checked = true;
+		}
+		delete this.payload['asset_identifier'];
+		delete this.payload['asset_type'];
+	}
 
 	getRangefunc(e) {
 		this.sliderFrom = e;
