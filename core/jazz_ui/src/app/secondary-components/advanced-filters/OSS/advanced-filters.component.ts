@@ -149,12 +149,14 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     if(event !== 'all'){
       this.isAllSelected = false;
       this.lambdaResourceNameArr = this.service.lambdaResourceNameArr;
+      if(this.lambdaResourceNameArr !== undefined) {
       if(this.lambdaResourceNameArr.length !== 0){
         this.resourceSelected = this.lambdaResourceNameArr[0];
         this.advanced_filter_input.sls_resource.show = true;
       }
       else {
         this.advanced_filter_input.sls_resource.show = false;
+        }
       }
     }
     if(event == "all"){
@@ -201,12 +203,14 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     else {
       this.isAllSelected = false;
       this.lambdaResourceNameArr = this.service.lambdaResourceNameArr;
+      if(this.lambdaResourceNameArr !== undefined){
       if(this.lambdaResourceNameArr.length !== 0){
         this.resourceSelected = this.lambdaResourceNameArr[0];
         this.advanced_filter_input.sls_resource.show = true;
       }
       else {
         this.advanced_filter_input.sls_resource.show = false;
+        }
       }
     }
     
