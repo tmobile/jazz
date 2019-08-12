@@ -312,3 +312,80 @@
       </div>
     </div>
 </div>
+<div class="access-control-wrap relative" *ngIf="service.serviceType === 'api'">
+        <section class="each-step-wrap header-sec">
+            <h1>Secret Management</h1>
+            <btn-jazz-primary newclass="loginbutton savechangesbtn" text="EDIT" *ngIf="showSecretDisplay" (click)="onSecretEditClick()"></btn-jazz-primary>
+            <div class="custom-save-btn-wrap" *ngIf="!showSecretDisplay">
+                <btn-jazz-primary newclass="loginbutton savechangesbtn" [disablePrimaryBtn]="!isSecret" text="SAVE" (click)='onSecretSaveClick()'></btn-jazz-primary>
+                <div class="cancel-wrapper" (click)='onSecretCancelClick()'><a>CANCEL</a></div>
+            </div>
+        </section>
+        <section class="api-access-check each-step-wrap">
+            <div class="row">
+                <div class="col-lg-4 col-md-4">
+                    <p class="step-details">Users who can access/manage the service through Jazz, typically team members
+                        with admin role.</p>
+                        <div class="role-description">
+                            <btn-jazz-primary newclass="loginbutton savechangesbtn" text="VISIT SAFE"></btn-jazz-primary>    
+                        </div>
+                </div>
+           
+            <div class="col-lg-8 col-md-8">
+                    <div class="groups-wrap" >
+                        <div class="groups-input toggle-class">
+                            <div>
+                                <p class="step-title">IAM Roles</p>
+                            </div>
+                        </div>
+                        <div class="">
+                                <div  *ngIf="!showSecretDisplay" class="group-status">
+                                    <p class="step-title">Admin</p>
+                                </div>
+                                <div  *ngIf="!showSecretDisplay" class="group-status">
+                                    <p class="step-title">Read</p>
+                                </div>
+                            </div>
+                    </div>
+            </div>
+            <div class="col-lg-8 col-md-8" *ngIf="showSecretDisplay">
+                    <div class="groups-wrap" *ngFor="let secret of secretList;let i=index">
+                        <div class="groups-input toggle-class">
+                            <div>
+                                <p class="step-title step-title-edit">{{secret.secretName}} <span class="usertype"> {{secret.secretPermission}}</span></p>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+            <div class="col-lg-8 col-md-8" *ngIf="!showSecretDisplay">
+                    <div class="groups-wrap" *ngFor="let secret of secretList;let i=index">
+                        <div class="groups-input toggle-class">
+                              <div class="input-wrapper">
+                                    <input name="secret_text_{{i}}" autocomplete="off" type="text" class="textForm" placeholder="Role" [(ngModel)]="secret.secretName" (ngModelChange)="onSecretChange(i, $event)">
+                            </div>
+                        </div>
+                        <div class="radio-button-wrapper">
+                            <div class="group-status">
+                                <div class="radio-container">
+                                    <input type="radio" id="secret_{{i}}" name="secret_{{i}}" [value]="admin" [checked]="secret.secretPermission == 'read'">
+                                    <label for="secret_{{i}}"><span><span class="background"></span></span></label>
+                                </div>
+                            </div>
+                            <div class="group-status">
+                                <div class="radio-container">
+                                    <input type="radio" type="radio" id="secret_{{i}}" name="secret_{{i}}" [value]="admin" [checked]="secret.secretPermission == 'read'">
+                                    <label><span><span class="background"></span></span></label>
+                                </div>
+                            </div>
+                        </div>
+    
+                        <div class="delete-grp">
+                            <span  class="icon-icon-close toggle-class"></span>
+                        </div>
+                    </div>
+                    <p class="add-group toggle-class"><span class="icon-icon-close"></span>Add Role</p>
+                </div>
+        </div>
+        </section>
+    
+    </div>

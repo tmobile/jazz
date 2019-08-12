@@ -1127,6 +1127,15 @@ details summary::-webkit-details-marker {
         background-color: #AEB2BB;
     }
 }
+.secret-container {
+    margin-top: 20px;
+    padding: 3px;
+}
+.popupcopy {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
 .metadata-buttons-wrap {
     position: absolute;
@@ -1161,7 +1170,105 @@ details summary::-webkit-details-marker {
         margin: 1rem;
     }
 }
-
+.popupcopy .tooltip-content {
+    visibility: hidden;
+    width: 185px;
+    background-color: #D5D7D9;
+    color: #4a4a4a;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 110%;
+    right: 7%;
+    font-size: 12px;
+  }
+  .popupcopy .tooltip-content::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 89%;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #D5D7D9 transparent transparent transparent;
+}
+.popupcopy:hover .tooltip-content{
+    visibility: visible;
+    -webkit-animation: fadeIn 2s;
+    animation: fadeIn 2s;
+}
+.secret-heading {
+    position: relative;
+}
+.secret-heading .tooltip-content {
+    visibility: hidden;
+    width: 185px;
+    background-color: #fff;
+    color: #000000;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 113%;
+    left: 15%;
+    font-size: 13px;
+  }
+  .secret-heading .tooltip-content::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #D5D7D9 transparent transparent transparent;
+}
+.secret-heading:hover .tooltip-content{
+    visibility: visible;
+    -webkit-animation: fadeIn 2s;
+    animation: fadeIn 2s;
+}
+.copyapilinkdev{
+    opacity: 0;
+    position: absolute;
+    z-index: -100000;
+}
+.column-style {
+    width: 100% !important;
+}
+.secretList {
+    img{
+        width:25px;
+        height:25px;
+        // background-color: #ed008c;
+        border-radius: 50%;
+        padding:3px;
+        cursor: pointer;
+        margin:0 5px;
+        transform: rotate(-45deg);
+    }
+}
+.btn-holder {
+    position: absolute;
+    bottom: 22px;
+    right: 22px;
+}
+.secretList {
+    margin: 5px;
+}
+.link {
+  color: #ed008c;  
+  margin: 5px;
+}
+.secret-label {
+    flex-shrink: 0;
+  font-size: 13px;
+  font-weight: bold;
+  color: #000000;
+  text-transform: capitalize;
+}
 .extra-bottom-padding {}
 
 .metadata-body-advanced {

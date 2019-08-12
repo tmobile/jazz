@@ -175,6 +175,7 @@ export class ServiceOverviewComponent implements OnInit {
   slackChannel_temp: string;
   slackChannel_link: string = '';
   edit_save: string = 'EDIT';
+  copylinkmsg = "COPY LINK TO CLIPBOARD";
   activeEnv: string = 'dev';
   Environments = [];
   environ_arr = [];
@@ -275,6 +276,30 @@ export class ServiceOverviewComponent implements OnInit {
     }
     return false;
   };
+  secretList = [
+    {
+      secretName:'emr-Gui-iamrole'
+    },
+    {
+      secretName:'emr-Gui-iamrole-Role'
+    },
+    {
+      secretName:'emr-Gui-iamrole-secretManagement'
+    }
+  ];
+  copyClipboard(copyapilinkid){
+    debugger
+    var element = null; // Should be <textarea> or <input>
+    element = document.getElementById(copyapilinkid);
+    element.select();
+    try {
+        document.execCommand("copy");
+        this.copylinkmsg = "LINK COPIED";
+    }
+    finally {
+       document.getSelection().removeAllRanges;
+    }
+  }
 
   generateExpression(rateExpression) {
     if (this.rateExpression !== undefined) {
