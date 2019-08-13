@@ -1,7 +1,7 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "2018-01-08T23:30:18Z",
+    "version": "1.0.0",
     "title": "Jazz API",
     "description": "Jazz API specification",
     "contact": {
