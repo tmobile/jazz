@@ -52,7 +52,8 @@
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
-                            <div class="icon-icon-azure"></div>
+                            <div class="icon-icon-azure" *ngIf=" typeOfPlatform != 'azure'"></div>
+                            <img *ngIf=" typeOfPlatform == 'azure'" src="./../../../../assets/images/icons/Azure.svg">
                             <p>Azure</p>
                         </div>
                     </section>
@@ -195,7 +196,7 @@
                 </div>
             </section>
 
-             <section class="each-step-wrap Internal-access">
+             <section class="each-step-wrap Internal-access" *ngIf=" typeOfPlatform != 'azure'">
               <div class="row">
                   <div class="col-lg-4 col-md-4">
                       <p class="step-title">Account &amp; Region</p>

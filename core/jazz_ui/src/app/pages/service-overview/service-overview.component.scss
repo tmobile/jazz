@@ -21,6 +21,13 @@
     height: 1.5rem;
     transform: rotate(-45deg);
 }
+.aws-icon {
+    font-size: 22px;
+}
+.azure-image {
+    width: 22px;
+    height: 22px;
+}
 
 .saving span {
     animation-name: blink;
@@ -45,6 +52,9 @@
 
 .saving span:nth-child(3) {
     animation-delay: 0.75s;
+}
+.service-platform {
+    display: flex;
 }
 
 .stage-wrp {
