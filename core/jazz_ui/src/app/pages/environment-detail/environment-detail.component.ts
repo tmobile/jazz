@@ -34,6 +34,7 @@ export class EnvironmentDetailComponent implements OnInit {
   isLoadingService: boolean = true;
   status_inactive: boolean = false;
   swagger_error: boolean = false;
+  platform:any;
 
   tabData = ['overview', 'deployments', 'code quality', 'assets', 'logs'];
   envSelected: string = '';
@@ -165,9 +166,12 @@ export class EnvironmentDetailComponent implements OnInit {
     this.isLoadingService = true;
     this.subscription = this.http.get('/jazz/services/' + id, null, this.serviceId).subscribe(
       response => {
+        console.log(response)
         this.service.accounts = env_internal.urls.accounts;
         this.service.regions = env_internal.urls.regions;
-        this.service = response.data.data;
+        this.service = response.data;
+        this.platform = response.data.platform;
+        console.log("pl",this.platform)
         if (environment.envName == 'oss') this.service = response.data;
         this.isFunction = this.service.type === "function";
         if (this.service.policies && this.service.policies.length) {
