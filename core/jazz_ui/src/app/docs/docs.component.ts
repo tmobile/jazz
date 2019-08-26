@@ -18,6 +18,10 @@ export class DocsComponent implements AfterViewInit {
 
   ngAfterViewInit() {
     Redoc.init('/assets/swagger.json', {
+      menuToggle: true,
+      nativeScrollbars: true,
+      scrollYOffset: 54,
+      hideLoading: true,
       suppressWarnings: true,
       noAutoAuth: true,
       theme: {

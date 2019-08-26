@@ -1,3 +1,5 @@
+#!/usr/bin/env sh
+
 #
 # TODO: Consider moving jq → config
 #
