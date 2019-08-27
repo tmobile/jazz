@@ -41,7 +41,6 @@ node  {
 	def accountDetailsPrimary
 	jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
-	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
 	def service_id = params.service_id
 	def admin_group = "admin_group"
@@ -60,6 +59,11 @@ node  {
 			error "Service Id is not available."
 		}
 
+		if(service_config['provider'] == 'azure'){
+			service_config['accountId'] = '102707241671'  // will remove once all configurations for azure account comes in
+		}
+
+		accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 		accountDetails = utilModule.getAccountInfo(service_config);
 
 		def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
@@ -80,7 +84,7 @@ node  {
 				switch (service_config['type']) {
 					case "api":
 						if (service_config['runtime'].startsWith("nodejs")) {
-							if(service_config['platform'] == "azure"){
+							if(service_config['provider'] == "azure"){
 							service_template = "azure-api-template-nodejs"
 							}
 							else {
@@ -97,14 +101,14 @@ node  {
 							service_template = 'api-template-go'
 						}
 						else if(service_config['runtime'].startsWith("c#")){
-							if(service_config['platform'] == "azure"){
+							if(service_config['provider'] == "azure"){
 								service_template = 'azure-api-template-csharp'
 							}
 						}
 						break
 
 					case "function":
-						if (service_config['platform'] == "azure") {
+						if (service_config['provider'] == "azure") {
 							if (service_config['runtime'].startsWith("nodejs")) {
 								service_template = "azure-function-template-nodejs"
 							}

@@ -68,12 +68,6 @@ node {
 		is_service_deletion = false
 	}
 
-	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
-	def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
-  		g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
-
-	auth_token = getAuthToken()
-
 	stage("Initialization") {
 
 		if (params.domain && params.domain != "") {
@@ -98,6 +92,16 @@ node {
 		if (!service_config) {
 			error "Failed to fetch service metadata from catalog"
 		}
+
+		if(service_config['provider'] == 'azure'){
+			service_config['accountId'] = '102707241671'  // will remove once all configurations for azure account comes in
+		}
+
+		accountDetailsPrimary = utilModule.getAccountInfoPrimary();
+		def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
+				g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
+
+		auth_token = getAuthToken()
 		// Get the Account Details from the ConfigLoader
 		accountInfo = utilModule.getAccountInfo(service_config)
 

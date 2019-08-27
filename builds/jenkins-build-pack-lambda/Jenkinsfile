@@ -90,6 +90,10 @@ node() {
     }
   }
 
+  if(config['provider'] == 'azure'){
+		config['accountId'] = '102707241671' // will remove once all configurations for azure account comes in
+	}
+
   accountDetails = utilModule.getAccountInfo(config);
   accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
@@ -155,7 +159,7 @@ node() {
   def internalAccess = config['require_internal_access']
   domain = config['domain']
 
-  def servicePlatform = config['platform']
+  def servicePlatform = config['provider']
 
   def roleARN = accountDetails.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
 
@@ -735,7 +739,7 @@ def validateDeploymentConfigurations(def prop) {
 		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
 			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
 		}
-	} else if (config['platform'] == "azure") {
+	} else if (config['provider'] == "azure") {
     // we use azure default timeout
   } else {
 		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"

@@ -58,6 +58,7 @@ def loadServiceMetadata(service_id){
 			if(service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS){
 			  metadata['accountId'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.accountId.S
 			  metadata['region'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.region.S
+			  metadata['provider'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.provider.S
 			} else {
 			  metadata['accountId'] = configLoader.AWS.DEFAULTS.ACCOUNTID
 			  metadata['region'] = configLoader.AWS.DEFAULTS.REGION
@@ -66,9 +67,6 @@ def loadServiceMetadata(service_id){
 			metadata['deployment_targets'] = deployment_targets_metadata
 			if(service_data.Item.SERVICE_SLACK_CHANNEL)
 				metadata['slack_channel'] = service_data.Item.SERVICE_SLACK_CHANNEL.S
-				
-			if(service_data.Item.SERVICE_PLATFORM)
-				metadata['platform'] = service_data.Item.SERVICE_PLATFORM.S
 			
 			return metadata
 		}

@@ -96,6 +96,11 @@ node()  {
 		websiteType = service_config['framework']
 	}
 
+	if(service_config['provider'] == 'azure'){
+		service_config['accountId'] = '102707241671' // will remove once all configurations for azure account comes in
+	}
+
+
 	accountDetails = utilModule.getAccountInfo(service_config);
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
@@ -201,7 +206,7 @@ node()  {
 			}		
 		}
 	
-    def servicePlatform = service_config['platform']
+    def servicePlatform = service_config['provider']
     if (servicePlatform != 'aws' && servicePlatform != 'azure'){
       send_status_email('FAILED', "service platform is unknown: ${servicePlatform}")
       events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', "service platform is unknown: ${servicePlatform}", context_map)
