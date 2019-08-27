@@ -132,7 +132,7 @@ module.exports.handler = (event, context, cb) => {
       }
 
       var req = utils.requestLoad;
-      req.url = config.BASE_URL + "/_plugin/kibana/elasticsearch/_msearch";
+      req.url = config.KIBANA_URL + "/elasticsearch/_msearch";
       req.body = setRequestBody(servCategory, env, querys, startTime, endTime, size, page);
 
       request(req, function (err, res, body) {
