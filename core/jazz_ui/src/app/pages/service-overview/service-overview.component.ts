@@ -36,6 +36,7 @@ export class ServiceOverviewComponent implements OnInit {
 
   flag: boolean = false;
   @Input() service: any = {};
+  @Input() provider: any;
   @Input() isLoadingService: boolean = false;
   @Input() isAdminAccess:boolean = false;
   private subscription: any;

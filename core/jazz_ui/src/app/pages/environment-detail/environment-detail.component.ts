@@ -169,7 +169,7 @@ export class EnvironmentDetailComponent implements OnInit {
         this.service.accounts = env_internal.urls.accounts;
         this.service.regions = env_internal.urls.regions;
         this.service = response.data;
-        this.platform = response.data.platform;
+        this.platform = response.data.deployment_accounts[0].provider;
         if (environment.envName == 'oss') this.service = response.data;
         this.isFunction = this.service.type === "function";
         if (this.service.policies && this.service.policies.length) {
