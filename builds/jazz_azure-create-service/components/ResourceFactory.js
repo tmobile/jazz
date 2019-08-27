@@ -341,17 +341,10 @@ module.exports = class ResourceFactory {
       let stream = new Stream.PassThrough();
       stream.end(decompressedData);
       promiseArray.push(new Promise(function(resolve, reject){
-        blobStorageService.createBlockBlobFromStream("$web", zipEntries[i].entryName, stream, buffer.length, {contentSettings: {contentType: mime.lookup(zipEntries[i].entryName)}} ,function (error, result, response) {
-          if (error) {
-            reject("Couldn't upload stream");
-
-          } else {
-            resolve(result);
-          }
-        });
+        stream.pipe(blobStorageService.createWriteStreamToBlockBlob("$web", zipEntries[i].entryName, {contentSettings: {contentType: mime.lookup(zipEntries[i].entryName)}}));
       }));
     }
-    return await Promise.all(promiseArray).then(() => { console.log('resolved!'); })
+    return Promise.all(promiseArray).then(() => { console.log('resolved!'); })
       .catch(() => { console.log('failed!') });
   }
 
