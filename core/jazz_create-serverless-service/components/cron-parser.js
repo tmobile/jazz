@@ -142,7 +142,66 @@ var CronParser = function (argument) {
                 };
                 return cronExpression;
             }
-        }
+        },
+        validateRateExpression : function(rateExpression) {
+            var rateValue, duration, interval, rateValidity;
+            if (rateExpression === "" || rateExpression === undefined || rateExpression === null) {
+                return {
+                    "result" : "invalid",
+                    "message": "Empty Rate expression."
+                };
+            };
+            intervalObj = ['minute', 'minutes','hour', 'hours', 'day', 'days'];
+              rateValue = rateExpression;
+              rateValue = rateValue.replace(/[\(\)']+/g, ' ');
+              rateValue = rateValue.split(' ');
+              duration = rateValue[0];
+              interval = rateValue[1];
+              durationValue = parseInt(duration);
+             if(durationValue>0){
+                 if(intervalObj.includes(interval)){
+                    if (durationValue === 1){
+                        if(interval.includes('s')){
+                          rateValidity = false;
+                        }
+                        else {
+                           rateValidity = true;
+                       }
+                    }
+                     else if (durationValue > 1) {
+                         if (interval.includes('s')) {
+                            rateValidity = true;
+                         }
+                         else {
+                            rateValidity = false;
+                         }
+                     }
+                 }
+                 else {
+                    return {
+                        "result" : "invalid",
+                        "message": "Invalid Rate expression."
+                    };
+                 }
+             }
+             else {
+                return {
+                    "result" : "invalid",
+                    "message": "Invalid Rate expression."
+                };
+             }
+            if (rateValidity == true) {
+                return {
+                    "result" : "valid",
+                    "message": "Valid Rate expression."
+                };
+            } else{
+                return {
+                    "result" : "invalid",
+                    "message": "Invalid Rate expression. " 
+                };
+            }
+        },
     }
 }();
 

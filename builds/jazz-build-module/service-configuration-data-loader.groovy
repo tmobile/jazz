@@ -237,6 +237,7 @@ def loadServiceConfigurationData() {
 
     if ((service_name.trim() == "jazz_logs") || (service_name.trim() == "jazz_cloud-logs-streamer") || (service_name.trim() == "jazz_es-kinesis-log-streamer")) {
       updateConfigValue("{inst_elastic_search_hostname}", config_loader.JAZZ.ES_HOSTNAME)
+      updateConfigValue("{inst_kibana_search_hostname}", config_loader.JAZZ.KIBANA_HOSTNAME)
 
       if (service_name.trim() == "jazz_logs") {
         updateConfigValue("{env-prefix}", config_loader.INSTANCE_PREFIX)
@@ -359,9 +360,9 @@ def loadServiceConfigurationData() {
 }
 
 def updateConfigValue(key, val) {
-  sh "sed -i -- 's/${key}/${val}/g' ./config/dev-config.json"
-  sh "sed -i -- 's/${key}/${val}/g' ./config/stg-config.json"
-  sh "sed -i -- 's/${key}/${val}/g' ./config/prod-config.json"
+  sh "sed -i -- 's#${key}#${val}#g' ./config/dev-config.json"
+  sh "sed -i -- 's#${key}#${val}#g' ./config/stg-config.json"
+  sh "sed -i -- 's#${key}#${val}#g' ./config/prod-config.json"
 }
 
 def updateCoreAPI() {

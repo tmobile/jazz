@@ -14,7 +14,7 @@ import { environment as env_internal } from './../../../environments/environment
   styleUrls: ['./env-overview-section.component.scss']
 })
 export class EnvOverviewSectionComponent implements OnInit {
-  
+
   @Output() onload:EventEmitter<any> = new EventEmitter<any>();
   @Output() envLoad:EventEmitter<any> = new EventEmitter<any>();
   @Output() open_sidebar:EventEmitter<any> = new EventEmitter<any>();
@@ -23,13 +23,16 @@ export class EnvOverviewSectionComponent implements OnInit {
 	regList=env_internal.urls.regions;
 	accSelected:string = this.accList[0];
   regSelected:string=this.regList[0];
- 
+
 
   @Output() frndload:EventEmitter<any> = new EventEmitter<any>();
-  
-  
+
+
   private http:any;
   private sub:any;
+  provider: any = '';
+  serviceName: any = '';
+  runtime: any = '';
   private env:any;
   branchname: any;
   friendlyChanged:boolean = false;
@@ -50,6 +53,8 @@ export class EnvOverviewSectionComponent implements OnInit {
   showCncl:boolean=false;
   environmnt:any;
   isDiv:boolean=true;
+  startnew: boolean = true;
+  version: string = ">=1.0.0 <2.0.0";
   isvalid:boolean=false;
   envResponseEmpty:boolean = false;
   envResponseTrue:boolean = false;
@@ -76,9 +81,13 @@ export class EnvOverviewSectionComponent implements OnInit {
   slsapp:boolean = false;
   desc_temp:any;
   toastmessage:any;
+  is_function:boolean;
   copyLink:string="Copy Link";
   disableSave:boolean = true;
- 
+  public lineNumberCounts: any = new Array(8);
+  isfunction: boolean = true;
+  linenumber:number;
+  public lineNumberCounting: any = new Array(5);
   errMessage: string = "Something went wrong while fetching your data";
   message:string="lalalala"
   public lineNumberCount: any = new Array(7);
@@ -89,7 +98,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   temp_description:string;
   put_payload:any = {};
   services = {
-    description:'NA', 
+    description:'NA',
     lastcommit:'NA',
     branchname:'NA',
     endpoint:'NA',
@@ -135,7 +144,7 @@ popup(state){
     var ele = document.getElementById('popup-endp');
     ele.classList.remove('endp-visible');
   }
-  
+
 }
   onEditClick(){
     this.tempFriendlyName=this.friendlyName;
@@ -143,7 +152,22 @@ popup(state){
     this.saveBtn=true;
     this.editBtn=false;
   }
-
+fetchfunction(){
+  this.isLoading = true;
+  this.http.get('/jazz/services/' + this.service.id, null, this.service.id).subscribe(response => {
+    this.is_function = response.data.metadata.is_function_template;
+    if(this.is_function === true && this.is_function !== undefined){
+      this.startnew = false;
+      this.provider = response.data.deployment_accounts[0].provider;
+      this.serviceName = this.service.name;
+      this.runtime = this.service.runtime;
+    }
+    else {
+      this.startnew = true;
+    }
+    this.isLoading = false;
+  })
+}
   onEditAppClick(){
     this.yaml = this.yamlName;
     this.showCncl = true;
@@ -164,7 +188,7 @@ popup(state){
     var errMsgBody;
     if(this.textChanged === true){
       this.put_payload.deployment_descriptor= this.yaml;
-      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
+      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload,this.service.id)
             .subscribe(
                 (Response)=>{
                   let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
@@ -192,20 +216,35 @@ popup(state){
               this.envResponseTrue = false;
               this.textChanged = false;
               this.isCancel = false;
-              this.disableSave = true;            
+              this.disableSave = true;
     }
-    
+
   }
   lineNumbers() {
     let lines;
-    if(this.yaml)
-    {
+    if (this.yaml) {
       lines = this.yaml.split(/\r*\n/);
       let line_numbers = lines.length;
       if(line_numbers < 7){
         line_numbers = 7;
       }
+      if (this.isCancel && lines.length < 27) {
+        line_numbers = 27;
+      }
       this.lineNumberCount = new Array(line_numbers);
+    }
+  }
+  // TODO: ?
+  lineNumbersCount() {
+    let lines;
+    if(this.yaml)
+    {
+      lines = this.yaml.split(/\r*\n/);
+      let line_numbers = lines.length;
+      if(line_numbers < 5){
+        line_numbers = 5;
+      }
+      this.lineNumberCounting = new Array(line_numbers);
     }
   }
   checkYaml(){
@@ -259,10 +298,11 @@ popup(state){
               this.isLoading=true;
               this.envResponseTrue=false;
               this.friendlyChanged=false;
-              
+
     }
-    
+
   }
+
   onCancel(){
     this.showCncl = false;
     this.saveButton = false;
@@ -291,12 +331,12 @@ popup(state){
   }
 
   formatLastCommit(){
-    
+
     var commit = this.lastCommitted.substring(0,19);
     var lastCommit = new Date(commit);
-    var now = new Date(); 
+    var now = new Date();
     var todays = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),  now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-            
+
             this.dayscommit = true;
             this.commitDiff = Math.floor(Math.abs((todays.getTime() - lastCommit.getTime())/(1000*60*60*24)));
             if( this.commitDiff == 0 ){
@@ -324,8 +364,6 @@ popup(state){
 
 }
    callServiceEnv() {
-    
-    
     if ( this.subscription ) {
       this.subscription.unsubscribe();
     }
@@ -333,13 +371,12 @@ popup(state){
     this.subscription = this.http.get('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
       // this.http.get('/jazz/environments/prd?domain=jazz-testing&service=test-create').subscribe(
         (response) => {
-
           if(response.data == (undefined || '')){
-           
-            this.envResponseEmpty = true; 
+
+            this.envResponseEmpty = true;
             this.isLoading = false;
           }
-          else {            
+          else {
             this.onload.emit(response.data.environment[0].endpoint);
             this.envLoad.emit(response.data);
             this.environmnt=response.data.environment[0];
@@ -357,11 +394,11 @@ popup(state){
             this.branchname = envResponse.physical_id;
             this.lastCommitted = envResponse.last_updated;
             this.frndload.emit(this.friendlyName);
-            this.formatLastCommit(); 
-            this.lineNumbers();              
+            this.formatLastCommit();
+            this.lineNumbers();
+            this.fetchfunction()
             this.envResponseTrue = true;
             this.envResponseEmpty = false;
-            this.isLoading = false;
           }
         },
         (error) => {
@@ -384,13 +421,13 @@ popup(state){
           this.errMessage = this.toastmessage.errorMessage(error, "environment");
       })
     };
-  
+
     getTime() {
       var now = new Date();
       this.errorTime = ((now.getMonth() + 1) + '/' + (now.getDate()) + '/' + now.getFullYear() + " " + now.getHours() + ':'
       + ((now.getMinutes() < 10) ? ("0" + now.getMinutes()) : (now.getMinutes())) + ':' + ((now.getSeconds() < 10) ? ("0" + now.getSeconds()) : (now.getSeconds())));
       }
-  
+
     feedbackRes:boolean=false;
     openModal:boolean=false;
       feedbackMsg:string='';
@@ -407,7 +444,7 @@ popup(state){
 		djson:any={};
 		// isLoading:boolean=false;
 		reportIssue(){
-			
+
 					this.json = {
 						"user_reported_issue" : this.model.userFeedback,
 						"API": this.errorAPI,
@@ -417,14 +454,14 @@ popup(state){
 						"TIME OF ERROR":this.errorTime,
 						"LOGGED IN USER":this.errorUser
 				}
-				
+
 					this.openModal=true;
 					this.errorChecked=true;
 					this.isLoading=false;
 					this.errorInclude = JSON.stringify(this.djson);
 					this.sjson = JSON.stringify(this.json);
 				}
-			
+
 				openFeedbackForm(){
 					this.isFeedback=true;
 					this.model.userFeedback='';
@@ -440,9 +477,9 @@ popup(state){
 				}
 				errorIncluded(){
 				}
-			 
+
 				submitFeedback(action){
-			
+
 					this.errorChecked = (<HTMLInputElement>document.getElementById("checkbox-slack")).checked;
 					if( this.errorChecked == true ){
 						this.json = {
@@ -458,14 +495,14 @@ popup(state){
 						this.json = this.model.userFeedback ;
 					}
 					this.sjson = JSON.stringify(this.json);
-			
+
 					this.isLoading = true;
-			
+
 					if(action == 'DONE'){
 						this.openModal=false;
 						return;
 					}
-			
+
 					var payload={
 						"title" : "Jazz: Issue reported by "+ this.authenticationservice.getUserId(),
 						"project_id":env_internal.urls.internal_acronym,
@@ -484,7 +521,7 @@ popup(state){
 							this.feedbackResSuccess= true;
 							if(respData != undefined && respData != null && respData != ""){
 								this.feedbackMsg = "Thanks for reporting the issue. We’ll use your input to improve Jazz experience for everyone!";
-							} 
+							}
 						},
 						error => {
 							this.buttonText='DONE';
@@ -500,11 +537,11 @@ popup(state){
    myFunction() {
     setTimeout( this.resetCopyValue(), 3000);
  }
- 
+
  resetCopyValue(){
     this.copylinkmsg = "COPY LINK TO CLIPBOARD";
  }
- 
+
  copyClipboard(copyapilinkid){
   var element = null; // Should be <textarea> or <input>
   element = document.getElementById(copyapilinkid);
@@ -521,14 +558,13 @@ isOSS:boolean=false;
 form_endplist(){
   // this.endpList=env_internal.urls.endplist;
 }
-  ngOnInit() {  
+  ngOnInit() {
     this.form_endplist();
     if(environment.envName=='oss')this.isOSS=true;
-    if(this.service.domain != undefined)  
+    if(this.service.domain != undefined)
       this.callServiceEnv();
       this.data.currentMessage.subscribe(message => this.message = message)
   }
-
 
   ngOnChanges(x:any) {
     this.route.params.subscribe(
@@ -540,19 +576,19 @@ form_endplist(){
       this.callServiceEnv();
       let ser=this.service.serviceType;
       if(ser == 'sls-app'){
-        this.slsapp = true; 
+        this.slsapp = true;
       }
 }
 notify(services){
   this.service=services;
- 
+
   if(this.service.domain != undefined)
       {
-        
+
         this.callServiceEnv();
       }
 }
-refreshCostData(event){ 
+refreshCostData(event){
   this.callServiceEnv();
 }
 
@@ -582,11 +618,11 @@ focusindex:number;
           this.showAccountList = true;
         }
       }
-    
+
       focusInputAccount(event) {
         document.getElementById('AccountInput').focus();
       }
-    
+
       focusInputRegion(event) {
         document.getElementById('regionInput').focus();
       }
@@ -632,7 +668,7 @@ selectRegion(region){
     }
 }
 copy_link(id)
-    {  
+    {
         var element = null; // Should be <textarea> or <input>
         element = document.getElementById(id);
         element.select();
@@ -642,7 +678,7 @@ copy_link(id)
             setTimeout(() => {
               this.copyLink = "Copy Link";
             }, 3000);
-            
+
         }
         finally {
             document.getSelection().removeAllRanges;
@@ -687,7 +723,7 @@ keypressAccount(hash){
     var pinkElement = document.getElementsByClassName("pinkfocus")[0].children;
 
     var approverObj = pinkElement[0].attributes[2].value;
-    
+
     this.selectAccount(approverObj);
 
     this.focusindex = -1;
@@ -709,33 +745,33 @@ keypressRegion(hash){
         }
         if (this.focusindex > 2) {
           this.scrollList = { 'position': 'relative', 'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem' };
-    
+
         }
       }
       else if (hash.key == 'ArrowUp') {
         if (this.focusindex > -1) {
           this.focusindex--;
-    
+
           if (this.focusindex > 1) {
             this.scrollList = { 'position': 'relative', 'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem' };
           }
         }
         if (this.focusindex == -1) {
           this.focusindex = -1;
-    
-    
+
+
         }
       }
       else if (hash.key == 'Enter' && this.focusindex > -1) {
         event.preventDefault();
         var pinkElement = document.getElementsByClassName("pinkfocus2")[0].children;
-    
+
         var approverObj = pinkElement[0].attributes[2].value;
-        
+
         this.selectRegion(approverObj);
-    
+
         this.focusindex = -1;
-    
+
       } else {
         this.focusindex = -1;
       }

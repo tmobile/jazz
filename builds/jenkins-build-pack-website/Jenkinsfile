@@ -33,6 +33,7 @@ import groovy.transform.Field
 @Field def service_config
 
 node()  {
+  try {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
 
@@ -76,11 +77,11 @@ node()  {
 	}
 
 	if(!service_config.region) {
-   		service_config.region = configLoader.AWS.DEFAULTS.REGION
+  	service_config.region = configLoader.AWS.DEFAULTS.REGION
 	}
 
  	if(!service_config.accountId) {
-   		service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
+    service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
  	}
 
  	if(!service_config.provider) {
@@ -90,7 +91,7 @@ node()  {
 	accountDetails = utilModule.getAccountInfo(service_config);
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 	def coreDomain = "jazz";
-	def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetails);
+	def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
 	auth_token = setCredentials()
@@ -292,6 +293,11 @@ node()  {
 			}
 		}
 	}
+	} catch (err) {
+   throw err
+  } finally {
+   deleteDir()
+  }
 }
 
 def generateAssetUrl(){

@@ -78,6 +78,7 @@ export class EnvLogsSectionComponent implements OnInit {
 	errBody: any;
 	parsedErrBody: any;
 	errMessage: any;
+	responseArray: any = [];
 	private toastmessage: any;
 	private env: any;
 	refreshData: any;
@@ -143,9 +144,13 @@ export class EnvLogsSectionComponent implements OnInit {
 	errorTime: any;
 	errorURL: any;
 	errorAPI: any;
+	selectedAssetName: any;
+	assetsNameArray:any = [];
+	allAssetsNameArray: any = [];
 	errorRequest: any = {};
 	errorResponse: any = {};
 	errorUser: any;
+	selectedEnv: any;
 	errorChecked: boolean = true;
 	errorInclude: any = "";
 	json: any = {};
@@ -162,21 +167,20 @@ export class EnvLogsSectionComponent implements OnInit {
   	public assetSelected:string;
 	public resourceSelected: any;
 	lambdaResourceNameArr;
+	lambdaResource;
 
 	instance_yes;
-	getFilter(filterServ){
-		
+	getFilter(filterServ){		
 		this.service['islogs']=true;
 		this.service['isServicelogs']=true;
 		if(this.assetList){
 			this.service['assetList']=this.assetList;
 		}
-
 		if(this.service.serviceType == 'sls-app'){
-			this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
+			this.service['allAssetsNameArray'] = this.allAssetsNameArray;
 			this.advanced_filter_input.sls_resource.show = true;
 		}
-
+		
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
 		var comp = this;
@@ -189,18 +193,32 @@ export class EnvLogsSectionComponent implements OnInit {
 		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
 			comp.onFilterSelect(event);
 		});
-		this.instance_yes.onAssetSelect.subscribe(event => {
-		
+		this.instance_yes.onAssetSelect.subscribe(event => {		
 			comp.onAssetSelect(event);
+			if(this.service.serviceType == 'sls-app' && event !== 'all'){
+				this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
+				this.advanced_filter_input.sls_resource.show = true;
+				(<AdvancedFiltersComponent>componentRef.instance).data = {"service" : this.service, "advanced_filter_input" : this.advanced_filter_input};
+			}
+		});
+		this.instance_yes.onResourceSelect.subscribe(event => {
+			comp.onResourceSelect(event);
 		});
 
 	}
+
 	onAssetSelect(event){
 		this.FilterTags.notify('filter-Asset',event);
 		this.assetSelected=event;
-	} 
-	
-
+		if(event !== 'all' && this.service.serviceType === 'sls-app'){
+		this.setAssetName(this.responseArray,this.assetSelected);
+		this.onResourceSelect('all');	
+		}
+	} 	
+	onResourceSelect(event){
+		this.FilterTags.notifyLogs('filter-Asset-Name', event);
+		this.resourceSelected = event;
+	}
 	 onaccSelected(event){
 	  this.accSelected=event;
   
@@ -214,7 +232,60 @@ export class EnvLogsSectionComponent implements OnInit {
 			rowData['expanded'] = true;
 		}
 		this.expandText = 'Collapse all';
+	}
 
+	setAssetName(val, selected) {
+		if (this.service.serviceType === "sls-app") {
+			let assetObj = [];
+			this.lambdaResourceNameArr = [];
+			this.allAssetsNameArray = [];
+			val.map((item) => {
+				assetObj.push({ type: item.asset_type, name: item.provider_id, env: item.environment });
+			})
+			if (selected === 'all') {
+				assetObj.map((item) => {
+					if(item.env === this.selectedEnv) {
+					let tokens = item.name.split(':');
+					this.selectedAssetName = tokens[tokens.length - 1];
+					if(item.type === 'lambda') {
+						let value = this.selectedAssetName.split('-');
+						this.selectedAssetName = value[value.length - 1];
+					  }
+					if (item.type === 'apigateway') {
+						this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 5).join('/');
+					}
+					this.allAssetsNameArray.push(this.selectedAssetName);
+					this.allAssetsNameArray.map((item,index)=>{
+						if(item === 'All'){
+							this.allAssetsNameArray.splice(index,1)
+						}
+					})
+					this.allAssetsNameArray.splice(0,0,'All')
+				}})
+			}
+			else {
+				assetObj.map((item) => {
+					if (item.type === selected && item.env === this.selectedEnv) {
+						let tokens = item.name.split(':');
+						this.selectedAssetName = tokens[tokens.length - 1];
+						if(item.type === 'lambda') {
+							let value = this.selectedAssetName.split('-');
+							this.selectedAssetName = value[value.length - 1];
+						  }
+						if(item.type === 'apigateway'){
+					     this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 5).join('/');
+						}
+						this.lambdaResourceNameArr.push(this.selectedAssetName);
+						this.lambdaResourceNameArr.map((item,index)=>{
+							if(item === 'All'){
+								this.lambdaResourceNameArr.splice(index,1)
+							}
+						})
+						this.lambdaResourceNameArr.splice(0,0,'All')
+					}
+				})
+			}
+		}
 	}
 
 	collapseall() {
@@ -444,18 +515,18 @@ export class EnvLogsSectionComponent implements OnInit {
 				   service: self.service.name,              
    }, self.service.id).toPromise().then((response:any)=>{
 	   if(response&&response.data&&response.data.assets){
-		    let assets=_(response.data.assets).map('asset_type').uniq().value();
+			this.assetsNameArray.push(response);
+			let assets=_(response.data.assets).map('asset_type').uniq().value();		
 			 let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 			 validAssetList.splice(0, 0, 'all');
-			 this.lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
-			for( let i = 0 ; i<this.lambdaResourceNameArr.length; i++ ){
-				let tokens = this.lambdaResourceNameArr[i].split(':');
-				let reduced = tokens[tokens.length-1];
-				let reducedTokens = reduced.split('-');
-				this.lambdaResourceNameArr[i] = reducedTokens[reducedTokens.length-1];
+			 if(self.service.serviceType === 'sls-app'){
+				validAssetList.map((item,index)=>{
+					if(item === 'dynamodb'){
+						validAssetList.splice(index,1)
+					}
+				})
 			}
-			this.lambdaResourceNameArr = _.uniq(this.lambdaResourceNameArr);
-			this.lambdaResourceNameArr.splice(0,0,'All');
+			this.responseArray = this.assetsNameArray[0].data.assets.filter(asset=>(validAssetList.indexOf(asset.asset_type)>-1));
 			 self.assetWithDefaultValue = validAssetList;
 			 for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
 				 self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
@@ -464,7 +535,7 @@ export class EnvLogsSectionComponent implements OnInit {
 			 if (!data) {
 				 self.assetSelected = validAssetList[0].replace(/_/g, " ");
 			 }
-			self.callLogsFunc();
+			self.setAssetName(self.responseArray ,self.assetSelected);
 			self.getFilter(self.advancedFilters);
 			self.instance_yes.showAsset = true;
 			self.instance_yes.assetSelected = validAssetList[0].replace(/_/g ," ");
@@ -483,6 +554,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		}
 		this.subscription = this.http.post('/jazz/logs', this.payload, this.service.id).subscribe(
 			response => {
+				if(response.data.logs !== undefined) {
 				this.logs = response.data.logs  || response.data.data.logs;
 				if(this.logs != undefined)
 				if (this.logs && this.logs.length != 0) {
@@ -503,8 +575,8 @@ export class EnvLogsSectionComponent implements OnInit {
 
 				} else {
 					this.loadingState = 'empty';
+						}
 				}
-
 			},
 			err => {
 				this.loadingState = 'error';
@@ -541,7 +613,7 @@ export class EnvLogsSectionComponent implements OnInit {
 			
 		    break;
 		  }
-		  case 'time-range-slider':{  this.instance_yes.resetslider(1);
+		  case 'time-range-slider':{  this.instance_yes.onTimePeriodSelected(1);
 		  
 			break;
 		  }
@@ -573,15 +645,21 @@ export class EnvLogsSectionComponent implements OnInit {
 		  
 		    break;
 		  }
+		  case 'asset-iden':{	this.instance_yes.getResourceType('all');
+
+			break;
+		}
 		  case 'all':{
 		        this.instance_yes.onRangeListSelected('Day');    
 				this.instance_yes.onPeriodSelected('15 Minutes');
+				this.instance_yes.onTimePeriodSelected(1);
 				this.instance_yes.onStatisticSelected('Average');
 				this.instance_yes.onaccSelected('Acc 1');
 				this.instance_yes.onregSelected('reg 1');
 				this.instance_yes.onEnvSelected('prod');
 				this.instance_yes.onMethodListSelected('POST');
 				this.instance_yes.getAssetType('all');
+				this.instance_yes.getResourceType('all');
 				break;
 		  	}
 		}
@@ -623,8 +701,13 @@ export class EnvLogsSectionComponent implements OnInit {
 		  case 'asset' :{
 			  this.FilterTags.notify('filter-Asset',event.value)
 				this.assetSelected=event.value;
-				if (this.assetSelected !== 'all' && this.assetSelected !== 'All') {
+				if (this.assetSelected !== 'all') {
 					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
+					var value = (<HTMLInputElement>document.getElementById('Allidentifier'))
+					if(value != null) {
+						var inputValue = value.checked = true;
+					}
+					delete this.payload['asset_identifier']
 				}
 				else {
 					delete this.payload['asset_type'];
@@ -636,16 +719,13 @@ export class EnvLogsSectionComponent implements OnInit {
 			if(this.service.serviceType == 'sls-app'){
 				this.resourceSelected = event.value;
 				this.payload.asset_identifier = this.resourceSelected;
-				if(this.resourceSelected === 'all' || this.resourceSelected === "All"){
+				if(this.resourceSelected.toLowerCase() === 'all'){
 					delete this.payload['asset_identifier'];
 				}
-				this.resetPayload();
+					this.resetPayload();
+				}
 			}
 		}
-	
-	   
-		}
-		
 	}
 	getTime() {
 		var now = new Date();
@@ -682,6 +762,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		if( this.assetSelected !== 'all') {
 			this.payload["asset_type"] = this.assetSelected;
 		}
+		this.selectedEnv = this.env;
 		this.callLogsFunc();
 		this.filter = new Filter(this.logs);
 		this.sort = new Sort(this.logs);
