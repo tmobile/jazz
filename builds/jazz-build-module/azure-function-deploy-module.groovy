@@ -67,7 +67,7 @@ def sendAssetCompletedEvent(serviceInfo, assetList) {
         break
     }
 
-    events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['platform'], id, assetType, serviceInfo.serviceCatalog), serviceInfo.envId)
+    events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['provider'], id, assetType, serviceInfo.serviceCatalog), serviceInfo.envId)
 
   }
 
@@ -75,7 +75,7 @@ def sendAssetCompletedEvent(serviceInfo, assetList) {
     for (item in assetList) {
       def id = item.azureResourceId
       def assetType = item.type
-      events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['platform'], id, assetType, serviceInfo.serviceCatalog), serviceInfo.envId)
+      events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['provider'], id, assetType, serviceInfo.serviceCatalog), serviceInfo.envId)
 
     }
   }
@@ -368,10 +368,10 @@ def getAssetDetails(id, assetType) {
 /**
  *
  * @param service_config  service catalog data from services table
- * @return true if platform is provided and it is azure
+ * @return true if provider is provided and it is azure
  */
 def isAzure(service_config) {
-  return  service_config['platform'] != null && service_config['platform'] == "azure"
+  return  service_config['provider'] != null && service_config['provider'] == "azure"
 }
 
 /**

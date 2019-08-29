@@ -96,12 +96,9 @@ node()  {
 		websiteType = service_config['framework']
 	}
 
-	if(service_config['provider'] == 'azure'){
-		service_config['accountId'] = '102707241671' // will remove once all configurations for azure account comes in
+	if(service_config['provider'] == 'aws'){
+		accountDetails = utilModule.getAccountInfo(service_config);
 	}
-
-
-	accountDetails = utilModule.getAccountInfo(service_config);
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
 	def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
@@ -115,9 +112,11 @@ node()  {
 	if (params.scm_branch == 'master') {
 		environment_logical_id = 'prod'
 		current_environment = 'PROD'
-		for (item in accountDetails.REGIONS) {
-			if(item.REGION == service_config.region){
-				s3Bucket = item.S3[current_environment]
+		if(service_config['provider'] == 'aws'){
+			for (item in accountDetails.REGIONS) {
+				if(item.REGION == service_config.region){
+					s3Bucket = item.S3[current_environment]
+				}
 			}
 		}
 	} else {
@@ -126,9 +125,11 @@ node()  {
 			error "The environment has not been created yet and its missing the logical Id"
 		}
 		current_environment = "DEV"
-		for (item in accountDetails.REGIONS) {
-			if(item.REGION == service_config.region){
-				s3Bucket = item.S3[current_environment]
+		if(service_config['provider'] == 'aws'){
+			for (item in accountDetails.REGIONS) {
+				if(item.REGION == service_config.region){
+					s3Bucket = item.S3[current_environment]
+				}
 			}
 		}
 	}
