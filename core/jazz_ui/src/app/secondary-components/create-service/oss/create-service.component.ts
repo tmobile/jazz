@@ -139,6 +139,7 @@ export class CreateServiceComponent implements OnInit {
   public focusSQS = new EventEmitter<boolean>();
 
   selectAccountsRegions(){
+    if(this.typeOfPlatform === 'aws') {
     this.accountMap = env_oss.aws.accountMap;
     this.accountList = [];
     this.regionList = [];
@@ -152,6 +153,7 @@ export class CreateServiceComponent implements OnInit {
     this.regionList = this.accountMap[0].regions;
     this.regionSelected = this.regionList[0];
     this.setAccountandRegion();
+    }
   }
 
   setAccountandRegion(){
@@ -251,16 +253,21 @@ export class CreateServiceComponent implements OnInit {
 
   // function for changing service type
   changeServiceType(serviceType){
+    if(serviceType === 'sls-app'){
+      this.changePlatformType('aws');
+    }
     this.typeOfService = serviceType;
   }
 
   // function for changing platform type
   changePlatformType(platformType){
-    if(!this.disablePlatform && platformType !== "gcloud"){
+    if(platformType === 'azure' && this.typeOfService !== 'sls-app'){
       this.typeOfPlatform = platformType;
-      this.updateEventLabels(platformType);
-      this.updateAvailableRuntimes(platformType);
+    } else {
+      this.typeOfPlatform = 'aws';
     }
+    this.updateEventLabels(platformType);
+    this.updateAvailableRuntimes(platformType);
   }
 
 
@@ -442,22 +449,35 @@ export class CreateServiceComponent implements OnInit {
                 "approvers": approversPayload,
                 "domain": this.model.domainName,
                 "description":this.model.serviceDescription,
-                "platform":this.typeOfPlatform,
                 "deployment_targets": {}
             };
 
     if (this.typeOfService == 'api') {
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
-      payload["deployment_targets"] = {
-        "api": this.selectedDeploymentTarget || "aws_apigateway"
+      if (this.typeOfPlatform === 'aws') {
+        payload["deployment_targets"] = {
+          "api": this.selectedDeploymentTarget || "aws_apigateway"
+        }
+      }
+      else if (this.typeOfPlatform === 'azure') {
+        payload["deployment_targets"] = {
+          "api": "azure_apigateway"
+        }
       }
     }
     else if(this.typeOfService == 'function'){
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
-      payload["deployment_targets"] = {
-        "function": "aws_lambda"
+      if (this.typeOfPlatform === 'aws') {
+        payload["deployment_targets"] = {
+          "function": "aws_lambda"
+        }
+      }
+      else if (this.typeOfPlatform === 'azure') {
+        payload["deployment_targets"] = {
+          "function": "azure_function"
+        }
       }
       if(this.rateExpression.type != 'none'){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
@@ -490,8 +510,14 @@ export class CreateServiceComponent implements OnInit {
     } else if(this.typeOfService == 'website'){
       payload["framework"] = this.webtime;
       payload["create_cloudfront_url"] = this.cdnConfigSelected;
-      payload["deployment_targets"] = {
-        "website": "aws_cloudfront"
+      if (this.typeOfPlatform === 'aws') {
+        payload["deployment_targets"] = {
+          "website": "aws_cloudfront"
+        }
+      } else if (this.typeOfPlatform === 'azure') {
+        payload["deployment_targets"] = {
+          "website": "azure_cdnprofile"
+        }
       }
     }
 
@@ -503,15 +529,28 @@ export class CreateServiceComponent implements OnInit {
     }
     
     /* Including deployment_accounts in the payload */
-    let deployment_accounts = [
-      {
-        "accountId": this.accountSelected,
-        "region": this.regionSelected,
-        "provider":"aws",
-        "primary":true
-      }
-    ]
-    payload['deployment_accounts'] = deployment_accounts
+    if(this.typeOfPlatform === 'aws'){
+      let deployment_accounts = [
+        {
+          "accountId": this.accountSelected,
+          "region": this.regionSelected,
+          "provider": this.typeOfPlatform,
+          "primary":true
+        }
+      ]
+      payload['deployment_accounts'] = deployment_accounts
+    }
+    else if(this.typeOfPlatform === 'azure') {
+      let deployment_accounts = [
+        {
+          "accountId": env_oss.azure.account_number,
+          "region": env_oss.azure.region,
+          "provider": this.typeOfPlatform,
+          "primary":true
+        }
+      ]
+      payload['deployment_accounts'] = deployment_accounts
+    }
 
     this.isLoading = true;
     this.http.post('/jazz/create-serverless-service' , payload)

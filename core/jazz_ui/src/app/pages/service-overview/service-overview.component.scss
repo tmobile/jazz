@@ -16,7 +16,16 @@
 .each-endp {
     display: inline-block;
 }
-
+.aws-icon {
+    font-size: 22px;
+}
+.azure-image {
+    width: 22px;
+    height: 22px;
+}
+.service-platform {
+    display: flex;
+}
 .copy-arn {
     height: 1.5rem;
     transform: rotate(-45deg);

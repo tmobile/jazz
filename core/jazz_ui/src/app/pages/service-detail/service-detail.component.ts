@@ -59,6 +59,7 @@ export class ServiceDetailComponent implements OnInit {
   service: any = {};
   isGraphLoading: boolean = false;
   stageOverview: any = {};
+  provider: any;
   showPopUp: boolean = false;
   success: boolean = false;
   thisIndex: number = 0;
@@ -232,6 +233,7 @@ export class ServiceDetailComponent implements OnInit {
     this.isLoadingService = true;
     this.http.get('/jazz/services/' + id, null, id).subscribe(response => {
       let service = response.data;
+      this.provider = response.data.deployment_accounts[0].provider
       this.cache.set(id, service);
       this.onDataFetched(service);
       this.isGraphLoading = false;

@@ -9,7 +9,7 @@
 <section class="page-container">
     <navigation-bar *ngIf='!isError403' [links]="breadcrumbs" [data]="friendly_name"></navigation-bar>
     <div *ngIf='!isError403' class="content">
-        <div class="page-title-wrap hide-for-mobile">
+        <div class="page-title-wrap hide-for-mobile  title-div">
             <div class="servie-details-container">
                 <h1 class="page-hdr bold-title relative">{{friendly_name}}
                         <div title='{{envStatus}}' *ngIf='status_val < 3' class='icon-icon-good inactive-icon succ'>
@@ -22,6 +22,24 @@
 
                 <span class="page-sub-title">{{service.name}}</span><br>
             </div>
+            <div class="image-btn-div">
+                <div class="image-container" *ngIf="selectedTab == 0">
+                    <img src="./../../../assets/images/icons/Azure.svg" *ngIf="platform ==='azure'" alt="azureimage"
+                        class="azure-image">
+                    <div class="icon-icon-AWS" *ngIf="platform ==='aws'">
+                        <span class="path1"></span><span class="path2"></span><span class="path3"></span><span
+                            class="path4"></span><span class="path5"></span><span class="path6"></span><span
+                            class="path7"></span><span class="path8"></span><span class="path9"></span><span
+                            class="path10"></span><span class="path11"></span><span class="path12"></span><span
+                            class="path13"></span><span class="path14"></span><span class="path15"></span><span
+                            class="path16"></span><span class="path17"></span><span class="path18"></span><span
+                            class="path19"></span><span class="path20"></span><span class="path21"></span><span
+                            class="path22"></span><span class="path23"></span><span class="path24"></span><span
+                            class="path25"></span><span class="path26"></span><span class="path27"></span><span
+                            class="path28"></span><span class="path29"></span><span class="path30"></span><span
+                            class="path31"></span><span class="path32"></span><span class="path33"></span>
+                    </div>
+                </div>
             <btn-jazz-secondary *ngIf="service.serviceType=='api'" [disablebtn]='disablingApiButton' class="testApiBtn" text="TEST API" (click)="testService('api')"></btn-jazz-secondary>
             <btn-jazz-secondary *ngIf="service.serviceType=='function'" [disablebtn]='disablingFunctionButton || !isAdminAccess' class="testApiBtn" text="TEST FUNCTION" (click)="testService('function')"></btn-jazz-secondary>
             <btn-jazz-secondary *ngIf="service.serviceType=='website'"  [disablebtn]='disablingApiButton' class="testApiBtn" text="GO TO WEBSITE" (click)="testService('website')"></btn-jazz-secondary>
@@ -30,6 +48,7 @@
             <div class="status-container status-inactive-def hide" >
                 <span class="status-hdr" [class.inactive]="status_val > 2">Status</span>
                 <div class="status-state-oval" [class.inactive-bg]="status_val > 2"></div>
+            </div>
             </div>
             <!--<btn-jazz-secondary *ngIf="selectedTab == 13" class="testApiBtn" text="SONAR PROJECT"></btn-jazz-secondary>-->
         </div>
