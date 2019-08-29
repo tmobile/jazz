@@ -97,7 +97,20 @@
         "produces": [
           "application/json"
         ],
-        "parameters": [{
+        "parameters": [
+          {
+            "name": "services",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
+            "name": "domain",
+            "in": "query",
+            "required": true,
+            "type": "string"
+          },
+          {
             "name": "environment",
             "in": "query",
             "required": false,

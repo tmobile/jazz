@@ -1463,14 +1463,14 @@ it('change platform type', () => {
   it("Generate Expression should change rateExpression.isvalid to undefined if function called with undefined rate expression or if rateexpression.type is none",()=>{
     component.generateExpression(undefined);
     expect(component.rateExpression.isValid).toBeUndefined;
-    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '');
+    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '', '');
     temp.isValid= true;
     component.rateExpression.isValid = false;
     component.generateExpression(temp);
     expect(component.rateExpression.isValid).toBeUndefined
   });
   it("GenerateExpression should change rateExpression.isvalid to false and rateExpression.error to error message if rateExpression.type is rate and duration is not defined",()=>{
-    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '');
+    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '', '');
     temp.type= "rate";
     temp.duration=undefined;
     component.generateExpression(temp);
@@ -1478,7 +1478,7 @@ it('change platform type', () => {
     expect(component.rateExpression.error).toContain("Please enter a valid duration");
   } )
   it("GenerateExpression should change rateExpression.isvalid to false and rateExpression.error to error message if rateExpression.type is rate and duration is null",()=>{
-    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '');
+    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '', '');
     temp.type= "rate";
     temp.duration=null;
     component.generateExpression(temp);
@@ -1486,7 +1486,7 @@ it('change platform type', () => {
     expect(component.rateExpression.error).toContain("Please enter a valid duration");
   } )
   it("GenerateExpression should change rateExpression.isvalid to false and rateExpression.error to error message if rateExpression.type is rate and duration is less than zero",()=>{
-    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '');
+    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '', '');
     temp.type= "rate";
     temp.duration= "-1";
     component.generateExpression(temp);
@@ -1494,7 +1494,7 @@ it('change platform type', () => {
     expect(component.rateExpression.error).toContain("Please enter a valid duration");
   } )
   it("GenerateExpression should create cron object and change rateExpression.isvalid to true if duration is valid and interval is set to minutes",()=>{
-    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '');
+    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '', '');
     temp.type= "rate";
     temp.duration= "5";
     component.generateExpression(temp);
@@ -1504,7 +1504,7 @@ it('change platform type', () => {
    
   })
   it("GenerateExpression should create cron object and change rateExpression.isvalid to true if duration is valid and interval is set to Hours",()=>{
-    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '');
+    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '', '');
     temp.type= "rate";
     temp.duration= "5";
     temp.interval='Hours';
@@ -1515,7 +1515,7 @@ it('change platform type', () => {
    
   })
   it("GenerateExpression should create cron object and change rateExpression.isvalid to true if duration is valid and interval is set to days",()=>{
-    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '');
+    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '', '');
     temp.type= "rate";
     temp.duration= "5";
     temp.interval='Days';
@@ -1526,7 +1526,7 @@ it('change platform type', () => {
    
   })
   it("GetExpression should create cron string if rateexpression.type is cron ",()=>{
-    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '');
+    let temp = new RateExpression(undefined, undefined, 'none', '5', "Minutes", '', '');
     temp.type= "cron";
     temp.duration= "5";
     temp.interval='Days';

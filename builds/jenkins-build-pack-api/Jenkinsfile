@@ -34,6 +34,7 @@ import groovy.transform.Field
 @Field def current_environment
 
 node() {
+  try {
   def jazzBuildModuleURL = getBuildModuleUrl()
   loadBuildModules(jazzBuildModuleURL)
 
@@ -405,6 +406,11 @@ node() {
     }//stage of deployment to an environment ends here
 
   }//dir ends here
+  } catch (err) {
+   throw err
+  } finally {
+   deleteDir()
+  }
 }
 
 def updateSwagger(){

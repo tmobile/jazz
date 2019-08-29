@@ -24,10 +24,15 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   payload: any = {};
   public allData: any;
   public serviceType;
+  assetsNameArray: any = [];
+  metricsLoaded: boolean = false;
+  selectedEnv: any;
   public assetFilter;
-  public assetIdentifierFilter;
+  lambdaResourceNameArr:any;
+  //public assetIdentifierFilter;
   public environmentFilter;
   public assetList: any = [];
+  selectedAssetName: any;
   public formFields: any = [
     {
       column: 'View By:',
@@ -83,7 +88,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   private http;
   public assetType = [];
   public assetSelected: any;
-
+  slsapp: boolean = false;
   errMessage: any;
   private toastmessage: any = '';
   private slsLambdaselected;
@@ -125,6 +130,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   ngOnInit() {
     this.serviceType = this.service.type || this.service.serviceType;
+    if(this.service.assets){
+      this.selectedEnv = this.service.assets[0].environment;
+    }
     this.setPeriodFilters();
   }
   setPeriodFilters() {
@@ -142,6 +150,54 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   refresh() {
     this.ngAfterViewInit();
   }
+  setAssetName(val,selected){
+    let assetIdentifierFilter = {};
+    if(this.service.serviceType === "sls-app"){
+      this.slsapp = true;
+      let assetObj = [];
+      let assetNameObject = [];
+      val[0].data.assets.map((item)=>{
+       assetObj.push({type: item.asset_type, name: item.provider_id ,env: item.environment});
+     })
+     assetObj.map((item)=>{
+       if(item.type === selected && item.env === this.selectedEnv){
+        let tokens = item.name.split(':');
+        this.selectedAssetName = tokens[tokens.length - 1];
+        if(item.type === 'lambda') {
+          let value = this.selectedAssetName.split('-');
+          this.selectedAssetName = value[value.length - 1];
+        }
+        if(item.type==='apigateway'){
+          this.selectedAssetName = this.selectedAssetName.split('/').slice(2,5).join('/');
+        }
+        if(this.selectedAssetName.startsWith("table/")){
+         this.selectedAssetName = this.selectedAssetName.replace('table/','');
+        }
+        assetNameObject.push(this.selectedAssetName);
+       }
+     })
+     if(assetNameObject.length !== 0) {
+      assetIdentifierFilter = {
+        column: 'Filter By:',
+        label: 'ASSET NAME',
+        options:assetNameObject,
+        values: assetNameObject,
+        selected: assetNameObject[0]
+      };
+     }
+     else {
+       let value = 'all'.split('0')
+      assetIdentifierFilter = {
+        column: 'Filter By:',
+        label: 'ASSET NAME',
+        options: value,
+        values: value,
+        selected: value
+      };
+     }
+     this.applyFilter(assetIdentifierFilter);
+    }
+  }
   getAssetType(data?) {
     try{
       let self = this;
@@ -152,38 +208,16 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         if (response && response.data && response.data.assets) {
           let assets = _(response.data.assets).map('asset_type').uniq().value();
           if(assets){
+            this.assetsNameArray = [];
             self.assetWithDefaultValue = assets;
+            this.assetsNameArray.push(response);
             let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
-            let lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
-            for( let i = 0 ; i<lambdaResourceNameArr.length; i++ ){
-              let tokens = lambdaResourceNameArr[i].split(':');
-              let reduced = tokens[tokens.length-1];
-              let reducedTokens = reduced.split('-');
-              lambdaResourceNameArr[i] = reducedTokens[reducedTokens.length-1];
-            }
-            lambdaResourceNameArr = _.uniq(lambdaResourceNameArr);
+            this.lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
+            this.lambdaResourceNameArr = _.uniq(this.lambdaResourceNameArr);
             self.assetWithDefaultValue = validAssetList;
             if(validAssetList.length){
               for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
                 self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
-              }
-              if(self.service.serviceType == "sls-app"){
-                self.assetIdentifierFilter = {
-                  column: 'Filter By:',
-                  label: 'ASSET IDENTIFIER',
-                  options: lambdaResourceNameArr,
-                  values: lambdaResourceNameArr,
-                  selected: lambdaResourceNameArr[0]
-                };
-                let resourceField = self.filters.getFieldValueOfLabel('ASSET IDENTIFIER');
-                if(!resourceField){
-                  self.formFields.splice(0, 0, self.assetIdentifierFilter);
-                  self.filters.setFields(self.formFields);
-  
-                }
-              }
-              else{
-                
               }
               self.assetFilter = {
                 column: 'Filter By:',
@@ -203,6 +237,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
                 self.formFields.splice(0, 0, self.assetFilter);
                 self.filters.setFields(self.formFields);
               }
+              self.setAssetName(self.assetsNameArray, self.assetSelected);
             }
             
           }          
@@ -220,7 +255,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   getEnvironments() {
     return this.http.get('/jazz/environments', {
-
       domain: this.service.domain,
       service: this.service.name
     }, this.service.id).toPromise()
@@ -235,7 +269,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
             values: serviceEnvironments,
             selected: 'prod'
           };
-
+          this.selectedEnv = this.environmentFilter.selected;
           let environmentField = this.filters.getFieldValueOfLabel('ENVIRONMENT');
           if (!environmentField) {
             this.formFields.splice(0, 0, this.environmentFilter);
@@ -341,15 +375,28 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       }
       if (changedFilter.label === 'ASSET TYPE') {
         this.assetSelected = changedFilter.selected.replace(/ /g, "_")
+        this.setAssetName(this.assetsNameArray,this.assetSelected);
       }
+      if (changedFilter.label === 'ASSET NAME') {
+        let lambda = changedFilter.selected;
+        this.slsLambdaselected = changedFilter.selected;
+          this.formFields.map((item,index)=>{
+            if(item.label === "ASSET NAME"){
+              this.formFields.splice(index,1);
+            }
+          })
+          this.formFields.splice(2, 0, changedFilter);
+          this.filters.setFields(this.formFields); 
+      }
+      if (changedFilter.label === 'ENVIRONMENT') {
+          this.selectedEnv = changedFilter.selected;
+          this.setAssetName(this.assetsNameArray,this.assetSelected);
+      }     
     }
-    if( changedFilter && (changedFilter.label === 'ASSET IDENTIFIER')){
-      this.slsLambdaselected = changedFilter.selected;
-      this.setAsset();
-    }
+  
     if (changedFilter && (changedFilter.label === 'ASSET' ||
       changedFilter.label === 'METHOD' ||
-      changedFilter.label === 'PATH')) {
+      changedFilter.label === 'PATH' || changedFilter.label === 'ASSET NAME')) {
       this.setAsset();
     } else {
       return this.queryMetricsData();
@@ -378,6 +425,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       .toPromise()
       .then((response) => {
         this.sectionStatus = 'empty';
+        this.metricsLoaded = true;
         if (response && response.data && response.data.length) {
           this.queryDataRaw = response.data;
           this.getAllData(response.data);
@@ -385,6 +433,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       })
       .catch((error) => {
         this.sectionStatus = 'error';
+        this.metricsLoaded = true;
         // comment following 2 lines if there are any issues?
         this.errorData['response'] = error;
         this.errMessage = this.toastmessage.errorMessage(error, "metricsResponse");
@@ -398,7 +447,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       this.setAsset();
     }
     else {
-      this.sectionStatus = 'empty';
+      if(this.metricsLoaded = true) {
+        this.sectionStatus = 'empty';
+      }
     }
   }
   filterAssetType(data) {
@@ -442,11 +493,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         break;
       case 'sls-app':
         if(this.queryDataRaw){
-          for(let asset of this.queryDataRaw.assets){
-            if(asset.asset_name.FunctionName.includes(this.slsLambdaselected)){
-              this.selectedAsset = asset;
-            }
-          }
           this.selectedAsset = this.queryDataRaw.assets[0];
 
         }
@@ -463,7 +509,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       this.setMetric();
       this.sectionStatus = 'resolved';
     } else {
-      this.sectionStatus = 'empty';
+      if(this.metricsLoaded === true) {
+        this.sectionStatus = 'empty';
+      }
     }
   }
 

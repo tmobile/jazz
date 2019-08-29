@@ -35,7 +35,7 @@ import groovy.transform.Field
 @Field def environment_logical_id
 
 node() {
-
+  try {
   def jazzBuildModuleURL = getBuildModuleUrl()
   loadBuildModules(jazzBuildModuleURL)
 
@@ -361,6 +361,11 @@ node() {
 
       } //end of withCredentials
     } //end of deployment to an environment
+  }
+  } catch (err) {
+   throw err
+  } finally {
+   deleteDir()
   }
 }
 

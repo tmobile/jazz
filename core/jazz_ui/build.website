@@ -1,0 +1,68 @@
+#!/usr/bin/env sh
+
+#
+# TODO: Consider moving jq → config
+#
+JQ_BINARY=https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+S3_BUCKET=$(cat .store).s3.amazonaws.com
+TEMP=$(mktemp -d)
+
+#
+# Pull paths from S3 bucket manifest
+#
+echo -e '\nPulling paths from S3 bucket manifest...\n'
+
+curl -L $S3_BUCKET > $TEMP/2
+sed -e 's/xmlns=".*"//g' $TEMP/2 > $TEMP/1
+xmllint --xpath '/ListBucketResult/Contents/Key' $TEMP/1 > $TEMP/2
+sed -E 's/<[^>]+>/ /g' $TEMP/2 > $TEMP/1
+tr ' ' '\n' < $TEMP/1 > $TEMP/2
+
+paths=$(sed '/^jazz\/.*swagger.json/!d; /-dev/d; /stg/d' $TEMP/2)
+
+echo -e '\nDone!\n'
+echo '{"swagger": "2.0"}' > $TEMP/1
+#
+# End pull paths
+#
+
+#
+# Download and merge jazz/* paths into placeholder JSON document
+#
+echo -e '\nDownloading jazz/* paths and merging JSON...\n'
+
+if ! [ -x "$(command -v jq)" ]; then
+  curl -L $JQ_BINARY -o $TEMP/jq; chmod +x $TEMP/jq
+  alias jq=$TEMP/jq
+fi
+
+for x in $paths; do
+  echo $x
+  curl -L $S3_BUCKET/$x > $TEMP/2
+  if merge=$(jq -s '.[0] * .[1]' $TEMP/1 $TEMP/2); then
+    jq -s '.[0] * .[1]' $TEMP/1 $TEMP/2 > $TEMP/3
+    cp $TEMP/3 $TEMP/1
+  fi
+  echo 'Success!'
+done
+#
+# End merge
+#
+
+#
+# Add project metadata from base JSON
+#
+if [ -f $TEMP/3 ]; then
+  cd jazz_ui
+  serve='src/assets'
+  jq -s '.[0] * .[1]' $TEMP/3 $serve/base.json > $TEMP/1
+  jq 'walk( if type == "object" then del(.options, ."x-amazon-apigateway-integration") else . end )' < $TEMP/1 > $serve/swagger.json
+  echo -e '\nFinal Swagger JSON:\n'
+  cat $serve/swagger.json
+fi
+#
+# End add metadata
+#
+
+cd ..
+rm -rf $TEMP .store

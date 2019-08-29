@@ -45,7 +45,7 @@ export class ServiceDetailComponent implements OnInit {
 
   @Output() deleteServiceStatus: EventEmitter<boolean> = new EventEmitter<boolean>();
   @ViewChild('selectedTabComponent') selectedTabComponent;
-  isENVavailable: boolean = true;
+  isEnvAvailable: boolean = false;
   disblebtn: boolean = true;
   ServiceName: string;
   deleteServiceVal: boolean;
@@ -206,6 +206,7 @@ export class ServiceDetailComponent implements OnInit {
     this.isLoadingService = true;
     this.http.get('/jazz/services/' + id, null, id).subscribe(response => {
       let service = response.data;
+      this.isEnvAvailable = true;
       this.cache.set(id, service);
       this.onDataFetched(service);
       this.isGraphLoading = false;

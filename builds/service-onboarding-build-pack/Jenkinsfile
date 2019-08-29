@@ -38,6 +38,7 @@ import groovy.transform.Field
 @Field def context_map = [:]
 
 node  {
+  try {
 	def accountDetailsPrimary
 	jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
@@ -338,6 +339,11 @@ node  {
 			}
 		}
 	}
+	} catch (err) {
+   throw err
+  } finally {
+   deleteDir()
+  }
 }
 
 /**
@@ -535,4 +541,3 @@ def readDir() {
   }
   return targetPaths
 }
-
