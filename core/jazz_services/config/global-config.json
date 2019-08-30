@@ -106,13 +106,6 @@
       "type": "Array"
     },
     {
-      "key": "platform",
-      "required": true,
-      "editable": false,
-      "isEmptyAllowed": false,
-      "type": "String"
-    },
-    {
       "key": "deployment_targets",
       "required": true,
       "editable": false,

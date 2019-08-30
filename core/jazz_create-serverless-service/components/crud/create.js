@@ -68,8 +68,6 @@ module.exports = (inputs, callback) => {
 		if (inputs.STATUS) { jsonBody.status = inputs.STATUS }
 		if (inputs.DEPLOYMENT_ACCOUNTS) { jsonBody.deployment_accounts = inputs.DEPLOYMENT_ACCOUNTS }		
 		if (inputs.DEPLOYMENT_TARGETS) { jsonBody.deployment_targets = inputs.DEPLOYMENT_TARGETS }
-
-		if (inputs.PLATFORM) { jsonBody.platform = inputs.PLATFORM }
 		return jsonBody;
 	}
 };
