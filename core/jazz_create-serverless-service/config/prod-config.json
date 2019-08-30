@@ -42,8 +42,15 @@
     ]
   },
   "PRIMARY_DEPLOYMENT_ACCOUNT": {
-    "accountId": "{conf-account}",
-    "region": "{conf-region}",
-    "provider": "{conf-provider}"
+    "AWS": {
+      "accountId": "{aws-primary-accountId}",
+      "region": "{aws-primary-region}",
+      "provider": "{aws-providerId}"
+    },
+    "AZURE" : {
+      "accountId": "{azure-primary-accountId}",
+      "region": "{azure-primary-region}",
+      "provider": "{azure-providerId}"
+    }
   }
 }

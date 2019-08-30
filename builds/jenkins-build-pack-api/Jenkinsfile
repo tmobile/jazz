@@ -89,8 +89,9 @@ node() {
       error "Service Id is not available."
     }
   }
-
-  accountDetails = utilModule.getAccountInfo(config);
+  if(config['provider'] == 'aws'){
+    accountDetails = utilModule.getAccountInfo(config);
+  }
   accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
   if (!config) {
@@ -144,7 +145,7 @@ node() {
     domain = config['domain']
     def runtime = config['providerRuntime']
     def service = config['service']
-    def servicePlatform = config['platform']
+    def servicePlatform = config['provider']
 
     def stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
@@ -254,54 +255,54 @@ node() {
         // resetting env endpoint url
         environmentDeploymentMetadata.setEnvironmentEndpoint(endpointUrl)
         events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
-        withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
-          def randomString = utilModule.generateRequestId();
-          credsId = "jazz-${randomString}";
-          sh "aws configure set profile.${credsId}.region ${config.region}"
-          sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-          sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-          if (servicePlatform == 'azure') {
-            withCredentials([
-              [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
-              [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
-              [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
-              [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
-            ]) {
-              if (environment_logical_id == "prod") {
-                AzureRG = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
-                AzureApim =  configLoader.AZURE.APIM["PRODUCTION"]
-                logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
-              }
-              else if(environment_logical_id.split('-')[1] == "stg"){
-                AzureRG = configLoader.AZURE.RESOURCE_GROUPS["STAGING"]
-                AzureApim =  configLoader.AZURE.APIM["STAGING"]
-                logicalId = environment_logical_id.split('-')[0] //13 + 10
-              }
-              else if(environment_logical_id.split('-')[1] == "dev"){
-                AzureRG = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
-                AzureApim =  configLoader.AZURE.APIM["DEVELOPMENT"]
-                logicalId = environment_logical_id.split('-')[0] //13 + 10
-              }
-              endpointUrl="https://${AzureApim}.azure-api.net/${stackName}/${stackName}"
-              swaggerDocUrl = "https://${AzureApim}.portal.azure-api.net/docs/services/${stackName}/export?DocumentFormat%3DSwagger"
-              apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.ApiManagement/service/$AzureApim"
-              def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
-              def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
-              def store_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Storage/storageAccounts/$storageName"
-              def function_app = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Web/sites/$stackName"
-              def hosting_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Web/serverFarms/$stackName/webHostingPlan"
-              createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name, storageName)
-
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", swaggerDocUrl, "swagger_url", config), environment_logical_id)
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", apigateway, "apigateway", config), environment_logical_id)
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", store_acct, "storage_account", config), environment_logical_id)
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", function_app, "functionapp", config), environment_logical_id)
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", hosting_acct, "app_service_plan", config), environment_logical_id)
-
+        if (servicePlatform == 'azure') {
+          withCredentials([
+            [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
+            [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
+            [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
+            [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
+          ]) {
+            if (environment_logical_id == "prod") {
+              AzureRG = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
+              AzureApim =  configLoader.AZURE.APIM["PRODUCTION"]
+              logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
             }
+            else if(environment_logical_id.split('-')[1] == "stg"){
+              AzureRG = configLoader.AZURE.RESOURCE_GROUPS["STAGING"]
+              AzureApim =  configLoader.AZURE.APIM["STAGING"]
+              logicalId = environment_logical_id.split('-')[0] //13 + 10
+            }
+            else if(environment_logical_id.split('-')[1] == "dev"){
+              AzureRG = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
+              AzureApim =  configLoader.AZURE.APIM["DEVELOPMENT"]
+              logicalId = environment_logical_id.split('-')[0] //13 + 10
+            }
+            endpointUrl="https://${AzureApim}.azure-api.net/${stackName}/${stackName}"
+            swaggerDocUrl = "https://${AzureApim}.portal.azure-api.net/docs/services/${stackName}/export?DocumentFormat%3DSwagger"
+            apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.ApiManagement/service/$AzureApim"
+            def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
+            def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
+            def store_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Storage/storageAccounts/$storageName"
+            def function_app = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Web/sites/$stackName"
+            def hosting_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Web/serverFarms/$stackName/webHostingPlan"
+            createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name, storageName)
 
-          } else {
+            events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", swaggerDocUrl, "swagger_url", config), environment_logical_id)
+            events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", apigateway, "apigateway", config), environment_logical_id)
+            events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", store_acct, "storage_account", config), environment_logical_id)
+            events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", function_app, "functionapp", config), environment_logical_id)
+            events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", hosting_acct, "app_service_plan", config), environment_logical_id)
+
+          }
+
+        } else {
+          withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+            def randomString = utilModule.generateRequestId();
+            credsId = "jazz-${randomString}";
+            sh "aws configure set profile.${credsId}.region ${config.region}"
+            sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+            sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
             // Generate serverless yml file with domain added in function name
             echo "Generate deployment env with domain for ${env_key}"
 

@@ -59,8 +59,9 @@ node  {
 		} else {
 			error "Service Id is not available."
 		}
-
-		accountDetails = utilModule.getAccountInfo(service_config);
+		if(service_config['provider'] == 'aws'){
+			accountDetails = utilModule.getAccountInfo(service_config);
+		}
 
 		def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
   		g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
@@ -80,7 +81,7 @@ node  {
 				switch (service_config['type']) {
 					case "api":
 						if (service_config['runtime'].startsWith("nodejs")) {
-							if(service_config['platform'] == "azure"){
+							if(service_config['provider'] == "azure"){
 							service_template = "azure-api-template-nodejs"
 							}
 							else {
@@ -97,14 +98,14 @@ node  {
 							service_template = 'api-template-go'
 						}
 						else if(service_config['runtime'].startsWith("c#")){
-							if(service_config['platform'] == "azure"){
+							if(service_config['provider'] == "azure"){
 								service_template = 'azure-api-template-csharp'
 							}
 						}
 						break
 
 					case "function":
-						if (service_config['platform'] == "azure") {
+						if (service_config['provider'] == "azure") {
 							if (service_config['runtime'].startsWith("nodejs")) {
 								service_template = "azure-function-template-nodejs"
 							}
@@ -170,23 +171,24 @@ node  {
 				def roleARN
 				def securityGroup
 				def subnetValue
-
-				if (service_config['domain'] && service_config['domain'] == "jazz") {
-					roleARN = accountDetailsPrimary.IAM.PLATFORMSERVICES_ROLEID
-					for (item in accountDetailsPrimary.REGIONS) {
-						if(item.PRIMARY){
-							securityGroup = item.SECURITY_GROUP_IDS
-							subnetValue = item.SUBNET_IDS
+				if(service_config['provider'] == 'aws'){
+					if (service_config['domain'] && service_config['domain'] == "jazz") {
+						roleARN = accountDetailsPrimary.IAM.PLATFORMSERVICES_ROLEID
+						for (item in accountDetailsPrimary.REGIONS) {
+							if(item.PRIMARY){
+								securityGroup = item.SECURITY_GROUP_IDS
+								subnetValue = item.SUBNET_IDS
+							}
 						}
-					}
-				} else {
-					roleARN = accountDetails.IAM.USERSERVICES_ROLEID
-					for (item in accountDetails.REGIONS) {
-						if(item.REGION == service_config.region){
-							securityGroup = item.SECURITY_GROUP_IDS
-							subnetValue = item.SUBNET_IDS
+					} else {
+						roleARN = accountDetails.IAM.USERSERVICES_ROLEID
+						for (item in accountDetails.REGIONS) {
+							if(item.REGION == service_config.region){
+								securityGroup = item.SECURITY_GROUP_IDS
+								subnetValue = item.SUBNET_IDS
+							}
 						}
-					}
+				}
 				}
 
 				def serviceMetadataJson = [

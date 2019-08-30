@@ -98,8 +98,10 @@ node {
 		if (!service_config) {
 			error "Failed to fetch service metadata from catalog"
 		}
-		// Get the Account Details from the ConfigLoader
-		accountInfo = utilModule.getAccountInfo(service_config)
+		if(service_config['provider'] == 'aws'){
+			// Get the Account Details from the ConfigLoader
+			accountInfo = utilModule.getAccountInfo(service_config)
+		}
 
     if(!service_config.region) {
 			service_config.region = configLoader.AWS.DEFAULTS.REGION
@@ -113,9 +115,12 @@ node {
       service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
     }
 
-		service_config.credentialId = accountInfo.CREDENTIAL_ID
-
-    lambdaEvents.setServiceConfig(service_config)
+		if(service_config['provider'] == 'aws'){
+			service_config.credentialId = accountInfo.CREDENTIAL_ID
+		}
+		if(service_config['provider'] == 'aws'){
+			lambdaEvents.setServiceConfig(service_config)
+		}
 		environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 		def environmentList = environmentMetadataLoader.getEnvironmentLogicalIds()
 		echo "Environment List: $environmentList"
