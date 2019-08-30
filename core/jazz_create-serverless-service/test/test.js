@@ -88,7 +88,6 @@ describe('create-serverless-service', function () {
         "body": {
           "service_name": "test-service",
           "service_type": "function",
-          "platform": "aws",
           "domain": "test-domain",
           "runtime": "nodejs",
           "deployment_accounts" : [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
@@ -229,8 +228,8 @@ describe('create-serverless-service', function () {
         "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
       });
 
-      event.body.deployment_accounts = [{"primary":false}];
-      let errMessage = "accountId, region and provider are required for a non-primary deployment account";
+      event.body.deployment_accounts = [{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}];
+      let errMessage = "Invalid input! At least one primary deployment account is required";
       let errType = "BadRequest";
       let bothCases = checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType) &&
         checkCase("body", "deployment_accounts", event.body.deployment_accounts, errMessage, errType);
