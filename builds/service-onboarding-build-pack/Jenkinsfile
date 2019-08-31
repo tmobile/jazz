@@ -118,23 +118,22 @@ node {
       
       // clean existing directory
 			sh 'rm -rf .*'
-      sh 'mkdir ' + service_template
+            sh 'mkdir ' + service_template
       
 			dir(service_template){
-        checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getTemplateUrl(service_template)]]])
+                checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getTemplateUrl(service_template)]]])
 				def config = LoadConfiguration()
-        def serviceMetadataJson = [:]
-        
-        if(service_config['provider'] == 'aws'){
+                def serviceMetadataJson = [:]
+                if(service_config['provider'] == 'aws'){
 					def roleARN
-          if (service_config['domain'] == "jazz") {
-            // allocate platform roles for platform APIs
+                    if (service_config['domain'] == "jazz") {
+                        // allocate platform roles for platform APIs
 						roleARN = platformPrimaryAWSAccountInfo.IAM.PLATFORMSERVICES_ROLEID
 					} else {
-            accountDetails = utilModule.getAccountInfo(service_config);
+                        accountDetails = utilModule.getAccountInfo(service_config);
 						roleARN = accountDetails.IAM.USERSERVICES_ROLEID
-				  }
-          serviceMetadataJson["iamRoleARN"] = roleARN
+                    }
+                    serviceMetadataJson["iamRoleARN"] = roleARN
 				}
 				
 				for (item in config) {
@@ -175,16 +174,16 @@ node {
 
 	stage('Uploading templates to code repository'){
 		dir(service_template){
-      events.sendStartedEvent("CREATE_SERVICE_REPO", 'service repo creation starts', context_map)
+            events.sendStartedEvent("CREATE_SERVICE_REPO", 'service repo creation starts', context_map)
 			try {
-        repo_name = "${service_config['domain']}_${service_config['service']}"
+                repo_name = "${service_config['domain']}_${service_config['service']}"
 				scmModule.createProject(service_config['created_by'], repo_name)
 				events.sendCompletedEvent('CREATE_SERVICE_REPO', 'modify template completed', context_map)
 			}
 			catch (ex) {
 				events.sendFailureEvent('CREATE_SERVICE_REPO', "Service repository creation failed, error: " + ex.getMessage(), context_map)
 				sendStatusEmailNotification("FAILED")
-        error ex.getMessage()
+                error ex.getMessage()
 			}
 		}
 		withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: repo_credential_id, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
@@ -205,52 +204,52 @@ node {
 			echo "Error while moving code to the destination folder"
 		}
 		dir(repo_name){
-      sh "ls -lart"
-      try {
-          events.sendStartedEvent('ADD_WEBHOOK', 'Adding webhook', context_map)
-          scmModule.addWebhook(repo_name, "notify-events", "${g_base_url}/jazz/scm-webhook")
-          events.sendCompletedEvent('ADD_WEBHOOK', 'Webhook added successfully', context_map)
-      } catch (ex) {
-          events.sendFailureEvent('ADD_WEBHOOK', 'Failed while adding webhook: ' + ex.getMessage(), context_map)
-          sendStatusEmailNotification("FAILED")
-          error ex.getMessage()
-      }
+            sh "ls -lart"
+            try {
+                events.sendStartedEvent('ADD_WEBHOOK', 'Adding webhook', context_map)
+                scmModule.addWebhook(repo_name, "notify-events", "${g_base_url}/jazz/scm-webhook")
+                events.sendCompletedEvent('ADD_WEBHOOK', 'Webhook added successfully', context_map)
+            } catch (ex) {
+                events.sendFailureEvent('ADD_WEBHOOK', 'Failed while adding webhook: ' + ex.getMessage(), context_map)
+                sendStatusEmailNotification("FAILED")
+                error ex.getMessage()
+            }
+            
+            try {
+                events.sendStartedEvent("PUSH_TEMPLATE_TO_SERVICE_REPO", 'push template to repo started', context_map)
+                sh "git add --all"
+                sh "git commit -m 'Code from the standard template'"
+                sh "git remote -v"
+                sh "git push -u origin master"
+                events.sendCompletedEvent('PUSH_TEMPLATE_TO_SERVICE_REPO', 'push template completed', context_map)
+            } catch (ex) {
+                events.sendFailureEvent('PUSH_TEMPLATE_TO_SERVICE_REPO', 'Failed while pushing code to repository, error: ' + ex.getMessage(), context_map)
+                sendStatusEmailNotification("FAILED")
+                error ex.getMessage()
+            }
 
-      try {
-          events.sendStartedEvent("PUSH_TEMPLATE_TO_SERVICE_REPO", 'push template to repo started', context_map)
-          sh "git add --all"
-          sh "git commit -m 'Code from the standard template'"
-          sh "git remote -v"
-          sh "git push -u origin master"
-          events.sendCompletedEvent('PUSH_TEMPLATE_TO_SERVICE_REPO', 'push template completed', context_map)
-      } catch (ex) {
-          events.sendFailureEvent('PUSH_TEMPLATE_TO_SERVICE_REPO', 'Failed while pushing code to repository, error: ' + ex.getMessage(), context_map)
-          sendStatusEmailNotification("FAILED")
-          error ex.getMessage()
-      }
+            try {
+                events.sendStartedEvent("ADD_POLICIES_AND_REPO_PERMISSIONS", 'Started adding acl policies for the service', context_map)
+                aclModule.updateServiceACL(service_id, auth_token, "${g_base_url}/jazz/acl/policies", service_config['created_by'])
+                events.sendCompletedEvent('ADD_POLICIES_AND_REPO_PERMISSIONS', 'Completed adding acl policies for the service', context_map)
+            } catch (ex) {
+                events.sendFailureEvent('ADD_POLICIES_AND_REPO_PERMISSIONS', 'Failed while adding acl policies, error: '+ ex.getMessage(), context_map)
+                sendStatusEmailNotification("FAILED")
+                error ex.getMessage()
+            }
 
-      try {
-          events.sendStartedEvent("ADD_POLICIES_AND_REPO_PERMISSIONS", 'Started adding acl policies for the service', context_map)
-          aclModule.updateServiceACL(service_id, auth_token, "${g_base_url}/jazz/acl/policies", service_config['created_by'])
-          events.sendCompletedEvent('ADD_POLICIES_AND_REPO_PERMISSIONS', 'Completed adding acl policies for the service', context_map)
-      } catch (ex) {
-          events.sendFailureEvent('ADD_POLICIES_AND_REPO_PERMISSIONS', 'Failed while adding acl policies, error: '+ ex.getMessage(), context_map)
-          sendStatusEmailNotification("FAILED")
-          error ex.getMessage()
-      }
-
-      try {
-          events.sendStartedEvent("LOCK_MASTER_BRANCH", 'set branch permission to repo started', context_map)
-          scmModule.setBranchPermissions(repo_name)
-          events.sendCompletedEvent('LOCK_MASTER_BRANCH', 'creation completed', context_map)
-      } catch (ex) {
-          events.sendFailureEvent('LOCK_MASTER_BRANCH', ex.getMessage(), context_map)
-          sendStatusEmailNotification("FAILED")
-          error ex.getMessage()
-      }
-    }
-    // Workflow is now complete! Send notification!
-    sendStatusEmailNotification("COMPLETED")
+            try {
+                events.sendStartedEvent("LOCK_MASTER_BRANCH", 'set branch permission to repo started', context_map)
+                scmModule.setBranchPermissions(repo_name)
+                events.sendCompletedEvent('LOCK_MASTER_BRANCH', 'creation completed', context_map)
+            } catch (ex) {
+                events.sendFailureEvent('LOCK_MASTER_BRANCH', ex.getMessage(), context_map)
+                sendStatusEmailNotification("FAILED")
+                error ex.getMessage()
+            }
+        }
+        // Workflow is now complete! Send notification!
+        sendStatusEmailNotification("COMPLETED")
 	}
 }
 
@@ -383,8 +382,8 @@ def loadBuildModules(buildModuleUrl){
 		echo "config loader loaded successfully."
 
 		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
-    awsAPIGatewayModule.initialize()
-    echo "apigateway module loaded successfully."
+        awsAPIGatewayModule.initialize()
+        echo "apigateway module loaded successfully."
 
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
@@ -396,14 +395,14 @@ def loadBuildModules(buildModuleUrl){
 
 		events = load "events-module.groovy"
 		echo "event module loaded successfully."
-    
-    utilModule = load "utility-loader.groovy"
-    echo "util module loaded successfully."
+
+        utilModule = load "utility-loader.groovy"
+        echo "util module loaded successfully."
 
 		aclModule = load "acl-module.groovy"
 		echo "acl module loaded successfully."
 	}
-    echo "Loaded all the required build modules for the workflow"
+        echo "Loaded all the required build modules for the workflow"
 }
 
 /*
