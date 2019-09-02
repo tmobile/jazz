@@ -18,7 +18,7 @@
 }
 
 .create-service-wrap .bold-title {
-  padding: 1.33rem 0;
+  padding: 1.33rem 1.2rem;
 }
 
 .service-box-section {
@@ -40,11 +40,21 @@
 .type-of-service {
   padding-bottom: 0;
 }
-
+.event-type-container {
+  padding: 0px 15px 20px;
+}
+.title-container {
+  padding-left: 30px;
+}
+.event-icon {
+  padding-left: 15px;
+}
 .service-box {
   border-radius: 5px;
   border: solid 1px #cccccc;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 2rem 0;
   cursor: pointer;
   min-height: 120px;
@@ -78,7 +88,10 @@
 .service-box.service-box-selected {
   border: solid 2px #ed008c !important;
 }
-
+.icon-name {
+  color: #ccc;
+  text-align: center;
+}
 .service-box {
   .icon-icon-api,
   .icon-icon-lambda,
@@ -400,7 +413,6 @@
 .arrow_box {
   position: relative;
 }
-
 .arrow_box:after {
   bottom: 100%;
   left: 0;
@@ -427,35 +439,35 @@
     padding-right: 5px;
   }
   &.arrow_box:after {
-    left: 50%;
+    left: 70%;
     margin-left: -7px;
   }
 }
 
 .rate-field.arrow_box:after {
-  left: 25%;
+  left: 40%;
   margin-left: -12px;
 }
 
 .dynamodb-fields.arrow_box:after {
-  left: 18%;
+  left: 25%;
   margin-left: -12px;
   margin-bottom: -15px;
 }
 
 .kinesis-fields.arrow_box:after {
-  left: 42%;
+  left: 44%;
   margin-left: -7px;
   margin-bottom: -15px;
 }
 
 .s3-fields.arrow_box:after {
-  left: 61.5%;
+  left: 63.5%;
   margin-left: -3px;
   margin-bottom: -15px;
 }
 .sqs-fields.arrow_box:after{
-  left:77.5%;
+  left:82.5%;
   margin-left: -3px;
   margin-bottom: -15px;
 }
@@ -902,7 +914,7 @@ p.learn-more {
 .body-auto {}
 
 .requiredInfo {
-  padding: 20px 0;
+  padding: 20px 15px;
   font-weight: bold;
   color: #222222;
   font-size: 12px;

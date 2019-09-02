@@ -6,7 +6,7 @@
 import { Http, Headers, Response } from '@angular/http';
 import { Component, Input, OnInit, Output, EventEmitter, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { ServiceFormData, RateExpression, CronObject, EventExpression, EventLabels } from '../service-form-data';
+import { ServiceFormData, RateExpression, CronObject, EventExpression, EventLabels, AzureEventExpression } from '../service-form-data';
 import { FocusDirective } from '../focus.directive';
 import { CronParserService } from '../../../core/helpers';
 import { ToasterService} from 'angular2-toaster';
@@ -85,12 +85,13 @@ export class CreateServiceComponent implements OnInit {
   cronObj = new CronObject('0/5','*','*','*','?','*')
   rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
   eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
+  azureEventExpression = new AzureEventExpression("azureEventsNone")
 
-  eventLabels = new EventLabels("LAMBDA","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
+  eventLabels = new EventLabels("Lambda","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
 
-  azureEventLabels = new EventLabels("FUNCTION APP", "DocumentDB", "Table Name","Event Hubs", "Event Hub Name", "Storage", "Storage Instance Name","Service Bus Queue", "Service Bus Name");
+  azureEventLabels = new EventLabels("Function", "DocumentDB", "Table Name","Event Hubs", "Event Hub Name", "Storage", "Storage Instance Name","Service Bus Queue", "Service Bus Name");
 
-  amazonEventLabels = new EventLabels("LAMBDA","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
+  amazonEventLabels = new EventLabels("Lambda","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
 
   private doctors = [];
   private toastmessage:any;
@@ -276,6 +277,7 @@ export class CreateServiceComponent implements OnInit {
   	this.eventLabels = this.amazonEventLabels;
   	}
   	else if(platformType == "azure"){
+    this.eventExpression.type = 'azureEventsNone';
   	this.eventLabels = this.azureEventLabels;
   	}
   }
@@ -310,6 +312,9 @@ export class CreateServiceComponent implements OnInit {
     if(val !== `none`){
       this.rateExpression.type = 'none';
     }
+  }
+  onAzureEventChange(val) {
+    this.azureEventExpression.type = val;
   }
   onSelectedDr(selected){
     this.rateExpression.interval = selected;

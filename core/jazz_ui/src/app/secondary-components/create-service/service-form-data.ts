@@ -47,7 +47,11 @@ export class EventExpression {
   ) {  }
 }
 
-
+export class AzureEventExpression {
+  constructor (
+    public type:string,
+  ){}
+}
 
 export class EventLabels {
   constructor(

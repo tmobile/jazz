@@ -11,26 +11,32 @@
     <div *ngIf='!serviceRequested' class="pad-for-mobile">
         <section class="each-step-wrap type-of-service">
             <div class="row">
-                <div class="col-lg-4 col-md-4">
+                <div class="title-container">
                     <p class="step-title">Choose the type of service you want to create<span>*</span></p>
                 </div>
                 <div class="col-lg-8 col-md-8">
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')" (click)="changeServiceType('api')">
                             <div class="icon-icon-api" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                            <p>API</p>
+                        </div>
+                        <div class="icon-name" [ngClass]="{'service-box-selected': typeOfService == 'api'}">
+                            <p>Api</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
                             <img src="./../../../../assets/images/icons/function-glyph.svg">
+                        </div>
+                        <div class="icon-name" [ngClass]="{'service-box-selected': typeOfService == 'function'}">
                             <p>{{eventLabels.functionLabel}}</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'website'}" (keyup.enter)="changeServiceType('website')" (click)="changeServiceType('website')">
                             <div class="icon-icon-web" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                            <p>WEBSITE</p>
+                        </div>
+                        <div class="icon-name" [ngClass]="{'service-box-selected': typeOfService == 'website'}">
+                            <p>Website</p>
                         </div>
                     </section>
                 </div>
@@ -38,7 +44,7 @@
         </section>
         <section class="each-step-wrap type-of-platform">
             <div class="row">
-                <div class="col-lg-4 col-md-4">
+                <div class="title-container">
                     <p class="step-title">Choose what platform you would like to use<span>*</span></p>
                 </div>
                 <div class="col-lg-8 col-md-8">
@@ -47,19 +53,25 @@
                                 <div class="icon-icon-AWS">
                                         <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span>
                                 </div>
-                            <p>AWS</p>
+                        </div>
+                        <div class="icon-name" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}">
+                            <p>Aws</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
-                            <div class="icon-icon-azure" *ngIf=" typeOfPlatform != 'azure'"></div>
+                            <img *ngIf=" typeOfPlatform != 'azure'" src="./../../../../assets/images/icons/azure-deselected.png">
                             <img *ngIf=" typeOfPlatform == 'azure'" src="./../../../../assets/images/icons/Azure.svg">
+                        </div>
+                        <div class="icon-name" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}">
                             <p>Azure</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
                         <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}" (click)="changePlatformType('gcloud')">
                             <div class="icon-icon-googlecloud"></div>
+                        </div>
+                        <div class="icon-name" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}">
                             <p>Google Cloud</p>
                         </div>
                     </section>
@@ -68,7 +80,7 @@
         </section>
         <section *ngIf="deploymentTargets[typeOfService.toUpperCase()].active && apigeeFeature" class="form-row deployment-targets">
           <div class="row">
-            <div class="col-lg-4 col-md-4">
+            <div class="title-container">
               <p class="step-title">Choose your API deployment target<span>*</span></p>
             </div>
             <radio-checkbox
@@ -80,7 +92,7 @@
 
         <section class="each-step-wrap run-time" *ngIf="typeOfService != 'website'">
             <div class="row">
-                <div class="col-lg-4 col-md-4">
+                <div class="title-container">
                     <p class="step-title">Choose your runtime<span>*</span></p>
                 </div>
                 <div class="col-lg-8 col-md-8">
@@ -97,7 +109,7 @@
         </section>
         <section class="each-step-wrap run-time" *ngIf="typeOfService == 'website'">
             <div class="row">
-                <div class="col-lg-4 col-md-4">
+                <div class="title-container">
                     <p class="step-title">Choose website framework<span>*</span></p>
                 </div>
                 <div class="col-lg-8 col-md-8">
@@ -135,7 +147,7 @@
         <form (ngSubmit)="onSubmit(); serviceForm.reset()" #serviceForm="ngForm" class='mob-form-pad'>
             <section class="each-step-wrap service-name">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">Service Name<span>*</span></p>
                         <p class="step-details">Name of your API, Microservice or Website that you want to create.</p>
                     </div>
@@ -160,7 +172,7 @@
             </section>
             <section class="each-step-wrap domain-name">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="col-lg-8 col-md-8 title-container">
                         <p class="step-title">Namespace<span>*</span></p>
                         <p class="step-details">Namespaces provide easier abstraction to implement similar security & access control on your APIs.</p>
                     </div>
@@ -180,7 +192,7 @@
             </section>
             <section class="each-step-wrap service-description">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">Service Description</p>
                         <p class="step-details hide">Multiple APIs can be bundled under a single namespace. Namespace provide easier abstraction to implement similar security & access control on your APIs.</p>
                     </div>
@@ -198,7 +210,7 @@
 
              <section class="each-step-wrap Internal-access" *ngIf=" typeOfPlatform != 'azure'">
               <div class="row">
-                  <div class="col-lg-4 col-md-4">
+                  <div class="title-container">
                       <p class="step-title">Account &amp; Region</p>
                       <p class="step-details">Choose the account and region you want your application deployed on</p>
                   </div>
@@ -232,7 +244,7 @@
 
             <section class="each-step-wrap slack-channel-integration">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">Slack Channel Integration</p>
                     </div>
                     <div class="col-lg-8 col-md-8">
@@ -261,7 +273,7 @@
             </section>
             <section class="each-step-wrap cache-ttl-integration" *ngIf="typeOfService == 'api'">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">Cache Time-to-Live (TTL)</p>
                     </div>
                     <div class="col-lg-8 col-md-8">
@@ -284,31 +296,40 @@
                     </div>
                 </div>
             </section>
-            <section class="each-step-wrap event-schedule" *ngIf="typeOfService == 'function'">
+            <section class="each-step-wrap event-schedule" *ngIf="typeOfService == 'function' && typeOfPlatform == 'aws'">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">Event Schedule</p>
                     </div>
                     <div class="col-lg-8 col-md-8">
                         <div class="input-field-container event-schedule-radio row zero-margin">
-                            <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container">
-                                    <input type="radio" name="EventSchedule" id="none" [value]="none" [checked]="rateExpression.type == 'none'" (click)="onEventScheduleChange('none')">
-                                    <label for="none"><span></span><span class="background"></span>None</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container">
-                                    <input type="radio" name="EventSchedule" id="fixedRate" [value]="rate" [checked]="rateExpression.type == 'rate'" (click)="onEventScheduleChange('rate')">
-                                    <label for="fixedRate"><span></span><span class="background"></span>Fixed Rate of</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container">
-                                    <input type="radio" name="EventSchedule" id="cron" [value]="cron" [checked]="rateExpression.type == 'cron'" (click)="onEventScheduleChange('cron')">
-                                    <label for="cron"><span></span><span class="background"></span>Cron Expression</label>
-                                </div>
-                            </section>
+                                <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': rateExpression.type == 'none'}"
+                                        (click)="onEventScheduleChange('none')">
+                                        <img src="./../../../../assets/images/icons/none-glyph.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': rateExpression.type == 'none'}">
+                                        <p>None</p>
+                                    </div>
+                                </section>
+                                <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': rateExpression.type == 'rate'}"
+                                        (click)="onEventScheduleChange('rate')">
+                                        <img src="./../../../../assets/images/icons/fixed-rate-glyph.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': rateExpression.type == 'rate'}">
+                                        <p>Fixed Rate of</p>
+                                    </div>
+                                </section>
+                                <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': rateExpression.type == 'cron'}"
+                                        (click)="onEventScheduleChange('cron')">
+                                        <img src="./../../../../assets/images/icons/cron-glyph.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': rateExpression.type == 'cron'}">
+                                        <p>Cron Expression</p>
+                                    </div>
+                                </section>
                         </div>
                         <div class="event-schedule-fields" [ngClass]="{'zero-padding': rateExpression.type == 'none'}">
                             <div class='clearfix'>
@@ -375,42 +396,104 @@
             <!-- start of aws events -->
             <section class="each-step-wrap aws-events" *ngIf="typeOfService == 'function'">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">Event Types</p>
                         <p class="step-details">Select appropriate events that you want to subscribe to.</p>
                     </div>
-                    <div class="col-lg-8 col-md-8">
-                        <div class="input-field-container event-schedule-radio row zero-margin">
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                                <div class="radio-container ">
-                                    <input type="radio" name="AWSEvents" id="awsEventsNone" [value]="awsEventsNone" [checked]="eventExpression.type == 'awsEventsNone'" (click)="onAWSEventChange('awsEventsNone')">
-                                    <label for="awsEventsNone"><span></span><span class="background"></span>None</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                                <div class="radio-container ">
-                                    <input  type="radio" name="AWSEvents" id="dynamodb" [value]="dynamodb" [checked]="eventExpression.type == 'dynamodb'" (click)="onAWSEventChange('dynamodb')">
-                                    <label for="dynamodb"><span></span><span class="background"></span>{{eventLabels.databaseLabel}}</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                                <div class="radio-container ">
-                                    <input  type="radio" name="AWSEvents" id="kinesis" [value]="kinesis" [checked]="eventExpression.type == 'kinesis'" (click)="onAWSEventChange('kinesis')">
-                                    <label for="kinesis"><span></span><span class="background"></span>{{eventLabels.streamLabel}}</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                                <div class="radio-container ">
-                                    <input  type="radio" name="AWSEvents" id="s3" [value]="s3" [checked]="eventExpression.type == 's3'" (click)="onAWSEventChange('s3')">
-                                    <label for="s3"><span></span><span class="background"></span>{{eventLabels.storageLabel}}</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                              <div class="radio-container">
-                                  <input type="radio" name="AWSEvents" id="sqs" [value]="sqs" [checked]="eventExpression.type == 'sqs'" (click)="onAWSEventChange('sqs')">
-                                  <label for="sqs"><span></span><span class="background"></span>{{eventLabels.queueLabel}}</label>
-                              </div>
-                            </section>
+                    <div class="event-icon">
+                        <div class="input-field-container event-schedule-radio row zero-margin" *ngIf="typeOfPlatform === 'aws'">
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': eventExpression.type == 'awsEventsNone'}"
+                                        (click)="onAWSEventChange('awsEventsNone')">
+                                        <img src="./../../../../assets/images/icons/Group.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': eventExpression.type == 'awsEventsNone'}">
+                                        <p>None</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': eventExpression.type == 'dynamodb'}"
+                                        (click)="onAWSEventChange('dynamodb')">
+                                        <img src="./../../../../assets/images/icons/220px-DynamoDB.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': eventExpression.type == 'dynamodb'}">
+                                        <p>Dynamo DB</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': eventExpression.type == 'kinesis'}"
+                                        (click)="onAWSEventChange('kinesis')">
+                                        <img src="./../../../../assets/images/icons/kinesis.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': eventExpression.type == 'kinesis'}">
+                                        <p>kinesis</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': eventExpression.type == 's3'}"
+                                        (click)="onAWSEventChange('s3')">
+                                        <img src="./../../../../assets/images/icons/aws-s3.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': eventExpression.type == 's3'}">
+                                        <p>S3</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': eventExpression.type == 'sqs'}"
+                                        (click)="onAWSEventChange('sqs')">
+                                        <img src="./../../../../assets/images/icons/sqs.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': eventExpression.type == 'sqs'}">
+                                        <p>SQS</p>
+                                    </div>
+                                </section>
+                        </div>
+                        <div class="input-field-container event-schedule-radio row zero-margin" *ngIf="typeOfPlatform === 'azure'">
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'azureEventsNone'}"
+                                        (click)="onAzureEventChange('azureEventsNone')">
+                                        <img src="./../../../../assets/images/icons/none-glyph.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'azureEventsNone'}">
+                                        <p>none</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'CosmosDB'}"
+                                        (click)="onAzureEventChange('CosmosDB')">
+                                        <img src="./../../../../assets/images/icons/cosmos.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'CosmosDB'}">
+                                        <p>Cosmos DB</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'eventhub'}"
+                                        (click)="onAzureEventChange('eventhub')">
+                                        <img src="./../../../../assets/images/icons/azure-event-hub.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'eventhub'}">
+                                        <p>Event Hub</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'storage account'}"
+                                        (click)="onAzureEventChange('storage account')">
+                                        <img src="./../../../../assets/images/icons/Azure-Storage.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'storage account'}">
+                                        <p>Storage Account</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'service bus'}"
+                                            (click)="onAzureEventChange('service bus')">
+                                            <img src="./../../../../assets/images/icons/download.svg">
+                                        </div>
+                                        <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'service bus'}">
+                                            <p>Service Bus</p>
+                                        </div>
+                                    </section>
                         </div>
                         <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': eventExpression.type == 'none'}">
                             <div class="dynamodb-fields row zero-margin arrow_box hide" [class.show]="chkDynamodb()">
@@ -495,7 +578,7 @@
             <!-- end of aws events -->
             <section class="each-step-wrap cloudfront-url" *ngIf="typeOfService == 'website'">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">CDN configuration</p>
                         <p class="step-details hide">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p>
                     </div>
