@@ -28,6 +28,26 @@
       "minLength": 1,
       "maxLength": 128,
       "regexPattern": "^[a-zA-Z0-9_.-]+$"
+    },
+    "documentdb": {
+      "minLength": 3,
+      "maxLength": 255,
+      "regexPattern": "^[a-zA-Z0-9_.-]+$"
+    },
+    "eventhub": {
+      "minLength": 1,
+      "maxLength": 128,
+      "regexPattern": "^[a-zA-Z0-9_.-]+$"
+    },
+    "storage": {
+      "minLength": 3,
+      "maxLength": 63,
+      "regexPattern": "^[a-z0-9-]+$"
+    },
+    "servicebusqueue": {
+      "minLength": 1,
+      "maxLength": 80,
+      "regexPattern": "^[a-zA-Z0-9-_]+$"
     }
   },
   "DEPLOYMENT_TARGETS": {

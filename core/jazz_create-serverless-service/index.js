@@ -442,7 +442,11 @@ var validateEventName = (eventType, sourceName, config) => {
     's3': sourceName,
     'sqs': sourceName.split(':').pop(),
     'dynamodb': sourceName.split('/').pop(),
-    'kinesis': sourceName.split('/').pop()
+    'kinesis': sourceName.split('/').pop(),
+    'documentdb': sourceName.split('/').pop(),
+    'eventhub': sourceName.split('/').pop(),
+    'storage': sourceName.split('/').pop(),
+    'servicebusqueue': sourceName.split('/').pop()
   };
 
   eventSourceName = eventSourceObject[sourceType];

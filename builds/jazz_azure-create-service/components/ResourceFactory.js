@@ -50,7 +50,6 @@ module.exports = class ResourceFactory {
 
 
   async createHostingPlan(resourceGroupName = this.resourceGroupName, location = 'westus', tags = {}, planSkuName = 'Y1', planName = 'WestUSPlan') {
-    //https://azure.microsoft.com/en-us/pricing/details/app-service/windows/
     let info = {
       location: location,
       tags: tags,
@@ -60,7 +59,7 @@ module.exports = class ResourceFactory {
       }
     };
 
-    let client = await this.factory.getResource("WebAppManagementClient");
+    let client = await this.factory.getResource("WebSiteManagementClient");
     let result = await client.appServicePlans.createOrUpdate(resourceGroupName, planName, info);
     return this.withStack(result);
   }
@@ -118,7 +117,7 @@ module.exports = class ResourceFactory {
 
 
   async createWebApp(appName, envelope, resourceGroupName = this.resourceGroupName) {
-    let client = await this.factory.getResource("WebAppManagementClient");
+    let client = await this.factory.getResource("WebSiteManagementClient");
     let result = await client.webApps.createOrUpdate(resourceGroupName, appName, envelope);
     return this.withStack(result);
   }
@@ -220,27 +219,55 @@ module.exports = class ResourceFactory {
   }
 
 
-  async createOrUpdateApiGatewayWithSwaggerJson(serviceName, apiId, swagger, basePath = "api", resourceGroupName = this.resourceGroupName) {
+  async createOrUpdateApiGatewayWithSwaggerJson(serviceName, apiId, swagger, appName, basePath = "api", resourceGroupName = this.resourceGroupName) {
     const fs = require("fs");
     let text = fs.readFileSync(swagger);
     var obj = JSON.parse(text);
+    obj = this.updateSwagger(obj, appName)
 
     let parameters = {
-      "contentFormat": "swagger-json",
-      "contentValue": JSON.stringify(obj),
-      "path": basePath
+        "format": "swagger-json",
+        "value": JSON.stringify(obj),
+        "path": basePath
     }
+
+    let dataParams = {
+      "description": "Sample Description API",
+      "displayName": appName,
+      "serviceUrl": "http://dev-cloud-api.corporate.t-mobile.com/api",
+      "path": appName,
+      "protocols": [
+        "https"
+      ]
+    }
+
     let client = await this.factory.getResource("ApiManagementClient");
+    let dataValue = await client.api.createOrUpdate(resourceGroupName, serviceName, apiId, dataParams, null);
     let result = await client.api.createOrUpdate(resourceGroupName, serviceName, apiId, parameters, null);
     this.serviceName = serviceName;
     return this.withStack(result);
   }
 
+  updateSwagger(swaggerFile, appName){
+    let data = swaggerFile;
+    data.info.title = appName;
+    data.host = 'conferenceapi.azurewebsites.net';
+    delete data.basePath;
+    let tempData = data.paths['/{service_name}'];
+    delete data.paths['/{service_name}'];
+    data.paths['/sessions'] = tempData;
+    data.paths['/sessions'].options.operationId = 'options'
+    data.paths['/sessions'].get.operationId = 'get'
+    data.paths['/sessions'].post.operationId = 'post'
+    data.paths['/sessions'].post.consumes.pop()
+    data.paths['/sessions'].post.produces.pop()
+    return data;
+  }
 
   async createOrUpdateApiContract(serviceName, apiId, resourceGroupName = this.resourceGroupName){
     let client = await this.factory.getResource("ApiManagementClient");
     let parameters = {
-      "contentFormat": "xml",
+      "format": "xml",
       "policyContent": `<policies>
                     <inbound>
                     <cors>
@@ -341,17 +368,10 @@ module.exports = class ResourceFactory {
       let stream = new Stream.PassThrough();
       stream.end(decompressedData);
       promiseArray.push(new Promise(function(resolve, reject){
-        blobStorageService.createBlockBlobFromStream("$web", zipEntries[i].entryName, stream, buffer.length, {contentSettings: {contentType: mime.lookup(zipEntries[i].entryName)}} ,function (error, result, response) {
-          if (error) {
-            reject("Couldn't upload stream");
-
-          } else {
-            resolve(result);
-          }
-        });
+        stream.pipe(blobStorageService.createWriteStreamToBlockBlob("$web", zipEntries[i].entryName, {contentSettings: {contentType: mime.lookup(zipEntries[i].entryName)}}));
       }));
     }
-    return await Promise.all(promiseArray).then(() => { console.log('resolved!'); })
+    return Promise.all(promiseArray).then(() => { console.log('resolved!'); })
       .catch(() => { console.log('failed!') });
   }
 
@@ -364,7 +384,7 @@ module.exports = class ResourceFactory {
       "dir": "site\\wwwroot"
     }
 
-    let client = await this.factory.getResource("WebAppManagementClient");
+    let client = await this.factory.getResource("WebSiteManagementClient");
     let publishingCredentials = await client.webApps.listPublishingCredentials(resourceGroup, appName, null);
 
     return new Promise(function(resolve, reject) {
@@ -396,7 +416,7 @@ module.exports = class ResourceFactory {
   async uploadZipToKudu(appName, filename, resourceGroup = this.resourceGroupName) {
     var fs = require('fs');
 
-    let client = await this.factory.getResource("WebAppManagementClient");
+    let client = await this.factory.getResource("WebSiteManagementClient");
     let publishingCredentials = await client.webApps.listPublishingCredentials(resourceGroup, appName, null);
     return new Promise(function(resolve, reject) {
       request({
@@ -467,7 +487,7 @@ module.exports = class ResourceFactory {
 
   async getToken(stackName, resourceGroup = this.resourceGroupName) {
 
-    let client = await this.factory.getResource('WebAppManagementClient');
+    let client = await this.factory.getResource('WebSiteManagementClient');
     let publishingCredentials = await client.webApps.listPublishingCredentials(resourceGroup, stackName, null);
 
     return new Promise(function (resolve, reject) {
@@ -489,13 +509,13 @@ module.exports = class ResourceFactory {
 
   }
   async existWebApp(appName, resourceGroupName = this.resourceGroupName) {
-    let client = await this.factory.getResource("WebAppManagementClient");
+    let client = await this.factory.getResource("WebSiteManagementClient");
     return await client.webApps.get(resourceGroupName, appName);
 
   }
 
   async restartWebApp(appName, resourceGroupName = this.resourceGroupName) {
-    let client = await this.factory.getResource("WebAppManagementClient");
+    let client = await this.factory.getResource("WebSiteManagementClient");
     return await client.webApps.restart(resourceGroupName, appName);
   }
 

@@ -9,7 +9,7 @@ async function create(data, client){
       location: data.location,
       tags: data.tags
     };
-    await client.eventHubs.createOrUpdate(data.resourceGroupName, data.namespace, data.resourceName, params);
+    return await client.eventHubs.createOrUpdate(data.resourceGroupName, data.namespace, data.resourceName, params);
   }
 }
 
@@ -22,7 +22,7 @@ async function createNamespace(data, client) {
       tags: data.tags
     };
 
-    await client.namespaces.createOrUpdate(data.resourceGroupName, data.namespace, params);
+   return await client.namespaces.createOrUpdate(data.resourceGroupName, data.namespace, params);
   }
 }
 
