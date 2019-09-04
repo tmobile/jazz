@@ -248,6 +248,16 @@ module.exports = class ResourceFactory {
     return this.withStack(result);
   }
 
+  /* 
+  Function to update Swagger for azure API 
+  Updated values:-
+    title -> variable replaced with the appName
+    host -> variable replaced with the host address of azure sample api. Tried with dev-cloud-api.corporate.t-mobile.com/api but didn't work out
+    basePath -> deleted the key, as Azure updates the swagger with its own basePath when checked in the portal
+    service_name -> variables replaced with key called sessions. It can be any key word. Tried to give the actual service name, but didn't work out
+    operationId -> variable replaced with actual method name
+    Removed application/x-www-form-urlencoded from post method
+  */
   updateSwagger(swaggerFile, appName){
     let data = swaggerFile;
     data.info.title = appName;
