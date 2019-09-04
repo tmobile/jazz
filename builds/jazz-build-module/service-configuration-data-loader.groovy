@@ -412,11 +412,11 @@ def loadServiceConfigurationData() {
       sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/prod-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/test-config.json"
 
-      if(config_loader.AZURE.IS_ENABLED){
-        updateConfigValue("{aws-primary-region}", region)
-        updateConfigValue("{aws-providerId}", config_loader.AWS.DEFAULTS.PROVIDER)
-        updateConfigValue("{aws-primary-accountId}", config_loader.AWS.DEFAULTS.ACCOUNTID)
+      updateConfigValue("{aws-primary-region}", region)
+      updateConfigValue("{aws-providerId}", config_loader.AWS.DEFAULTS.PROVIDER)
+      updateConfigValue("{aws-primary-accountId}", config_loader.AWS.DEFAULTS.ACCOUNTID)
 
+      if(config_loader.AZURE.IS_ENABLED){
         updateConfigValue("{azure-primary-region}", config_loader.AZURE.DEFAULTS.REGION)
         updateConfigValue("{azure-providerId}", config_loader.AZURE.DEFAULTS.PROVIDER)
         updateConfigValue("{azure-primary-accountId}", config_loader.AZURE.DEFAULTS.ACCOUNTID)
