@@ -276,10 +276,10 @@ node() {
             'envId'             : environment_logical_id,
             'serviceCatalog'    : config,
             'isScheduleEnabled' : isScheduleEnabled,
-            'isStreamEnabled'   : isStreamEnabled,
-            'isQueueEnabled'    : isSQSEventEnabled,
-            'isDbEnabled'       : isDynamoDbEnabled,
-            'isStorageEnabled'  : isS3EventEnabled
+            'isStreamEnabled'   : isEventHubEnabled,
+            'isQueueEnabled'    : isServiceBusQueueEnabled,
+            'isDbEnabled'       : isCosmoDbEnabled,
+            'isStorageEnabled'  : isStorageEnabled
           ]
           try {
             def endpoint = azureDeployer.createFunction(serviceInfo)
