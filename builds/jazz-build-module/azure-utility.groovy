@@ -35,7 +35,7 @@ def setAzureVar(serviceInfo) {
 //TODO this is not needed after we fix the UI
 def getQueueName(serviceMetadata, env) {
 
-  def queueNameInput = serviceMetadata['event_source_sqs']
+  def queueNameInput = serviceMetadata['event_source_servicebus']
   def queueNameArray = queueNameInput.split(':')
   return resourceUtil.getResourceName(queueNameArray[queueNameArray.size() - 1], env)
 }
@@ -43,18 +43,18 @@ def getQueueName(serviceMetadata, env) {
 //TODO this is not needed after we fix the UI
 def getStreamName(serviceMetadata, env) {
 
-  def nameInput = serviceMetadata['event_source_kinesis']
+  def nameInput = serviceMetadata['event_source_eventhub']
   def nameArray = nameInput.split('/')
   return resourceUtil.getResourceName(nameArray[nameArray.size() - 1], env)
 }
 
 def getStorageName(serviceMetadata, env) {
-  def nameInput = serviceMetadata['event_source_s3']
+  def nameInput = serviceMetadata['event_source_storage']
   return resourceUtil.getResourceName(nameInput, env)
 }
 
 def getDbName(serviceMetadata, env) {
-  def nameInput = serviceMetadata['event_source_dynamodb']
+  def nameInput = serviceMetadata['event_source_cosmosdb']
   def nameArray = nameInput.split('/')
   return resourceUtil.getResourceName(nameArray[1], env)
 }
