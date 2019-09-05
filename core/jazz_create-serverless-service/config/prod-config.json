@@ -39,7 +39,7 @@
       "maxLength": 128,
       "regexPattern": "^[a-zA-Z0-9_.-]+$"
     },
-    "storage": {
+    "storageaccount": {
       "minLength": 3,
       "maxLength": 63,
       "regexPattern": "^[a-z0-9-]+$"

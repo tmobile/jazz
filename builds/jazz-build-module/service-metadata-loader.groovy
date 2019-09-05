@@ -61,13 +61,13 @@ def loadServiceMetadata(service_id){
 			  metadata['provider'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.provider.S
 			} else {
 			  if(configLoader.AZURE.IS_ENABLED){
-				metadata['accountId'] = configLoader.AZURE.DEFAULTS.ACCOUNTID
-				metadata['region'] = configLoader.AZURE.DEFAULTS.REGION
-				metadata['provider'] = configLoader.AZURE.DEFAULTS.PROVIDER
+					metadata['accountId'] = configLoader.AZURE.DEFAULTS.ACCOUNTID
+					metadata['region'] = configLoader.AZURE.DEFAULTS.REGION
+					metadata['provider'] = configLoader.AZURE.DEFAULTS.PROVIDER
 			  } else {
-				metadata['accountId'] = configLoader.AWS.DEFAULTS.ACCOUNTID
-				metadata['region'] = configLoader.AWS.DEFAULTS.REGION
-				metadata['provider'] = configLoader.AWS.DEFAULTS.PROVIDER 
+					metadata['accountId'] = configLoader.AWS.DEFAULTS.ACCOUNTID
+					metadata['region'] = configLoader.AWS.DEFAULTS.REGION
+					metadata['provider'] = configLoader.AWS.DEFAULTS.PROVIDER 
 			  }
 			}
 			metadata['catalog_metadata'] = catalog_metadata

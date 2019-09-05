@@ -152,6 +152,10 @@ node() {
   def isS3EventEnabled = isEnabled(config, "event_source_s3")
   def isSQSEventEnabled = isEnabled(config, "event_source_sqs")
   def isEc2EventEnabled = isEnabled(config, "event_source_ec2")
+  def isCosmoDbEnabled = isEnabled(config, "event_source_documentdb")
+  def isEventHubEnabled = isEnabled(config, "event_source_eventhub")
+  def isStorageEnabled = isEnabled(config, "event_source_storageaccount")
+  def isServiceBusQueueEnabled = isEnabled(config, "event_source_servicebusqueue")
   def isEventSchdld = false
   def internalAccess = config['require_internal_access']
   domain = config['domain']

@@ -445,7 +445,7 @@ var validateEventName = (eventType, sourceName, config) => {
     'kinesis': sourceName.split('/').pop(),
     'documentdb': sourceName.split('/').pop(),
     'eventhub': sourceName.split('/').pop(),
-    'storage': sourceName.split('/').pop(),
+    'storageaccount': sourceName.split('/').pop(),
     'servicebusqueue': sourceName.split('/').pop()
   };
 
