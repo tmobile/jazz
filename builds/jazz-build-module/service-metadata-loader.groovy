@@ -60,7 +60,7 @@ def loadServiceMetadata(service_id){
 			  metadata['region'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.region.S
 			  metadata['provider'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.provider.S
 			} else {
-			  if(configLoader.AZURE.IS_ENABLED){
+			  if(configLoader.AZURE && configLoader.AZURE.IS_ENABLED instanceof Boolean && configLoader.AZURE.IS_ENABLED){
 					metadata['accountId'] = configLoader.AZURE.DEFAULTS.ACCOUNTID
 					metadata['region'] = configLoader.AZURE.DEFAULTS.REGION
 					metadata['provider'] = configLoader.AZURE.DEFAULTS.PROVIDER
