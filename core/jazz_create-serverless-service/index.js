@@ -70,6 +70,7 @@ var handler = (event, context, cb) => {
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError(`Invalid service type provided - ${service_creation_data.service_type}`)));
     }
+
     // validate deployment targets
     if (service_creation_data.deployment_targets && typeof service_creation_data.deployment_targets === "object") {
       const allowedSubServiceType = config.DEPLOYMENT_TARGETS[service_creation_data.service_type];
@@ -80,14 +81,15 @@ var handler = (event, context, cb) => {
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError(`Deployment targets is missing or is not in a valid format`)));
     }
+
     // Validate and set deployment accounts
     let primaryAccountCount = 0;
 
     if (Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts) {
-      let providerValues = validateProviders(service_creation_data.deployment_accounts);
+      let providerValues = validateMultipleProviders(service_creation_data.deployment_accounts);
       if(!providerValues){
-        logger.error('Support for more than one provider is not available!');
-        return cb(JSON.stringify(errorHandler.throwInputValidationError('Support for more than one provider is not available!')));
+        logger.error('Deployment accounts has multiple providers which is not supported now!');
+        return cb(JSON.stringify(errorHandler.throwInputValidationError('Deployment accounts has multiple providers which is not supported now!')));
       }
       for (let eachDeploymentAccount of service_creation_data.deployment_accounts) {
         if(eachDeploymentAccount.provider == 'aws'){
@@ -142,6 +144,14 @@ var handler = (event, context, cb) => {
       }
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError(`Deployment accounts is missing or is not in a valid format`)));
+    }
+
+    //validate list of providers
+    if(service_creation_data.deployment_accounts){
+      if(!validateProviders(service_creation_data.deployment_accounts)){
+        logger.error('List of Providers are not valid')
+        return cb(JSON.stringify(errorHandler.throwInputValidationError('List of Providers are not valid')))
+      }
     }
 
     user_id = event.principalId;
@@ -238,12 +248,27 @@ var startServiceOnboarding = (service_creation_data, config, service_id) => {
   });
 }
 
-function validateProviders(deployment_accounts){
+/**
+ * Function to check and validate if the list of providers for deployment_accounts are all same or different. If same return true else false
+ */
+function validateMultipleProviders(deployment_accounts){
   let providerValues = []
   for (let eachDeploymentAccount of deployment_accounts){
     providerValues.push(eachDeploymentAccount.provider)
   }
   return providerValues.every( (val, i, arr) => val === arr[0] )
+}
+
+/**
+ * Function to check and validate the list of providers
+ */
+function validateProviders(deployment_accounts){
+  for (let eachDeploymentAccount of deployment_accounts){
+    if(eachDeploymentAccount.provider != 'aws' && eachDeploymentAccount.provider != 'azure'){
+        return false
+    }
+  }
+  return true
 }
 
 var getToken = (configData) => {
