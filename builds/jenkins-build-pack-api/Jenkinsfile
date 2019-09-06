@@ -151,7 +151,10 @@ node() {
 
     def internalAccess = config['require_internal_access']
 
-    def roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
+    def roleId
+    if(config['provider'] == 'aws'){
+      roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
+    }
 
     sonarModule.initialize(configLoader, config, branch)
     if (servicePlatform != 'azure') {
