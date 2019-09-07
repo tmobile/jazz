@@ -254,23 +254,15 @@ module.exports = class ResourceFactory {
     title -> variable replaced with the appName
     host -> variable replaced with the host address of azure sample api. Tried with dev-cloud-api.corporate.t-mobile.com/api but didn't work out
     basePath -> deleted the key, as Azure updates the swagger with its own basePath when checked in the portal
-    service_name -> variables replaced with key called sessions. It can be any key word. Tried to give the actual service name, but didn't work out
-    operationId -> variable replaced with actual method name
-    Removed application/x-www-form-urlencoded from post method
   */
   updateSwagger(swaggerFile, appName){
     let data = swaggerFile;
     data.info.title = appName;
     data.host = 'conferenceapi.azurewebsites.net';
     delete data.basePath;
-    let tempData = data.paths['/{service_name}'];
-    delete data.paths['/{service_name}'];
+    let tempData = data.paths['/'+appName];
+    delete data.paths['/'+appName];
     data.paths['/sessions'] = tempData;
-    data.paths['/sessions'].options.operationId = 'options'
-    data.paths['/sessions'].get.operationId = 'get'
-    data.paths['/sessions'].post.operationId = 'post'
-    data.paths['/sessions'].post.consumes.pop()
-    data.paths['/sessions'].post.produces.pop()
     return data;
   }
 
