@@ -92,14 +92,23 @@
   color: #ccc;
   text-align: center;
 }
+.serviceBus-div {
+margin-left: 14px;
+}
+.inline-input {
+  text-overflow: ellipsis;
+}
 .service-box {
   .icon-icon-api,
   .icon-icon-lambda,
   .icon-icon-web,
   .icon-logo-aws,
   .icon-logo-azure,
-  .icon-logo-googleCloud,
   .icon-logo-docker {
+    font-size: 40px;
+    color: #ed008c;
+  }
+  .icon-logo-googleCloud {
     font-size: 40px;
     color: #ccc;
   }
@@ -250,8 +259,15 @@
   .icon-icon-web,
   .icon-icon-AWS,
   .icon-icon-azure,
-  .icon-icon-googlecloud,
   .icon-icon-ccp {
+    font-size: 40px;
+    color: #ed008c;
+    span {
+      font-size: 40px;
+      color: #ccc !important;
+    }
+  }
+  .icon-icon-googlecloud {
     font-size: 40px;
     color: #ccc;
     span {
@@ -269,11 +285,6 @@
     .icon-icon-azure {
       color:#0078d7;
   }
-
-
-
-
-
   }
 }
 
@@ -453,6 +464,16 @@
   left: 25%;
   margin-left: -12px;
   margin-bottom: -15px;
+}
+.name-style {
+  padding-top: 1rem;
+  margin: 0;
+  font-size: 1rem;
+  font-family: Lato !important;
+  font-weight: bold;
+  letter-spacing: 0.7px;
+  color: #cccccc;
+  text-transform: uppercase;
 }
 
 .kinesis-fields.arrow_box:after {
