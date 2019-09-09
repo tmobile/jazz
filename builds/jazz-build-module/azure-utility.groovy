@@ -4,26 +4,35 @@ import groovy.transform.Field
 
 @Field def configLoader
 @Field def resourceUtil
+@Field def utilModule
 
 
 echo "azure util loaded successfully"
 
-def initialize(configData, resourceUtility){
+def initialize(configData, resourceUtility, utilModule){
 
   configLoader = configData
   resourceUtil = resourceUtility
+  utilModule = utilModule
 }
 
 
 def setAzureVar(serviceInfo) {
+  def azureAccount = utilModule.getAzureAccountInfo(serviceInfo.serviceCatalog)
+  def azureRegionInfo
+  for (item in azureAccount.REGIONS) {
+		if(item.REGION == serviceInfo.serviceCatalog.region){
+			azureRegionInfo = item
+		}
+	}
   if (serviceInfo.serviceCatalog['event_source_resource_group'] && serviceInfo.envId == 'prod') {
-    configLoader.AZURE.RESOURCE_GROUP = resourceUtil.getResourceName(serviceInfo.serviceCatalog['event_source_resource_group'], serviceInfo.envId)
+    azureRegionInfo.RESOURCE_GROUP = resourceUtil.getResourceName(serviceInfo.serviceCatalog['event_source_resource_group'], serviceInfo.envId)
   } else {
-    if (configLoader.AZURE && configLoader.AZURE.RESOURCE_GROUPS) {
+    if (azureRegionInfo && azureRegionInfo.RESOURCE_GROUPS) {
       if (serviceInfo.envId == 'prod') {
-        configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.PRODUCTION
+        azureRegionInfo.RESOURCE_GROUP = azureRegionInfo.RESOURCE_GROUPS.PROD
       } else {
-        configLoader.AZURE.RESOURCE_GROUP = configLoader.AZURE.RESOURCE_GROUPS.DEVELOPMENT
+        azureRegionInfo.RESOURCE_GROUP = azureRegionInfo.RESOURCE_GROUPS.DEV
       }
 
     }
@@ -165,16 +174,22 @@ def getTags(serviceInfo) {
 }
 def getAzureRequestPayload(serviceInfo) {
 
-
+  def azureAccount = utilModule.getAzureAccountInfo(serviceInfo.serviceCatalog)
+  def location
+  for (item in azureAccount.REGIONS) {
+		if(item.REGION == serviceInfo.serviceCatalog.region){
+			location = item.LOCATION
+		}
+	}
   def data = [
-    "resourceGroupName": configLoader.AZURE.RESOURCE_GROUP,
+    "resourceGroupName": azureAccount.RESOURCE_GROUP,
     "appName"          : serviceInfo.storageAccountName,
     "stackName"        : serviceInfo.stackName,
     "tenantId"         : AZURE_TENANT_ID,
     "subscriptionId"   : AZURE_SUBSCRIPTION_ID,
     "clientId"         : AZURE_CLIENT_ID,
     "clientSecret"     : AZURE_CLIENT_SECRET,
-    "location"         : configLoader.AZURE.LOCATION
+    "location"         : location
   ]
 
   return data

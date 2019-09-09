@@ -37,6 +37,7 @@ import groovy.transform.Field
 @Field def environment_logical_id = ''
 @Field def g_base_url_for_swagger = ''
 @Field def current_environment
+@Field def azureAccount
 
 node() {
   def jazzBuildModuleURL = getBuildModuleUrl()
@@ -91,6 +92,8 @@ node() {
   }
   if(config['provider'] == 'aws'){
     accountDetails = utilModule.getAccountInfo(config);
+  } else if(config['provider'] == 'azure'){
+    azureAccount = utilModule.getAzureAccountInfo(config);
   }
   accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
@@ -266,19 +269,25 @@ node() {
             [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
             [$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
           ]) {
+            def azureRegionInfo
+            for (item in azureAccount.REGIONS) {
+              if(item.REGION == service_config.region){
+                azureRegionInfo = item
+              }
+            }
             if (environment_logical_id == "prod") {
-              AzureRG = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
-              AzureApim =  configLoader.AZURE.APIM["PRODUCTION"]
+              AzureRG = azureRegionInfo.RESOURCE_GROUPS["PROD"]
+              AzureApim =  azureRegionInfo.APIM["PROD"]
               logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
             }
             else if(environment_logical_id.split('-')[1] == "stg"){
-              AzureRG = configLoader.AZURE.RESOURCE_GROUPS["STAGING"]
-              AzureApim =  configLoader.AZURE.APIM["STAGING"]
+              AzureRG = azureRegionInfo.RESOURCE_GROUPS["STG"]
+              AzureApim =  azureRegionInfo.APIM["STG"]
               logicalId = environment_logical_id.split('-')[0] //13 + 10
             }
             else if(environment_logical_id.split('-')[1] == "dev"){
-              AzureRG = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
-              AzureApim =  configLoader.AZURE.APIM["DEVELOPMENT"]
+              AzureRG = azureRegionInfo.RESOURCE_GROUPS["DEV"]
+              AzureApim =  azureRegionInfo.APIM["DEV"]
               logicalId = environment_logical_id.split('-')[0] //13 + 10
             }
             endpointUrl="https://${AzureApim}.azure-api.net/${stackName}/${stackName}"

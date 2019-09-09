@@ -34,6 +34,7 @@ import groovy.transform.Field
 @Field def asset_name
 @Field def service_config
 @Field def websiteType
+@Field def azureAccount
 
 node()  {
 	def jazzBuildModuleURL = getBuildModuleUrl()
@@ -98,6 +99,8 @@ node()  {
 
 	if(service_config['provider'] == 'aws'){
 		accountDetails = utilModule.getAccountInfo(service_config);
+	} else if (service_config['provider'] == 'azure'){
+		azureAccount = utilModule.getAzureAccountInfo(service_config);
 	}
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
@@ -229,13 +232,18 @@ node()  {
           def resourcegroup
           def storageaccount=appname
           def logicalId
-
+          def azureRegionInfo
+          for (item in azureAccount.REGIONS) {
+            if(item.REGION == service_config.region){
+              azureRegionInfo = item
+            }
+          }
           if (current_environment == "PROD") {
-            resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
+            resourcegroup = azureRegionInfo.RESOURCE_GROUPS["PROD"]
             logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
           }
           else {
-            resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
+            resourcegroup = azureRegionInfo.RESOURCE_GROUPS["DEV"]
             logicalId = environment_logical_id.split('-')[0] //13 + 10
           }
           def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
@@ -1025,7 +1033,7 @@ def azureSync(storageName, framework){
 	def keyData = modifiedKey[0]['value']
 
 	sh "cd ./app && rm -rf node_modules package-lock.json && ls && cd .."
-	sh "az login --service-principal -u ${configLoader.AZURE.CLIENT_USERNAME} -p ${configLoader.AZURE.CLIENT_PASSWORD} --tenant ${configLoader.AZURE.CLIENT_TENANT}"
+	sh "az login --service-principal -u ${azureAccount.CLIENT_USERNAME} -p ${azureAccount.CLIENT_PASSWORD} --tenant ${azureAccount.CLIENT_TENANT}"
     
 	def sasTokenRaw = sh (script:"az storage container generate-sas --name '\$web' --account-name ${storageName} --account-key ${keyData} --https-only --permissions rwlcd --expiry ${expiryDate}", returnStdout: true).trim()
 	sasTokenRaw = sasTokenRaw.replaceAll(/"/, '');

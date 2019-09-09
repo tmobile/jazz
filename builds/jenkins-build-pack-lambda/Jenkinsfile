@@ -1241,7 +1241,7 @@ def loadBuildModules(buildModuleUrl) {
     echo "resource util init successfully."
 
     def azureUtility = load "azure-utility.groovy"
-    azureUtility.initialize(configLoader, resourceUtility)
+    azureUtility.initialize(configLoader, resourceUtility, utilModule)
     echo "Azure util init successfully."
     azureDeployer = load "azure-function-deploy-module.groovy"
     azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtility)
