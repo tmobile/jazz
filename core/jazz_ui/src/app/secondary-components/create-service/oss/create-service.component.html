@@ -59,7 +59,7 @@
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
+                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure','disabled-azure':typeOfPlatform != 'azure'}" (click)="changePlatformType('azure')">
                             <img *ngIf=" typeOfPlatform != 'azure'" src="./../../../../assets/images/icons/azure-deselected.png">
                             <img *ngIf=" typeOfPlatform == 'azure'" src="./../../../../assets/images/icons/Azure.svg">
                         </div>
@@ -90,7 +90,7 @@
         </section>
 
 
-        <section class="each-step-wrap run-time" *ngIf="typeOfService != 'website'">
+        <section class="each-step-wrap run-time" *ngIf="typeOfService != 'website' && typeOfPlatform != 'gcloud' ">
             <div class="row">
                 <div class="title-container">
                     <p class="step-title">Choose your runtime<span>*</span></p>
@@ -378,7 +378,7 @@
                                     </div>
                                 </div>
                                 <div class="rate-field row  zero-margin arrow_box" *ngIf="rateExpression.type == 'rate'">
-                                    <div class="col-lg-7 padding-right-0">
+                                    <div class="col-lg-7">
                                         <div class="input-wrapper" [ngClass]="{'available': rateField.valid && (rateField.dirty || rateField.touched), 'unavailable': !rateField.valid && (rateField.dirty || rateField.touched)}">
                                             <input name="rateField" type="number" class="textForm" required [(ngModel)]="rateExpression.duration" (ngModelChange)="generateExpression(rateExpression)" #rateField='ngModel' OnlyNumber="true">
                                             <img class="input-loader ng-hide">
@@ -504,7 +504,7 @@
                         </div>
                         <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': eventExpression.type == 'none'}" *ngIf="typeOfPlatform === 'aws'">
                             <div class="dynamodb-fields row zero-margin arrow_box hide" [class.show]="chkDynamodb()">
-                                <div class="col-lg-3 padding-right-0">
+                                <div class="col-lg-3">
                                     <div class="text">Event</div>
                                     <div class="slct-bx-wrp">
                                         <div class="slct-bx-selected disabled">{{typeOfPlatform === 'aws' ? "PutItem" : "*"}}</div>
@@ -524,7 +524,7 @@
                             </div>
 
                             <div class="kinesis-fields row zero-margin arrow_box hide" [class.show]="chkfrKinesis()">
-                                <div class="col-lg-3  padding-right-0">
+                                <div class="col-lg-3">
                                     <div class="text">Event</div>
                                     <div class="slct-bx-wrp">
                                         <div class="slct-bx-selected disabled">{{typeOfPlatform === 'aws' ? "PutRecord" : "*"}}</div>
@@ -544,7 +544,7 @@
                             </div>
 
                             <div class="s3-fields row zero-margin arrow_box hide" [class.show]="chkS3()">
-                                <div class="col-lg-3  padding-right-0">
+                                <div class="col-lg-3">
                                     <div class="text">Event</div>
                                     <div class="slct-bx-wrp">
                                         <div class="slct-bx-selected disabled">{{typeOfPlatform === 'aws' ? "PutItem" : "*"}}</div>
@@ -581,7 +581,7 @@
                         <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': azureEventExpression.type == 'none'}"
                             *ngIf="typeOfPlatform === 'azure'">
                             <div class="dynamodb-fields row zero-margin arrow_box hide" [class.show]="chkDocumentdb()">
-                                <div class="col-lg-3 padding-right-0">
+                                <div class="col-lg-3">
                                     <div class="text">Event</div>
                                     <div class="slct-bx-wrp">
                                         <div class="slct-bx-selected disabled">{{typeOfPlatform !== 'azure' ? "PutItem" : "*"}}</div>
@@ -591,7 +591,7 @@
                                     <div class="text">{{azureEventLabels.azuredatabaseNameLabel}}</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input *ngIf="typeOfPlatform == 'azure'" type="text" disabled="disabled"
-                                            class="inline-input input-label aws-events-left-block" title="{{documentDBStreamString}}" value="{{documentDBStreamString}}">
+                                            class="inline-input input-label aws-events-left-block cursor" title="{{documentDBStreamString}}" value="{{documentDBStreamString}}">
                                         <input id="documentdb" name="documentdb" type="text" minlength="3"
                                             maxlength="{{eventMaxLength.table_name}}" #documentdb='ngModel'
                                             pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.documentdb"
@@ -610,7 +610,7 @@
                                 <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Cosmos DB Trigger uses the Azure Cosmos DB Change Feed to listen for inserts and updates across partitions. The change feed publishes inserts and updates.</p>
                             </div>
                             <div class="kinesis-fields row zero-margin arrow_box hide" [class.show]="chkEventHub()">
-                                <div class="col-lg-3 padding-right-0">
+                                <div class="col-lg-3">
                                     <div class="text">Event</div>
                                     <div class="slct-bx-wrp">
                                         <div class="slct-bx-selected disabled">{{typeOfPlatform !== 'azure' ? "PutRecord" : "*"}}</div>
@@ -620,7 +620,7 @@
                                     <div class="text">{{azureEventLabels.azurestreamNameLabel}}</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input *ngIf="typeOfPlatform == 'azure'" type="text" disabled="disabled"
-                                            class="inline-input input-label aws-events-left-block" title="{{eventStreamString}}" value="{{eventStreamString}}">
+                                            class="inline-input input-label aws-events-left-block cursor" title="{{eventStreamString}}" value="{{eventStreamString}}">
                                         <input id="eventhub" name="eventhub" type="text" minlength="3"
                                             maxlength="{{eventMaxLength.table_name}}" #eventhub='ngModel'
                                             pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.eventhub"
@@ -639,7 +639,7 @@
                                 <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function trigger to respond to an event sent to an event hub event stream.</p>
                             </div>
                             <div class="s3-fields row zero-margin arrow_box hide" [class.show]="chkStorageAccount()">
-                                <div class="col-lg-3 padding-right-0">
+                                <div class="col-lg-3 ">
                                     <div class="text">Event</div>
                                     <div class="slct-bx-wrp">
                                         <div class="slct-bx-selected disabled">{{typeOfPlatform !== 'azure' ? "PutItem" : "*"}}</div>
@@ -670,7 +670,7 @@
                                     <div class="text">{{azureEventLabels.azurequeueNameLabel}}</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input *ngIf="typeOfPlatform == 'azure'" type="text" disabled="disabled"
-                                            class="inline-input input-label aws-events-left-block" title="{{serviceBusStreamString}}" value="{{serviceBusStreamString}}">
+                                            class="inline-input input-label aws-events-left-block cursor" title="{{serviceBusStreamString}}" value="{{serviceBusStreamString}}">
                                         <input id="servicebusqueue" name="servicebusqueue" type="text" minlength="3"
                                             maxlength="{{eventMaxLength.table_name}}" #servicebusqueue='ngModel'
                                             pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.servicebusqueue"

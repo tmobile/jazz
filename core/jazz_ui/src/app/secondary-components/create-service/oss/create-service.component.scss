@@ -65,6 +65,9 @@
     border-color: #cccccc !important;
   }
 }
+.disabled-azure {
+  border-color: #cccccc !important;
+}
 
 .service-box img {
   height: 3.33rem;
@@ -93,10 +96,13 @@
   text-align: center;
 }
 .serviceBus-div {
-margin-left: 14px;
+  margin: 0px 14px;
 }
 .inline-input {
   text-overflow: ellipsis;
+}
+.cursor {
+  cursor: pointer;
 }
 .service-box {
   .icon-icon-api,

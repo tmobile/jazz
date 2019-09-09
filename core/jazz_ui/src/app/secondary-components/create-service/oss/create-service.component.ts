@@ -297,14 +297,14 @@ export class CreateServiceComponent implements OnInit {
 
   // function for changing platform type
   changePlatformType(platformType){
-    if(platformType === 'azure' && this.typeOfService !== 'sls-app'){
+    if(env_oss.azure.azure_enabled === true && platformType !== 'gcloud'){
       this.typeOfPlatform = platformType;
     } else {
       this.typeOfPlatform = 'aws';
     }
     this.events = this.typeOfPlatform.charAt(0).toUpperCase() + this.typeOfPlatform.slice(1);
-    this.updateEventLabels(platformType);
-    this.updateAvailableRuntimes(platformType);
+    this.updateEventLabels(this.typeOfPlatform);
+    this.updateAvailableRuntimes(this.typeOfPlatform);
   }
 
 
@@ -620,8 +620,8 @@ export class CreateServiceComponent implements OnInit {
     else if(this.typeOfPlatform === 'azure') {
       let deployment_accounts = [
         {
-          "accountId": env_oss.azure.account_number,
-          "region": env_oss.azure.region,
+          "accountId": env_oss.azure.azure_account_number,
+          "region": env_oss.azure.azure_region,
           "provider": this.typeOfPlatform,
           "primary":true
         }

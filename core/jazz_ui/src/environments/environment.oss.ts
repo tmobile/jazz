@@ -45,8 +45,9 @@ export const environment = {
     accountMap: {accountMap}
   },
   azure: {
-    account_number: '{azure-account}',
-    region: '{azure-region}',
+    azure_account_number: '{azure_account_number}',
+    azure_region: '{azure_region}',
+    azure_enabled: '{azure_enabled}',
     envLists: {"nodejs8.10": "Nodejs 8.10", "c#": "C#"},
   },
   gcloud: {
