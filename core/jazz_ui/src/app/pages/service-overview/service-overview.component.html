@@ -178,7 +178,8 @@
           </li>
           <li>
             <div class="det-label">Account</div>
-            <div class="det-value">{{service.accountID}} ({{accountName}})</div>
+            <div *ngIf="provider ==='aws'" class="det-value">{{service.accountID}} ({{accountName}})</div>
+            <div *ngIf="provider ==='azure'" class="det-value">{{service.accountID}} </div>
           </li>
           <li>
             <div class="det-label">Region</div>

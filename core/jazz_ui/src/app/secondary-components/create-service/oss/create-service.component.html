@@ -27,8 +27,11 @@
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
                             <img src="./../../../../assets/images/icons/function-glyph.svg">
                         </div>
-                        <div class="icon-name" [ngClass]="{'service-box-selected': typeOfService == 'function'}">
+                        <div class="icon-name" *ngIf="typeOfPlatform == 'aws'" [ngClass]="{'service-box-selected': typeOfService == 'function'}">
                             <p class="name-style">{{eventLabels.functionLabel}}</p>
+                        </div>
+                        <div class="icon-name" *ngIf="typeOfPlatform == 'azure'" [ngClass]="{'service-box-selected': typeOfService == 'function'}">
+                            <p class="name-style">{{azureEventLabels.azurefunctionLabel}}</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0 service-box-section">
@@ -489,7 +492,7 @@
                                         <img src="./../../../../assets/images/icons/Azure-Storage.svg">
                                     </div>
                                     <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'storageaccount'}">
-                                        <p class="name-style">Storage Account</p>
+                                        <p class="name-style">Storage</p>
                                     </div>
                                 </section>
                                 <section class="service-box-section event-type-container">

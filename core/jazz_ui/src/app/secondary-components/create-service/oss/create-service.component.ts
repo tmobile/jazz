@@ -94,7 +94,7 @@ export class CreateServiceComponent implements OnInit {
 
   eventLabels = new EventLabels("Lambda","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
 
-  azureEventLabels = new AzureEventLabels("Function", "DocumentDB", "Table Name","Event Hubs", "Event Hub Name", "Storage", "Storage Instance Name","Service Bus Queue", "Service Bus Name");
+  azureEventLabels = new AzureEventLabels("Function", "DocumentDB", "Table Name","Event Hubs", "Event Hub Name", "Storage", "Storage Account","Service Bus Queue", "Service Bus Name");
 
   amazonEventLabels = new EventLabels("Lambda","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
 
@@ -314,8 +314,8 @@ export class CreateServiceComponent implements OnInit {
     this.eventExpression.type = 'awsEventsNone';
   	}
   	else if(platformType == "azure"){
+      this.azureEventLabels = this.azureEventLabels;
     this.azureEventExpression.type = 'azureEventsNone';
-  	this.azureEventLabels = this.azureEventLabels;
   	}
   }
 
