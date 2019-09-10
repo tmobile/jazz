@@ -247,13 +247,13 @@ export class EnvLogsSectionComponent implements OnInit {
 					if(item.env === this.selectedEnv) {
 					let tokens = item.name.split(':');
 					this.selectedAssetName = tokens[tokens.length - 1];
-					if(item.type === 'lambda') {
-						let value = this.selectedAssetName.split('-');
-						this.selectedAssetName = value[value.length - 1];
-					  }
-					if (item.type === 'apigateway') {
-						this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 5).join('/');
-					}
+					// if(item.type === 'lambda') {
+					// 	let value = this.selectedAssetName.split('-');
+					// 	this.selectedAssetName = value[value.length - 1];
+					//   }
+					// if (item.type === 'apigateway') {
+					// 	this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 5).join('/');
+					// }
 					this.allAssetsNameArray.push(this.selectedAssetName);
 					this.allAssetsNameArray.map((item,index)=>{
 						if(item === 'All'){
@@ -261,6 +261,7 @@ export class EnvLogsSectionComponent implements OnInit {
 						}
 					})
 					this.allAssetsNameArray.splice(0,0,'All')
+					this.allAssetsNameArray.sort();
 				}})
 			}
 			else {
@@ -268,13 +269,13 @@ export class EnvLogsSectionComponent implements OnInit {
 					if (item.type === selected && item.env === this.selectedEnv) {
 						let tokens = item.name.split(':');
 						this.selectedAssetName = tokens[tokens.length - 1];
-						if(item.type === 'lambda') {
-							let value = this.selectedAssetName.split('-');
-							this.selectedAssetName = value[value.length - 1];
-						  }
-						if(item.type === 'apigateway'){
-					     this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 5).join('/');
-						}
+						// if(item.type === 'lambda') {
+						// 	let value = this.selectedAssetName.split('-');
+						// 	this.selectedAssetName = value[value.length - 1];
+						//   }
+						// if(item.type === 'apigateway'){
+					    //  this.selectedAssetName = this.selectedAssetName.split('/').splice(2, 5).join('/');
+						// }
 						this.lambdaResourceNameArr.push(this.selectedAssetName);
 						this.lambdaResourceNameArr.map((item,index)=>{
 							if(item === 'All'){

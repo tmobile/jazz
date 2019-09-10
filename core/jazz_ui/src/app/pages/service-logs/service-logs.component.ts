@@ -294,13 +294,13 @@ export class ServiceLogsComponent implements OnInit {
 					if(item.env === this.selectedEnv) {
 					let tokens = item.name.split(':');
 					this.selectedAssetName = tokens[tokens.length - 1];
-					if(item.type === 'lambda') {
-						let value = this.selectedAssetName.split('-');
-						this.selectedAssetName = value[value.length - 1];
-					  }
-					if(item.type === 'apigateway'){
-						this.selectedAssetName = this.selectedAssetName.split('/').splice(2,5).join('/');						
-					}
+					// if(item.type === 'lambda') {
+					// 	let value = this.selectedAssetName.split('-');
+					// 	this.selectedAssetName = value[value.length - 1];
+					//   }
+					// if(item.type === 'apigateway'){
+					// 	this.selectedAssetName = this.selectedAssetName.split('/').splice(2,5).join('/');						
+					// }
 					this.allAssetsNameArray.push(this.selectedAssetName);
 					this.allAssetsNameArray.map((item,index)=>{
 						if(item === 'All'){
@@ -308,6 +308,7 @@ export class ServiceLogsComponent implements OnInit {
 						}
 					})
 					this.allAssetsNameArray.splice(0,0,'All')
+					this.allAssetsNameArray.sort();
 				}
 			})
 			}
@@ -317,13 +318,13 @@ export class ServiceLogsComponent implements OnInit {
 					if (item.type === selected && item.env === this.selectedEnv) {
 						let tokens = item.name.split(':');
 						this.selectedAssetName = tokens[tokens.length - 1];
-						if(item.type === 'lambda') {
-							let value = this.selectedAssetName.split('-');
-							this.selectedAssetName = value[value.length - 1];
-						  }
-						if(item.type === 'apigateway'){
-							this.selectedAssetName = this.selectedAssetName.split('/').splice(2,5).join('/');						
-						}
+						// if(item.type === 'lambda') {
+						// 	let value = this.selectedAssetName.split('-');
+						// 	this.selectedAssetName = value[value.length - 1];
+						//   }
+						// if(item.type === 'apigateway'){
+						// 	this.selectedAssetName = this.selectedAssetName.split('/').splice(2,5).join('/');						
+						// }
 						this.lambdaResourceNameArr.push(this.selectedAssetName);
 						this.lambdaResourceNameArr.map((item,index)=>{
 							if(item === 'All'){
@@ -331,6 +332,8 @@ export class ServiceLogsComponent implements OnInit {
 							}
 						})
 						this.lambdaResourceNameArr.splice(0,0,'All')
+						this.lambdaResourceNameArr.sort()
+
 					}
 				})
 			}
@@ -740,7 +743,7 @@ export class ServiceLogsComponent implements OnInit {
 
 				this.errMessage = this.toastmessage.errorMessage(err, "serviceLogs");
 				try {
-					this.parsedErrBody = JSON.parse(this.errBody);
+					this.parsedErrBody = this.errBody;
 					if (this.parsedErrBody.message != undefined && this.parsedErrBody.message != '') {
 						this.errMessage = this.errMessage || this.parsedErrBody.message;
 					}

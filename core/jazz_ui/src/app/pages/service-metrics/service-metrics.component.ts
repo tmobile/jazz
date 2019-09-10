@@ -9,6 +9,7 @@ import { Observable } from 'rxjs/Observable';
 import { environment } from '../../../environments/environment.oss'
 import { environment as env_oss } from './../../../environments/environment.oss';
 import * as _ from 'lodash';
+import { Subscription } from 'rxjs';
 declare let Promise;
 
 @Component({
@@ -92,6 +93,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   errMessage: any;
   private toastmessage: any = '';
   private slsLambdaselected;
+  private metricSubscription: Subscription;
+  private assetSubscription: Subscription;
   constructor(private request: RequestService,
     private utils: UtilsService,
     private messageservice: MessageService,
@@ -121,11 +124,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         })
     }
 
-  }
-  ngOnChanges(x: any) {
-    if (x.service.currentValue.domain) {
-      this.getAssetType()
-    }
   }
 
   ngOnInit() {
@@ -163,17 +161,18 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
        if(item.type === selected && item.env === this.selectedEnv){
         let tokens = item.name.split(':');
         this.selectedAssetName = tokens[tokens.length - 1];
-        if(item.type === 'lambda') {
-          let value = this.selectedAssetName.split('-');
-          this.selectedAssetName = value[value.length - 1];
-        }
-        if(item.type==='apigateway'){
-          this.selectedAssetName = this.selectedAssetName.split('/').slice(2,5).join('/');
-        }
+        // if(item.type === 'lambda') {
+        //   let value = this.selectedAssetName.split('-');
+        //   this.selectedAssetName = value[value.length - 1];
+        // }
+        // if(item.type==='apigateway'){
+        //   this.selectedAssetName = this.selectedAssetName.split('/').slice(2,5).join('/');
+        // }
         if(this.selectedAssetName.startsWith("table/")){
          this.selectedAssetName = this.selectedAssetName.replace('table/','');
         }
         assetNameObject.push(this.selectedAssetName);
+        assetNameObject.sort();
        }
      })
      if(assetNameObject.length !== 0) {
@@ -200,6 +199,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
   getAssetType(data?) {
     try{
+      if(this.assetSubscription) {
+        this.assetSubscription.unsubscribe();
+      }
       let self = this;
       return self.http.get('/jazz/assets', {
         domain: self.service.domain,
@@ -234,7 +236,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
               self.assetSelected = validAssetList[0].replace(/ /g, "_");
               let assetField = self.filters.getFieldValueOfLabel('ASSET TYPE');
               if (!assetField) {
-                self.formFields.splice(0, 0, self.assetFilter);
+                self.formFields.splice(1, 0, self.assetFilter);
                 self.filters.setFields(self.formFields);
               }
               self.setAssetName(self.assetsNameArray, self.assetSelected);
@@ -405,6 +407,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   queryMetricsData() {
+    if (this.metricSubscription) {
+      this.metricSubscription.unsubscribe();
+    }
     this.sectionStatus = 'loading';
     let request = {
       url: '/jazz/metrics',
@@ -590,4 +595,14 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       metric.datapoints = datapoints;
     })
   }
+
+  ngOnDestroy() {
+    if (this.metricSubscription) {
+      this.metricSubscription.unsubscribe();
+    }
+    if(this.assetSubscription) {
+      this.assetSubscription.unsubscribe();
+    }
+  }
+
 }
