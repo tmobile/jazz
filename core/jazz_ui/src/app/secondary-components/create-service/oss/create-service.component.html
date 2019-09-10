@@ -24,7 +24,7 @@
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
+                        <div id="tile-function" tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
                             <img src="./../../../../assets/images/icons/function-glyph.svg">
                         </div>
                         <div class="icon-name" *ngIf="typeOfPlatform == 'aws'" [ngClass]="{'service-box-selected': typeOfService == 'function'}">
@@ -52,27 +52,25 @@
                 </div>
                 <div class="col-lg-8 col-md-8">
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}" (click)="changePlatformType('aws')">
-                                <div class="icon-icon-AWS">
-                                        <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span>
-                                </div>
+                        <div id="tile-aws" tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}" (click)="changePlatformType('aws')">
+                            <img src="./../../../../assets/images/aws-logo-alt.svg">
                         </div>
                         <div class="icon-name" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}">
                             <p class="name-style">Aws</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure','disabled-azure':typeOfPlatform != 'azure'}" (click)="changePlatformType('azure')">
-                            <img *ngIf=" typeOfPlatform != 'azure'" src="./../../../../assets/images/icons/azure-deselected.png">
-                            <img *ngIf=" typeOfPlatform == 'azure'" src="./../../../../assets/images/icons/Azure.svg">
+                        <div id="tile-azure" tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure','disabled-azure':typeOfPlatform != 'azure'}" (click)="changePlatformType('azure')">
+                            <img *ngIf=" typeOfPlatform != 'azure'" src="./../../../../assets/images/azure-logo-gray.svg">
+                            <img *ngIf=" typeOfPlatform == 'azure'" src="./../../../../assets/images/azure-logo.svg">
                         </div>
                         <div class="icon-name" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}">
                             <p class="name-style">Azure</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}" (click)="changePlatformType('gcloud')">
-                            <div class="icon-icon-googlecloud"></div>
+                        <div id="tile-gcloud" tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}" (click)="changePlatformType('gcloud')">
+                            <img src="./../../../../assets/images/google-cloud-logo.svg">
                         </div>
                         <div class="icon-name" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}">
                             <p class="name-style">Google Cloud</p>
@@ -135,7 +133,7 @@
                                 <label for="webKeys[2]"><span class='outer'></span><span class="background"></span>{{webObject[webKeys[2]]}}</label>
                             </div>
                         </section>
-                        
+
                     </div>
                 </div>
             </div>
@@ -309,7 +307,7 @@
                                 <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
                                     <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': rateExpression.type == 'none'}"
                                         (click)="onEventScheduleChange('none')">
-                                        <img src="./../../../../assets/images/icons/none-glyph.svg">
+                                        <img src="./../../../../assets/images/icons/Group.svg">
                                     </div>
                                     <div class="icon-name" [ngClass]="{'service-box-selected': rateExpression.type == 'none'}">
                                         <p class="name-style">None</p>
@@ -462,7 +460,7 @@
                                 <section class="service-box-section event-type-container">
                                     <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'azureEventsNone'}"
                                         (click)="onAzureEventChange('azureEventsNone')">
-                                        <img src="./../../../../assets/images/icons/none-glyph.svg">
+                                        <img src="./../../../../assets/images/icons/Group.svg">
                                     </div>
                                     <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'azureEventsNone'}">
                                         <p class="name-style">none</p>
@@ -523,7 +521,7 @@
                                 <p class="termsConditions error-message" *ngIf="((chkDynamodb()) && (!dynamoTable.valid && (dynamoTable.dirty || dynamoTable.touched)))">Table name must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
                                 <p class="termsConditions error-message" *ngIf="(chkDynamodb() && invalidEventName)">Table name Should not begin or end with special character.</p>
                                 <p class="learn-more" *ngIf="typeOfPlatform === 'aws'">Function would be triggered whenever a new entry is added to the table. Note that the DynamoDB table should exist already and Jazz creates a new stream for this table</p>
-                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function would be triggered whenever a new entry is added or updated to the table. Note that Jazz will create the CosmosDB table</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function would be triggered whenever a new entry is added or updated to the table. Note that Jazz will create the Cosmos DB table</p>
                             </div>
 
                             <div class="kinesis-fields row zero-margin arrow_box hide" [class.show]="chkfrKinesis()">
@@ -691,7 +689,7 @@
                                     not begin or end with special character.</p>
                                 <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function trigger to respond to messages from a Service Bus Queue.</p>
                             </div>
-                        </div>  
+                        </div>
                         </div>
                         </div>
                         </section>

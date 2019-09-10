@@ -20,8 +20,12 @@
     font-size: 22px;
 }
 .azure-image {
-    width: 22px;
-    height: 22px;
+  height: 20px;
+  margin-top: -.2em;
+  width: 20px;
+}
+#aws-logo-single-block.tiny {
+  width: 1.5em;
 }
 .service-platform {
     display: flex;
