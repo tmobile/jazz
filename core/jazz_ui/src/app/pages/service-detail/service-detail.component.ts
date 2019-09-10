@@ -145,8 +145,8 @@ export class ServiceDetailComponent implements OnInit {
         if(service.metadata.event_source_sqs){
           returnObject["event_source_arn"] = service.metadata.event_source_sqs;
         }
-        if(service.metadata.event_source_documentdb){
-          returnObject["event_source_arn"] = service.metadata.event_source_documentdb;
+        if(service.metadata.event_source_cosmosdb){
+          returnObject["event_source_arn"] = service.metadata.event_source_cosmosdb;
         }
         if(service.metadata.event_source_eventhub){
           returnObject["event_source_arn"] = service.metadata.event_source_eventhub;
