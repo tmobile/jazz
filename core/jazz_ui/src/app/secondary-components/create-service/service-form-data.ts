@@ -47,7 +47,15 @@ export class EventExpression {
   ) {  }
 }
 
-
+export class AzureEventExpression {
+  constructor (
+    public type:string,
+    public cosmosdb: string,
+    public eventhub: string,
+    public storageaccount: string,
+    public servicebusqueue: string
+  ){}
+}
 
 export class EventLabels {
   constructor(
@@ -62,4 +70,17 @@ export class EventLabels {
     public queueNameLabel: string,
 
   ) {  }
+}
+export class AzureEventLabels {
+  constructor (
+    public azurefunctionLabel: string,
+    public azuredatabaseLabel: string,
+    public azuredatabaseNameLabel: string,
+    public azurestreamLabel: string,
+    public azurestreamNameLabel: string,
+    public azurestorageLabel: string,
+    public azurestorageNameLabel: string,
+    public azurequeueLabel: string,
+    public azurequeueNameLabel: string
+  ){}
 }

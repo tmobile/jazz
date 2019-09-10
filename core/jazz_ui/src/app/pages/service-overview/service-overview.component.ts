@@ -38,6 +38,7 @@ export class ServiceOverviewComponent implements OnInit {
   @Input() service: any = {};
   @Input() isLoadingService: boolean = false;
   @Input() isAdminAccess:boolean = false;
+  @Input() provider: any;
   private subscription: any;
 
   multiENV: boolean = true;

@@ -6,7 +6,7 @@
 import { Http, Headers, Response } from '@angular/http';
 import { Component, Input, OnInit, Output, EventEmitter, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { ServiceFormData, RateExpression, CronObject, EventExpression, EventLabels } from '../service-form-data';
+import { ServiceFormData, RateExpression, CronObject, EventExpression, EventLabels, AzureEventExpression, AzureEventLabels } from '../service-form-data';
 import { FocusDirective } from '../focus.directive';
 import { CronParserService } from '../../../core/helpers';
 import { ToasterService} from 'angular2-toaster';
@@ -32,6 +32,11 @@ export class CreateServiceComponent implements OnInit {
   kinesisStreamString:string;
   dynamoStreamString:string;
   SlackEnabled:boolean = false;
+  documentDBStreamString: string;
+  eventStreamString: string;
+  storageStreamString: string;
+  serviceBusStreamString: string;
+  invalidAzureEventName: boolean = false;
   docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
   typeOfPlatform:string = "aws";
@@ -85,12 +90,13 @@ export class CreateServiceComponent implements OnInit {
   cronObj = new CronObject('0/5','*','*','*','?','*')
   rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
   eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
+  azureEventExpression = new AzureEventExpression("azureEventsNone",undefined,undefined,undefined,undefined);
 
-  eventLabels = new EventLabels("LAMBDA","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
+  eventLabels = new EventLabels("Lambda","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
 
-  azureEventLabels = new EventLabels("FUNCTION APP", "DocumentDB", "Table Name","Event Hubs", "Event Hub Name", "Storage", "Storage Instance Name","Service Bus Queue", "Service Bus Name");
+  azureEventLabels = new AzureEventLabels("Function", "DocumentDB", "Table Name","Event Hubs", "Event Hub Name", "Storage", "Storage Account","Service Bus Queue", "Service Bus Name");
 
-  amazonEventLabels = new EventLabels("LAMBDA","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
+  amazonEventLabels = new EventLabels("Lambda","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
 
   private doctors = [];
   private toastmessage:any;
@@ -106,6 +112,7 @@ export class CreateServiceComponent implements OnInit {
   regionList = [];
   accountSelected;
   accountDetails;
+  events: string;
   regionSelected;
   accountMap: any;
   webObject : any;
@@ -137,8 +144,13 @@ export class CreateServiceComponent implements OnInit {
   public focusKinesis = new EventEmitter<boolean>();
   public focusS3 = new EventEmitter<boolean>();
   public focusSQS = new EventEmitter<boolean>();
+  public focusDocumentDB = new EventEmitter<boolean>();
+  public focusEventHub = new EventEmitter<boolean>();
+  public focusStorageAccount = new EventEmitter<boolean>();
+  public focusServiceBus = new EventEmitter<boolean>();
 
   selectAccountsRegions(){
+    if(this.typeOfPlatform === 'aws') {
     this.accountMap = env_oss.aws.accountMap;
     this.accountList = [];
     this.regionList = [];
@@ -152,12 +164,19 @@ export class CreateServiceComponent implements OnInit {
     this.regionList = this.accountMap[0].regions;
     this.regionSelected = this.regionList[0];
     this.setAccountandRegion();
+    }
   }
 
   setAccountandRegion(){
     this.sqsStreamString = "arn:aws:sqs:" + this.regionSelected + ":" + this.accountSelected + ":";
     this.kinesisStreamString = "arn:aws:kinesis:" + this.regionSelected + ":" + this.accountSelected + ":stream/";
     this.dynamoStreamString = "arn:aws:dynamo:" + this.regionSelected + ":" + this.accountSelected + ":table/";
+  }
+
+  azureEventsPrefix() {
+    this.documentDBStreamString = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.cosmosdb/"
+    this.eventStreamString = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.eventHub/";
+    this.serviceBusStreamString = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.serviceBus/";
   }
 
   chkDynamodb() {
@@ -178,6 +197,25 @@ export class CreateServiceComponent implements OnInit {
   chkS3() {
     this.focusS3.emit(true);
     return this.eventExpression.type === 's3';
+  }
+  chkDocumentdb() {
+    this.focusDocumentDB.emit(true);
+    return this.azureEventExpression.type === 'cosmosdb';
+  }
+
+  chkEventHub() {
+    this.focusEventHub.emit(true);
+    return this.azureEventExpression.type === 'eventhub';
+  }
+
+  chkStorageAccount() {
+    this.focusStorageAccount.emit(true);
+    return this.azureEventExpression.type === 'storageaccount';
+  }
+
+  chkServiceBus() {
+    this.focusServiceBus.emit(true);
+    return this.azureEventExpression.type === 'servicebusqueue'
   }
 
   getSelectedData(data){
@@ -251,25 +289,33 @@ export class CreateServiceComponent implements OnInit {
 
   // function for changing service type
   changeServiceType(serviceType){
+    if(serviceType === 'sls-app'){
+      this.changePlatformType('aws');
+    }
     this.typeOfService = serviceType;
   }
 
   // function for changing platform type
   changePlatformType(platformType){
-    if(!this.disablePlatform && platformType !== "gcloud"){
+    if(env_oss.azure.azure_enabled === true && platformType !== 'gcloud'){
       this.typeOfPlatform = platformType;
-      this.updateEventLabels(platformType);
-      this.updateAvailableRuntimes(platformType);
+    } else {
+      this.typeOfPlatform = 'aws';
     }
+    this.events = this.typeOfPlatform.charAt(0).toUpperCase() + this.typeOfPlatform.slice(1);
+    this.updateEventLabels(this.typeOfPlatform);
+    this.updateAvailableRuntimes(this.typeOfPlatform);
   }
 
 
   updateEventLabels(platformType){
   	if(platformType == "aws"){
-  	this.eventLabels = this.amazonEventLabels;
+    this.eventLabels = this.amazonEventLabels;
+    this.eventExpression.type = 'awsEventsNone';
   	}
   	else if(platformType == "azure"){
-  	this.eventLabels = this.azureEventLabels;
+      this.azureEventLabels = this.azureEventLabels;
+    this.azureEventExpression.type = 'azureEventsNone';
   	}
   }
 
@@ -293,13 +339,26 @@ export class CreateServiceComponent implements OnInit {
   onEventScheduleChange(val){
     this.rateExpression.type = val;
     if(val !== `none`){
-      this.eventExpression.type = 'awsEventsNone';
+      if (this.typeOfPlatform === 'aws') {
+        this.eventExpression.type = 'awsEventsNone';
+      }
+      else if (this.typeOfPlatform === 'azure') {
+        this.azureEventExpression.type = 'azureEventsNone';
+      }
     }
   }
   onAWSEventChange(val){
     this.invalidEventName = false;
     this.eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
     this.eventExpression.type = val;
+    if(val !== `none`){
+      this.rateExpression.type = 'none';
+    }
+  }
+  onAzureEventChange(val) {
+    this.invalidAzureEventName = false;
+    this.azureEventExpression = new AzureEventExpression("azureEventsNone",undefined,undefined,undefined,undefined);
+    this.azureEventExpression.type = val;
     if(val !== `none`){
       this.rateExpression.type = 'none';
     }
@@ -323,7 +382,11 @@ export class CreateServiceComponent implements OnInit {
   //function to validate event source names
   validateEvents(value){
     if(value != null && ((value[0] === '-' || value[value.length - 1] === '-') || (value[0] === '.' || value[value.length - 1] === '.') || (value[0] === '_' || value[value.length - 1] === '_'))){
-      this.invalidEventName = true;
+      if(this.typeOfPlatform === 'aws') {
+      this.invalidEventName = true; }
+      else if(this.typeOfPlatform === 'azure') {
+        this.invalidAzureEventName = true;
+      }
     }
   }
   // function to validate slack channel
@@ -442,22 +505,35 @@ export class CreateServiceComponent implements OnInit {
                 "approvers": approversPayload,
                 "domain": this.model.domainName,
                 "description":this.model.serviceDescription,
-                "platform":this.typeOfPlatform,
                 "deployment_targets": {}
             };
 
     if (this.typeOfService == 'api') {
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
-      payload["deployment_targets"] = {
-        "api": this.selectedDeploymentTarget || "aws_apigateway"
+      if (this.typeOfPlatform === 'aws') {
+        payload["deployment_targets"] = {
+          "api": this.selectedDeploymentTarget || "aws_apigateway"
+        }
+      }
+      else if (this.typeOfPlatform === 'azure') {
+        payload["deployment_targets"] = {
+          "api": "azure_apigateway"
+        }
       }
     }
     else if(this.typeOfService == 'function'){
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
-      payload["deployment_targets"] = {
-        "function": "aws_lambda"
+      if (this.typeOfPlatform === 'aws') {
+        payload["deployment_targets"] = {
+          "function": "aws_lambda"
+        }
+      }
+      else if (this.typeOfPlatform === 'azure') {
+        payload["deployment_targets"] = {
+          "function": "azure_function"
+        }
       }
       if(this.rateExpression.type != 'none'){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
@@ -467,7 +543,7 @@ export class CreateServiceComponent implements OnInit {
             payload["rateExpression"] = this.rateExpression.cronStr;
         }
       }
-
+      if(this.typeOfPlatform === 'aws') {
       if(this.eventExpression.type !== "awsEventsNone") {
         var event = {};
         event["type"] = this.eventExpression.type;
@@ -486,12 +562,39 @@ export class CreateServiceComponent implements OnInit {
         payload["events"] = [];
         payload["events"].push(event);
       }
+    }
+    else if(this.typeOfPlatform === 'azure') {
+      if(this.azureEventExpression.type !== "azureEventsNone") {
+        var event = {};
+        event["type"] = this.azureEventExpression.type;
+        if(this.azureEventExpression.type === "cosmosdb") {
+          event["source"] =  "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.cosmosdb/"+ this.model.domainName + "/" + this.azureEventExpression.cosmosdb;
+          event["action"] = "PutItem";
+        } else if(this.azureEventExpression.type === "eventhub") {
+          event["source"] = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.eventHub/" + this.model.domainName + "/" + this.azureEventExpression.eventhub;
+          event["action"] = "PutRecord";
+        } else if(this.azureEventExpression.type === "storageaccount") {
+          event["source"] = this.azureEventExpression.storageaccount;
+          event["action"] = "storageBus";
+        } else if (this.azureEventExpression.type === "servicebusqueue") {
+          event["source"] = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.serviceBus/"+ this.model.domainName + "/" + this.azureEventExpression.servicebusqueue;
+        }
+        payload["events"] = [];
+        payload["events"].push(event);
+      }
+    }
 
     } else if(this.typeOfService == 'website'){
       payload["framework"] = this.webtime;
       payload["create_cloudfront_url"] = this.cdnConfigSelected;
-      payload["deployment_targets"] = {
-        "website": "aws_cloudfront"
+      if (this.typeOfPlatform === 'aws') {
+        payload["deployment_targets"] = {
+          "website": "aws_cloudfront"
+        }
+      } else if (this.typeOfPlatform === 'azure') {
+        payload["deployment_targets"] = {
+          "website": "azure_cdnprofile"
+        }
       }
     }
 
@@ -503,15 +606,28 @@ export class CreateServiceComponent implements OnInit {
     }
     
     /* Including deployment_accounts in the payload */
-    let deployment_accounts = [
-      {
-        "accountId": this.accountSelected,
-        "region": this.regionSelected,
-        "provider":"aws",
-        "primary":true
-      }
-    ]
-    payload['deployment_accounts'] = deployment_accounts
+    if(this.typeOfPlatform === 'aws'){
+      let deployment_accounts = [
+        {
+          "accountId": this.accountSelected,
+          "region": this.regionSelected,
+          "provider": this.typeOfPlatform,
+          "primary":true
+        }
+      ]
+      payload['deployment_accounts'] = deployment_accounts
+    }
+    else if(this.typeOfPlatform === 'azure') {
+      let deployment_accounts = [
+        {
+          "accountId": env_oss.azure.azure_account_number,
+          "region": env_oss.azure.azure_region,
+          "provider": this.typeOfPlatform,
+          "primary":true
+        }
+      ]
+      payload['deployment_accounts'] = deployment_accounts
+    }
 
     this.isLoading = true;
     this.http.post('/jazz/create-serverless-service' , payload)
@@ -555,11 +671,16 @@ export class CreateServiceComponent implements OnInit {
     this.eventExpression.streamARN = "";
     this.eventExpression.S3BucketName = "";
     this.eventExpression.SQSstreamARN = "";
+    this.azureEventExpression.cosmosdb = "";
+    this.azureEventExpression.eventhub = "";
+    this.azureEventExpression.storageaccount = "";
+    this.azureEventExpression.servicebusqueue = "";
     this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
     this.rateExpression.error = undefined;
     this.rateExpression.type = 'none';
     this.rateExpression.duration = "5";
     this.eventExpression.type = 'awsEventsNone';
+    this.azureEventExpression.type = 'azureEventsNone';
     this.runtime = this.runtimeKeys[0];
   }
 
@@ -673,9 +794,6 @@ export class CreateServiceComponent implements OnInit {
     if(this.rateExpression.error != undefined && this.typeOfService == 'function' && this.rateExpression.type != 'none'){
         return true
     }
-    if(this.eventExpression.type == 'awsEventsNone' && this.typeOfService == 'function' && this.rateExpression.type == 'none'){
-      return true;
-    }
     if(this.eventExpression.type == 'dynamodb' && this.eventExpression.dynamoTable == undefined){
         return true
     }
@@ -685,10 +803,19 @@ export class CreateServiceComponent implements OnInit {
     if(this.eventExpression.type == 's3' && this.eventExpression.S3BucketName == undefined){
         return true
     }
+    if(this.azureEventExpression.type == 'cosmosdb' && this.azureEventExpression.cosmosdb == undefined){
+      return true
+    }
+    if(this.azureEventExpression.type == 'eventhub' && this.azureEventExpression.eventhub == undefined){
+      return true
+    }
+    if(this.azureEventExpression.type == 'storageaccount' && this.azureEventExpression.storageaccount == undefined){
+      return true
+    }
     if(this.invalidServiceName || this.invalidDomainName){
       return true
     }
-    if(this.invalidEventName){
+    if(this.invalidEventName || this.invalidAzureEventName){
       return true
     }
 
@@ -771,6 +898,7 @@ export class CreateServiceComponent implements OnInit {
     this.selectAccountsRegions();
     this.getData();
     this.loadMaxLength();
+    this.azureEventsPrefix();
     if(env_oss.slack_support) this.SlackEnabled=true;
   };
     // cron validation related functions //

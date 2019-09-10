@@ -18,7 +18,7 @@
 }
 
 .create-service-wrap .bold-title {
-  padding: 1.33rem 0;
+  padding: 1.33rem 1.2rem;
 }
 
 .service-box-section {
@@ -40,11 +40,21 @@
 .type-of-service {
   padding-bottom: 0;
 }
-
+.event-type-container {
+  padding: 0px 15px 20px;
+}
+.title-container {
+  padding-left: 30px;
+}
+.event-icon {
+  padding-left: 15px;
+}
 .service-box {
   border-radius: 5px;
   border: solid 1px #cccccc;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 2rem 0;
   cursor: pointer;
   min-height: 120px;
@@ -55,9 +65,12 @@
     border-color: #cccccc !important;
   }
 }
+.disabled-azure {
+  border-color: #cccccc !important;
+}
 
 .service-box img {
-  height: 3.33rem;
+  height: 3.53rem;
   width: 88%;
   max-width: 70px;
 }
@@ -78,15 +91,30 @@
 .service-box.service-box-selected {
   border: solid 2px #ed008c !important;
 }
-
+.icon-name {
+  color: #ccc;
+  text-align: center;
+}
+.serviceBus-div {
+  margin: 0px 14px;
+}
+.inline-input {
+  text-overflow: ellipsis;
+}
+.cursor {
+  cursor: pointer;
+}
 .service-box {
   .icon-icon-api,
   .icon-icon-lambda,
   .icon-icon-web,
   .icon-logo-aws,
   .icon-logo-azure,
-  .icon-logo-googleCloud,
   .icon-logo-docker {
+    font-size: 40px;
+    color: #ed008c;
+  }
+  .icon-logo-googleCloud {
     font-size: 40px;
     color: #ccc;
   }
@@ -96,116 +124,6 @@
     .icon-icon-web {
       color: #ed008c;
     }
-
-
-
-
-
-    .icon-icon-AWS .path1:before {
-      color: rgb(17, 16, 14);
-    }
-    .icon-icon-AWS .path2:before {
-      color: rgb(245, 141, 17);
-    }
-    .icon-icon-AWS .path3:before {
-      color: rgb(245, 142, 20);
-    }
-    .icon-icon-AWS .path4:before {
-      color: rgb(245, 142, 20);
-    }
-    .icon-icon-AWS .path5:before {
-      color: rgb(18, 17, 15);
-    }
-    .icon-icon-AWS .path6:before {
-      color: rgb(18, 17, 15);
-    }
-    .icon-icon-AWS .path7:before {
-      color: rgb(18, 17, 15);
-    }
-    .icon-icon-AWS .path8:before {
-      color: rgb(18, 17, 15);
-    }
-    .icon-icon-AWS .path9:before {
-      color: rgb(19, 18, 16);
-    }
-    .icon-icon-AWS .path10:before {
-      color: rgb(245, 141, 18);
-    }
-    .icon-icon-AWS .path11:before {
-      color: rgb(245, 141, 18);
-    }
-    .icon-icon-AWS .path12:before {
-      color: rgb(245, 141, 18);
-    }
-    .icon-icon-AWS .path13:before {
-      color: rgb(245, 141, 18);
-    }
-    .icon-icon-AWS .path14:before {
-      color: rgb(245, 141, 18);
-    }
-    .icon-icon-AWS .path15:before {
-      color: rgb(245, 141, 17);
-    }
-    .icon-icon-AWS .path16:before {
-      color: rgb(245, 141, 17);
-    }
-    .icon-icon-AWS .path17:before {
-      color: rgb(245, 141, 17);
-    }
-    .icon-icon-AWS .path18:before {
-      color: rgb(245, 141, 17);
-    }
-    .icon-icon-AWS .path19:before {
-      color: rgb(20, 19, 17);
-    }
-    .icon-icon-AWS .path20:before {
-      color: rgb(18, 17, 15);
-    }
-    .icon-icon-AWS .path21:before {
-      color: rgb(21, 20, 18);
-    }
-    .icon-icon-AWS .path22:before {
-      color: rgb(21, 20, 18);
-    }
-    .icon-icon-AWS .path23:before {
-      color: rgb(21, 20, 18);
-    }
-    .icon-icon-AWS .path24:before {
-      color: rgb(20, 19, 17);
-    }
-    .icon-icon-AWS .path25:before {
-      color: rgb(21, 20, 18);
-    }
-    .icon-icon-AWS .path26:before {
-      color: rgb(20, 19, 17);
-    }
-    .icon-icon-AWS .path27:before {
-      color: rgb(20, 19, 17);
-    }
-    .icon-icon-AWS .path28:before {
-      color: rgb(245, 142, 20);
-    }
-    .icon-icon-AWS .path29:before {
-      color: rgb(245, 142, 20);
-    }
-    .icon-icon-AWS .path30:before {
-      color: rgb(245, 142, 20);
-    }
-    .icon-icon-AWS .path31:before {
-      color: rgb(18, 17, 15);
-    }
-    .icon-icon-AWS .path32:before {
-      color: rgb(25, 24, 22);
-    }
-    .icon-icon-AWS .path33:before {
-      color: rgb(20, 19, 17);
-    }
-
-
-
-
-
-
   }
 }
 
@@ -237,8 +155,15 @@
   .icon-icon-web,
   .icon-icon-AWS,
   .icon-icon-azure,
-  .icon-icon-googlecloud,
   .icon-icon-ccp {
+    font-size: 40px;
+    color: #ed008c;
+    span {
+      font-size: 40px;
+      color: #ccc !important;
+    }
+  }
+  .icon-icon-googlecloud {
     font-size: 40px;
     color: #ccc;
     span {
@@ -256,11 +181,6 @@
     .icon-icon-azure {
       color:#0078d7;
   }
-
-
-
-
-
   }
 }
 
@@ -400,7 +320,6 @@
 .arrow_box {
   position: relative;
 }
-
 .arrow_box:after {
   bottom: 100%;
   left: 0;
@@ -427,35 +346,45 @@
     padding-right: 5px;
   }
   &.arrow_box:after {
-    left: 50%;
+    left: 70%;
     margin-left: -7px;
   }
 }
 
 .rate-field.arrow_box:after {
-  left: 25%;
+  left: 40%;
   margin-left: -12px;
 }
 
 .dynamodb-fields.arrow_box:after {
-  left: 18%;
+  left: 25%;
   margin-left: -12px;
   margin-bottom: -15px;
 }
+.name-style {
+  padding-top: 1rem;
+  margin: 0;
+  font-size: 1rem;
+  font-family: Lato !important;
+  font-weight: bold;
+  letter-spacing: 0.7px;
+  color: #cccccc;
+  text-transform: uppercase;
+}
 
 .kinesis-fields.arrow_box:after {
-  left: 42%;
+  left: 44%;
   margin-left: -7px;
   margin-bottom: -15px;
 }
 
 .s3-fields.arrow_box:after {
-  left: 61.5%;
+  left: 63.5%;
   margin-left: -3px;
   margin-bottom: -15px;
 }
 .sqs-fields.arrow_box:after{
-  left:77.5%;
+  left:82.5%;
   margin-left: -3px;
   margin-bottom: -15px;
 }
@@ -837,16 +766,17 @@
 }
 
 .aws-events-left-block {
+  background: #e8e8e8;
   border: 1px solid #ccc;
   border-right: 0;
   float: left;
-  width: 25rem;
+  width: 24.5rem;
   padding-right: 0 !important;
   border-radius: 2px 0 0 2px !important;
 }
 
 .aws-events-left-block.stream {
-  width: 25rem;
+  width: 24.7rem;
 }
 
 .aws-events-right-block {
@@ -902,7 +832,7 @@ p.learn-more {
 .body-auto {}
 
 .requiredInfo {
-  padding: 20px 0;
+  padding: 20px 15px;
   font-weight: bold;
   color: #222222;
   font-size: 12px;
@@ -959,7 +889,7 @@ p.learn-more {
   /*padding: 0px 2.5rem 0 9px;*/
 }
 .aws-events-left-block.stream-sqs{
-  width: 19.5rem;
+  width: 19.4rem;
 }
 .aws-events-right-block-sqs.stream{
   width: calc(100% - 19.5rem)
@@ -1001,4 +931,22 @@ p.learn-more {
   border: 1px solid transparent;
   padding: 6px 12px;
   line-height: 1.42857143;
+}
+
+#tile-aws img {
+  max-width: 6em;
+}
+
+#tile-function img,
+#tile-gcloud img {
+  height: 4.2em;
+  max-width: 6.2em;
+  width: 7em;
+}
+
+
+#tile-azure img {
+  height: 2.9em;
+  max-width: 4.3em;
+  width: 4.3em;
 }

@@ -166,7 +166,7 @@ private intervalSubscription: Subscription;
       let serviceRow = {
         name: service.service,
         type: service.type,
-        platform: service.platform,
+        platform: service.deployment_accounts[0].provider,
         domain: service.domain,
         health: 2,
         status: service.status.replace('_',' '),

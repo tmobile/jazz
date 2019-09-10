@@ -9,6 +9,34 @@
   font-weight: bold;
   color: #000000;
 }
+.page-title-wrap {
+  display: flex;
+  justify-content: space-between;
+}
+.image-btn-div {
+  display: flex;
+}
+.azure-image {
+  width: 30px;
+  height: 30px;
+}
+#aws-watermark {
+  opacity: .075;
+  position: fixed;
+  right: 3em;
+  top: 7em;
+  width: 13em;
+}
+#azure-watermark {
+  opacity: .075;
+  position: fixed;
+  right: 3em;
+  top: 6.8em;
+  width: 12em;
+}
+.image-container {
+  margin: 0px 5px;
+}
 
 .sub-title {
   font-size: 12px;
@@ -526,7 +554,7 @@
   cursor: pointer;
   margin: 10px 0 0 0;
   span{
-      color:#ed008c;  
+      color:#ed008c;
       text-transform: uppercase;
       font-size: 12px;
   }

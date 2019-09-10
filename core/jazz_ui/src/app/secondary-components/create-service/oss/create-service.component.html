@@ -11,26 +11,35 @@
     <div *ngIf='!serviceRequested' class="pad-for-mobile">
         <section class="each-step-wrap type-of-service">
             <div class="row">
-                <div class="col-lg-4 col-md-4">
+                <div class="title-container">
                     <p class="step-title">Choose the type of service you want to create<span>*</span></p>
                 </div>
                 <div class="col-lg-8 col-md-8">
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')" (click)="changeServiceType('api')">
                             <div class="icon-icon-api" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                            <p>API</p>
+                        </div>
+                        <div class="icon-name" [ngClass]="{'service-box-selected': typeOfService == 'api'}">
+                            <p class="name-style">Api</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4  pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
-                            <div [ngClass]="{'selected': typeOfService == 'function', 'icon-icon-azure-functions': typeOfPlatform =='azure', 'icon-icon-function': typeOfPlatform =='aws' || typeOfPlatform =='gcloud' }"></div>
-                            <p>{{eventLabels.functionLabel}}</p>
+                        <div id="tile-function" tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'function'}" (keyup.enter)="changeServiceType('function')" (click)="changeServiceType('function')">
+                            <img src="./../../../../assets/images/icons/function-glyph.svg">
+                        </div>
+                        <div class="icon-name" *ngIf="typeOfPlatform == 'aws'" [ngClass]="{'service-box-selected': typeOfService == 'function'}">
+                            <p class="name-style">{{eventLabels.functionLabel}}</p>
+                        </div>
+                        <div class="icon-name" *ngIf="typeOfPlatform == 'azure'" [ngClass]="{'service-box-selected': typeOfService == 'function'}">
+                            <p class="name-style">{{azureEventLabels.azurefunctionLabel}}</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-4 col-xs-4 pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'website'}" (keyup.enter)="changeServiceType('website')" (click)="changeServiceType('website')">
                             <div class="icon-icon-web" [ngClass]="{'selected': typeOfService == 'function'}"></div>
-                            <p>WEBSITE</p>
+                        </div>
+                        <div class="icon-name" [ngClass]="{'service-box-selected': typeOfService == 'website'}">
+                            <p class="name-style">Website</p>
                         </div>
                     </section>
                 </div>
@@ -38,28 +47,33 @@
         </section>
         <section class="each-step-wrap type-of-platform">
             <div class="row">
-                <div class="col-lg-4 col-md-4">
+                <div class="title-container">
                     <p class="step-title">Choose what platform you would like to use<span>*</span></p>
                 </div>
                 <div class="col-lg-8 col-md-8">
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}" (click)="changePlatformType('aws')">
-                                <div class="icon-icon-AWS">
-                                        <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span>
-                                </div>
-                            <p>AWS</p>
+                        <div id="tile-aws" tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}" (click)="changePlatformType('aws')">
+                            <img src="./../../../../assets/images/aws-logo-alt.svg">
+                        </div>
+                        <div class="icon-name" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}">
+                            <p class="name-style">Aws</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}" (click)="changePlatformType('azure')">
-                            <div class="icon-icon-azure"></div>
-                            <p>Azure</p>
+                        <div id="tile-azure" tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure','disabled-azure':typeOfPlatform != 'azure'}" (click)="changePlatformType('azure')">
+                            <img *ngIf=" typeOfPlatform != 'azure'" src="./../../../../assets/images/azure-logo-gray.svg">
+                            <img *ngIf=" typeOfPlatform == 'azure'" src="./../../../../assets/images/azure-logo.svg">
+                        </div>
+                        <div class="icon-name" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}">
+                            <p class="name-style">Azure</p>
                         </div>
                     </section>
                     <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
-                        <div tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}" (click)="changePlatformType('gcloud')">
-                            <div class="icon-icon-googlecloud"></div>
-                            <p>Google Cloud</p>
+                        <div id="tile-gcloud" tabindex="-1" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}" (click)="changePlatformType('gcloud')">
+                            <img src="./../../../../assets/images/google-cloud-logo.svg">
+                        </div>
+                        <div class="icon-name" [ngClass]="{'service-box-selected': typeOfPlatform == 'gcloud'}">
+                            <p class="name-style">Google Cloud</p>
                         </div>
                     </section>
                 </div>
@@ -67,7 +81,7 @@
         </section>
         <section *ngIf="deploymentTargets[typeOfService.toUpperCase()].active && apigeeFeature" class="form-row deployment-targets">
           <div class="row">
-            <div class="col-lg-4 col-md-4">
+            <div class="title-container">
               <p class="step-title">Choose your API deployment target<span>*</span></p>
             </div>
             <radio-checkbox
@@ -77,9 +91,9 @@
         </section>
 
 
-        <section class="each-step-wrap run-time" *ngIf="typeOfService != 'website'">
+        <section class="each-step-wrap run-time" *ngIf="typeOfService != 'website' && typeOfPlatform != 'gcloud' ">
             <div class="row">
-                <div class="col-lg-4 col-md-4">
+                <div class="title-container">
                     <p class="step-title">Choose your runtime<span>*</span></p>
                 </div>
                 <div class="col-lg-8 col-md-8">
@@ -96,7 +110,7 @@
         </section>
         <section class="each-step-wrap run-time" *ngIf="typeOfService == 'website'">
             <div class="row">
-                <div class="col-lg-4 col-md-4">
+                <div class="title-container">
                     <p class="step-title">Choose website framework<span>*</span></p>
                 </div>
                 <div class="col-lg-8 col-md-8">
@@ -119,7 +133,7 @@
                                 <label for="webKeys[2]"><span class='outer'></span><span class="background"></span>{{webObject[webKeys[2]]}}</label>
                             </div>
                         </section>
-                        
+
                     </div>
                 </div>
             </div>
@@ -134,7 +148,7 @@
         <form (ngSubmit)="onSubmit(); serviceForm.reset()" #serviceForm="ngForm" class='mob-form-pad'>
             <section class="each-step-wrap service-name">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">Service Name<span>*</span></p>
                         <p class="step-details">Name of your API, Microservice or Website that you want to create.</p>
                     </div>
@@ -159,7 +173,7 @@
             </section>
             <section class="each-step-wrap domain-name">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="col-lg-8 col-md-8 title-container">
                         <p class="step-title">Namespace<span>*</span></p>
                         <p class="step-details">Namespaces provide easier abstraction to implement similar security & access control on your APIs.</p>
                     </div>
@@ -179,7 +193,7 @@
             </section>
             <section class="each-step-wrap service-description">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">Service Description</p>
                         <p class="step-details hide">Multiple APIs can be bundled under a single namespace. Namespace provide easier abstraction to implement similar security & access control on your APIs.</p>
                     </div>
@@ -195,9 +209,9 @@
                 </div>
             </section>
 
-             <section class="each-step-wrap Internal-access">
+             <section class="each-step-wrap Internal-access" *ngIf=" typeOfPlatform != 'azure'">
               <div class="row">
-                  <div class="col-lg-4 col-md-4">
+                  <div class="title-container">
                       <p class="step-title">Account &amp; Region</p>
                       <p class="step-details">Choose the account and region you want your application deployed on</p>
                   </div>
@@ -231,7 +245,7 @@
 
             <section class="each-step-wrap slack-channel-integration">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">Slack Channel Integration</p>
                     </div>
                     <div class="col-lg-8 col-md-8">
@@ -260,7 +274,7 @@
             </section>
             <section class="each-step-wrap cache-ttl-integration" *ngIf="typeOfService == 'api'">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">Cache Time-to-Live (TTL)</p>
                     </div>
                     <div class="col-lg-8 col-md-8">
@@ -285,33 +299,48 @@
             </section>
             <section class="each-step-wrap event-schedule" *ngIf="typeOfService == 'function'">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">Event Schedule</p>
                     </div>
                     <div class="col-lg-8 col-md-8">
                         <div class="input-field-container event-schedule-radio row zero-margin">
-                            <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container">
-                                    <input type="radio" name="EventSchedule" id="none" [value]="none" [checked]="rateExpression.type == 'none'" (click)="onEventScheduleChange('none')">
-                                    <label for="none"><span></span><span class="background"></span>None</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container">
-                                    <input type="radio" name="EventSchedule" id="fixedRate" [value]="rate" [checked]="rateExpression.type == 'rate'" (click)="onEventScheduleChange('rate')">
-                                    <label for="fixedRate"><span></span><span class="background"></span>Fixed Rate of</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-3 col-md-3  pad-left0">
-                                <div class="radio-container">
-                                    <input type="radio" name="EventSchedule" id="cron" [value]="cron" [checked]="rateExpression.type == 'cron'" (click)="onEventScheduleChange('cron')">
-                                    <label for="cron"><span></span><span class="background"></span>Cron Expression</label>
-                                </div>
-                            </section>
+                                <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': rateExpression.type == 'none'}"
+                                        (click)="onEventScheduleChange('none')">
+                                        <img src="./../../../../assets/images/icons/Group.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': rateExpression.type == 'none'}">
+                                        <p class="name-style">None</p>
+                                    </div>
+                                </section>
+                                <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': rateExpression.type == 'rate'}"
+                                        (click)="onEventScheduleChange('rate')">
+                                        <img src="./../../../../assets/images/icons/fixed-rate-glyph.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': rateExpression.type == 'rate'}">
+                                        <p class="name-style">Fixed Rate of</p>
+                                    </div>
+                                </section>
+                                <section class="col-lg-3 col-md-3 col-sm-3 col-xs-3 pad-left0 service-box-section">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': rateExpression.type == 'cron'}"
+                                        (click)="onEventScheduleChange('cron')">
+                                        <img src="./../../../../assets/images/icons/cron-glyph.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': rateExpression.type == 'cron'}">
+                                        <p class="name-style">Cron Expression</p>
+                                    </div>
+                                </section>
                         </div>
                         <div class="event-schedule-fields" [ngClass]="{'zero-padding': rateExpression.type == 'none'}">
                             <div class='clearfix'>
                                 <div class="cron-fields row zero-margin arrow_box" *ngIf="rateExpression.type == 'cron'">
+                                    <div class="col-lg-2" *ngIf="typeOfPlatform == 'azure'">
+                                        <p class="sm-input-label">Seconds</p>
+                                            <div class="input-wrapper">
+                                                <input name="rateMinute" type="text" class="textForm" required [(ngModel)]="cronObj.minutes" #rateMinute='ngModel' (ngModelChange)="generateExpression(rateExpression)">
+                                            </div>
+                                    </div>
                                     <div class="col-lg-2">
                                         <p class="sm-input-label">Minutes</p>
                                         <div class="input-wrapper">
@@ -342,7 +371,7 @@
                                             <input name="rateDayOfWeek" type="text" class="textForm" [(ngModel)]="cronObj.dayOfWeek" #rateDayOfWeek='ngModel' (ngModelChange)="generateExpression(rateExpression)" required>
                                         </div>
                                     </div>
-                                    <div class="col-lg-2">
+                                    <div class="col-lg-2" *ngIf="typeOfPlatform == 'aws'">
                                         <p class="sm-input-label">Year</p>
                                         <div class="input-wrapper">
                                             <input name="rateYear" type="text" class="textForm" required [(ngModel)]="cronObj.year" #rateYear='ngModel' (ngModelChange)="generateExpression(rateExpression)">
@@ -350,7 +379,7 @@
                                     </div>
                                 </div>
                                 <div class="rate-field row  zero-margin arrow_box" *ngIf="rateExpression.type == 'rate'">
-                                    <div class="col-lg-7 padding-right-0">
+                                    <div class="col-lg-7">
                                         <div class="input-wrapper" [ngClass]="{'available': rateField.valid && (rateField.dirty || rateField.touched), 'unavailable': !rateField.valid && (rateField.dirty || rateField.touched)}">
                                             <input name="rateField" type="number" class="textForm" required [(ngModel)]="rateExpression.duration" (ngModelChange)="generateExpression(rateExpression)" #rateField='ngModel' OnlyNumber="true">
                                             <img class="input-loader ng-hide">
@@ -366,7 +395,8 @@
                             <div class="form-error" *ngIf="rateExpression.error != undefined && rateExpression.type != 'none'">
                                 {{rateExpression.error}}
                             </div>
-                            <p *ngIf="rateExpression.type != 'none'" class="learn-more"><a target="_blank" href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html">Learn more</a> about CloudWatch Event schedules</p>
+                            <p *ngIf="rateExpression.type != 'none' && typeOfPlatform === 'aws'" class="learn-more"><a target="_blank" href="https://docs.aws.amazon.com/AmazonCloudWatch/latest/events/ScheduledEvents.html">Learn more</a> about AWS Event Schedule</p>
+                            <p *ngIf="rateExpression.type != 'none' && typeOfPlatform === 'azure'" class="learn-more"><a target="_blank" href="https://docs.microsoft.com/en-us/azure/azure-functions/functions-bindings-timer#ncrontab-expressions">Learn more</a> about Azure Event Schedule</p>
                         </div>
                     </div>
                 </div>
@@ -374,46 +404,108 @@
             <!-- start of aws events -->
             <section class="each-step-wrap aws-events" *ngIf="typeOfService == 'function'">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
-                        <p class="step-title">Event Types</p>
+                    <div class="title-container">
+                        <p class="step-title">{{events}} Events</p>
                         <p class="step-details">Select appropriate events that you want to subscribe to.</p>
                     </div>
-                    <div class="col-lg-8 col-md-8">
-                        <div class="input-field-container event-schedule-radio row zero-margin">
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                                <div class="radio-container ">
-                                    <input type="radio" name="AWSEvents" id="awsEventsNone" [value]="awsEventsNone" [checked]="eventExpression.type == 'awsEventsNone'" (click)="onAWSEventChange('awsEventsNone')">
-                                    <label for="awsEventsNone"><span></span><span class="background"></span>None</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                                <div class="radio-container ">
-                                    <input  type="radio" name="AWSEvents" id="dynamodb" [value]="dynamodb" [checked]="eventExpression.type == 'dynamodb'" (click)="onAWSEventChange('dynamodb')">
-                                    <label for="dynamodb"><span></span><span class="background"></span>{{eventLabels.databaseLabel}}</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                                <div class="radio-container ">
-                                    <input  type="radio" name="AWSEvents" id="kinesis" [value]="kinesis" [checked]="eventExpression.type == 'kinesis'" (click)="onAWSEventChange('kinesis')">
-                                    <label for="kinesis"><span></span><span class="background"></span>{{eventLabels.streamLabel}}</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                                <div class="radio-container ">
-                                    <input  type="radio" name="AWSEvents" id="s3" [value]="s3" [checked]="eventExpression.type == 's3'" (click)="onAWSEventChange('s3')">
-                                    <label for="s3"><span></span><span class="background"></span>{{eventLabels.storageLabel}}</label>
-                                </div>
-                            </section>
-                            <section class="col-lg-2 col-md-2  pad-left0 events-radio">
-                              <div class="radio-container">
-                                  <input type="radio" name="AWSEvents" id="sqs" [value]="sqs" [checked]="eventExpression.type == 'sqs'" (click)="onAWSEventChange('sqs')">
-                                  <label for="sqs"><span></span><span class="background"></span>{{eventLabels.queueLabel}}</label>
-                              </div>
-                            </section>
+                    <div class="event-icon">
+                        <div class="input-field-container event-schedule-radio row zero-margin" *ngIf="typeOfPlatform === 'aws'">
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': eventExpression.type == 'awsEventsNone'}"
+                                        (click)="onAWSEventChange('awsEventsNone')">
+                                        <img src="./../../../../assets/images/icons/Group.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': eventExpression.type == 'awsEventsNone'}">
+                                        <p class="name-style">None</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': eventExpression.type == 'dynamodb'}"
+                                        (click)="onAWSEventChange('dynamodb')">
+                                        <img src="./../../../../assets/images/icons/220px-DynamoDB.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': eventExpression.type == 'dynamodb'}">
+                                        <p class="name-style">DynamoDB</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': eventExpression.type == 'kinesis'}"
+                                        (click)="onAWSEventChange('kinesis')">
+                                        <img src="./../../../../assets/images/icons/kinesis.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': eventExpression.type == 'kinesis'}">
+                                        <p class="name-style">kinesis</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': eventExpression.type == 's3'}"
+                                        (click)="onAWSEventChange('s3')">
+                                        <img src="./../../../../assets/images/icons/aws-s3.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': eventExpression.type == 's3'}">
+                                        <p class="name-style">S3</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': eventExpression.type == 'sqs'}"
+                                        (click)="onAWSEventChange('sqs')">
+                                        <img src="./../../../../assets/images/icons/sqs.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': eventExpression.type == 'sqs'}">
+                                        <p class="name-style">SQS</p>
+                                    </div>
+                                </section>
                         </div>
-                        <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': eventExpression.type == 'none'}">
+                        <div class="input-field-container event-schedule-radio row zero-margin" *ngIf="typeOfPlatform === 'azure'">
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'azureEventsNone'}"
+                                        (click)="onAzureEventChange('azureEventsNone')">
+                                        <img src="./../../../../assets/images/icons/Group.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'azureEventsNone'}">
+                                        <p class="name-style">none</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'cosmosdb'}"
+                                        (click)="onAzureEventChange('cosmosdb')">
+                                        <img src="./../../../../assets/images/icons/cosmos.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'cosmosdb'}">
+                                        <p class="name-style">Cosmos DB</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'eventhub'}"
+                                        (click)="onAzureEventChange('eventhub')">
+                                        <img src="./../../../../assets/images/icons/azure-event-hub.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'eventhub'}">
+                                        <p class="name-style">Event Hub</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'storageaccount'}"
+                                        (click)="onAzureEventChange('storageaccount')">
+                                        <img src="./../../../../assets/images/icons/Azure-Storage.svg">
+                                    </div>
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'storageaccount'}">
+                                        <p class="name-style">Storage</p>
+                                    </div>
+                                </section>
+                                <section class="service-box-section event-type-container">
+                                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'servicebusqueue'}"
+                                            (click)="onAzureEventChange('servicebusqueue')">
+                                            <img src="./../../../../assets/images/icons/download.svg">
+                                        </div>
+                                        <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'servicebusqueue'}">
+                                            <p class="name-style">Service Bus</p>
+                                        </div>
+                                    </section>
+                        </div>
+                        <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': eventExpression.type == 'none'}" *ngIf="typeOfPlatform === 'aws'">
                             <div class="dynamodb-fields row zero-margin arrow_box hide" [class.show]="chkDynamodb()">
-                                <div class="col-lg-3 padding-right-0">
+                                <div class="col-lg-3">
                                     <div class="text">Event</div>
                                     <div class="slct-bx-wrp">
                                         <div class="slct-bx-selected disabled">{{typeOfPlatform === 'aws' ? "PutItem" : "*"}}</div>
@@ -429,11 +521,11 @@
                                 <p class="termsConditions error-message" *ngIf="((chkDynamodb()) && (!dynamoTable.valid && (dynamoTable.dirty || dynamoTable.touched)))">Table name must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
                                 <p class="termsConditions error-message" *ngIf="(chkDynamodb() && invalidEventName)">Table name Should not begin or end with special character.</p>
                                 <p class="learn-more" *ngIf="typeOfPlatform === 'aws'">Function would be triggered whenever a new entry is added to the table. Note that the DynamoDB table should exist already and Jazz creates a new stream for this table</p>
-                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function would be triggered whenever a new entry is added or updated to the table. Note that Jazz will create the CosmosDB table</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function would be triggered whenever a new entry is added or updated to the table. Note that Jazz will create the Cosmos DB table</p>
                             </div>
 
                             <div class="kinesis-fields row zero-margin arrow_box hide" [class.show]="chkfrKinesis()">
-                                <div class="col-lg-3  padding-right-0">
+                                <div class="col-lg-3">
                                     <div class="text">Event</div>
                                     <div class="slct-bx-wrp">
                                         <div class="slct-bx-selected disabled">{{typeOfPlatform === 'aws' ? "PutRecord" : "*"}}</div>
@@ -453,7 +545,7 @@
                             </div>
 
                             <div class="s3-fields row zero-margin arrow_box hide" [class.show]="chkS3()">
-                                <div class="col-lg-3  padding-right-0">
+                                <div class="col-lg-3">
                                     <div class="text">Event</div>
                                     <div class="slct-bx-wrp">
                                         <div class="slct-bx-selected disabled">{{typeOfPlatform === 'aws' ? "PutItem" : "*"}}</div>
@@ -473,7 +565,6 @@
                             </div>
 
                             <div class="sqs-fields row zero-margin arrow_box hide" [class.show]="chkSQS()">
-
                               <div class="col-lg-12">
                                   <div class="text">{{eventLabels.queueNameLabel}}</div>
                                   <div class="label-input slct-bx-selected input-wrapper">
@@ -488,13 +579,124 @@
                               </div>
 
                         </div>
-                    </div>
-                </div>
-            </section>
+                        <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': azureEventExpression.type == 'none'}"
+                            *ngIf="typeOfPlatform === 'azure'">
+                            <div class="dynamodb-fields row zero-margin arrow_box hide" [class.show]="chkDocumentdb()">
+                                <div class="col-lg-3">
+                                    <div class="text">Event</div>
+                                    <div class="slct-bx-wrp">
+                                        <div class="slct-bx-selected disabled">{{typeOfPlatform !== 'azure' ? "PutItem" : "*"}}</div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-9">
+                                    <div class="text">{{azureEventLabels.azuredatabaseNameLabel}}</div>
+                                    <div class="label-input slct-bx-selected input-wrapper">
+                                        <input *ngIf="typeOfPlatform == 'azure'" type="text" disabled="disabled"
+                                            class="inline-input input-label aws-events-left-block cursor" title="{{documentDBStreamString}}" value="{{documentDBStreamString}}">
+                                        <input id="cosmosdb" name="cosmosdb" type="text" minlength="3"
+                                            maxlength="{{eventMaxLength.table_name}}" #cosmosdb='ngModel'
+                                            pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.cosmosdb"
+                                            [focus]="focusDocumentDB" (blur)="validateEvents(azureEventExpression.cosmosdb)"
+                                            (ngModelChange)="invalidAzureEventName = false;"
+                                            [ngClass]="{'full-width' : typeOfPlatform !== 'azure'}"
+                                            class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required"
+                                            placeholder="Table Name">
+                                    </div>
+                                </div>
+                                <p class="termsConditions error-message"
+                                    *ngIf="((chkDocumentdb()) && (!cosmosdb.valid && (cosmosdb.dirty || cosmosdb.touched)))">Table name
+                                    must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
+                                <p class="termsConditions error-message" *ngIf="(chkDocumentdb() && invalidAzureEventName)">Table name Should
+                                    not begin or end with special character.</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Cosmos DB Trigger uses the Azure Cosmos DB Change Feed to listen for inserts and updates across partitions. The change feed publishes inserts and updates.</p>
+                            </div>
+                            <div class="kinesis-fields row zero-margin arrow_box hide" [class.show]="chkEventHub()">
+                                <div class="col-lg-3">
+                                    <div class="text">Event</div>
+                                    <div class="slct-bx-wrp">
+                                        <div class="slct-bx-selected disabled">{{typeOfPlatform !== 'azure' ? "PutRecord" : "*"}}</div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-9">
+                                    <div class="text">{{azureEventLabels.azurestreamNameLabel}}</div>
+                                    <div class="label-input slct-bx-selected input-wrapper">
+                                        <input *ngIf="typeOfPlatform == 'azure'" type="text" disabled="disabled"
+                                            class="inline-input input-label aws-events-left-block cursor" title="{{eventStreamString}}" value="{{eventStreamString}}">
+                                        <input id="eventhub" name="eventhub" type="text" minlength="3"
+                                            maxlength="{{eventMaxLength.table_name}}" #eventhub='ngModel'
+                                            pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.eventhub"
+                                            [focus]="focusEventHub" (blur)="validateEvents(azureEventExpression.eventhub)"
+                                            (ngModelChange)="invalidAzureEventName = false;"
+                                            [ngClass]="{'full-width' : typeOfPlatform !== 'azure'}"
+                                            class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required"
+                                            placeholder="Table Name">
+                                    </div>
+                                </div>
+                                <p class="termsConditions error-message"
+                                    *ngIf="((chkEventHub()) && (!eventhub.valid && (eventhub.dirty || eventhub.touched)))">Table name
+                                    must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
+                                <p class="termsConditions error-message" *ngIf="(chkEventHub() && invalidAzureEventName)">Table name Should not
+                                    begin or end with special character.</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function trigger to respond to an event sent to an event hub event stream.</p>
+                            </div>
+                            <div class="s3-fields row zero-margin arrow_box hide" [class.show]="chkStorageAccount()">
+                                <div class="col-lg-3 ">
+                                    <div class="text">Event</div>
+                                    <div class="slct-bx-wrp">
+                                        <div class="slct-bx-selected disabled">{{typeOfPlatform !== 'azure' ? "PutItem" : "*"}}</div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-9">
+                                    <div class="text">{{azureEventLabels.azurestorageNameLabel}}</div>
+                                    <div class="label-input slct-bx-selected input-wrapper">
+                                        <input id="storageaccount" name="storageaccount" type="text" minlength="3"
+                                            maxlength="{{eventMaxLength.table_name}}" #storageaccount='ngModel'
+                                            pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.storageaccount"
+                                            [focus]="focusStorageAccount" (blur)="validateEvents(azureEventExpression.storageaccount)"
+                                            (ngModelChange)="invalidAzureEventName = false;"
+                                            [ngClass]="{'full-width' : typeOfPlatform !== 'azure'}"
+                                            class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required"
+                                            placeholder="Table Name">
+                                    </div>
+                                </div>
+                                <p class="termsConditions error-message"
+                                    *ngIf="((chkStorageAccount()) && (!storageaccount.valid && (storageaccount.dirty || storageaccount.touched)))">Table
+                                    name must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
+                                <p class="termsConditions error-message" *ngIf="(chkStorageAccount() && invalidAzureEventName)">Table name
+                                    Should not begin or end with special character.</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Blob storage trigger starts a function when a new or updated blob is detected. The blob contents are provided as input to the function.</p>
+                            </div>
+                            <div class="sqs-fields row zero-margin arrow_box hide" [class.show]="chkServiceBus()">
+                                <div class="serviceBus-div">
+                                    <div class="text">{{azureEventLabels.azurequeueNameLabel}}</div>
+                                    <div class="label-input slct-bx-selected input-wrapper">
+                                        <input *ngIf="typeOfPlatform == 'azure'" type="text" disabled="disabled"
+                                            class="inline-input input-label aws-events-left-block cursor" title="{{serviceBusStreamString}}" value="{{serviceBusStreamString}}">
+                                        <input id="servicebusqueue" name="servicebusqueue" type="text" minlength="3"
+                                            maxlength="{{eventMaxLength.table_name}}" #servicebusqueue='ngModel'
+                                            pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.servicebusqueue"
+                                            [focus]="focusServiceBus" (blur)="validateEvents(azureEventExpression.servicebusqueue)"
+                                            (ngModelChange)="invalidAzureEventName = false;"
+                                            [ngClass]="{'full-width' : typeOfPlatform !== 'azure'}"
+                                            class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required"
+                                            placeholder="Table Name">
+                                    </div>
+                                </div>
+                                <p class="termsConditions error-message"
+                                    *ngIf="((chkServiceBus()) && (!servicebusqueue.valid && (servicebusqueue.dirty || servicebusqueue.touched)))">Table name
+                                    must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
+                                <p class="termsConditions error-message" *ngIf="(chkServiceBus() && invalidAzureEventName)">Table name Should
+                                    not begin or end with special character.</p>
+                                <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function trigger to respond to messages from a Service Bus Queue.</p>
+                            </div>
+                        </div>
+                        </div>
+                        </div>
+                        </section>
             <!-- end of aws events -->
             <section class="each-step-wrap cloudfront-url" *ngIf="typeOfService == 'website'">
                 <div class="row">
-                    <div class="col-lg-4 col-md-4">
+                    <div class="title-container">
                         <p class="step-title">CDN configuration</p>
                         <p class="step-details hide">Donec facilisis tortor ut augue lacinia, at viverra est semper. Sed sapien metus, scelerisque nec pharetra id.</p>
                     </div>
