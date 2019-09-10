@@ -153,5 +153,9 @@
       "type": "website",
       "fields": []
     }
+  ],
+  "PROVIDER_LIST": [
+    "aws",
+    "azure"
   ]
 }

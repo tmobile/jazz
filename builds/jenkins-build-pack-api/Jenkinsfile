@@ -290,7 +290,7 @@ node() {
               AzureApim =  azureRegionInfo.APIM["DEV"]
               logicalId = environment_logical_id.split('-')[0] //13 + 10
             }
-            endpointUrl="https://${AzureApim}.azure-api.net/${stackName}/${stackName}"
+            endpointUrl="https://${AzureApim}.azure-api.net/${stackName}/sessions"
             swaggerDocUrl = "https://${AzureApim}.portal.azure-api.net/docs/services/${stackName}/export?DocumentFormat%3DSwagger"
             apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.ApiManagement/service/$AzureApim"
             def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"

@@ -29,7 +29,7 @@
       "maxLength": 128,
       "regexPattern": "^[a-zA-Z0-9_.-]+$"
     },
-    "documentdb": {
+    "cosmosdb": {
       "minLength": 3,
       "maxLength": 255,
       "regexPattern": "^[a-zA-Z0-9_.-]+$"
@@ -72,5 +72,9 @@
       "region": "{azure-primary-region}",
       "provider": "{azure-providerId}"
     }
-  }
+  },
+  "PROVIDER_LIST": [
+    "aws",
+    "azure"
+  ]
 }

@@ -82,6 +82,14 @@ var handler = (event, context, cb) => {
       return cb(JSON.stringify(errorHandler.throwInputValidationError(`Deployment targets is missing or is not in a valid format`)));
     }
 
+     //validate list of providers
+     if(service_creation_data.deployment_accounts){
+      if(!validateProviders(config, service_creation_data.deployment_accounts)){
+        logger.error('Invalid provider in the input')
+        return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid provider in the input')))
+      }
+    }
+
     // Validate and set deployment accounts
     let primaryAccountCount = 0;
 
@@ -128,9 +136,6 @@ var handler = (event, context, cb) => {
               return cb(JSON.stringify(errorHandler.throwInputValidationError('accountId, region and provider are required for a non-primary deployment account')));
             }
           }
-        } else {
-          logger.error('Unsupported provider');
-          return cb(JSON.stringify(errorHandler.throwInputValidationError('Unsupported provider: ' + eachDeploymentAccount.provider)));
         }
       }
 
@@ -144,14 +149,6 @@ var handler = (event, context, cb) => {
       }
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError(`Deployment accounts is missing or is not in a valid format`)));
-    }
-
-    //validate list of providers
-    if(service_creation_data.deployment_accounts){
-      if(!validateProviders(service_creation_data.deployment_accounts)){
-        logger.error('List of Providers are not valid')
-        return cb(JSON.stringify(errorHandler.throwInputValidationError('List of Providers are not valid')))
-      }
     }
 
     user_id = event.principalId;
@@ -262,10 +259,10 @@ function validateMultipleProviders(deployment_accounts){
 /**
  * Function to check and validate the list of providers
  */
-function validateProviders(deployment_accounts){
+function validateProviders(config, deployment_accounts){
   for (let eachDeploymentAccount of deployment_accounts){
-    if(eachDeploymentAccount.provider != 'aws' && eachDeploymentAccount.provider != 'azure'){
-        return false
+    if(config.PROVIDER_LIST.indexOf(eachDeploymentAccount.provider) == -1){
+      return false
     }
   }
   return true
@@ -468,7 +465,7 @@ var validateEventName = (eventType, sourceName, config) => {
     'sqs': sourceName.split(':').pop(),
     'dynamodb': sourceName.split('/').pop(),
     'kinesis': sourceName.split('/').pop(),
-    'documentdb': sourceName.split('/').pop(),
+    'cosmosdb': sourceName.split('/').pop(),
     'eventhub': sourceName.split('/').pop(),
     'storageaccount': sourceName.split('/').pop(),
     'servicebusqueue': sourceName.split('/').pop()

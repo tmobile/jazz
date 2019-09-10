@@ -354,12 +354,12 @@ var validateStatusStateChange = function (update_data, service_data_from_db, onC
 var validateProviderValue = function(service_data, onComplete) {
     let inValidProvider = [];
     for (let eachDeploymentAccount of service_data.deployment_accounts){
-        if(eachDeploymentAccount.provider != 'aws' && eachDeploymentAccount.provider != 'azure'){
+        if(global.global_config.PROVIDER_LIST.indexOf(eachDeploymentAccount.provider) == -1){
             inValidProvider.push(eachDeploymentAccount.provider)
         }
     }
     if (inValidProvider.length > 0) {
-        var message = "Provider is not valid";
+        var message = "Invalid provider in the input";
         onComplete({
             result: "inputError",
             message: message

@@ -175,14 +175,16 @@ def getTags(serviceInfo) {
 def getAzureRequestPayload(serviceInfo) {
 
   def azureAccount = utilModule.getAzureAccountInfo(serviceInfo.serviceCatalog)
+  def resourceGroupName
   def location
   for (item in azureAccount.REGIONS) {
 		if(item.REGION == serviceInfo.serviceCatalog.region){
 			location = item.LOCATION
+      resourceGroupName = item
 		}
 	}
   def data = [
-    "resourceGroupName": azureAccount.RESOURCE_GROUP,
+    "resourceGroupName": resourceGroupName.RESOURCE_GROUP,
     "appName"          : serviceInfo.storageAccountName,
     "stackName"        : serviceInfo.stackName,
     "tenantId"         : AZURE_TENANT_ID,
