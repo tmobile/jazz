@@ -50,7 +50,7 @@ export class EventExpression {
 export class AzureEventExpression {
   constructor (
     public type:string,
-    public documentdb: string,
+    public cosmosdb: string,
     public eventhub: string,
     public storageaccount: string,
     public servicebusqueue: string

@@ -469,11 +469,11 @@
                                     </div>
                                 </section>
                                 <section class="service-box-section event-type-container">
-                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'documentdb'}"
-                                        (click)="onAzureEventChange('documentdb')">
+                                    <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': azureEventExpression.type == 'cosmosdb'}"
+                                        (click)="onAzureEventChange('cosmosdb')">
                                         <img src="./../../../../assets/images/icons/cosmos.svg">
                                     </div>
-                                    <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'documentdb'}">
+                                    <div class="icon-name" [ngClass]="{'service-box-selected': azureEventExpression.type == 'cosmosdb'}">
                                         <p class="name-style">Cosmos DB</p>
                                     </div>
                                 </section>
@@ -595,10 +595,10 @@
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input *ngIf="typeOfPlatform == 'azure'" type="text" disabled="disabled"
                                             class="inline-input input-label aws-events-left-block cursor" title="{{documentDBStreamString}}" value="{{documentDBStreamString}}">
-                                        <input id="documentdb" name="documentdb" type="text" minlength="3"
-                                            maxlength="{{eventMaxLength.table_name}}" #documentdb='ngModel'
-                                            pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.documentdb"
-                                            [focus]="focusDocumentDB" (blur)="validateEvents(azureEventExpression.documentdb)"
+                                        <input id="cosmosdb" name="cosmosdb" type="text" minlength="3"
+                                            maxlength="{{eventMaxLength.table_name}}" #cosmosdb='ngModel'
+                                            pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.cosmosdb"
+                                            [focus]="focusDocumentDB" (blur)="validateEvents(azureEventExpression.cosmosdb)"
                                             (ngModelChange)="invalidAzureEventName = false;"
                                             [ngClass]="{'full-width' : typeOfPlatform !== 'azure'}"
                                             class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required"
@@ -606,7 +606,7 @@
                                     </div>
                                 </div>
                                 <p class="termsConditions error-message"
-                                    *ngIf="((chkDocumentdb()) && (!documentdb.valid && (documentdb.dirty || documentdb.touched)))">Table name
+                                    *ngIf="((chkDocumentdb()) && (!cosmosdb.valid && (cosmosdb.dirty || cosmosdb.touched)))">Table name
                                     must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
                                 <p class="termsConditions error-message" *ngIf="(chkDocumentdb() && invalidAzureEventName)">Table name Should
                                     not begin or end with special character.</p>

@@ -174,7 +174,7 @@ export class CreateServiceComponent implements OnInit {
   }
 
   azureEventsPrefix() {
-    this.documentDBStreamString = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.documentDB/"
+    this.documentDBStreamString = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.cosmosdb/"
     this.eventStreamString = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.eventHub/";
     this.serviceBusStreamString = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.serviceBus/";
   }
@@ -200,7 +200,7 @@ export class CreateServiceComponent implements OnInit {
   }
   chkDocumentdb() {
     this.focusDocumentDB.emit(true);
-    return this.azureEventExpression.type === 'documentdb';
+    return this.azureEventExpression.type === 'cosmosdb';
   }
 
   chkEventHub() {
@@ -567,8 +567,8 @@ export class CreateServiceComponent implements OnInit {
       if(this.azureEventExpression.type !== "azureEventsNone") {
         var event = {};
         event["type"] = this.azureEventExpression.type;
-        if(this.azureEventExpression.type === "documentdb") {
-          event["source"] =  "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.documentDB/"+ this.model.domainName + "/" + this.azureEventExpression.documentdb;
+        if(this.azureEventExpression.type === "cosmosdb") {
+          event["source"] =  "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.cosmosdb/"+ this.model.domainName + "/" + this.azureEventExpression.cosmosdb;
           event["action"] = "PutItem";
         } else if(this.azureEventExpression.type === "eventhub") {
           event["source"] = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.eventHub/" + this.model.domainName + "/" + this.azureEventExpression.eventhub;
@@ -671,7 +671,7 @@ export class CreateServiceComponent implements OnInit {
     this.eventExpression.streamARN = "";
     this.eventExpression.S3BucketName = "";
     this.eventExpression.SQSstreamARN = "";
-    this.azureEventExpression.documentdb = "";
+    this.azureEventExpression.cosmosdb = "";
     this.azureEventExpression.eventhub = "";
     this.azureEventExpression.storageaccount = "";
     this.azureEventExpression.servicebusqueue = "";
@@ -803,7 +803,7 @@ export class CreateServiceComponent implements OnInit {
     if(this.eventExpression.type == 's3' && this.eventExpression.S3BucketName == undefined){
         return true
     }
-    if(this.azureEventExpression.type == 'documentdb' && this.azureEventExpression.documentdb == undefined){
+    if(this.azureEventExpression.type == 'cosmosdb' && this.azureEventExpression.cosmosdb == undefined){
       return true
     }
     if(this.azureEventExpression.type == 'eventhub' && this.azureEventExpression.eventhub == undefined){
