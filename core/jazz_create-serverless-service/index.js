@@ -83,7 +83,7 @@ var handler = (event, context, cb) => {
     }
 
      //validate list of providers
-     if(service_creation_data.deployment_accounts){
+    if(Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts){
       if(!validateProviders(config, service_creation_data.deployment_accounts)){
         logger.error('Invalid provider in the input')
         return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid provider in the input')))
@@ -262,7 +262,7 @@ function validateMultipleProviders(deployment_accounts){
 function validateProviders(config, deployment_accounts){
   for (let eachDeploymentAccount of deployment_accounts){
     if(config.PROVIDER_LIST.indexOf(eachDeploymentAccount.provider) == -1){
-      return false
+        return false
     }
   }
   return true

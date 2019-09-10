@@ -193,7 +193,8 @@ describe('create-serverless-service', function () {
     it("should inform user of error if given an event with no primary account.deployment_accounts", function () {
       let configstub = sinon.stub(configModule, "getConfig").returns({
         "DEPLOYMENT_ACCOUNTS": [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
-        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" },
+        "PROVIDER_LIST": ["aws","azure"]
       });
 
       event.body.deployment_accounts = [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":false}];
@@ -209,7 +210,8 @@ describe('create-serverless-service', function () {
     it("should inform user of error if given an event with two primary account.deployment_accounts", function () {
       let configstub = sinon.stub(configModule, "getConfig").returns({
         "DEPLOYMENT_ACCOUNTS": [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
-        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" },
+        "PROVIDER_LIST": ["aws","azure"]
       });
 
       event.body.deployment_accounts = [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":true}];
@@ -225,7 +227,8 @@ describe('create-serverless-service', function () {
     it("should inform user of error if given an event with no account, region and provider for non-primary account.deployment_accounts", function () {
       let configstub = sinon.stub(configModule, "getConfig").returns({
         "DEPLOYMENT_ACCOUNTS": [{"accountId":"12345","region":"us-east-1","provider":"aws","primary":true},{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}],
-        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" },
+        "PROVIDER_LIST": ["aws","azure"]
       });
 
       event.body.deployment_accounts = [{"accountId":"67890","region":"us-west-2","provider":"aws","primary":false}];
@@ -350,7 +353,8 @@ describe('create-serverless-service', function () {
 
     it("should state the user isn't authorized if no principalId is given", function () {
       let configstub = sinon.stub(configModule, "getConfig").returns({
-        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" }
+        "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" },
+        "PROVIDER_LIST": ["aws","azure"]
       });
 
       event.body.deployment_targets = { "function": "aws_lambda" };
@@ -372,7 +376,8 @@ describe('create-serverless-service', function () {
       let configstub = sinon.stub(configModule, "getConfig").returns({
         "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" },
         "SERVICE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/",
-        "TOKEN_URL": "dev/jazz/services"
+        "TOKEN_URL": "dev/jazz/services",
+        "PROVIDER_LIST": ["aws","azure"]
       });
       event.body.deployment_targets = { "function": "aws_lambda" };
       let responseObject_getToken = {
@@ -430,7 +435,8 @@ describe('create-serverless-service', function () {
     it("should Return the Error message if jenkinks job failed ", () => {
       let configstub = sinon.stub(configModule, "getConfig").returns({
         "DEPLOYMENT_TARGETS": { "gcp": "apigee", "function": "aws_lambda" },
-        "JOB_BUILD_URL": "{conf-jenkins-host}/job/create-service/buildWithParameters"
+        "JOB_BUILD_URL": "{conf-jenkins-host}/job/create-service/buildWithParameters",
+        "PROVIDER_LIST": ["aws","azure"]
       });
       event.body.deployment_targets = { "function": "aws_lambda" };
       let bool = false;
