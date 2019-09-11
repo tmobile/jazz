@@ -1,12 +1,12 @@
-const WebAppManagementClient = require('azure-arm-website');
-const ResourceManagementClient = require('azure-arm-resource').ResourceManagementClient;
-const StorageManagementClient = require('azure-arm-storage');
-const ApiManagementClient = require("azure-arm-apimanagement");
-const CdnManagementClient = require("azure-arm-cdn");
-const msRestAzure = require('ms-rest-azure');
-const CosmosDBManagementClient = require('azure-arm-cosmosdb');
-const EventHubManagementClient = require('azure-arm-eventhub');
-const ServiceBusManagementClient = require('azure-arm-sb');
+const WebSiteManagementClient = require('@azure/arm-appservice').WebSiteManagementClient;
+const ResourceManagementClient = require('@azure/arm-resources').ResourceManagementClient;
+const StorageManagementClient = require('@azure/arm-storage').StorageManagementClient;
+const ApiManagementClient = require("@azure/arm-apimanagement").ApiManagementClient;
+const CdnManagementClient = require("@azure/arm-cdn").CdnManagementClient;
+const msRestNodeAuth = require("@azure/ms-rest-nodeauth");
+const CosmosDBManagementClient = require('@azure/arm-cosmosdb').CosmosDBManagementClient;
+const EventHubManagementClient = require('@azure/arm-eventhub').EventHubManagementClient;
+const ServiceBusManagementClient = require('@azure/arm-servicebus').ServiceBusManagementClient;
 
 module.exports = class ClientFactory {
 
@@ -18,7 +18,7 @@ module.exports = class ClientFactory {
         this.subscriptionId = subscriptionId;
 
         this.classList = new Map();
-        this.classList.set('WebAppManagementClient', WebAppManagementClient);
+        this.classList.set('WebSiteManagementClient', WebSiteManagementClient);
         this.classList.set('ResourceManagementClient', ResourceManagementClient);
         this.classList.set('StorageManagementClient', StorageManagementClient);
         this.classList.set('ApiManagementClient', ApiManagementClient);
@@ -34,15 +34,22 @@ module.exports = class ClientFactory {
      await this.login();
     }
 
-    async login(){
-        this.credentials = await msRestAzure.loginWithServicePrincipalSecret(this.clientId, this.clientSecret, this.tenantId);
+    async login() {
+    	try {
+    		const authResponse = await msRestNodeAuth.loginWithServicePrincipalSecretWithAuthResponse(this.clientId, this.clientSecret, this.tenantId);
+        	this.credentials = authResponse.credentials
+  		} catch (err) {
+    		console.log(err);
+  		}
     }
 
 
     async instantiate(className){
         let resource;
+        let localCredentials = this.credentials;
+        let localSubscriptionId = this.subscriptionId;
         if(this.classList.has(className)){
-            resource = new (this.classList.get(className))(this.credentials, this.subscriptionId);
+            resource = new (this.classList.get(className))(localCredentials, localSubscriptionId);
 
         }
         else{

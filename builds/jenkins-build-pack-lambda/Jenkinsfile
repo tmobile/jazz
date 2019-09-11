@@ -89,8 +89,9 @@ node() {
       error "Service Id is not available."
     }
   }
-
-  accountDetails = utilModule.getAccountInfo(config);
+  if(config['provider'] == 'aws'){
+    accountDetails = utilModule.getAccountInfo(config);
+  }
   accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
   if (!config) {
@@ -151,13 +152,19 @@ node() {
   def isS3EventEnabled = isEnabled(config, "event_source_s3")
   def isSQSEventEnabled = isEnabled(config, "event_source_sqs")
   def isEc2EventEnabled = isEnabled(config, "event_source_ec2")
+  def isCosmoDbEnabled = isEnabled(config, "event_source_cosmosdb")
+  def isEventHubEnabled = isEnabled(config, "event_source_eventhub")
+  def isStorageEnabled = isEnabled(config, "event_source_storageaccount")
+  def isServiceBusQueueEnabled = isEnabled(config, "event_source_servicebusqueue")
   def isEventSchdld = false
   def internalAccess = config['require_internal_access']
   domain = config['domain']
 
-  def servicePlatform = config['platform']
-
-  def roleARN = accountDetails.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
+  def servicePlatform = config['provider']
+  def roleARN;
+  if(config['provider'] == 'aws'){
+    roleARN = accountDetails.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
+  } 
 
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
@@ -252,43 +259,42 @@ node() {
       
       def logicalId
       def credsId = null
+      if (servicePlatform && servicePlatform == 'azure') {
+        timestamps {
+          if (environment_logical_id == "prod") {
+            logicalId = config['service_id'].substring(0, 7) + environment_logical_id
+          } else {
+            logicalId = environment_logical_id.split('-')[0] //13 + 10
+          }
+          def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
+          def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
+
+          def serviceInfo = [
+            'stackName'         : stackName,
+            'storageAccountName': storageName,
+            "repoCredentialId"  : repo_credential_id,
+            'envId'             : environment_logical_id,
+            'serviceCatalog'    : config,
+            'isScheduleEnabled' : isScheduleEnabled,
+            'isStreamEnabled'   : isEventHubEnabled,
+            'isQueueEnabled'    : isServiceBusQueueEnabled,
+            'isDbEnabled'       : isCosmoDbEnabled,
+            'isStorageEnabled'  : isStorageEnabled
+          ]
+          try {
+            def endpoint = azureDeployer.createFunction(serviceInfo)
+            environmentDeploymentMetadata.setEnvironmentEndpoint(endpoint)
+            def svc_response = "Your service endpoint: $endpoint"
+            sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response)
+          } catch (ex) {
+            handleFail(ex, context_map, environment_logical_id, config, gitCommitHash)
+          }
+        }
+        return
+      }
       withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
       ]) {
-
-        if (servicePlatform && servicePlatform == 'azure') {
-          timestamps {
-            if (environment_logical_id == "prod") {
-              logicalId = config['service_id'].substring(0, 7) + environment_logical_id
-            } else {
-              logicalId = environment_logical_id.split('-')[0] //13 + 10
-            }
-            def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
-            def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
-
-            def serviceInfo = [
-              'stackName'         : stackName,
-              'storageAccountName': storageName,
-              "repoCredentialId"  : repo_credential_id,
-              'envId'             : environment_logical_id,
-              'serviceCatalog'    : config,
-              'isScheduleEnabled' : isScheduleEnabled,
-              'isStreamEnabled'   : isStreamEnabled,
-              'isQueueEnabled'    : isSQSEventEnabled,
-              'isDbEnabled'       : isDynamoDbEnabled,
-              'isStorageEnabled'  : isS3EventEnabled
-            ]
-            try {
-              def endpoint = azureDeployer.createFunction(serviceInfo)
-              environmentDeploymentMetadata.setEnvironmentEndpoint(endpoint)
-              def svc_response = "Your service endpoint: $endpoint"
-              sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response)
-            } catch (ex) {
-              handleFail(ex, context_map, environment_logical_id, config, gitCommitHash)
-            }
-          }
-          return
-        }
 
         try {
           // initialize aws credentials
@@ -735,7 +741,7 @@ def validateDeploymentConfigurations(def prop) {
 		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
 			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
 		}
-	} else if (config['platform'] == "azure") {
+	} else if (config['provider'] == "azure") {
     // we use azure default timeout
   } else {
 		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
@@ -1235,7 +1241,7 @@ def loadBuildModules(buildModuleUrl) {
     echo "resource util init successfully."
 
     def azureUtility = load "azure-utility.groovy"
-    azureUtility.initialize(configLoader, resourceUtility)
+    azureUtility.initialize(configLoader, resourceUtility, utilModule)
     echo "Azure util init successfully."
     azureDeployer = load "azure-function-deploy-module.groovy"
     azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtility)

@@ -1,4 +1,5 @@
 #!groovy
+import java.text.SimpleDateFormat
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.Field
@@ -32,6 +33,8 @@ import groovy.transform.Field
 @Field def asset_info
 @Field def asset_name
 @Field def service_config
+@Field def websiteType
+@Field def azureAccount
 
 node()  {
 	def jazzBuildModuleURL = getBuildModuleUrl()
@@ -88,7 +91,17 @@ node()  {
    		service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
  	}
 
-	accountDetails = utilModule.getAccountInfo(service_config);
+	if(service_config['framework'] == null){
+		websiteType = 'static'
+	} else {
+		websiteType = service_config['framework']
+	}
+
+	if(service_config['provider'] == 'aws'){
+		accountDetails = utilModule.getAccountInfo(service_config);
+	} else if (service_config['provider'] == 'azure'){
+		azureAccount = utilModule.getAzureAccountInfo(service_config);
+	}
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
 	def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
@@ -98,13 +111,14 @@ node()  {
 
 	environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
-	def environment_logical_id
 	if (params.scm_branch == 'master') {
 		environment_logical_id = 'prod'
 		current_environment = 'PROD'
-		for (item in accountDetails.REGIONS) {
-			if(item.REGION == service_config.region){
-				s3Bucket = item.S3[current_environment]
+		if(service_config['provider'] == 'aws'){
+			for (item in accountDetails.REGIONS) {
+				if(item.REGION == service_config.region){
+					s3Bucket = item.S3[current_environment]
+				}
 			}
 		}
 	} else {
@@ -113,9 +127,11 @@ node()  {
 			error "The environment has not been created yet and its missing the logical Id"
 		}
 		current_environment = "DEV"
-		for (item in accountDetails.REGIONS) {
-			if(item.REGION == service_config.region){
-				s3Bucket = item.S3[current_environment]
+		if(service_config['provider'] == 'aws'){
+			for (item in accountDetails.REGIONS) {
+				if(item.REGION == service_config.region){
+					s3Bucket = item.S3[current_environment]
+				}
 			}
 		}
 	}
@@ -179,7 +195,7 @@ node()  {
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map)
 		}
 
-		stage("Build ${service_config['framework']}") {
+		stage("Build ${websiteType}") {
 			if(service_config['framework'] == 'angular' || service_config['framework'] == 'react') {
 				events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
 				try {
@@ -193,7 +209,7 @@ node()  {
 			}		
 		}
 	
-    def servicePlatform = service_config['platform']
+    def servicePlatform = service_config['provider']
     if (servicePlatform != 'aws' && servicePlatform != 'azure'){
       send_status_email('FAILED', "service platform is unknown: ${servicePlatform}")
       events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', "service platform is unknown: ${servicePlatform}", context_map)
@@ -215,13 +231,18 @@ node()  {
           def resourcegroup
           def storageaccount=appname
           def logicalId
-
+          def azureRegionInfo
+          for (item in azureAccount.REGIONS) {
+            if(item.REGION == service_config.region){
+              azureRegionInfo = item
+            }
+          }
           if (current_environment == "PROD") {
-            resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["PRODUCTION"]
+            resourcegroup = azureRegionInfo.RESOURCE_GROUPS["PROD"]
             logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
           }
           else {
-            resourcegroup = configLoader.AZURE.RESOURCE_GROUPS["DEVELOPMENT"]
+            resourcegroup = azureRegionInfo.RESOURCE_GROUPS["DEV"]
             logicalId = environment_logical_id.split('-')[0] //13 + 10
           }
           def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
@@ -233,7 +254,8 @@ node()  {
           events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
           events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
 
-          createWebsite(appname, resourcegroup, storageName)
+          createWebsite(appname, resourcegroup, storageName, service_config['framework'])
+          azureSync(storageName, service_config['framework'])
 
           def origin_endpoint_url = "https://${storageName}.azureedge.net"
           def cdn_endpoint_url = "https://${storageName}.z22.web.core.windows.net"
@@ -976,6 +998,9 @@ def loadBuildModules(buildModuleUrl){
 		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
     	awsAPIGatewayModule.initialize()
 
+		events = load "events-module.groovy"
+		echo "Event module loaded successfully."
+
 		scmModule = load "scm-module.groovy"
 		scmModule.initialize(configLoader)
 		echo "SCM module loaded successfully."
@@ -991,11 +1016,47 @@ def loadBuildModules(buildModuleUrl){
   }
 }
 
+def azureSync(storageName, framework){
+	def dateData = new Date()
+	def dateFormat = new SimpleDateFormat("MM/dd/yyyy")
+	def dateValue = dateFormat.format(dateData);
+	dateValue = dateValue.split('/')
+	def year = dateValue[2].toInteger() + 1
+	def month = dateValue[1]
+	def dailyDate = dateValue[0]
+	def expiryDate = "${dateValue[2].toInteger() + 1}-${dateValue[0]}-${dateValue[1]}T00:00:00Z"
+	def container = '$web'
+
+	def primaryKey = sh (script:"az storage account keys list -n ${storageName}", returnStdout: true).trim()
+	def modifiedKey = jsonParse(primaryKey)
+	def keyData = modifiedKey[0]['value']
+
+	sh "cd ./app && rm -rf node_modules package-lock.json && ls && cd .."
+	sh "az login --service-principal -u ${azureAccount.CLIENT_USERNAME} -p ${azureAccount.CLIENT_PASSWORD} --tenant ${azureAccount.CLIENT_TENANT}"
+    
+	def sasTokenRaw = sh (script:"az storage container generate-sas --name '\$web' --account-name ${storageName} --account-key ${keyData} --https-only --permissions rwlcd --expiry ${expiryDate}", returnStdout: true).trim()
+	sasTokenRaw = sasTokenRaw.replaceAll(/"/, '');
+	def sasToken = sasTokenRaw
+	echo "sasToken now is ${sasToken}"
+	if(framework == 'angular'){
+		sh "azcopy sync ./app/dist 'https://${storageName}.blob.core.windows.net/${container}?${sasToken}' --delete-destination=true"
+	} else if(framework == 'react'){
+		sh "azcopy sync ./app/build 'https://${storageName}.blob.core.windows.net/${container}?${sasToken}' --delete-destination=true"
+	} else {
+		sh "azcopy sync ./app 'https://${storageName}.blob.core.windows.net/${container}?${sasToken}' --delete-destination=true"
+	}
+}
 
 
-
-def createWebsite(stackName, resourceGroup, storageName){
-  sh "cd ./app && zip -qr ../content.zip *  && cd .."
+def createWebsite(stackName, resourceGroup, storageName, framework){
+  sh "cd ./app && rm -rf node_modules package-lock.json && cd .."
+	if(framework == 'angular'){
+		sh "zip -qr content.zip ./app/dist/*"
+	} else if(framework == 'react'){
+		sh "zip -qr content.zip ./app/build/*"
+	} else {
+		sh "zip -qr content.zip ./app/*"
+	}
   def zip = sh(script: 'readlink -f ./content.zip', returnStdout: true).trim()
 
 

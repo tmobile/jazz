@@ -3,7 +3,8 @@
 async function create(data, client){
 
   await createNamespace(data, client);
-  await createQueue(data, client);
+  let response = await createQueue(data, client);
+  return response;
 }
 
 
@@ -16,7 +17,7 @@ async function createNamespace(data, client) {
       tags: data.tags
     };
 
-    await client.namespaces.createOrUpdate(data.resourceGroupName, data.namespace, params);
+    return await client.namespaces.createOrUpdate(data.resourceGroupName, data.namespace, params);
   }
 }
 
@@ -29,7 +30,7 @@ async function createQueue(data, client) {
       location: data.location,
       tags: data.tags
     };
-    await client.queues.createOrUpdate(data.resourceGroupName, data.namespace, data.resourceName, params);
+    return await client.queues.createOrUpdate(data.resourceGroupName, data.namespace, data.resourceName, params);
   }
 }
 

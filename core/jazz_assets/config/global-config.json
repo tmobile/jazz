@@ -92,5 +92,10 @@
 		"offset": 0,
 		"limit": 10,
 		"max_limit": 100
-	}
+	},
+	"PROVIDER_LIST": [
+		"aws",
+		"azure",
+		"gcp"
+	]
 }

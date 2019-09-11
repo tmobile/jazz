@@ -28,6 +28,26 @@
       "minLength": 1,
       "maxLength": 128,
       "regexPattern": "^[a-zA-Z0-9_.-]+$"
+    },
+    "cosmosdb": {
+      "minLength": 3,
+      "maxLength": 255,
+      "regexPattern": "^[a-zA-Z0-9_.-]+$"
+    },
+    "eventhub": {
+      "minLength": 1,
+      "maxLength": 128,
+      "regexPattern": "^[a-zA-Z0-9_.-]+$"
+    },
+    "storageaccount": {
+      "minLength": 3,
+      "maxLength": 63,
+      "regexPattern": "^[a-z0-9-]+$"
+    },
+    "servicebusqueue": {
+      "minLength": 1,
+      "maxLength": 80,
+      "regexPattern": "^[a-zA-Z0-9-_]+$"
     }
   },
   "DEPLOYMENT_TARGETS": {
@@ -42,8 +62,19 @@
     ]
   },
   "PRIMARY_DEPLOYMENT_ACCOUNT": {
-    "accountId": "{conf-account}",
-    "region": "{conf-region}",
-    "provider": "{conf-provider}"
-  }
+    "AWS": {
+      "accountId": "{aws-primary-accountId}",
+      "region": "{aws-primary-region}",
+      "provider": "{aws-providerId}"
+    },
+    "AZURE" : {
+      "accountId": "{azure-primary-accountId}",
+      "region": "{azure-primary-region}",
+      "provider": "{azure-providerId}"
+    }
+  },
+  "PROVIDER_LIST": [
+    "aws",
+    "azure"
+  ]
 }

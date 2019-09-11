@@ -20,8 +20,8 @@ async function createAccount(data, client) {
     databaseAccountOfferType: "Standard",
     tags: data.tags
   };
-
-  return await client.databaseAccounts.createOrUpdate(data.resourceGroupName, data.database_account, params);
+  let response = await client.databaseAccounts.createOrUpdate(data.resourceGroupName, data.database_account, params);
+  return response;
 }
 
 async function createDatabase(data, client) {
@@ -51,8 +51,8 @@ async function createDatabaseWithEndpoint(data, client, endpoint) {
 
 
 async function accountExists(data, client) {
-
-  return await client.databaseAccounts.checkNameExists(data.database_account);
+  let account = await client.databaseAccounts.checkNameExists(data.database_account);
+  return account.body;
 }
 
 module.exports = {

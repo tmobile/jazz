@@ -19,7 +19,7 @@ module.exports = class ApiApp {
                 await this.resourceFactory.createHostingPlan(this.data.resourceGroupName, 'westus', {}, 'Y1', this.data.appName);
                 await this.resourceFactory.createFunctionApp(this.data.appName, storageAccountKey, this.data.tags, undefined,undefined,undefined,undefined, this.data.runtime);
                 await this.resourceFactory.uploadZipToKudu(this.data.appName, this.data.zip);
-                await this.resourceFactory.createOrUpdateApiGatewayWithSwaggerJson(this.data.serviceName, this.data.apiId, this.data.swagger, this.data.basepath);
+                await this.resourceFactory.createOrUpdateApiGatewayWithSwaggerJson(this.data.serviceName, this.data.apiId, this.data.swagger, this.data.appName, this.data.basepath);
                 await this.resourceFactory.createOrUpdateApiContract(this.data.serviceName,this.data.apiId);
                 await this.resourceFactory.setSubscriptionForProduct(this.data.serviceName, "starter");
                 await this.resourceFactory.addApiToProduct(this.data.serviceName, "starter", this.data.apiId);

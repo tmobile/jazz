@@ -66,7 +66,6 @@ describe('platform_services', function() {
       "query" : {
         "service" : "mAg!c",
         "domain" : "k!ngd0m",
-        "platform" : "testPlatform",
         "region" : "mewni",
         "type" : "api",
         "runtime" : "nodejs8.10",

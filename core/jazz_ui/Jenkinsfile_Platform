@@ -125,6 +125,13 @@ node ()  {
       def uiAccountMap = JsonOutput.toJson(eachAccountMap)
       sh "sed -i 's/{accountMap}/${uiAccountMap}/g' ./src/environments/environment.oss.ts"
 
+      /* If Azure extension is present, then UI will support azure related components*/
+      if(config_loader.AZURE && config_loader.AZURE.IS_ENABLED instanceof Boolean && config_loader.AZURE.IS_ENABLED){
+        sh "sed -i 's/{azure_enabled}/${config_loader.AZURE.IS_ENABLED}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{azure_account_number}/${config_loader.AZURE.DEFAULTS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{azure_region}/${config_loader.AZURE.DEFAULTS.REGION}/g' ./src/environments/environment.oss.ts"
+      }
+
       /* Getting the deployment targets */
       sh "sed -i 's/{api_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.API_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
 
