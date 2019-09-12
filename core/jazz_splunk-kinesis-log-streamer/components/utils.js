@@ -59,17 +59,32 @@ var getCommonData = function (payload) {
   return new Promise((resolve, reject) => {
     let data = {};
     data.metadata = {};
-    data.request_id = getInfo(payload.logEvents, global_config.PATTERNS.Lambda_request_id);
+    data.asset_type = "lambda"
+    data.request_id = getInfo(payload.logEvents, global_config.PATTERNS.lambda_request_id);
     if (data.request_id) {
       data.provider = "aws_lambda";
       let domainAndservice;
-      data.environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment, 2);
-      if (data.environment === "dev") {
-        let dev_environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 2);
-        domainAndservice = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 1);
-        data.environment = dev_environment;
+      let lastSubstring = getSubInfo(payload.logGroup, global_config.PATTERNS.lambda_environment, 2);
+      if (lastSubstring === "prod" || lastSubstring === "stg" || lastSubstring === "dev") {
+        if (lastSubstring === "dev") {
+          let dev_environment = getSubInfo(payload.logGroup, global_config.PATTERNS.lambda_environment_dev, 2);
+          domainAndservice = getSubInfo(payload.logGroup, global_config.PATTERNS.lambda_environment_dev, 1);
+          data.environment = dev_environment;
+        } else {
+          data.environment = lastSubstring;
+          domainAndservice = getSubInfo(payload.logGroup, global_config.PATTERNS.lambda_domain_service, 1);
+        }
       } else {
-        domainAndservice = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_domain_service, 1);
+        data.asset_identifier = lastSubstring
+        let environment = getSubInfo(payload.logGroup, global_config.PATTERNS.lambda_environment_in_slsapp, 2);
+        if (environment === "dev") {
+          let dev_environment = getSubInfo(payload.logGroup, global_config.PATTERNS.lambda_environment_dev_in_slsapp, 2);
+          domainAndservice = getSubInfo(payload.logGroup, global_config.PATTERNS.lambda_environment_dev_in_slsapp, 1);
+          data.environment = dev_environment;
+        } else {
+          data.environment = environment;
+          domainAndservice = getSubInfo(payload.logGroup, global_config.PATTERNS.lambda_domain_service_in_slsapp, 1);
+        }
       }
 
       let namespace = domainAndservice.substring(0, domainAndservice.indexOf("_"));
@@ -96,6 +111,7 @@ var transformApiLogs = function (payload) {
     data.metadata = {};
     data.event_timestamp = new Date();
     data.provider = "aws_apigateway";
+    data.asset_type = "apigateway"
     data.metadata.platform_log_group = payload.logGroup;
     data.metadata.platform_log_stream = payload.logStream;
     data.environment = getSubInfo(payload.logGroup, global_config.PATTERNS.environment, 2);

@@ -37,6 +37,7 @@ import groovy.transform.Field
 @Field def azureAccount
 
 node()  {
+  try {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
 
@@ -80,11 +81,11 @@ node()  {
 	}
 
 	if(!service_config.region) {
-   		service_config.region = configLoader.AWS.DEFAULTS.REGION
+  	service_config.region = configLoader.AWS.DEFAULTS.REGION
 	}
 
- 	if(!service_config.accountId) {	
-   		service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
+ 	if(!service_config.accountId) {
+    service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
  	}
 
  	if(!service_config.provider) {
@@ -103,11 +104,11 @@ node()  {
 		azureAccount = utilModule.getAzureAccountInfo(service_config);
 	}
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
+	def coreDomain = "jazz";
+	def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
+  g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
-	def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
-    g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
-
-		auth_token = setCredentials()
+	auth_token = setCredentials()
 
 	environmentDeploymentMetadata.initialize(service_config, configLoader, scmModule, branch, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 
@@ -206,7 +207,7 @@ node()  {
         			error ex.getMessage()
 				}
 				events.sendCompletedEvent('BUILD', 'build completed', context_map, environment_logical_id)
-			}		
+			}
 		}
 	
     def servicePlatform = service_config['provider']
@@ -216,6 +217,101 @@ node()  {
       events.sendFailureEvent('UPDATE_DEPLOYMENT', "service platform is unknown: ${servicePlatform}", environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
       error "service platform is unknown: ${servicePlatform}"
     }
+
+		stage("Deployment to ${current_environment} Env"){
+			def randomString = utilModule.generateRequestId();
+			def credsId = "jazz-${randomString}";
+
+			def origin_access_identity_ID = accountDetails.CLOUDFRONT.CLOUDFRONT_ORIGIN_ID.split("/");
+			origin_access_identity_ID = origin_access_identity_ID[origin_access_identity_ID.length - 1];
+
+			events.sendStartedEvent("DEPLOY_TO_AWS", 'deployment starts', context_map)
+			events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${environment} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment, null), environment)
+			withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+				sh "aws configure set profile.${credsId}.region ${service_config.region}"
+				sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+				sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+				sh "aws configure set preview.cloudfront true"
+
+				generateAssetInfo()
+				def assetInfo = "S3 Folder - /${asset_info}"
+
+				echo "Checking if the website already exists.."
+				if (configLoader.JAZZ.BUCKET_PER_SERVICE == "true") {
+					def isBucketExists = checkIfBucketExists(s3Bucket, credsId)
+					if (!isBucketExists) {
+						echo "creating a new website with name $s3Bucket"
+						sh "aws s3 mb s3://$s3Bucket --profile ${credsId}"
+					}
+				}
+				def isBucketwithEnvExists = checkIfBucketExists(asset_info, credsId)
+				def asset_event
+				def asset_event_message
+				buildApp(service_config['framework'], environment_logical_id)
+				if (isBucketwithEnvExists) {
+					asset_event = 'UPDATE_ASSET'
+					asset_event_message = 'update'
+				} else {
+					asset_event = 'CREATE_ASSET'
+					asset_event_message = 'create'
+				}
+				events.sendStartedEvent(asset_event, "${asset_event_message} assets starts", utilModule.generateAssetMap(service_config['provider'], "arn:aws:s3:::${asset_info}/*", "s3", service_config))
+				try {
+					if(service_config['framework'] == 'angular') {
+						sh "aws s3 sync ./app/dist s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\" --profile ${credsId}"
+						sh "aws s3 sync ./app/dist s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml --profile ${credsId}"
+					} else if (service_config['framework'] == 'react') {
+						sh "aws s3 sync ./app/build s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\" --profile ${credsId}"
+						sh "aws s3 sync ./app/build s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml --profile ${credsId}"
+					} else {
+						sh "aws s3 sync ./app s3://${asset_info}  --exclude \".git/*\" --exclude \".gitignore\" --exclude \"*.svg\" --profile ${credsId}"
+						sh "aws s3 sync ./app s3://${asset_info}  --exclude \"*\" --include \"*.svg\" --no-guess-mime-type --content-type image/svg+xml --profile ${credsId}"
+					}
+					events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap("aws", "arn:aws:s3:::${asset_info}/*", "s3", service_config), environment);
+					def url
+					if (create_cloudfront_url == true) {
+						updateOrCreateCF(credsId, origin_access_identity_ID)
+						def cloudFrontDistribution = getCloudFrontARN(credsId)
+						cfArn = cloudFrontDistribution.ARN
+						events.sendCompletedEvent(asset_event, null, utilModule.generateAssetMap(service_config['provider'], cfArn, "cloudfront", service_config), environment);
+
+						def cloudFrontDistributionDetails = getCloudFrontDetails(credsId)
+						url = 'https://' + cloudFrontDistributionDetails['Distribution']
+
+						invalidateCloudFrontCache(credsId)
+						generateBucketPolicy(true, credsId, origin_access_identity_ID)
+						echo "CLOUDFRONT UPDATED"
+						echo "You can access the website at $url"
+					} else {
+						def distributionID = getDistributionId(credsId)
+						if (distributionID != null && distributionID != "") {
+							cleanupCloudFrontDistribution(credsId)
+						}
+						generateBucketPolicy(false, credsId, origin_access_identity_ID)
+						sh "aws s3 website s3://$s3Bucket --index-document index.html --error-document error.html --profile ${credsId}"
+						url = generateAssetUrl()
+						echo "You can access the website at $url"
+					}
+					def svc_status = "You can access your website using following link: ${url}"
+					echo svc_status
+					environmentDeploymentMetadata.setEnvironmentEndpoint(url)
+					send_status_email('COMPLETED', svc_status)
+
+					events.sendCompletedEvent(asset_event, "${asset_event_message} assets completed", utilModule.generateAssetMap(service_config['provider'], url, "endpoint_url", service_config),environment)
+					events.sendCompletedEvent('UPDATE_DEPLOYMENT',  'Deployment completion Event for $environment deployment',  environmentDeploymentMetadata.generateDeploymentMap("successful",  environment, gitCommitHash), environment)
+					events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment, null), environment)
+					events.sendCompletedEvent('DEPLOY_TO_AWS', 'deployment completed', context_map)
+				} catch (ex) {
+					send_status_email('FAILED', '')
+					events.sendFailureEvent(asset_event, ex.getMessage(), context_map)
+					events.sendFailureEvent('UPDATE_DEPLOYMENT',  ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment, gitCommitHash), environment)
+					events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment, null), environment)
+					events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map)
+					error "Deployment Failed. "+ ex.getMessage()
+				} finally {
+					// reset Credentials
+					resetCredentials(credsId)
+				}
 
     if (servicePlatform == 'azure'){
       withCredentials([
@@ -374,6 +470,11 @@ node()  {
 		  }
     }
 	}
+	} catch (err) {
+   throw err
+  } finally {
+   deleteDir()
+  }
 }
 
 def generateAssetUrl(){
@@ -384,10 +485,6 @@ def generateAssetUrl(){
 		url = "http://${s3Bucket}.s3-website-${service_config.region}.amazonaws.com/${service_config['domain']}-${service_config['service']}/${environment}/index.html"
 	}
 	return url
-}
-
-def getApiIDName(accountDetails) {
-	return awsAPIGatewayModule.getApiGatewayCore(accountDetails)
 }
 
 def generateAssetInfo(){
@@ -996,7 +1093,7 @@ def loadBuildModules(buildModuleUrl){
 		echo "config loader loaded successfully."
 
 		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
-    	awsAPIGatewayModule.initialize()
+    awsAPIGatewayModule.initialize()
 
 		events = load "events-module.groovy"
 		echo "Event module loaded successfully."
@@ -1137,7 +1234,7 @@ def validateAngularTemplate() {
 	} else {
 		error "package.json is not available."
 	}
-	
+
 	if (fileExists('deployment-env.yml')) {
 		echo "deployment-env.yml is present"
 	} else {
@@ -1184,7 +1281,7 @@ def validateReactTemplate() {
 
 		def reactDomVersionString = new groovy.json.JsonSlurperClassic().parseText(packageString).dependencies.'react-dom';
 		def domVersion = reactDomVersionString.substring(1, reactDomVersionString.indexOf('.'))
-		
+
 		echo "React Project version $version, Dom version $domVersion"
 	} catch(ex) {
 		error "Error while checking version::"+ ex.getMessage();
@@ -1193,7 +1290,7 @@ def validateReactTemplate() {
 
 
 /**
-  * Function to do build of angular/react 
+  * Function to do build of angular/react
 */
 def buildWebsite(framework) {
 	def websiteCodeFolder = "app/"
@@ -1203,16 +1300,33 @@ def buildWebsite(framework) {
 				sh "rm -rf dist"
 				sh "npm cache clean --force"
 				sh "npm install"
-				sh "ng build --prod --output-path=dist"
 			break
 			case "react":
 				sh "rm -rf build"
 				sh "npm cache clean --force"
 				sh "npm install"
-				sh "npm run build"
 			break
 			default:
 			break
+		}
+	}
+}
+def buildApp(framework, env) {
+	if(env.contains("-dev")){
+		env = "dev"
+	}
+	def websiteCodeFolder = "app/"
+	dir(websiteCodeFolder) {
+		switch(framework) {
+			case "angular":
+				sh "ng build --configuration=${env} --output-path=dist"
+				break
+			case "react":
+				sh "npm run build"
+				break
+			default:
+				echo "Not executing any build commands.."
+				break
 		}
 	}
 }

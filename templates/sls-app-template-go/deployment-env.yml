@@ -1,0 +1,3 @@
+providerRuntime: go1.x
+providerMemorySize: 256
+providerTimeout: 160

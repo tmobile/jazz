@@ -35,7 +35,9 @@ import groovy.transform.Field
 @Field def g_base_url = ''
 @Field def context_map = [:]
 
-node {
+node  {
+  try {
+	def accountDetailsPrimary
 	jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
 	def platformPrimaryAWSAccountInfo = utilModule.getAccountInfoPrimary();
@@ -86,24 +88,49 @@ node {
             } else {
                 service_template = 'static-website-template'
             }
-        } else {
-            if (serviceRunTime.startsWith("nodejs")) {
-                service_template = "${serviceType}-template-nodejs"
-            } else if (serviceRunTime.startsWith("python")) {
-                service_template = "${serviceType}-template-python"
-            } else if (serviceRunTime.startsWith("java")) {
-                service_template = "${serviceType}-template-java"
-            } else if (serviceRunTime.startsWith("go")) {
-                service_template = "${serviceType}-template-go"
-            } else if (serviceRunTime.startsWith("c#")) {
-                service_template = "${serviceType}-template-csharp"
-            }
-
-            // aws templates have no prefixes
-            if (provider == "azure") {
-                service_template = "azure-" + service_template
-            }
-        }
+        } else if (serviceType == "api"){
+			if (serviceRunTime.startsWith("nodejs")) {
+				if(provider == "aws"){
+					service_template = "${serviceType}-template-nodejs"
+				} else {
+					service_template = "azure-${serviceType}-template-nodejs"
+				}
+			} else if (serviceRunTime.startsWith("python")) {
+				service_template = "${serviceType}-template-python"
+			} else if (serviceRunTime.startsWith("java")) {
+				service_template = "${serviceType}-template-java"
+			} else if (serviceRunTime.startsWith("go")) {
+				service_template = "${serviceType}-template-go"
+			} else if (serviceRunTime.startsWith("c#")) {
+				service_template = "azure-${serviceType}-template-csharp"
+			}
+		} else if (serviceType == "function"){
+			if (serviceRunTime.startsWith("nodejs")) {
+				if(provider == "aws"){
+					service_template = "lambda-template-nodejs"
+				} else {
+					service_template = "azure-${serviceType}-template-nodejs"
+				}
+			} else if (serviceRunTime.startsWith("python")) {
+				service_template = "lambda-template-python"
+			} else if (serviceRunTime.startsWith("java")) {
+				service_template = "lambda-template-java"
+			} else if (serviceRunTime.startsWith("go")) {
+				service_template = "lambda-template-go"
+			} else if (serviceRunTime.startsWith("c#")) {
+				service_template = "azure-${serviceType}-template-csharp"
+			}
+		} else if (serviceType == "sls-app"){
+			if (serviceRunTime.startsWith("nodejs")) {
+				service_template = "${serviceType}-template-nodejs"
+			} else if (serviceRunTime.startsWith("python")) {
+				service_template = "${serviceType}-template-python"
+			} else if (serviceRunTime.startsWith("java")) {
+				service_template = "${serviceType}-template-java"
+			}  else if (serviceRunTime.startsWith("go")) {
+				service_template = "${serviceType}-template-go"
+			}
+		}
     } else {
         events.sendFailureEvent('VALIDATE_INPUT', "Invalid runtime: ${service_config['runtime']}", context_map)
         sendStatusEmailNotification("FAILED")
@@ -162,12 +189,27 @@ node {
 				events.sendStartedEvent("MODIFY_TEMPLATE", 'modify template starts', context_map)
 				sh "echo -n > ./deployment-env.yml"
 				sh "echo 'service_id: $service_id' >> ./deployment-env.yml"
-        events.sendCompletedEvent('MODIFY_TEMPLATE', 'modify template completed', context_map)
+
+				// Replacing template specific keys in the code
+				if (service_config['type'] == "sls-app" && service_config['runtime'].startsWith("go")) {
+					echo "Updating go template in the serveless app"
+					def dirPath = pwd()
+					dirs = readDir()
+					def size = dirs.size()
+					if (size > 0) {
+						for (item in dirs) {
+							def functionpath = "./${item}"
+							sh "sed -i -- 's/sls-api-template-go/${repo_name}/g' ${functionpath}/main.go"
+						}
+					} else {
+						echo "No functions found.. Skipping code updates to the template!"
+					}
+				}
 			}
 		}
 		catch (ex) {
 			events.sendFailureEvent('MODIFY_TEMPLATE', 'Failed to update template: ' + ex.getMessage(), context_map)
-      sendStatusEmailNotification("FAILED")
+			sendStatusEmailNotification("FAILED")
 			error ex.getMessage()
 		}
 	}
@@ -251,6 +293,11 @@ node {
         // Workflow is now complete! Send notification!
         sendStatusEmailNotification("COMPLETED")
 	}
+	} catch (err) {
+   throw err
+  } finally {
+   deleteDir()
+  }
 }
 
 /**
@@ -429,4 +476,16 @@ def jsonParse(jsonString) {
     def m = [:]
     m.putAll(lazyMap)
     return m
+}
+
+def readDir() {
+  sh "ls -al"
+  def targetPaths
+  try {
+    targetPaths = sh(returnStdout: true, script: 'ls -d functions/*').split("\n")
+    echo "completed : $targetPaths"
+  } catch (ex) {
+      echo "Error Occured while Fetching functions... $ex"
+  }
+  return targetPaths
 }

@@ -29,6 +29,8 @@ import groovy.json.JsonSlurperClassic
 @Field def lambdaEvents
 @Field def aclModule
 @Field def azureDeployer
+@Field def whiteListModule
+@Field def env_deployment_descriptor
 
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
@@ -40,6 +42,7 @@ import groovy.json.JsonSlurperClassic
 @Field def accountInfo;
 
 node {
+  try {
 	echo "Starting delete service job with params : $params"
 
 	jazzBuildModuleURL = getBuildModuleUrl()
@@ -69,14 +72,14 @@ node {
 	}
 
 	accountDetailsPrimary = utilModule.getAccountInfoPrimary();
-	def jazz_prod_api_id = getApiIDName(accountDetailsPrimary)
-  		g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
+	def coreDomain = "jazz";
+	def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
+	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
 	auth_token = getAuthToken()
 
 	stage("Initialization") {
-
-		if (params.domain && params.domain != "") {
+    if (params.domain && params.domain != "") {
 			repo_name = params.domain + "_" + params.service_name
 		}
 		sh 'rm -rf ' + repo_name
@@ -163,9 +166,10 @@ node {
 				} else {
 					cloudfrontEnabled = "false"
 				}
+			} else if(fileExists('build.slsapp')) {
+				flowType = "SLSAPP"
 			} else {
 				error "Invalid project configuration"
-
 			}
 		}
 	}
@@ -317,7 +321,38 @@ node {
 						}
 					}
 					break
-			}
+
+			case "SLSAPP":
+				stage('Undeploy Service') {
+					for (_envId in environmentIds) {
+						current_environment_id = _envId
+						loadServerlessYml(service_config, _envId)
+						try {
+							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+							if (branch && branch != 'NA') {
+								events.setBranch(branch)
+								sonarModule.setBranch(branch)
+								branch = 'NA'
+							}
+							events.setEnvironment(_envId)
+							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+							echo 'undeploying function for environment: ' + _envId
+
+							cleanupEventSourceMapping(_envId)
+							unDeployService(_envId)
+
+							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
+								cleanupCodeQualityReports()
+							}
+							archiveAssetDetails(_envId)
+							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
+						} catch (ex) {
+							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+							error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
+						}
+					}
+				}
+				break
 		}
 	}
 
@@ -330,6 +365,11 @@ node {
 			events.sendCompletedEvent('DELETE_PROJECT', 'deletion completed', context_map)
 		}
 	}
+  } catch (err) {
+   throw err
+  } finally {
+   deleteDir()
+  }
 }
 
 def deletePolicies(serviceId, authToken, aclUrl) {
@@ -341,15 +381,11 @@ def deletePolicies(serviceId, authToken, aclUrl) {
 	}
 }
 
-def getApiIDName(accountDetails) {
-	return awsAPIGatewayModule.getApiGatewayCore(accountDetails)
-}
-
 def cleanupEventSourceMapping(env) {
-		withCredentials([
-		[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: service_config.credentialId, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
-	]) {
-		def credsId = null
+  withCredentials([
+    [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: service_config.credentialId, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+	]){
+    def credsId = null
 		try {
 			def randomString = utilModule.generateRequestId();
 			credsId = "jazz-${randomString}";
@@ -619,7 +655,7 @@ def cleanUpApiGatewayResources(stage, path) {
 				current_environment = 'prod'
 			}
 			echo "Resource search key for ApiGateway : $resource_search_key"
-			def aws_api_id = getApiId(stage)
+			def aws_api_id = awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountInfo, service_config)
 
 			echo "API Gateway Id is : ${aws_api_id}"
 
@@ -671,47 +707,6 @@ def getServiceBucket(stage) {
 		return configLoader.JAZZ.PLATFORM.AWS.S3.WEBSITE_STG_BUCKET;
 	} else if (stage == 'prod') {
 		return configLoader.JAZZ.PLATFORM.AWS.S3.WEBSITE_PROD_BUCKET;
-	}
-}
-
-
-/**
- * Get the API Id of the gateway specific to an environment. The value will be retrieved from environments table and if not available will try to retrieve it from config
- * @param  stage the environment
- * @return  api Id
- */
-def getApiId(stage) {
-	echo "stage: $stage"
-
-	def envInfo = environmentMetadataLoader.getEnvironmentInfo()
-	def envMetadata = [:]
-	def apiIdMapping = null;
-
-	if (envInfo && envInfo["metadata"]) {
-		envMetadata = envInfo["metadata"]
-	}
-
-	if (envMetadata["AWS_API_ID"] != null) {
-		return envMetadata["AWS_API_ID"]
-	}
-	def accountAPIGateway = utilModule.getApiId(service_config)
-	if (stage.endsWith('-dev')) {
-		apiIdMapping = accountAPIGateway["DEV"]
-	} else if (stage == 'stg') {
-		apiIdMapping = accountAPIGateway["STG"]
-	} else if (stage == 'prod') {
-		apiIdMapping = accountAPIGateway["PROD"]
-	}
-
-	def namespace = service_config['domain']
-	def service = service_config['service']
-
-	if (apiIdMapping["${namespace}_${service}"]) {
-		return apiIdMapping["${namespace}_${service}"];
-	} else if (apiIdMapping["${namespace}_*"]) {
-		return apiIdMapping["${namespace}_*"];
-	} else {
-		return apiIdMapping["*"];
 	}
 }
 
@@ -1139,6 +1134,20 @@ def LoadConfiguration() {
 	return prop
 }
 
+/**
+** Create Serverless.yml from config
+**/
+
+def loadServerlessYml(config, env){
+	sh "rm -f ./serverless.yml" // remove if exists
+	environmentMetadataLoader.setEnvironmentLogicalId(env) //set Current Environment
+	//Get deployment descriptor from environments
+  env_deployment_descriptor = environmentMetadataLoader.getEnvDeploymentDescriptor()
+	def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader, env_deployment_descriptor) // Generating the deployment descriptor
+	echo "prepareServerlessYml = ${deploymentDescriptor}"
+	writeYaml(file: './serverless.yml', data: deploymentDescriptor)
+}
+
 def loadServerlessConfig() {
   if (azureDeployer.isAzure(service_config)) {
     return
@@ -1284,7 +1293,7 @@ def loadBuildModules(buildModuleUrl){
 		echo "SCM module loaded successfully."
 
 		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
-    	awsAPIGatewayModule.initialize()
+    awsAPIGatewayModule.initialize()
 
 		events = load "events-module.groovy"
 		echo "Event module loaded successfully."
@@ -1325,6 +1334,14 @@ def loadBuildModules(buildModuleUrl){
     azureDeployer = load "azure-function-deploy-module.groovy"
     azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtil)
     echo "Azure deploy module init successfully."
+
+		whiteListModule = load "whitelist-validator-module.groovy"
+    whiteListModule.initialize()
+    echo "whitelist-validator-module module loaded successfully"
+
+		slsBuildRules = load "sls-app/sbr.groovy"
+		slsBuildRules.initialize(steps,whiteListModule)
+		echo "sls-app/sbr.groovy has been loaded"
 	}
 }
 

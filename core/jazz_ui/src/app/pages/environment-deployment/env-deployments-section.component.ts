@@ -24,6 +24,7 @@ export class EnvDeploymentsSectionComponent implements OnInit {
   filterloglevel:string = 'INFO';
   loadingState:string='default';
   envObj:any;
+  isSort:boolean = false;
   disableRetry:boolean = false;
   paginationSelected: Boolean = true;
 	totalPagesTable: number = 7;
@@ -294,6 +295,9 @@ export class EnvDeploymentsSectionComponent implements OnInit {
             this.totalPagesTable = Math.ceil(pageCount/this.limitValue);
             if(this.totalPagesTable === 1){
               this.pageSelected = false;
+            }
+            else {
+              this.pageSelected = true;
             }
           }
           else{

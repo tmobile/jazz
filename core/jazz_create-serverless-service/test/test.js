@@ -781,6 +781,19 @@ describe('create-serverless-service', function () {
       assert.isTrue(spy.called);
     })
 
+    it("should an http POST containing the 'deployment_descriptor' field for sls-app service", () => {
+      const theSpy = sinon.spy();
+      input.TYPE = 'sls-app';
+      input.DEPLOYMENT_DESCRIPTOR = 'service: cool';
+      stub = sinon.stub(request, "Request", theSpy);
+      let callFunction = index.createService(input);
+      stub.restore();
+
+      const requestCalledWith = theSpy.args[0][0].json;
+      assert.equal('sls-app', requestCalledWith.type);
+      assert.equal('service: cool', requestCalledWith.deployment_descriptor);
+    })
+
     it("should Return service id of Created Service in case of successfull service creation", () => {
       let bool = false;
       let responseObject = {

@@ -34,20 +34,20 @@
         </div>
 
         <div *ngIf='!err_flag'>
-            <section class="page-content" *ngIf="selectedTab == 0">
-                <service-overview #selectedTabComponent (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isAdminAccess]= "isAdminAccess" [isLoadingService]="isLoadingService"  [provider]="provider"></service-overview>
+            <section class="page-content" *ngIf="selectedTab == 'overview'">
+                <service-overview #selectedTabComponent (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isAdminAccess]= "isAdminAccess" [isLoadingService]="isLoadingService"></service-overview>
             </section>
-            <section class="page-content" *ngIf="selectedTab == 1">
+            <section class="page-content" *ngIf="selectedTab == 'access control'">
                 <service-access-control #selectedTabComponent [service]="service" (updateAdminAccess)='setAdminAccess($event)' [isAdminAccess]= "isAdminAccess" ></service-access-control>
             </section>
-            <section class="page-content" *ngIf="selectedTab == 2">
+            <section class="page-content" *ngIf="selectedTab == 'metrics'">
                 <service-metrics #selectedTabComponent [service]="service" #metric></service-metrics>
             </section>
-            <section class="page-content" *ngIf="selectedTab == 3">
+            <section class="page-content" *ngIf="selectedTab == 'cost'">
                 <service-cost #selectedTabComponent #cost [service]="service"></service-cost>
             </section>
 
-          <section class="page-content" *ngIf="selectedTab == 4">
+          <section class="page-content" *ngIf="selectedTab == 'logs'">
             <service-logs #selectedTabComponent #logs [service]="service"></service-logs>
           </section>
         </div>

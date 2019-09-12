@@ -23,7 +23,7 @@ def handler(event, context):
         ## ==== Sample code to fetch environment specific configurations ====
         # myconfig = config.get_config('default')
         # logger.info ('One of the environment configuration: config_key => ' + myconfig['config_key'])
-        
+
         ## ==== Log message samples ====
         # logger.error('Runtime errors or unexpected conditions.')
         # logger.warn('Runtime situations that are undesirable, but not wrong')
@@ -40,9 +40,11 @@ def handler(event, context):
         if 'method' in event:
             if event['method'] == "POST":
                 # Handle Post response here
+                logger.info('Sample log inside POST')
                 response = CustomResponse(data, event['body']).get_json()
             else:
                 # Handle Get/other response here.
+                logger.info('Sample log inside GET')
                 response = CustomResponse(data, event['query']).get_json()
         return response
     except Exception as e:

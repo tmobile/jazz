@@ -1,16 +1,20 @@
-@import './../../../main-styles';
+ @import './../../../main-styles';
+@import'../../secondary-components/create-service/create-service.component.scss';
+.item{
+   letter-spacing: 1;
+   text-transform: capitalize;
+}
 .radio-container{
   margin: 0.3rem -1.3rem;
 }
 .label-text{
   font-weight: normal;
   font-style: normal;
+  text-transform: capitalize;
 }
 
 .radio-group .background {
   position: absolute;
-  left: 4px;
-  bottom: 4px;
   border: none;
   width: 11px;
   height: 11px;

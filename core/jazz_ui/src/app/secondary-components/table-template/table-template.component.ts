@@ -18,8 +18,8 @@ export class TableTemplateComponent implements OnInit {
   @Input() errcode:number;
 	@Input() header: Array<any>;
 	@Input() showFilters: boolean = false;
-	@Input() isfromservice: boolean = false;
-
+  @Input() isfromservice: boolean = false;
+  @Input() isSort: boolean = false;
   @Input() state: string = 'default';
   @Input() showPaginationtable: boolean = true;
   @Input() currentlyActive: number = 1; 
