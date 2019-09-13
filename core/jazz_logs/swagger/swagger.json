@@ -479,8 +479,12 @@
             "apigee_proxy"
           ],
           "type": "string",
-          "description": "Asset type for which the logs should be fetched."
+          "description": "Asset Type of the service"
         },
+        "asset_identifier": {
+          "type": "string",
+          "description": "Asset identifier of the service"
+        },        
         "start_time": {
           "type": "string",
           "format": "date-time",
