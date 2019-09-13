@@ -196,7 +196,9 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
     environmentApiPayload.physical_id = svcContext.branch;
 
     if (eventPayload.EVENT_NAME.S === configData.EVENTS.INITIAL_COMMIT) {
-      environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
+      if (serviceDetails.deployment_descriptor) {
+        environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
+      }
       exportable.processEventInitialCommit(environmentApiPayload, serviceDetails.id, configData, authToken)
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
@@ -207,7 +209,9 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
 
     } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.CREATE_BRANCH) {
       environmentApiPayload.friendly_name = svcContext.branch;
-      environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
+      if (serviceDetails.deployment_descriptor) {
+        environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
+      }
 
       exportable.processEventCreateBranch(environmentApiPayload, serviceDetails.id, configData, authToken)
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
