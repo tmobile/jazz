@@ -1,7 +1,7 @@
 @import './../../../../main-styles';
 .create-service-wrap {
   background-color: white;
-  max-width: 700px;
+  max-width: 820px;
   width: 100vw;
   padding: 0 2.5rem;
   height: 100%;
@@ -83,7 +83,7 @@
 
 .service-box img {
   height: 3.53rem;
-  width: 88%;
+  width: 100%;
   max-width: 70px;
   object-fit: contain;
 }
@@ -391,7 +391,7 @@
 .dynamodb-fields.arrow_box:after {
   left: 25%;
   margin-left: -12px;
-  margin-bottom: -15px;
+  margin-bottom: 2px;
 }
 .name-style {
   padding-top: 1rem;
@@ -405,20 +405,20 @@
 }
 
 .kinesis-fields.arrow_box:after {
-  left: 44%;
+  left: 46%;
   margin-left: -7px;
-  margin-bottom: -15px;
+  margin-bottom: 2px;
 }
 
 .s3-fields.arrow_box:after {
-  left: 63.5%;
+  left: 66%;
   margin-left: -3px;
-  margin-bottom: -15px;
+  margin-bottom: 2px;
 }
 .sqs-fields.arrow_box:after{
-  left:82.5%;
+  left:87%;
   margin-left: -3px;
-  margin-bottom: -15px;
+  margin-bottom: 2px;
 }
 
 .submit-form {
@@ -1155,7 +1155,19 @@ textarea[type="text"] {
 }
 
 .service-type-width{
-  width:73%;
+  width:68%;
+}
+
+.run-type-width{
+  width:66%;
+}
+
+.azure-width{
+  width: 41%;
+}
+
+.event-width {
+  width: 61%;
 }
 
 .deployment-target-width{
@@ -1237,7 +1249,7 @@ textarea[type="text"] {
 }
 
 .width-content{
-  width: 75%;
+  width: 68%;
 }
 
 .allWidth{

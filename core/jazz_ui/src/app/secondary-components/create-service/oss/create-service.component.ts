@@ -394,7 +394,9 @@ export class CreateServiceComponent implements OnInit {
     if(env_oss.azure.azure_enabled === true && platformType !== 'gcloud'){
       this.typeOfPlatform = platformType;
       if(this.typeOfPlatform == 'azure'){
-        this.changeServiceType('api')
+        if(this.typeOfService == 'sls-app'){
+          this.changeServiceType('api')
+        }
         this.awsOnly = false;
       } else {
         this.awsOnly = true
