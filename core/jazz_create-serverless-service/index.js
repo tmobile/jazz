@@ -82,7 +82,7 @@ var handler = (event, context, cb) => {
     // Validate and set deployment accounts
     let primaryAccountCount = 0;
 
-    if (Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts) {
+    if (service_creation_data.deployment_accounts && Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts) {
       for (let eachDeploymentAccount of service_creation_data.deployment_accounts) {
         if ((typeof eachDeploymentAccount.primary == "boolean") && eachDeploymentAccount.primary) {
           primaryAccountCount++
