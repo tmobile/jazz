@@ -150,7 +150,7 @@
                 </div>
                 <div class="space-between content">
                     <div class="pad-left0 input-field-container allWidth" id="runtime-type">
-                        <div class="runtime-row1 service-type-width space-between">
+                        <div class="runtime-row1 run-type-width space-between" [class.azure-width]="typeOfPlatform == 'azure'">
                             <section class="pad-left0 service-box-section">                  
                                 <div tabindex="0" class="service-box"  [ngClass]="{'service-box-selected': runtime == runtimeKeys[0]}"(keyup.enter)="onSelectionChange(runtimeKeys[0])"  (click)="onSelectionChange(runtimeKeys[0])">
                                     <div class="">
@@ -198,7 +198,7 @@
                                 </div>
                             </section>
                         </div>
-                        <div class="runtime-row2 service-type-width space-between">
+                        <div class="runtime-row2 run-type-width space-between">
                             <section class="pad-left0 service-box-section" *ngIf="typeOfPlatform == 'aws'">                  
                                 <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[3]}"(keyup.enter)="onSelectionChange(runtimeKeys[3])"  (click)="onSelectionChange(runtimeKeys[3])">
                                     <div class="icon-icon-go">
@@ -248,7 +248,7 @@
                 </div>
                 <div class="space-between content">
                     <div class="pad-left0 input-field-container allWidth" id="website-type">
-                        <div class="runtime-row1 service-type-width space-between">
+                        <div class="runtime-row1 run-type-width space-between">
                             <section class="pad-left0 service-box-section">                  
                                 <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': webtime == webKeys[0]}"(keyup.enter)="onWebSelectionChange(webKeys[0])"  (click)="onWebSelectionChange(webKeys[0])">
                                     <div>
@@ -516,7 +516,7 @@
                         <p class="step-title">Event Schedule</p>
                     </div>
                     <div class="schedule">
-                        <div class="input-field-container event-schedule-radio row zero-margin space-between service-type-width">
+                        <div class="input-field-container event-schedule-radio row zero-margin space-between event-width">
                                 <section class="pad-left0 service-box-section">
                                     <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': rateExpression.type == 'none'}"
                                         (click)="onEventScheduleChange('none')">
@@ -716,7 +716,7 @@
                                         </div>
                                     </section>
                         </div>
-                        <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': eventExpression.type == 'none'}" *ngIf="typeOfPlatform === 'aws'">
+                        <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': eventExpression.type == 'awsEventsNone'}" *ngIf="typeOfPlatform === 'aws'">
                             <div class="dynamodb-fields row zero-margin arrow_box hide" [class.show]="chkDynamodb()">
                                 <div class="col-lg-3">
                                     <div class="text">Event</div>
@@ -792,7 +792,7 @@
                               </div>
 
                         </div>
-                        <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': azureEventExpression.type == 'none'}"
+                        <div class="aws-event-fields rate-exp-wrp zero-margin" [ngClass]="{'zero-padding': azureEventExpression.type == 'azureEventsNone'}"
                             *ngIf="typeOfPlatform === 'azure'">
                             <div class="dynamodb-fields row zero-margin arrow_box hide" [class.show]="chkDocumentdb()">
                                 <div class="col-lg-3">
