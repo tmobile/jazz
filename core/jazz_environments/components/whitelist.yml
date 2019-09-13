@@ -1,0 +1,454 @@
+# This file defines what AWS resources and policies a developer
+# can create or use in their serverless project.
+
+resources:
+  DynamoDB:
+    - Type: "AWS::DynamoDB::Table"
+  ApiGateway:
+    - Type: "AWS::ApiGateway::Account"
+    - Type: "AWS::ApiGateway::ApiKey"
+    - Type: "AWS::ApiGateway::Authorizer"
+    - Type: "AWS::ApiGateway::BasePathMapping"
+    - Type: "AWS::ApiGateway::ClientCertificate"
+    - Type: "AWS::ApiGateway::Deployment"
+    - Type: "AWS::ApiGateway::DocumentationPart"
+    - Type: "AWS::ApiGateway::DocumentationVersion"
+    - Type: "AWS::ApiGateway::DomainName"
+    - Type: "AWS::ApiGateway::GatewayResponse"
+    - Type: "AWS::ApiGateway::Method"
+    - Type: "AWS::ApiGateway::Model"
+    - Type: "AWS::ApiGateway::RequestValidator"
+    - Type: "AWS::ApiGateway::Resource"
+    - Type: "AWS::ApiGateway::RestApi"
+    - Type: "AWS::ApiGateway::Stage"
+    - Type: "AWS::ApiGateway::UsagePlan"
+    - Type: "AWS::ApiGateway::UsagePlanKey"
+    - Type: "AWS::ApiGateway::VpcLink"
+  LambdaFunction:
+    - Type: "AWS::Lambda::EventSourceMapping"
+    - Type: "AWS::Lambda::Function"
+    - Type: "AWS::Lambda::Alias"
+    - Type: "AWS::Lambda::LayerVersion"
+    - Type: "AWS::Lambda::LayerVersionPermission"
+    - Type: "AWS::Lambda::Permission"
+    - Type: "AWS::Lambda::Version"
+  S3:
+    - Type: "AWS::S3::Bucket"
+    - Type: "AWS::S3::BucketPolicy"
+  CloudFront:
+    - Type: "AWS::CloudFront::Distribution"
+    - Type: "AWS::CloudFront::CloudFrontOriginAccessIdentity"
+    - Type: "AWS::CloudFront::StreamingDistribution"
+  SQS:
+    - Type: "AWS::SQS::Queue"
+    - Type: "AWS::SQS::QueuePolicy"
+  Kinesis:
+    - Type: "AWS::Kinesis::Stream"
+    - Type: "AWS::Kinesis::StreamConsumer"
+    - Type: "AWS::KinesisFirehose::DeliveryStream"
+    - Type: "AWS::KinesisAnalytics::Application"
+    - Type: "AWS::KinesisAnalytics::ApplicationOutput"
+    - Type: "AWS::KinesisAnalytics::ApplicationReferenceDataSource"
+  IAM:
+    - Type: "AWS::IAM::AccessKey"
+    - Type: "AWS::IAM::Group"
+    - Type: "AWS::IAM::InstanceProfile"
+    - Type: "AWS::IAM::Group"
+    - Type: "AWS::IAM::Policy"
+    - Type: "AWS::IAM::Role"
+    - Type: "AWS::IAM::ServiceLinkedRole"
+    - Type: "AWS::IAM::User"
+    - Type: "AWS::IAM::UserToGroupAddition"
+  CloudWatch:
+    - Type: "AWS::CloudWatch::Alarm"
+    - Type: "AWS::CloudWatch::Dashboard"
+    - Type: "AWS::Events::Rule"
+    - Type: "AWS::Events::EventBusPolicy"
+    - Type: "AWS::Logs::Destination"
+    - Type: "AWS::Logs::LogGroup"
+    - Type: "AWS::Logs::LogStream"
+    - Type: "AWS::Logs::MetricFilter"
+    - Type: "AWS::Logs::SubscriptionFilter"
+
+events:
+  schedule:
+  stream:
+    - type: kinesis
+    - type: dynamodb
+  sqs:
+  s3:
+  http:
+
+actions:
+  dynamodb:
+    - BatchWriteItem
+    - ConditionCheck
+    - CreateBackup
+    - CreateGlobalTable
+    - CreateTable
+    - DeleteBackup
+    - DeleteItem
+    - DeleteTable
+    - DescribeBackup
+    - DescribeContinuousBackups
+    - DescribeGlobalTable
+    - DescribeGlobalTableSettings
+    - DescribeLimits
+    - DescribeReservedCapacity
+    - DescribeReservedCapacityOfferings
+    - DescribeStream
+    - DescribeTable
+    - DescribeTimeToLive
+    - EnclosingOperation
+    - GetItem
+    - GetRecords
+    - GetShardIterator
+    - ListBackups
+    - ListGlobalTables
+    - ListStreams
+    - ListTables
+    - ListTagsOfResource
+    - PurchaseReservedCapacityOfferings
+    - PutItem
+    - Query
+    - RestoreTableFromBackup
+    - RestoreTableToPointInTime
+    - Scan
+    - TagResource
+    - UntagResource
+    - UpdateContinuousBackups
+    - UpdateGlobalTable
+    - UpdateGlobalTableSettings
+    - UpdateItem
+    - UpdateTable
+    - UpdateTimeToLive
+  kinesis:
+    - AddTagsToStream
+    - CreateStream
+    - DecreaseStreamRetentionPeriod
+    - DeleteStream
+    - DescribeLimits
+    - DescribeStream
+    - DescribeStreamSummary
+    - DisableEnhancedMonitoring
+    - EnableEnhancedMonitoring
+    - GetRecords
+    - GetShardIterator
+    - ListShards
+    - ListStreamConsumers
+    - ListStreams
+    - ListTagsForStream
+    - MergeShards
+    - PutRecord
+    - PutRecords
+    - RemoveTagsFromStream
+    - SplitShard
+    - SubscribeToShard
+    - UpdateShardCount
+    - DeregisterStreamConsumer
+    - DescribeStreamConsumer
+    - RegisterStreamConsumer
+  s3:
+    - Actions
+    - AbortMultipartUpload
+    - CreateBucket
+    - DeleteBucket
+    - DeleteBucketPolicy
+    - DeleteBucketWebsite
+    - DeleteObject
+    - DeleteObjectTagging
+    - DeleteObjectVersion
+    - DeleteObjectVersionTagging
+    - GetAccelerateConfiguration
+    - GetAccountPublicAccessBlock
+    - GetAnalyticsConfiguration
+    - GetBucketAcl
+    - GetBucketCORS
+    - GetBucketLocation
+    - GetBucketLogging
+    - GetBucketNotification
+    - GetBucketPolicy
+    - GetBucketPolicyStatus
+    - GetBucketPublicAccessBlock
+    - GetBucketRequestPayment
+    - GetBucketTagging
+    - GetBucketVersioning
+    - GetBucketWebsite
+    - GetEncryptionConfiguration
+    - GetInventoryConfiguration
+    - GetLifecycleConfiguration
+    - GetMetricsConfiguration
+    - GetObject
+    - GetObjectAcl
+    - GetObjectTagging
+    - GetObjectTorrent
+    - GetObjectVersion
+    - GetObjectVersionAcl
+    - GetObjectVersionForReplication
+    - GetObjectVersionTagging
+    - GetObjectVersionTorrent
+    - GetReplicationConfiguration
+    - ListAllMyBuckets
+    - ListBucket
+    - ListBucketByTags
+    - ListBucketMultipartUploads
+    - ListBucketVersions
+    - ListMultipartUploadParts
+    - ObjectOwnerOverrideToBucketOwner
+    - PutAccelerateConfiguration
+    - PutAccountPublicAccessBlock
+    - PutAnalyticsConfiguration
+    - PutBucketAcl
+    - PutBucketCORS
+    - PutBucketLogging
+    - PutBucketNotification
+    - PutBucketPolicy
+    - PutBucketPublicAccessBlock
+    - PutBucketRequestPayment
+    - PutBucketTagging
+    - PutBucketVersioning
+    - PutBucketWebsite
+    - PutEncryptionConfiguration
+    - PutInventoryConfiguration
+    - PutLifecycleConfiguration
+    - PutMetricsConfiguration
+    - PutObject
+    - PutObjectAcl
+    - PutObjectTagging
+    - PutObjectVersionAcl
+    - PutObjectVersionTagging
+    - PutReplicationConfiguration
+    - ReplicateDelete
+    - ReplicateObject
+    - ReplicateTags
+    - RestoreObject
+  logs:
+    - AssociateKmsKey
+    - CancelExportTask
+    - CreateExportTask
+    - CreateLogDelivery
+    - CreateLogGroup
+    - CreateLogStream
+    - DeleteDestination
+    - DeleteLogDelivery
+    - DeleteLogGroup
+    - DeleteLogStream
+    - DeleteMetricFilter
+    - DeleteResourcePolicy
+    - DeleteRetentionPolicy
+    - DeleteSubscriptionFilter
+    - DescribeDestinations
+    - DescribeExportTasks
+    - DescribeLogGroups
+    - DescribeLogStreams
+    - DescribeMetricFilters
+    - DescribeQueries
+    - DescribeResourcePolicies
+    - DescribeSubscriptionFilters
+    - DisassociateKmsKey
+    - FilterLogEvents
+    - GetLogDelivery
+    - GetLogEvents
+    - GetLogGroupFields
+    - GetLogRecord
+    - GetQueryResults
+    - ListLogDeliveries
+    - ListTagsLogGroup
+    - PutDestination
+    - PutDestinationPolicy
+    - PutLogEvents
+    - PutMetricFilter
+    - PutResourcePolicy
+    - PutRetentionPolicy
+    - PutSubscriptionFilter
+    - StartQuery
+    - StopQuery
+    - TagLogGroup
+    - TestMetricFilter
+    - UntagLogGroup
+    - UpdateLogDelivery
+  sqs:
+    - AddPermission
+    - ChangeMessageVisibility
+    - ChangeMessageVisibilityBatch
+    - CreateQueue
+    - DeleteMessage
+    - DeleteMessageBatch
+    - DeleteQueue
+    - GetQueueAttributes
+    - GetQueueUrl
+    - ListDeadLetterSourceQueues
+    - ListQueueTags
+    - ListQueues
+    - PurgeQueue
+    - ReceiveMessage
+    - RemovePermission
+    - SendMessage
+    - SendMessageBatch
+    - SetQueueAttributes
+    - TagQueue
+    - UntagQueue
+  lambda:
+    - AddLayerVersionPermission
+    - AddPermission
+    - CreateAlias
+    - CreateEventSourceMapping
+    - CreateFunction
+    - DeleteAlias
+    - DeleteEventSourceMapping
+    - DeleteFunction
+    - DeleteFunctionConcurrency
+    - DeleteLayerVersion
+    - EnableReplication
+    - GetAccountSettings
+    - GetAlias
+    - GetEventSourceMapping
+    - GetFunction
+    - GetFunctionConfiguration
+    - GetLayerVersion
+    - GetLayerVersionPolicy
+    - GetPolicy
+    - InvokeAsync
+    - InvokeFunction
+    - ListAliases
+    - ListEventSourceMappings
+    - ListFunctions
+    - ListLayerVersions
+    - ListLayers
+    - ListTags
+    - ListVersionsByFunction
+    - PublishLayerVersion
+    - PublishVersion
+    - PutFunctionConcurrency
+    - RemoveLayerVersionPermission
+    - RemovePermission
+    - TagResource
+    - UntagResource
+    - UpdateAlias
+    - UpdateEventSourceMapping
+    - UpdateFunctionCode
+    - UpdateFunctionConfiguration
+  iam:
+    - GenerateCredentialReport
+    - GenerateServiceLastAccessedDetails
+    - GetAccessKeyLastUsed
+    - GetAccountAuthorizationDetails
+    - GetAccountPasswordPolicy
+    - GetAccountSummary
+    - GetContextKeysForCustomPolicy
+    - GetContextKeysForPrincipalPolicy
+    - GetCredentialReport
+    - GetGroup
+    - GetGroupPolicy
+    - GetInstanceProfile
+    - GetLoginProfile
+    - GetOpenIDConnectProvider
+    - GetPolicy
+    - GetPolicyVersion
+    - GetRole
+    - GetRolePolicy
+    - GetSAMLProvider
+    - GetSSHPublicKey
+    - GetServerCertificate
+    - GetServiceLastAccessedDetails
+    - GetServiceLastAccessedDetailsWithEntities
+    - GetServiceLinkedRoleDeletionStatus
+    - GetUser
+    - GetUserPolicy
+    - ListAccessKeys
+    - ListAccountAliases
+    - ListAttachedGroupPolicies
+    - ListAttachedRolePolicies
+    - ListAttachedUserPolicies
+    - ListEntitiesForPolicy
+    - ListGroupPolicies
+    - ListGroups
+    - ListGroupsForUser
+    - ListInstanceProfiles
+    - ListInstanceProfilesForRole
+    - ListMFADevices
+    - ListOpenIDConnectProviders
+    - ListPolicies
+    - ListPoliciesGrantingServiceAccess
+    - ListPolicyVersions
+    - ListRolePolicies
+    - ListRoleTags
+    - ListRoles
+    - ListSAMLProviders
+    - ListSSHPublicKeys
+    - ListServerCertificates
+    - ListServiceSpecificCredentials
+    - ListSigningCertificates
+    - ListUserPolicies
+    - ListUserTags
+    - ListUsers
+    - ListVirtualMFADevices
+  ec2:
+    - DescribeAccountAttributes
+    - DescribeAddresses
+    - DescribeAggregateIdFormat
+    - DescribeAvailabilityZones
+    - DescribeBundleTasks
+    - DescribeByoipCidrs
+    - DescribeCapacityReservations
+    - DescribeClassicLinkInstances
+    - DescribeConversionTasks
+    - DescribeCustomerGateways
+    - DescribeDhcpOptions
+    - DescribeEgressOnlyInternetGateways
+    - DescribeElasticGpus
+    - DescribeExportTasks
+    - DescribeFleetHistory
+    - DescribeFleetInstances
+    - DescribeFleets
+    - DescribeFlowLogs
+    - DescribeFpgaImageAttribute
+    - DescribeFpgaImages
+    - DescribeHostReservationOfferings
+    - DescribeHostReservations
+    - DescribeHosts
+    - DescribeIamInstanceProfileAssociations
+    - DescribeIdFormat
+    - DescribeIdentityIdFormat
+    - DescribeImageAttribute
+    - DescribeImages
+    - DescribeImportImageTasks
+    - DescribeImportSnapshotTasks
+    - DescribeInstanceAttribute
+    - DescribeInstanceCreditSpecifications
+    - DescribeInstanceStatus
+    - DescribeInstances
+    - DescribeInternetGateways
+    - DescribeKeyPairs
+    - DescribeLaunchTemplateVersions
+    - DescribeLaunchTemplates
+    - DescribeMovingAddresses
+    - DescribeNatGateways
+    - DescribeNetworkAcls
+    - DescribeNetworkInterfaceAttribute
+    - DescribeNetworkInterfacePermissions
+    - DescribeNetworkInterfaces
+    - DescribePlacementGroups
+    - DescribePrefixLists
+    - DescribePrincipalIdFormat
+    - DescribePublicIpv4Pools
+    - DescribeRegions
+    - DescribeReservedInstances
+    - DescribeReservedInstancesListings
+    - DescribeReservedInstancesModifications
+    - DescribeReservedInstancesOfferings
+    - DescribeRouteTables
+    - DescribeScheduledInstanceAvailability
+    - DescribeScheduledInstances
+    - DescribeSecurityGroupReferences
+    - DescribeSecurityGroups
+    - DescribeSnapshotAttribute
+    - DescribeSnapshots
+    - DescribeSpotDatafeedSubscription
+    - DescribeSpotFleetInstances
+    - DescribeSpotFleetRequestHistory
+    - DescribeSpotFleetRequests
+    - DescribeSpotInstanceRequests
+    - DescribeSpotPriceHistory
+    - DescribeStaleSecurityGroups
+    - DescribeSubnets

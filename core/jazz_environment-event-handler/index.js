@@ -196,6 +196,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
     environmentApiPayload.physical_id = svcContext.branch;
 
     if (eventPayload.EVENT_NAME.S === configData.EVENTS.INITIAL_COMMIT) {
+      environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
       exportable.processEventInitialCommit(environmentApiPayload, serviceDetails.id, configData, authToken)
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
@@ -206,6 +207,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
 
     } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.CREATE_BRANCH) {
       environmentApiPayload.friendly_name = svcContext.branch;
+      environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
 
       exportable.processEventCreateBranch(environmentApiPayload, serviceDetails.id, configData, authToken)
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
@@ -304,9 +306,7 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
         rejectUnauthorized: false
       };
 
-      if (environmentPayload.service === 'ui' && environmentPayload.domain === 'jazz') {
-        return resolve();
-      }
+
       logger.info("svcPayload" + JSON.stringify(svcPayload));
       request(svcPayload, function (error, response, body) {
         if (response.statusCode === 200 && body && body.data) {
@@ -359,9 +359,7 @@ function processEventCreateBranch(environmentPayload, service_id, configData, au
       rejectUnauthorized: false
     };
 
-    if (environmentPayload.service === 'ui' && environmentPayload.domain === 'jazz') {
-      return resolve();
-    }
+
     logger.info("svcPayload" + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200 && body && body.data) {
@@ -550,9 +548,7 @@ function getServiceDetails(eventPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
     var apiEndpoint = `${configData.BASE_API_URL}${configData.SERVICE_API_RESOURCE}?service=${eventPayload.service}&domain=${eventPayload.domain}&isAdmin=true`;
     var svcPayload = getSvcPayload("GET", null, apiEndpoint, authToken, null);
-    if (eventPayload.service === 'ui' && eventPayload.domain === 'jazz') {
-      return resolve();
-    }
+
     exportable.processRequest(svcPayload)
       .then(result => { return resolve(result); })
       .catch(err => {
@@ -569,7 +565,7 @@ function triggerBuildJob(payload, serviceDetails, configData) {
     var type;
     if (payload.service === 'ui' && payload.domain === 'jazz') {
       type = 'ui';
-      buildQuery = `/build?token=${configData.JOB_TOKEN}`;
+      buildQuery = `/buildWithParameters?token=${configData.JOB_TOKEN}&scm_branch=${payload.physical_id}`;
     } else {
       type = serviceDetails.type;
       buildQuery = `/buildWithParameters?token=${configData.JOB_TOKEN}&service_name=${payload.service}&domain=${payload.domain}&scm_branch=${payload.physical_id}`;

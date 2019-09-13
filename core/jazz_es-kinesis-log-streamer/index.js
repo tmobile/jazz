@@ -29,23 +29,24 @@ const logger = require("./components/logger.js");
 	@version: 1.0
 **/
 
-function handler(input, context, cb) {
+function handler(event, context, cb) {
 
   let errorHandler = errorHandlerModule();
-  let config = configObj.getConfig(input, context)
-  logger.init(input, context);
-  logger.debug("event:" + JSON.stringify(input));
+  let config = configObj.getConfig(event, context)
+  logger.init(event, context);
+  logger.debug("event:" + JSON.stringify(event));
 
   try {
-    if (input && input.Records && input.Records.length) {
-      input.Records.forEach(eachRecord => {
+    if (event && event.Records && event.Records.length) {
+      for (let i = 0; i < event.Records.length; i++) {
+        let eachRecord = event.Records[i];
         // decode input from base64
         let zippedInput = new Buffer(eachRecord.kinesis.data, 'base64');
 
         zlib.gunzip(zippedInput, function (error, buffer) {
           if (error) {
             logger.debug("Skipping this record since message is not in supported format (gzip). Raw message: " + zippedInput);
-            return cb(null, responseObj("Success", input));
+            return cb(null, responseObj("Success", event));
           } else {
             // parse the input from JSON
             let awslogsData = JSON.parse(buffer.toString('utf8'));
@@ -71,28 +72,28 @@ function handler(input, context, cb) {
                       return cb(JSON.stringify(errorHandler.throwInternalServerError(JSON.stringify(error))));
                     } else {
                       logger.info('Success: ' + JSON.stringify(success));
-                      return cb(null, responseObj("Success", input));
+                      return cb(null, responseObj("Success", event));
                     }
                   });
                 } else {
                   logger.debug("Invalid or unsupported record from kinesis stream.");
-                  return cb(null, responseObj("Success", input));
+                  return cb(null, responseObj("Success", event));
                 }
               })
               .catch(error => {
                 logger.error('Error:' + JSON.stringify(error));
-                return cb(null, responseObj("Success", input));
+                return cb(null, responseObj("Success", event));
               });
           }
         });
-      });
+      }
     } else {
       logger.debug("No input or empty records from kinesis stream.");
-      return cb(null, responseObj("Success", input));
+      return cb(null, responseObj("Success", event));
     }
   } catch (err) {
     logger.error("Something went wrong. " + err);
-    return cb(null, responseObj("Success", input));
+    return cb(null, responseObj("Success", event));
   }
 };
 

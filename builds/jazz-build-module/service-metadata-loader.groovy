@@ -72,9 +72,12 @@ def loadServiceMetadata(service_id){
 			}
 			metadata['catalog_metadata'] = catalog_metadata
 			metadata['deployment_targets'] = deployment_targets_metadata
-			if(service_data.Item.SERVICE_SLACK_CHANNEL)
+			if(service_data.Item.SERVICE_SLACK_CHANNEL){
 				metadata['slack_channel'] = service_data.Item.SERVICE_SLACK_CHANNEL.S
-			
+			}
+			if (service_data.Item.SERVICE_DEPLOYMENT_DESCRIPTOR) { /* Lets load the deployment_descriptor if it exists */
+				metadata['deployment_descriptor'] = service_data.Item.SERVICE_DEPLOYMENT_DESCRIPTOR.S
+			}
 			return metadata
 		}
 	}

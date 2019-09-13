@@ -32,7 +32,6 @@ describe('Overview', () => {
     jazzServices_po = new Jazz();
     commonUtils = new Common();
     browser.driver.sleep(Common.miniWait);
-    //jazzServices_po.navigateToJazzGet();
     commonUtils.Login();
   });
 
@@ -43,8 +42,6 @@ describe('Overview', () => {
   });
 
   afterAll(() => {
-    jazzServices_po = new Jazz();
-    commonUtils = new Common();
     browser.driver.sleep(Common.miniWait);
     jazzServices_po.logoutIcon().click();
     jazzServices_po.logout().click();
@@ -98,7 +95,7 @@ describe('Overview', () => {
     var min = 111;
     var max = 999;
     var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
-    servicename = 'service' + randomNum;
+    servicename = 'lambda' + randomNum;
     createservice(servicename);
     jazzServices_po.getEventScheduleFixedRate().click();
     serviceapprover();
@@ -211,104 +208,114 @@ describe('Overview', () => {
       var min = 11;
       var max = 99;
       var randomNum = Math.floor(Math.random() * (max - min + 1)) + min;
-      test = 'test' + randomNum;
+      var test = 'TEST' + randomNum;
       browser.switchTo().window(handles[1]).then(function () {
-        browser.sleep(Common.shortWait);
-        browser.getTitle().then(function (webpagetitle) {
-          if (webpagetitle === 'Sign in · GitLab') {
-            jazzServices_po.gitUsername().sendKeys(Common.config.SCM_USERNAME).then(null, function (err) {
-              console.log(err.name);
-            });
-            jazzServices_po.gitPassword().sendKeys(Common.config.SCM_PASSWORD).then(null, function (err) {
-              console.log(err.name);
-            });
-            jazzServices_po.gitLogin().click().then(null, function (err) {
-              console.log(err.name);
-            });
-            jazzServices_po.drpGitBranchType().click().then(null, function (err) {
-              console.log(err.name);
-            });
-            jazzServices_po.selectGitBranchType().click().then(null, function (err) {
-              console.log(err.name);
-            });
-            jazzServices_po.gitBranchName().sendKeys(test).then(null, function (err) {
-              console.log(err.name);
-            });
-            jazzServices_po.btnGitCreateBranch().click().then(null, function (err) {
-              console.log(err.name);
-            });
-            jazzServices_po.getGitLogoutIcon().click().then(null, function (err) {
-              console.log(err.name);
-            });
-            jazzServices_po.getGitLogout().click().then(null, function (err) {
-              console.log(err.name);
-              flag = 0;
-              browser.sleep(Common.longWait);
-              browser.close();
-            });
-            browser.close();
-          }
-          else {
-            expect(webpagetitle).not.toEqual('Sign in · GitLab');
-            jazzServices_po.bitUsername().sendKeys(Common.config.SCM_USERNAME).then(null, function (err) {
-              console.log(err.name);
-            });
-            browser.sleep(Common.microWait);
-            jazzServices_po.bitPassword().sendKeys(Common.config.SCM_PASSWORD).then(null, function (err) {
-              console.log(err.name);
-            });
-            browser.sleep(Common.microWait);
-            jazzServices_po.bitLogin().click().then(null, function (err) {
-              console.log(err.name);
-            });
-            browser.sleep(Common.microWait);
-            jazzServices_po.createBranch().click().then(null, function (err) {
-              console.log(err.name);
-            });
-            browser.sleep(Common.microWait);
-            jazzServices_po.drp_BranchType().click().then(null, function (err) {
-              console.log(err.name);
-            });
-            browser.sleep(Common.microWait);
-            jazzServices_po.select_BranchType().click().then(null, function (err) {
-              console.log(err.name);
-            });
-            browser.sleep(Common.microWait);
-            jazzServices_po.branchName().sendKeys(test).then(null, function (err) {
-              console.log(err.name);
-            });
-            browser.sleep(Common.microWait);
-            jazzServices_po.btn_CreateBranch().click().then(null, function (err) {
-              console.log(err.name);
-            });
-            browser.sleep(Common.microWait);
-            jazzServices_po.getBitLogoutIcon().click().then(null, function (err) {
-              console.log(err.name);
-            });
-            browser.sleep(Common.microWait);
-            jazzServices_po.getBitLogout().click().then(null, function (err) {
-              console.log(err.name);
-              flag = 0;
-              browser.sleep(Common.longWait);
-              browser.close();
-            });
-            browser.sleep(Common.microWait);
-            browser.close();
-          }
-        });
+       browser.sleep(Common.microWait);
+   
+       var some_name = browser.getTitle().then(function (webpagetitle) {
+        if (webpagetitle === 'Sign in · GitLab') {
+         expect(webpagetitle).toEqual('Sign in · GitLab');
+         jazzServices_po.gitUsername().sendKeys(Common.config.SCM_USERNAME).then(null, function (err) {
+          console.log("Invalid Username"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.gitPassword().sendKeys(Common.config.SCM_PASSWORD).then(null, function (err) {
+          console.log("Invalid Password"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.gitLogin().click().then(null, function (err) {
+          console.log("Login Button is not visible"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.drpGitBranchType().click().then(null, function (err) {
+          console.log("Branch drop not is not working"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.selectGitBranchType().click().then(null, function (err) {
+          console.log("Feature type is not available"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.gitBranchName().sendKeys(test).then(null, function (err) {
+          console.log("Branch name text box is not visible"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.btnGitCreateBranch().click().then(null, function (err) {
+          console.log("Create branch button is not working"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.getGitLogoutIcon().click().then(null, function (err) {
+          console.log("Unable to locate Logout Icon"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.getGitLogout().click().then(null, function (err) {
+          console.log("Unable to locate Logout link"+err.name);
+          flag = 0;
+          browser.sleep(Common.longWait);
+          browser.close();
+         });
+         browser.sleep(Common.microWait);
+         browser.close();
+        }
+        else {
+         expect(webpagetitle).not.toEqual('Sign in · GitLab');
+         jazzServices_po.bitUsername().sendKeys(Common.config.SCM_USERNAME).then(null, function (err) {
+          console.log("Invalid Username"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.bitPassword().sendKeys(Common.config.SCM_PASSWORD).then(null, function (err) {
+          console.log("Invalid Password"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.bitLogin().click().then(null, function (err) {
+          console.log("Unable to locate Login button"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.createBranch().click().then(null, function (err) {
+          console.log("Unable to locate create branch button"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.drp_BranchType().click().then(null, function (err) {
+          console.log("Unable to locate branch type dropdown"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.select_BranchType().click().then(null, function (err) {
+          console.log("Unable to locate branch type"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.branchName().sendKeys(test).then(null, function (err) {
+          console.log("Unable to locate create branch textbox"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.btn_CreateBranch().click().then(null, function (err) {
+          console.log("Unable to locate submit button"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.getBitLogoutIcon().click().then(null, function (err) {
+          console.log("Unable to locate bitbucket logout icon"+err.name);
+         });
+         browser.sleep(Common.microWait);
+         jazzServices_po.getBitLogout().click().then(null, function (err) {
+          console.log("Unable to locate bitbucket logout button"+err.name);
+          flag = 0;
+          browser.sleep(Common.longWait);
+          browser.close();
+         });
+         browser.sleep(Common.microWait);
+         browser.close();
+        }
+       });
       });
-
       browser.switchTo().window(handles[0]).then(function () {
-        browser.sleep(Common.microWait);
-        waitforskiptest(jazzServices_po.activeTestBranch(), Common.xxlWait);
-        jazzServices_po.activeTestBranch().click().
-          then(null, function (err) {
-            console.log("the error occurred is : " + err.name);
-          });
-        commonUtils.waitForSpinnerDisappear();
-        browser.sleep(Common.miniWait);
+       browser.sleep(Common.microWait);
+       waitforskiptest(jazzServices_po.activeTestBranch(), Common.xxlWait);
+       jazzServices_po.activeTestBranch().click().
+        then(null, function (err) {
+         console.log("the error occurred is : " + err.name);
+        });
+       commonUtils.waitForSpinnerDisappear();
+       browser.sleep(Common.miniWait);
       });
-    });
+     });
   });
   it('Verify METRICS Navigation for Lambda for Test Branch', () => {
     browser.sleep(Common.microWait);
@@ -352,4 +359,3 @@ describe('Overview', () => {
     jazzServices_po.getServiceHomePage().click();
   });
 });
-

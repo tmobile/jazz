@@ -17,7 +17,7 @@
 'use strict';
 
 const request = require('request');
-const errorHandlerModule = require("./components/error-handler.js");
+const errorHandler = require("./components/error-handler.js")();
 const responseObj = require("./components/response.js");
 const CronParser = require("./components/cron-parser.js");
 const configModule = require("./components/config.js");
@@ -39,7 +39,6 @@ var handler = (event, context, cb) => {
 
   let deploymentTargets = {};
   let deploymentAccounts = [];
-  var errorHandler = errorHandlerModule();
   var config = configModule.getConfig(event, context);
   logger.init(event, context);
   var service_creation_data = event.body;
@@ -345,19 +344,20 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
     }
 
     //Adding providerRuntime key in service catalog
-    if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
+    if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function" || service_creation_data.service_type === "sls-app") {
       serviceMetadataObj.providerRuntime = service_creation_data.runtime;
     }
+
+    inputs.DEPLOYMENT_ACCOUNTS = deploymentAccounts;
 
     // Pass the flag to enable authentication on API
     if (service_creation_data.service_type === "api") {
       inputs.DEPLOYMENT_TARGETS = deploymentTargets;
-      inputs.DEPLOYMENT_ACCOUNTS = deploymentAccounts;
       serviceMetadataObj.enable_api_security = service_creation_data.enable_api_security || false;
       if (service_creation_data.authorizer_arn) {
         // Validate ARN format - arn:aws:lambda:region:account-id:function:function-name
         if (!validateARN(service_creation_data.authorizer_arn)) {
-          return cb(JSON.stringify(errorHandler.throwInputValidationError("authorizer arn is invalid, expected format=arn:aws:lambda:region:account-id:function:function-name")));
+          return reject(JSON.stringify(errorHandler.throwInputValidationError("authorizer arn is invalid, expected format=arn:aws:lambda:region:account-id:function:function-name")));
         } else {
           serviceMetadataObj.authorizer_arn = service_creation_data.authorizer_arn;
         }
@@ -372,7 +372,6 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
 
     if (service_creation_data.service_type === "website") {
       inputs.DEPLOYMENT_TARGETS = deploymentTargets;
-      inputs.DEPLOYMENT_ACCOUNTS = deploymentAccounts;
       var create_cloudfront_url = "true";
       serviceMetadataObj.create_cloudfront_url = create_cloudfront_url;
       inputs.RUNTIME = 'n/a';
@@ -383,7 +382,6 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
     // Add rate expression to the propertiesObject;
     if (service_creation_data.service_type === "function") {
       inputs.DEPLOYMENT_TARGETS = deploymentTargets;
-      inputs.DEPLOYMENT_ACCOUNTS = deploymentAccounts;
       if (service_creation_data.rateExpression) {
         var cronExpValidator = CronParser.validateCronExpression(service_creation_data.rateExpression);
         if (cronExpValidator.result === 'valid') {
@@ -424,6 +422,35 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
             }
             reject({ result: 'inputError', message: isEventNameValid.message });
           }
+        }
+      }
+    }
+
+    if (service_creation_data.service_type === "sls-app") { // application with a deployment descriptor
+      inputs.DEPLOYMENT_TARGETS = deploymentTargets; // This part was missing on Apr-5 and we received: 'deployment_targets missing' error
+      if (service_creation_data.is_function_template ) serviceMetadataObj.is_function_template = service_creation_data.is_function_template
+
+      const deployDescrValidator = require('./components/validate-sls-yml');
+      if (service_creation_data.deployment_descriptor) { // If deployment descriptor is present then validate
+        try {
+          const outstandingResources = deployDescrValidator.validateResources(service_creation_data.deployment_descriptor);
+          if (outstandingResources.length) { // some resources that are not allowed were found this is bad
+            reject({ result: 'inputError', message: `Invalid deployment_descriptor. The resource types not allowed ${outstandingResources}` });
+          } else {
+            const outstandingEvents = deployDescrValidator.validateEvents(service_creation_data.deployment_descriptor);
+            if (outstandingEvents.length) { // some events that are not allowed were found so let's reject the request
+              reject({ result: 'inputError', message: `Invalid deployment_descriptor. The event types not allowed ${outstandingEvents}` });
+            } else {
+              const outstandingActions = deployDescrValidator.validateActions(service_creation_data.deployment_descriptor);
+              if (outstandingActions.length) {
+                reject({ result: 'inputError', message: `Invalid deployment_descriptor. The action types not allowed ${outstandingActions}` });
+              } else {
+                inputs.DEPLOYMENT_DESCRIPTOR = service_creation_data.deployment_descriptor;
+              }
+            }
+          }
+        } catch (e) {
+          reject({ result: 'inputError', message: `Invalid deployment_descriptor format. Nested exception is ${e}` });
         }
       }
     }
