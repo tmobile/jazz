@@ -46,6 +46,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   lastCommitted: any;
   isCancel:boolean=false;
   editBtn:boolean = true;
+  showAppDetail:boolean = false;
   saveBtn:boolean = false;
   saveButton:boolean=false;
   editButton:boolean=true;

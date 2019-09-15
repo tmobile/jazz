@@ -28,9 +28,10 @@
 		</div>
 	</div>
 </div>
-<div class="row-detail">
-<div class="col-detail">
-<div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined && !isLoading && !envResponseError' >
+<div class='relative flex-col flex-grow'>
+ <div class="row-detail">
+  <div class="col-detail">
+   <div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined && !isLoading && !envResponseError' >
 	<ul class=" col-md-12 col-sm-12">
 		<li class='det-wrp'>
 			<!-- *ngIf='service.endpoints.dev != undefined' -->
@@ -278,11 +279,11 @@
 				to work with Jazz framework and remove or replace any unsupported configurations.</div>
 	</span>
 
-	<div   class='edit-service-overview-btn'>
-			<a  *ngIf='showCncl'  (click)='onCancel()'>CANCEL</a>
-			<btn-jazz-secondary class='btn-edit-overview'  *ngIf="editButton" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditAppClick()'></btn-jazz-secondary>
-			<btn-jazz-secondary  class='btn-edit-overview' [disablebtn]="invalid || disableSave" *ngIf='saveButton' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" [disablebtn]='disableEditBtn()'  (click)='descriptor()'></btn-jazz-secondary>
-		</div>
+	<div class='edit-service-overview-btn'>
+		<!-- <a  *ngIf='showCncl'  (click)='onCancel()'>CANCEL</a> -->
+		<btn-jazz-secondary class='btn-edit-overview' text='VIEW' (click)='showAppDetail = true;'></btn-jazz-secondary>
+		<!-- <btn-jazz-secondary  class='btn-edit-overview' [disablebtn]="invalid || disableSave" *ngIf='saveButton' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" [disablebtn]='disableEditBtn()'  (click)='descriptor()'></btn-jazz-secondary> -->
+	</div>
 	<div>
 		<div class="valid" *ngIf="isCancel">
 			<p class="validation" *ngIf="isvalid">YAML is valid.</p>
@@ -450,4 +451,61 @@
 			</ul>
 		</div>
 	</div>
-</div>
+ </div>
+ <div class='app-definition-detail absolute' [class.active]='showAppDetail'>
+	 <div class='app-definition-wrapper flex flex-col height-100'>
+		 <div class='flex flex-between flex-align-center app-heading-wrapper relative'>
+			 <div class='app-heading'>Application Definition</div>
+			 <div class='edit-service-overview-btn'>
+				<a  *ngIf='showCncl'  (click)='onCancel()'>CANCEL</a>
+				<btn-jazz-secondary class='btn-edit-overview'  *ngIf="editButton" text='EDIT' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onEditAppClick()'></btn-jazz-secondary>
+				<btn-jazz-secondary  class='btn-edit-overview' [disablebtn]="invalid || disableSave" *ngIf='saveButton' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" [disablebtn]='disableEditBtn()'  (click)='descriptor()'></btn-jazz-secondary>
+			</div>
+			 <div class='cross-icon icon-icon-close' (click)='showAppDetail = false; onCancel();'></div>
+		 </div>
+		 <div class='app-description'>The Application Definition deployed may differ from the following 
+			to work with Jazz framework and remove or replace any unsupported configurations.
+		</div>
+		
+		 <div class='app-definition-content flex-grow height-100'>
+					<div class="main-div height-100 flex-col flex-grow">
+						<div class="div-line">
+							<div class="line-num border opac">
+							 <div  *ngFor="let value of lineNumberCounts;let i = index">{{i + 1}}</div>                                                
+							</div>
+							<div class="myservice opac">
+								<p class="parameter">service:</p>
+								<div class="services-name">
+									<p class="service">name:</p>
+									<p class="magenta">{{serviceName}}</p>
+								</div>
+								<div class="services-name">
+									<p class="parameter">frameworkVersion:</p>
+									<p class="magenta">{{version}}</p> 
+								</div> 
+								<p class="parameter">provider:</p>
+									<div class="services-name">
+										<p class="service">name:</p>
+										<p class="magenta">{{provider}}</p>
+									</div>
+									<div class="services-name">
+										<p class="service">runtime:</p>
+										<p class="magenta">{{runtime}}</p>
+									</div>
+								</div>
+							</div>
+							<div class= "text-line flex-col flex-grow">
+								<div class="text-box flex-grow">
+									<div class="line-num radius">
+								<div *ngFor="let value of lineNumberCounting; let i = index">{{i + 9}}</div>
+							</div>
+							<textarea class="textChange" [disabled]="textarea"  (ngModelChange)="textChanged  && lineNumbersCount()"
+						 [(ngModel)]="yaml" id="field" name="yaml" (keyup)='checkYaml()'></textarea>
+						</div>
+						</div>
+					</div>
+				
+		 </div>
+	 </div>
+ </div>
+<div>

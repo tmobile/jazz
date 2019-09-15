@@ -826,3 +826,78 @@ textarea[type="text"] {
   margin: 0;
   padding: 1.6rem;
 }
+
+.app-definition-detail {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  -webkit-transform: translateX(110%);
+  transform: translateX(110%);
+  z-index: 1;
+  background: white;
+  width: 40em;
+  -webkit-transition: 0.3s ease;
+  transition: 0.3s ease;
+  -webkit-box-shadow: 0 3px 4px 0 #0000001e, 0 2px 4px 0 #00000023;
+  box-shadow: 0 3px 4px 0 #0000001e, 0 2px 4px 0 #00000023;
+  max-width: 100%;
+  max-height: 30em;
+}
+
+.app-definition-detail.active {
+  transform: translateX(0%);
+}
+
+.app-definition-wrapper {
+  padding: 1em;
+}
+.content-html {
+  white-space: pre;
+  width: 100%;
+}
+.definition-content-wrapper {
+  white-space: nowrap;
+  overflow: auto;
+}
+
+.app-heading-wrapper {
+  padding-bottom: 0.5em;
+}
+
+.app-heading {
+  font-size: 1.2em;
+}
+
+.app-description {
+  font-size: 0.9em;
+  padding-bottom: 0.5em;
+}
+.app-definition-detail .edit-service-overview-btn {
+  top:0;
+  right:2em;
+  padding: 0;
+}
+.app-definition-detail .edit-service-overview-btn /deep/ .btn-edit-overview .btnT-radial-in {
+  margin: 0 1em;
+  line-height: 1;
+  padding: .4rem 1.4rem;
+  font-size: .8em;
+}
+
+.app-definition-detail .main-div {
+  max-height: 100%;
+  overflow: auto;
+}
+
+.app-definition-detail .text-line {
+  max-height: inherit;
+  overflow: inherit;
+}
+
+.app-definition-detail .text-box {
+  overflow: inherit;
+}
+
+.cross-icon {
+  cursor: pointer;
+}
