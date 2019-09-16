@@ -138,6 +138,8 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   }
 
   getAssetType(event) {
+    this.isAllSelected = !this.isAllSelected;
+    this.advanced_filter_input.sls_resource.show = false;
     this.assetSel = event;
     this.selectFilter["key"] = 'asset';
     this.selectFilter["value"] = event;
@@ -146,15 +148,13 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     if(event !== 'all'){
       this.isAllSelected = false;
       this.lambdaResourceNameArr = this.service.lambdaResourceNameArr;
-      if(this.lambdaResourceNameArr !== undefined) {
-      if(this.lambdaResourceNameArr.length !== 0){
+      if(this.lambdaResourceNameArr &&  this.lambdaResourceNameArr.length !== 0){
         this.resourceSelected = this.lambdaResourceNameArr[0];
         this.advanced_filter_input.sls_resource.show = true;
       }
       else {
         this.advanced_filter_input.sls_resource.show = false;
         }
-      }
     }
     if(event == "all"){
        this.isAllSelected = true;
@@ -166,11 +166,11 @@ export class AdvancedFiltersComponentOSS implements OnInit {
       else {
         this.advanced_filter_input.sls_resource.show = false;
       }
-        this.onResourceSelect.emit("all");
-        this.selectFilter["key"] = 'resource';
-        this.selectFilter["value"] = "all";
-        this.onFilterSelect.emit(this.selectFilter);
     }
+    this.onResourceSelect.emit("all");
+    this.selectFilter["key"] = 'resource';
+    this.selectFilter["value"] = "all";
+    this.onFilterSelect.emit(this.selectFilter);
   }
 
   getResourceType(event){
@@ -257,14 +257,8 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     if(this.assetList){
       this.assetSelected = this.assetList[0];
     }
-    if(this.service.serviceType !== 'sls-app') {
-      
-      this.advanced_filter_input.sls_resource.show = false;
-      this.isSlsapp = false;
-    }
-    if(this.assetSelected == "all" && this.service.serviceType === 'sls-app'){
+    if(this.assetSelected == "all"){
       this.isAllSelected = true;
-      this.isSlsapp = true;
       this.allAssetsNameArray = this.service.allAssetsNameArray;
       if (this.allAssetsNameArray.length !== 0) {
         this.resourceSelected = this.allAssetsNameArray[0];
