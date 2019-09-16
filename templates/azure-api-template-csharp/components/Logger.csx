@@ -11,31 +11,31 @@ public class Logger {
 
     public static void info(string message) {
 
-        logger.LogInformation($"{context.InvocationId} {message}");
+        logger.LogInformation($" INFO {context.InvocationId} {message}");
 
     }
 
     public static void error(string message) {
 
-        logger.LogError($"{context.InvocationId} {message}");
+        logger.LogError($" ERROR {context.InvocationId} {message}");
 
     }
 
     public static void debug(string message) {
 
-        logger.LogDebug($"{context.InvocationId} {message}");
+        logger.LogDebug($" DEBUG {context.InvocationId} {message}");
 
     }
 
     public static void warn(string message) {
 
-        logger.LogWarning($"{context.InvocationId} {message}");
+        logger.LogWarning($" WARN {context.InvocationId} {message}");
 
     }
 
     public static void trace(string message) {
 
-        logger.LogTrace($"{context.InvocationId} {message}");
+        logger.LogTrace($" TRACE {context.InvocationId} {message}");
 
     }
 }
