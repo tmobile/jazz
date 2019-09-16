@@ -40,10 +40,27 @@ module.exports = function(context, req) {
       "configKeys": myVal
     };
 
-    context.res = {
-      // status defaults to 200 */
-      body: responseObj(sampleResponse, req)
-    };
+    //Your GET method should be handled here
+    if (req && req.method && req.method === 'GET') {
+      //sampleResponse.message = "Your Node Template GET Method executed successfully";
+      logger.info(req);
+      logger.info(context);
+
+      logger.verbose(sampleResponse);
+      context.res = {
+        // status defaults to 200 */
+        body: responseObj(sampleResponse, req.query)
+      };
+    }
+
+		//Your POST method should be handled here
+    if (req && req.method && req.method === 'POST') {
+      //sampleResponse.message = "Your Node Template POST Method executed successfully";
+      context.res = {
+        // status defaults to 200 */
+        body: responseObj(sampleResponse, req.body)
+      };
+    }
 
 
   } catch (e) {

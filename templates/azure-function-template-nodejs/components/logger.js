@@ -41,14 +41,28 @@ module.exports = function () {
     curLogLevel: 'info',
     requestDetails: ''
   };
-  let context;
   // set logLevel, RequestDetails
-  const init = (event, context) => setLevel('info', context);
+  const init = (event, context) => setLevel();
+
+  // To add request specific details, which will be prepended in all the logs for ease of debugging in CloudWatch logs
+  const setRequestDetails = (someContextSpecificId) => {
+    return;
+
+    // Timestamp and requestID are prepended in cloudwatch log by default; If any other details are required it can be done here.
+
+    /*
+    if (someContextSpecificId != undefined && someContextSpecificId != '') {
+        config.someContextSpecificId = someContextSpecificId;
+        config.requestDetails = 'someContextSpecificId : ' + someContextSpecificId + ' =>\t'
+    } else{
+        config.requestDetails = ''
+    };
+    */
+  };
 
   // set current logLevel; Only logs which are above the curLogLevel will be logged;
-  const setLevel = (level, context) => {
+  const setLevel = (level) => {
     // LOG_LEVEL is 'info' by default
-    this.context = context;
 
     if (level && logLevels[level]) {
       // If LOG_LEVEL if explicitly specified , set it as the curLogLevel
@@ -73,15 +87,15 @@ module.exports = function () {
 
     if (logLevels[level] >= logLevels[config.curLogLevel]) {
       if (level === 'error') {
-        this.context.log.error(this.context.invocationId, message);
+        console.error('ERROR \t', config.requestDetails, message);
       } else if (level === 'warn') {
-        this.context.log.warn(this.context.invocationId, message);
+        console.warn('WARN  \t', config.requestDetails, message);
       } else if (level === 'info') {
-        this.context.log.info(this.context.invocationId, message);
+        console.info('INFO  \t', config.requestDetails, message);
       } else if (level === 'verbose') {
-        this.context.log.verbose(this.context.invocationId, message);
+        console.info('VERBOSE  \t', config.requestDetails, message);
       } else {
-        this.context.log(this.context.invocationId, message);
+        console.log(level, '\t', config.requestDetails, message);
       }
     }
 

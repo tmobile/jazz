@@ -92,17 +92,17 @@ module.exports = function () {
 
       if (logLevels[level] >= logLevels[config.curLogLevel]) {
         if (level === 'error') {
-            console.error(timestamp, 'ERROR \t', config.requestDetails, message);
+            console.error('ERROR \t', config.requestDetails, message);
         } else if (level === 'warn') {
-            console.warn(timestamp, 'WARN  \t', config.requestDetails, message);
+            console.warn('WARN  \t', config.requestDetails, message);
         } else if (level === 'info') {
-            console.info(timestamp, 'INFO  \t', config.requestDetails, message);
+            console.info('INFO  \t', config.requestDetails, message);
         } else if (level === 'verbose') {
-            console.info(timestamp, 'VERBOSE  \t', config.requestDetails, message);
+            console.info('VERBOSE  \t', config.requestDetails, message);
         } else if (level === 'debug') {
-            console.debug(timestamp, 'DEBUG  \t', config.requestDetails, message);
+            console.debug('DEBUG  \t', config.requestDetails, message);
         } else {
-            console.log(timestamp, level, '\t', config.requestDetails, message);
+            console.log(level, '\t', config.requestDetails, message);
         }
       }
 
