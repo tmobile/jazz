@@ -296,6 +296,9 @@ export class EnvDeploymentsSectionComponent implements OnInit {
             if(this.totalPagesTable === 1){
               this.pageSelected = false;
             }
+            else {
+              this.pageSelected = true;
+            }
           }
           else{
             this.totalPagesTable = 0;

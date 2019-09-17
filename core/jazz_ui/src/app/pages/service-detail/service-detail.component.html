@@ -7,9 +7,24 @@
                         <span  class="reduxS" *ngIf='service.status == "deletion started"'></span>
 
         <div *ngIf='!isError403' class="page-title-wrap hide-for-mobile">
+            <div class="title-platform">
             <h1 class="page-hdr bold-title">{{service.name}}</h1>
-            <span class="page-sub-title"><span class="service-type">{{service.serviceType}}</span><span *ngIf="service.runtime"> - {{service.runtime}}</span></span>
+            <span class="page-sub-title"><span class="service-platform">{{provider}}</span><span class="service-type">{{service.serviceType}}</span><span *ngIf="service.runtime"> - {{service.runtime}}</span></span>
+            </div>
+            <div class="image-btn-div">
+            <div class="image-container">
+                <img
+                  *ngIf="provider ==='azure'"
+                  id="azure-watermark"
+                  src="../../../assets/images/azure-watermark.png"
+                  alt="azureimage">
+                <img
+                  *ngIf="provider === 'aws'"
+                  id="aws-watermark"
+                  src="../../../assets/images/aws-watermark.png">
+            </div>
             <btn-jazz-secondary class="delete-service-btn" text="DELETE SERVICE" [disablebtn]="!canDelete || !isAdminAccess" (click)="deleteService(true)"></btn-jazz-secondary>
+            </div>
         </div>
         <div *ngIf='!isError403' class='tab-component'>
             <div class="refresh-button" (click)="refreshTab()">

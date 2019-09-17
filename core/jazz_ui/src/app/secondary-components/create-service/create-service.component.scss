@@ -119,6 +119,7 @@
 .service-box {
     .icon-icon-api,
     .icon-icon-function,
+    .icon-icon-azure-functions,
     .icon-icon-web,
     .icon-icon-AWS,
     .icon-icon-azure,
@@ -128,7 +129,7 @@
         color: #ccc;
         span{
             font-size: 40px;
-            color: #ccc;
+            color: #ccc !important;
         }
     }
     &.service-box-selected {
@@ -136,6 +137,9 @@
         .icon-icon-function,
         .icon-icon-web {
             color: #ed008c;
+        }
+        .icon-icon-azure{
+            color:#0078d7;
         }
     }
 }

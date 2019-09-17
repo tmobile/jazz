@@ -138,6 +138,23 @@
             <div class="det-value" [class.PlaceHolder]="runtime_empty">{{service.runtime}}</div>
           </li>
           <li>
+              <div class="det-label">Provider</div>
+              <div class="det-value service-platform">{{ provider }}
+                  <div class="image-container">
+                      <img
+                        src="../../../assets/images/icons/Azure.svg"
+                        *ngIf="provider ==='azure'"
+                        alt="azureimage"
+                        class="azure-image">
+                      <img
+                        id="aws-logo-single-block"
+                        class="tiny"
+                        *ngIf="provider === 'aws'"
+                        src="../../../assets/images/aws-logo-small.jpg">
+                  </div>
+              </div>
+          </li>
+          <li>
             <div class="det-label">Service Type</div>
             <div class="det-value service-type">{{ service.serviceType || 'Pick your service type'}}</div>
           </li>
@@ -157,7 +174,8 @@
           </li>
           <li>
             <div class="det-label">Account</div>
-            <div class="det-value">{{service.accountID}} ({{accountName}})</div>
+            <div *ngIf="provider ==='aws'" class="det-value">{{service.accountID}} ({{accountName}})</div>
+            <div *ngIf="provider ==='azure'" class="det-value">{{service.accountID}} </div>
           </li>
           <li>
             <div class="det-label">Region</div>

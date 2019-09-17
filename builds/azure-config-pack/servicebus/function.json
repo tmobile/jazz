@@ -1,0 +1,12 @@
+{
+  "disabled": false,
+  "bindings": [
+    {
+      "name": "myEvent",
+      "type": "serviceBusTrigger",
+      "direction": "in",
+      "queueName": "{resource_name}",
+      "connection": "CONNECTION_STRING"
+    }
+  ]
+}

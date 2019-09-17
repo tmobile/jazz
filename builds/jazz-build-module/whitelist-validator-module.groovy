@@ -217,12 +217,10 @@ def getarnTemplates( resourceType ) {
 }
 
 def checkAssetType( resourceType ) {
-  echo "Resource Type is ${resourceType}"
   def status = false
   if( assetTypes.contains(resourceType)) {
     status = true
   }
-  echo "Status is ${status}"
   return status
 }
 
