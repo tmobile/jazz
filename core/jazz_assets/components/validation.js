@@ -222,6 +222,24 @@ function validateAssetExists(assets_data, asset_table) {
   });
 };
 
+function validateProvider(provider, provider_list) {
+  logger.debug("Inside validateProvider");
+  return new Promise((resolve, reject) => {
+    if (provider_list.indexOf(provider) > -1) {
+      resolve({
+        "result": "success",
+        "input": provider
+      });
+    } else {
+      var message = "Provider is not valid";
+      reject({
+        "result": "inputError",
+        "message": message
+      });
+    }
+  });
+}
+
 function validateAssetsExistsById(assets_id, asset_table) {
   logger.debug("Inside validateAssetsExistsById:")
   return new Promise((resolve, reject) => {
@@ -243,6 +261,7 @@ function validateCreatePayload(create_data, asset_table) {
     logger.info("Inside validateAndCreate:" + JSON.stringify(create_data));
     var required_fields = global.global_config.ASSETS_CREATION_REQUIRED_FIELDS;
     var allowed_fields = global.global_config.ASSETS_FIELDS;
+    var provider_list = global.global_config.PROVIDER_LIST;
     var assets_data = utils.toLowercase(create_data);
     validateIsEmptyInputData(assets_data)
       .then(() => validateUnAllowedFieldsInInput(assets_data, allowed_fields))
@@ -251,6 +270,7 @@ function validateCreatePayload(create_data, asset_table) {
       .then(() => validateEnumValues(assets_data))
       .then(() => validateEmptyFieldsVal(assets_data))
       .then(() => validateAssetExists(assets_data, asset_table))
+      .then(() => validateProvider(assets_data.provider, provider_list))
       .then((res) => {
         resolve(res);
       })

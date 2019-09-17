@@ -87,7 +87,16 @@ private intervalSubscription: Subscription;
       filter: {
         type: ''
       }
-    },{
+    },
+    {
+      label: 'Platform',
+      key: 'platform',
+      sort: true,
+      filter: {
+        type: 'input'
+      }
+    },
+    {
       label: 'Namespace',
       key: 'domain',
       sort: true,
@@ -158,6 +167,7 @@ private intervalSubscription: Subscription;
       let serviceRow = {
         name: service.service,
         type: service.type,
+        platform: service.deployment_accounts[0].provider,
         domain: service.domain,
         health: 2,
         status: service.status.replace('_',' '),

@@ -5,12 +5,12 @@ export const environment = {
   baseurl: "https://{API_GATEWAY_KEY_PROD}.execute-api.{inst_region}.amazonaws.com/prod",
   api_doc_name: "https://{api_doc_name}.s3.amazonaws.com",
   envName: "oss",
-  multi_env: "{multi_env}",
-  slack_support: "{slack_support}",
+  multi_env: {multi_env},
+  slack_support: {slack_support},
   webLists: { "html": "Static", "angular": "Angular", "react": "ReactJS" },
-  envLists: { "nodejs8.10": "Nodejs 8.10", "python2.7": "Python 2.7", "python3.6": "Python 3.6", "java8": "Java 8", "go1.x": "Go 1.x" },
+  envLists: { "nodejs8.10": "Nodejs 8.10", "python2.7": "Python 2.7", "python3.6": "Python 3.6", "java8": "Java 8", "go1.x": "Go 1.x", "c#": "C#" },
   serviceTabs: ["{overview}", "{access control}", "{metrics}", "{logs}", "{cost}"],
-  environmentTabs: ["{env_overview}", "{deployments}", "{code quality}" , "{assets}", "{env_logs}", "{metrics}"],
+  environmentTabs: ["{env_overview}", "{deployments}", "{code quality}", "{metrics}", "{assets}", "{env_logs}"],
   assetTypeList: [
     "lambda",
     "apigateway",
@@ -52,8 +52,18 @@ export const environment = {
     registrationMessage: 'Please contact your Jazz Admin(s) to get a registration code.'
   },
   aws: {
-    account_number:'{account_number}',
-    region:"{region}"
+    account_number: '{account_number}',
+    region: '{region}',
+    envLists: {"nodejs8.10": "Nodejs 8.10", "python2.7": "Python 2.7", "python3.6": "Python 3.6", "java8": "Java 8", "go1.x": "Go 1.x"},
+    accountMap: {accountMap}
   },
-  accountMap:{accountMap}
+  azure: {
+    azure_account_number: '{azure_account_number}',
+    azure_region: '{azure_region}',
+    azure_enabled: '{azure_enabled}',
+    envLists: {"nodejs8.10": "Nodejs 8.10", "c#": "C#"},
+  },
+  gcloud: {
+    envLists:  {},
+  }
 };

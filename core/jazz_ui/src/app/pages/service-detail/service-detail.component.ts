@@ -48,6 +48,7 @@ export class ServiceDetailComponent implements OnInit {
   isENVavailable: boolean = true;
   disblebtn: boolean = true;
   ServiceName: string;
+  platfrom: string;
   deleteServiceVal: boolean;
   id: string;
   errMessage: string = '';
@@ -58,6 +59,7 @@ export class ServiceDetailComponent implements OnInit {
   service: any = {};
   isGraphLoading: boolean = false;
   stageOverview: any = {};
+  provider: any;
   showPopUp: boolean = false;
   success: boolean = false;
   thisIndex: number = 0;
@@ -143,6 +145,18 @@ export class ServiceDetailComponent implements OnInit {
         if(service.metadata.event_source_sqs){
           returnObject["event_source_arn"] = service.metadata.event_source_sqs;
         }
+        if(service.metadata.event_source_cosmosdb){
+          returnObject["event_source_arn"] = service.metadata.event_source_cosmosdb;
+        }
+        if(service.metadata.event_source_eventhub){
+          returnObject["event_source_arn"] = service.metadata.event_source_eventhub;
+        }
+        if(service.metadata.event_source_storageaccount){
+          returnObject["event_source_arn"] = service.metadata.event_source_storageaccount;
+        }
+        if(service.metadata.event_source_servicebusqueue){
+          returnObject["event_source_arn"] = service.metadata.event_source_servicebusqueue;
+        }
       }
       if(typeof returnObject["event_source_arn"] == "object"){
         returnObject["event_source_arn"] = returnObject["event_source_arn"].S;
@@ -169,7 +183,6 @@ export class ServiceDetailComponent implements OnInit {
       }
 
       this.service = this.processService(service);
-
       // Update breadcrumbs
       this.breadcrumbs = [
         {
@@ -206,6 +219,7 @@ export class ServiceDetailComponent implements OnInit {
     this.isLoadingService = true;
     this.http.get('/jazz/services/' + id, null, id).subscribe(response => {
       let service = response.data;
+      this.provider = response.data.deployment_accounts[0].provider
       this.cache.set(id, service);
       this.onDataFetched(service);
       this.isGraphLoading = false;

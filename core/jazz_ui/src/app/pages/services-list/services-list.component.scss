@@ -132,7 +132,7 @@
           th {
             &:nth-child(1) {
               width: 250px; //fallback
-              width: calc(100% - 650px);
+              width: calc(100% - 700px);
             }
             &:nth-child(2) {
               width: 100px;
@@ -173,7 +173,7 @@
         padding-left: 15px;
       }
       @media (min-width: $screen-lg) {
-        width: calc(100% - 650px);
+        width: calc(100% - 700px);
       }
     }
     &:nth-child(2) {
