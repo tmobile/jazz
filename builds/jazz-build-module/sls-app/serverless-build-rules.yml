@@ -162,7 +162,7 @@ provider:
       sbr-to: 900
     sbr-value:
       sbr-formula: ${config.providerTimeout}
-      sbr-example: 160
+      sbr-example: 30
       
   logRetentionInDays:  # Set the default RetentionInDays for a CloudWatch LogGroup
     sbr-type: int

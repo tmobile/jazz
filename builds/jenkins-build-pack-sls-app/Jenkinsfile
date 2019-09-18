@@ -724,7 +724,7 @@ def echoServiceInfo(String env, String envBucketKey) {
     return svc_response
 
   } catch (Exception ex) {
-    echo "error occured while creating log subscription filters to function log groups: " + ex.getMessage()
+    echo "Error while getting service info: " + ex.getMessage()
   }
 }
 

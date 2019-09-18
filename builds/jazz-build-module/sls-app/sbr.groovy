@@ -16,7 +16,7 @@ def initialize(output,aWhitelistValidator) {
 }
 
 
-/** The function traverses through the original user application.yml file that is represented as a Map and applies the rules from the rules file for every clause found in the user input.
+/** The function traverses through the original user serverless.yml file that is represented as a Map and applies the rules from the rules file for every clause found in the user input.
     It returns a resulting Map that can immediatelly be serialized into the yml file and written to disk. config and context are also needed to resolve some values from the application yml
     @origAppYmlFile - the file in serverless serverless.yml format () as defined by a user/developer and parsed by SnakeYml (https://serverless.com/framework/docs/providers/aws/guide/serverless.yml/)
     @rulesYmlFile - the Map representation of serverless-build-rules.yml parsed by org.yaml.snakeyaml.Yaml
@@ -548,6 +548,7 @@ class SBR_Type_Descriptor {
   public void validate(aValue) {
     if (!underlyingTypeList.contains(aValue))
     {
+      // TODO for now we are not throwing this exception as the validation implementation is incomplete
       // throw new IllegalStateException("The following type is not supported: $aValue Supported types are: ${underlyingTypeList}")
     }
   }
@@ -1122,13 +1123,13 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
     deploymentDescriptor = aConfig['deployment_descriptor']
   }
   try {
-    def appContent = readFile('application.yml').trim()
+    def appContent = readFile('application.yml').trim() // copy of the user serverless.yml
     if(!appContent.isEmpty()) {
-      echo "The application.yml is being used."
+      echo "User supplied serverless.yml is being used."
       deploymentDescriptor = appContent
     }
   } catch(e) { // TODO to catch the type error
-      echo "The application.yml does not exist in the code. So the default value from config will be used.$e"
+      echo "The user supplied serverless.yml does not exist in the code. So the default value from config will be used: ${e}"
   }
 
     def doc = deploymentDescriptor  ? readYaml(text: deploymentDescriptor ) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
@@ -1137,10 +1138,8 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
             "INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
             "REGION": aConfig.region,
             "cloud_provider": "aws",
-            "subnetIds": configLoader.AWS.SUBNET_IDS, // TODO change for OSS based on selected account
-            "securityGroupIds": configLoader.AWS.SECURITY_GROUP_IDS, // TODO change for OSS based on selected account
             "kinesisStreamArn": configLoader.AWS.KINESIS_LOGS_STREAM,
-            "platformRoleArn": 'arn:aws:iam::XXXXXXXXXXXXX:role/jazz_platform_services', // TODO hard-coded
+            "platformRoleArn": configLoader.AWS.PLATFORM_ROLE_ARN, // TODO ???
             "serverless_framework_version": ">=1.0.0 <2.0.0"]
 
     if (doc && doc instanceof Map && doc['service']) doc.remove('service')
