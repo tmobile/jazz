@@ -63,6 +63,7 @@ import { MetricsCarouselComponent } from "../secondary-components/metrics-carous
 import { RouterModule } from "@angular/router";
 import { Error403Component } from "../pages/error403/error403.component";
 import { RadioCheckboxComponent } from "../primary-components/radio-checkbox/radio-checkbox.component";
+import { CopyElementComponent } from '../secondary-components/copy-element/copy-element.component';
 
 let specificComponents: any
 let specificModules: any;
@@ -141,6 +142,7 @@ for (let i in specificComponents) {
     CheckboxGroupRegionComponent,
     FilterTagComponent,
     Error403Component,
+    CopyElementComponent,
     ...declarationsArray,
 
 
@@ -192,6 +194,7 @@ for (let i in specificComponents) {
     Error403Component,
     RadioCheckboxComponent,
     RadioGroupComponent,
+    CopyElementComponent,
     ...declarationsArray
 
   ],

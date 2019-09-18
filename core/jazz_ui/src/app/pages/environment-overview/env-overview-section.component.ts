@@ -39,7 +39,6 @@ export class EnvOverviewSectionComponent implements OnInit {
   textChanged:boolean = true;
   tempFriendlyName:string;
   yaml:string = "";
-  textarea:boolean= true;
   tempTextArea:string;
   friendlyName : string;
   yamlName:string;
@@ -48,8 +47,6 @@ export class EnvOverviewSectionComponent implements OnInit {
   editBtn:boolean = true;
   showAppDetail:boolean = false;
   saveBtn:boolean = false;
-  saveButton:boolean=false;
-  editButton:boolean=true;
   showCancel:boolean = false;
   showCncl:boolean=false;
   environmnt:any;
@@ -84,8 +81,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   toastmessage:any;
   is_function:boolean;
   copyLink:string="Copy Link";
-  disableSave:boolean = true;
-  public lineNumberCounts: any = new Array(8);
+  public lineNumberCounts: any = new Array(7);
   isfunction: boolean = true;
   linenumber:number;
   public lineNumberCounting: any = new Array(5);
@@ -133,9 +129,6 @@ export class EnvOverviewSectionComponent implements OnInit {
   }
   //  prd?domain=jazz-testing&service=test-create
 
-  disableEditBtn(){
-
-  }
 popup(state){
   if(state == 'enter'){
     var ele = document.getElementById('popup-endp');
@@ -153,74 +146,14 @@ popup(state){
     this.saveBtn=true;
     this.editBtn=false;
   }
-fetchfunction(){
-  this.isLoading = true;
-  this.http.get('/jazz/services/' + this.service.id, null, this.service.id).subscribe(response => {
-    this.is_function = response.data.metadata.is_function_template;
-    if(this.is_function === true && this.is_function !== undefined){
-      this.startnew = false;
-      this.provider = response.data.deployment_accounts[0].provider;
-      this.serviceName = this.service.name;
-      this.runtime = this.service.runtime;
-    }
-    else {
+  fetchfunction(){
+    this.isLoading = true;
+    this.http.get('/jazz/services/' + this.service.id, null, this.service.id).subscribe(response => {
       this.startnew = true;
-    }
-    this.isLoading = false;
-  })
-}
-  onEditAppClick(){
-    this.yaml = this.yamlName;
-    this.showCncl = true;
-    this.isDiv = true;
-    this.saveButton = true;
-    this.editButton = false;
-    this.isCancel = false;
-    this.textChanged = true;
-    this.disableSave = true;
-    this.textarea = false;
+      this.isLoading = false;
+    })
   }
-  descriptor(){
-    this.showCncl = false;
-    this.editButton = true;
-    this.textarea = true;
-    this.saveBtn = false;
-    this.saveButton = false;
-    var errMsgBody;
-    if(this.textChanged === true){
-      this.put_payload.deployment_descriptor= this.yaml;
-      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload,this.service.id)
-            .subscribe(
-                (Response)=>{
-                  let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
-                  this.toast_pop('success',"",successMessage);
 
-                  this.callServiceEnv();
-                  this.yaml='';
-                },
-                (error)=>{
-                  try{
-                    errMsgBody=JSON.parse(error._body);
-                  }
-                  catch(e){
-                  }
-                  let errorMessage='';
-                  if(errMsgBody!=undefined)
-                    errorMessage = errMsgBody.message;
-                  // let errorMessage = this.toastmessage.errorMessage(Error,"updateEnv");
-                  this.toast_pop('error', 'Oops!', errorMessage)
-                  this.callServiceEnv();
-
-                }
-              );
-              this.isLoading = true;
-              this.envResponseTrue = false;
-              this.textChanged = false;
-              this.isCancel = false;
-              this.disableSave = true;
-    }
-
-  }
   lineNumbers() {
     let lines;
     if (this.yaml) {
@@ -255,13 +188,11 @@ fetchfunction(){
       const yamlLint = require('yaml-lint');
       yamlLint.lint(yaml).then(() => {
         this.isvalid = true;
-        this.disableSave = false;
       }).catch((error) => {
         this.isvalid = false;
       });
     }
     else{
-      this.disableSave = true;
       this.isCancel = false;
     }
   }
@@ -306,12 +237,8 @@ fetchfunction(){
 
   onCancel(){
     this.showCncl = false;
-    this.saveButton = false;
-    this.editButton = true;
-    this.textarea = true;
     this.yaml = this.yamlName;
     this.isCancel = false;
-    this.disableSave = true;
     this.lineNumbers();
     this.isvalid = false;
 }
@@ -440,10 +367,8 @@ fetchfunction(){
           userFeedback : ''
     };
     buttonText:string='SUBMIT';
-    // isLoading:boolean=false;
     sjson:any={};
 		djson:any={};
-		// isLoading:boolean=false;
 		reportIssue(){
 
 					this.json = {
@@ -536,7 +461,7 @@ fetchfunction(){
 
 
    myFunction() {
-    setTimeout( this.resetCopyValue(), 3000);
+    setTimeout( ()=> {this.resetCopyValue()}, 3000);
  }
 
  resetCopyValue(){
