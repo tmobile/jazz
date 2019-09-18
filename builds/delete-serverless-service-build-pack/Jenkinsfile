@@ -374,6 +374,7 @@ def archiveAssetDetails(env) {
   def assets = utilModule.getAssets(assets_api, auth_token, service_config, env)
   def assetList = parseJsonMap(assets)
   for (asset in assetList.data.assets) {
+	// TODO update Asset Status to 'archived'/'deleted'?  
     events.sendCompletedEvent('UPDATE_ASSET', "Environment cleanup for ${env} completed", utilModule.generateAssetMap(asset.provider, asset.provider_id , asset.asset_type, service_config), env)
   }
 }
@@ -1305,7 +1306,7 @@ def loadBuildModules(buildModuleUrl){
 		aclModule = load "acl-module.groovy"
 		echo "ACL module loaded successfully."
 
-		whiteListModule = load "whitelist-validator-module.groovy"
+		whiteListModule = load "sls-app/whitelist-validator-module.groovy"
     whiteListModule.initialize()
     echo "whitelist-validator-module module loaded successfully"
 

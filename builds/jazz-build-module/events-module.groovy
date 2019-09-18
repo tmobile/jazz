@@ -193,7 +193,6 @@ def getEventName(eventTxt) {
 	_validEvent = Event_Names[eventTxt]
 
 	if (_validEvent) {
-		echo "$_validEvent"
 		return _validEvent
 	} else {
 		error "EVENT NAME not defined- $eventTxt. Please update the EventsName table"
@@ -209,6 +208,10 @@ def getEventName(eventTxt) {
 
 
 def sendEvent(event_name, event_status, message, moreCxtMap){
+
+	// generate a guid used for the payload file
+	// Util --> utility-loader.groovy is expected to be loaded here as global variable!
+	def guid = Util.generateRequestId()
 
 	def context_json = []
 	def event_json = []
@@ -240,14 +243,17 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 	]
 
 	def payload = JsonOutput.toJson(event_json)
-	echo "$event_json"
+	echo "Sending Event -- Type: ${g_event_type}, Name: ${event_name}, Status: ${event_status}"
+
+	// write payload to a file guid.json
+	writeFile(file: "./${guid}.json", text: payload)
 
 	try {
 		if (service_metadata['domain'] != "jazz") {
 			def shcmd = sh(script: "curl --silent -X POST -k -v \
 				-H \"Content-Type: application/json\" \
 					$g_events_api \
-				-d \'${payload}\'", returnStdout:true).trim()
+				-d @./${guid}.json", returnStdout:true).trim()
 
 			echo "------  Event send.........."
 		}
@@ -255,6 +261,10 @@ def sendEvent(event_name, event_status, message, moreCxtMap){
 	catch (e) {
 		echo "error occured when recording event: " + e.getMessage()
 	}
+	finally {
+		// delete guid.json if it exists
+		sh "rm -rf ${guid}.json"
+	}	
 }
 
 /**

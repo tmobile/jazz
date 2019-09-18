@@ -143,26 +143,27 @@ provider:
     sbr-value:
       sbr-example: $request.body.route # custom route selection expression
 
-  memorySize:
+  memorySize: # in MB
     sbr-type: int
     sbr-render: user-wins
+    sbr-mandatory: true
     sbr-constraint:
-      sbr-from: 256
+      sbr-from: 128
       sbr-to: 2048
     sbr-value:
       sbr-formula: ${config.providerMemorySize}
-      sbr-example: 1024
+      sbr-example: 256
 
-  timeout:
+  timeout: # in seconds 1 sec to 15 mins
     sbr-type: int
     sbr-render: user-wins
     sbr-constraint:
-      sbr-from: 100
-      sbr-to: 500
+      sbr-from: 1
+      sbr-to: 900
     sbr-value:
       sbr-formula: ${config.providerTimeout}
       sbr-example: 160
-
+      
   logRetentionInDays:  # Set the default RetentionInDays for a CloudWatch LogGroup
     sbr-type: int
     sbr-render: user-only
@@ -207,9 +208,9 @@ provider:
     sbr-value:
       sbr-example: serverless
 
-  role:  # Overwrite the default IAM role which is used for all functions
+  role:  # do NOT overwrite the default IAM role which is used for all functions
     sbr-type: arn-iam
-    sbr-render: config-wins
+    sbr-render: user-only # was config-wins
     sbr-mandatory: true
     sbr-value:
       sbr-formula: ${config.iamRoleARN}
@@ -555,15 +556,16 @@ function:
       sbr-value:
         sbr-formula: Description for ${context.asterisk0} function
 
-    memorySize: # memorySize for this specific function.
+    memorySize: # memorySize in MB for this specific function.
       sbr-type: int
       sbr-render: user-wins
+      sbr-mandatory: true
       sbr-constraint:
-        sbr-from: 256
+        sbr-from: 128
         sbr-to: 2048
       sbr-value:
         sbr-formula: ${config.providerMemorySize}
-        sbr-example: 512
+        sbr-example: 256
 
     runtime:
       sbr-type: enum
@@ -579,20 +581,21 @@ function:
         sbr-formula: ${config.providerRuntime}
         sbr-example: nodejs8.10
 
-    timeout:
+    timeout: # in seconds 1 sec to 15 mins
       sbr-type: int
       sbr-render: user-wins
       sbr-constraint:
-        sbr-from: 100
-        sbr-to: 500
+        sbr-from: 1
+        sbr-to: 900
       sbr-value:
         sbr-formula: ${config.providerTimeout}
-        sbr-example: 160
+        sbr-example: 30
 
-    role:  # Overwrite the default IAM role which is used for all functions
+    role: # none provided in config, serverless creates if not user provided
       sbr-type: arn-iam
-      sbr-render: user-wins
+      sbr-render: user-only
       sbr-value:
+        sbr-formula: ${config.role}
         sbr-example: arn:aws:iam::XXXXXX:role/role
 
     onError: # Optional SNS topic / SQS arn (Ref, Fn::GetAtt and Fn::ImportValue are supported as well) which will be used for the DeadLetterConfig

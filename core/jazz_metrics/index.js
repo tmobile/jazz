@@ -34,7 +34,7 @@ const metricConfig = require("./components/metrics.json");
 function handler(event, context, cb) {
   var errorHandler = errorHandlerModule();
   var config = configObj.getConfig(event, context);
-  logger.debug("EVENT : " + JSON.stringify(event));
+  logger.debug("EVENT: " + JSON.stringify(event));
 
   try {
 		/*
@@ -188,10 +188,10 @@ function getConfigJson(config, token) {
       } else {
         if (response.statusCode && response.statusCode === 200) {
           var responseBody = JSON.parse(body);
-          logger.debug("Response body of Config Json is :", JSON.stringify(responseBody));
+          logger.debug("Response body of Config Json is: ", JSON.stringify(responseBody));
           resolve(responseBody.data)
         } else {
-          logger.debug("Service not found for this service, domain, environment. ", JSON.stringify(config_json_api_options));
+          logger.debug("Service not found for this service, domain, environment: ", JSON.stringify(config_json_api_options));
           resolve([])
         }
       }
@@ -219,10 +219,10 @@ function getserviceMetaData(config, eventBody, authToken) {
       } else {
         if (response.statusCode && response.statusCode === 200) {
           var responseBody = JSON.parse(body);
-          logger.debug("Response Body of Service Metadata is :", JSON.stringify(responseBody));
+          logger.debug("Response Body of Service Metadata is: ", JSON.stringify(responseBody));
           resolve(responseBody)
         } else {
-          logger.debug("Service not found for this service, domain, environment. ", JSON.stringify(service_api_options));
+          logger.debug("Service not found for this service, domain, environment: ", JSON.stringify(service_api_options));
           resolve([])
         }
       }
@@ -245,7 +245,7 @@ function getAssetsDetails(config, eventBody, authToken, serviceId) {
       async: true
     };
 
-    logger.info("asset_api_options :- " + JSON.stringify(asset_api_options));
+    logger.info("asset_api_options: " + JSON.stringify(asset_api_options));
     request(asset_api_options, (error, response, body) => {
       if (error) {
         logger.error("error received in getting assets" + error);
@@ -261,8 +261,8 @@ function getAssetsDetails(config, eventBody, authToken, serviceId) {
 
           var userStatistics = eventBody.statistics.toLowerCase();
 
-          if (eventBody.asset_type) {
-            let requiredAsset = apiAssetsArray.filter(asset => (asset.asset_type === eventBody.asset_type));
+          if (eventBody.assetType) {
+            let requiredAsset = apiAssetsArray.filter(asset => (asset.asset_type === eventBody.assetType));
             if (requiredAsset.length){
               let assetsArray = utils.getAssetsObj(requiredAsset, userStatistics);
               resolve(assetsArray);
@@ -275,11 +275,11 @@ function getAssetsDetails(config, eventBody, authToken, serviceId) {
           } else {
             // Massaging data from assets api , to get required list of assets which contains type, asset_name and statistics.
             var assetsArray = utils.getAssetsObj(apiAssetsArray, userStatistics);
-            logger.debug("Assets got:" + JSON.stringify(assetsArray));
+            logger.debug("Assets got: " + JSON.stringify(assetsArray));
             resolve(assetsArray);
           }
         } else {
-          logger.debug("Assets not found for this service, domain, environment. ", JSON.stringify(asset_api_options));
+          logger.debug("Assets not found for this service, domain, environment: ", JSON.stringify(asset_api_options));
           resolve([]);
         }
       }
@@ -295,12 +295,12 @@ function validateAssets(assetsArray, eventBody) {
       logger.debug("Validating assets");
       assetsArray.forEach((assetItem) => {
         if (assetItem.isError) {
-          logger.error(assetItem.isError);
+          logger.error("Unsupported metric type: " + assetItem.provider + ":" + assetItem.asset_type);
           invalidTypeCount++;
           if (invalidTypeCount === assetsArray.length) {
             reject({
               result: "inputError",
-              message: "Unsupported metric type."
+              message: "Unsupported metric type: " + assetItem.provider + ":" + assetItem.asset_type
             });
           }
         } else {
@@ -444,7 +444,7 @@ function getActualParam(paramMetrics, awsNameSpace, assetItem, eventBody) {
 
 function getMetricsDetails(newAssetArray, eventBody, config, tempCreds, region) {
   return new Promise((resolve, reject) => {
-    logger.debug("Inside getMetricsDetails" + JSON.stringify(newAssetArray));
+    logger.debug("Inside getMetricsDetails: " + JSON.stringify(newAssetArray));
     var metricsStatsArray = [];
     newAssetArray.forEach(assetParam => {
       if (assetParam.nameSpace === 'aws') {
@@ -538,7 +538,7 @@ function apigeeMetricDetails(assetParam, eventBody, config) {
 }
 
 function cloudWatchDetails(assetParam, tempCreds, region) {
-  logger.debug("Inside cloudWatchDetails : " + JSON.stringify(assetParam));
+  logger.debug("Inside cloudWatchDetails: " + JSON.stringify(assetParam));
   return new Promise((resolve, reject) => {
     var metricsStats = [];
     (assetParam.actualParam).forEach((param) => {
@@ -559,7 +559,7 @@ function cloudWatchDetails(assetParam, tempCreds, region) {
             });
           }
         } else {
-          logger.debug("Stats got:" + JSON.stringify(data));
+          logger.debug("Stats got: " + JSON.stringify(data));
           metricsStats.push(data);
           if (metricsStats.length === assetParam.actualParam.length) {
             resolve(utils.assetData(metricsStats, assetParam.userParam));

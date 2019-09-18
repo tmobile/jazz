@@ -123,7 +123,7 @@ class Transformer {
      return theRule.applyRule(aSubTree, currentPath, config, context)
     } else {
       if(aSubTree instanceof Map) return aSubTree.inject([:]){acc, item -> acc.put(item.key, processor(item.value, currentPath+"/"+item.key) ); return acc}
-      else throw new IllegalStateException("Unknown path: $currentPath")
+      else throw new IllegalStateException("Your application definition - serverless.yml contains a path `${currentPath}` that is not supported. Please refer to documentation for supported paths.")
     }
   }
 
@@ -546,7 +546,10 @@ class SBR_Type_Descriptor {
   }
 
   public void validate(aValue) {
-   return underlyingTypeList.contains(aValue)
+    if (!underlyingTypeList.contains(aValue))
+    {
+      // throw new IllegalStateException("The following type is not supported: $aValue Supported types are: ${underlyingTypeList}")
+    }
   }
 }
 
@@ -586,9 +589,9 @@ class ConfigMerge implements Resolver {
 
     if(userVal instanceof List &&  configVal instanceof List) {
       def out = []
-      if(userVal != null) out << userVal
-      if(configVal != null) out << configVal
-      return out
+      if(userVal != null) out += userVal
+      if(configVal != null) out += configVal
+      return out.unique()
     } else if(userVal instanceof Map &&  configVal instanceof Map) {
       def out = [:]
       if(userVal != null) out << userVal
@@ -680,7 +683,6 @@ class SBR_Enum_Constraint implements SBR_Constraint {
 }
 
 class SBR_Whitelist_Constraint implements SBR_Constraint {
-  private def whitelist;
   private String elementPointer
   private def whitelistValidator
 
@@ -781,7 +783,7 @@ class SBR_Formula_Value implements SBR_Value {
     } else if(formula instanceof Map) {
       result = formula.inject([:]){acc, item -> acc.put(item.key, shell.evaluate('"'+item.value+'"')); return acc}
     } else if(formula instanceof List) {
-      resule = formula.collect{item -> shell.evaluate('"'+item.value+'"')}
+      result = formula.collect{item -> shell.evaluate('"'+item+'"')}
     } else {
       throw new IllegalStateException("The formula is of unknown type "+formula.getClass().getName())
     }
@@ -841,7 +843,7 @@ class SBR_Rule extends SBR_PreRule {
      type.validate(theValue); // This will raise the exception if type is wrong but we shave to suppliment it with path so TODO is to catch the exceotion then add the path and the re-throw it
 
      if(constraint != null && !constraint.compliant(theValue)) {
-       throw new IllegalStateException("Constraint violated at the path $path with the value: $theValue")
+       throw new IllegalStateException("Your application definition - serverless.yml contains value `${theValue}` for `${path}` that violates one of our rules. Please refer to documentation for valid values for `${path}`.")
      }
      return theValue
    }
@@ -1121,10 +1123,13 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
   }
   try {
     def appContent = readFile('application.yml').trim()
-    if(!appContent.isEmpty()) deploymentDescriptor = appContent
-    } catch(e) { // TODO to catch the type error
-      echo "The application.yml does not exist in the code. So the default value from config will be used.$e"
+    if(!appContent.isEmpty()) {
+      echo "The application.yml is being used."
+      deploymentDescriptor = appContent
     }
+  } catch(e) { // TODO to catch the type error
+      echo "The application.yml does not exist in the code. So the default value from config will be used.$e"
+  }
 
     def doc = deploymentDescriptor  ? readYaml(text: deploymentDescriptor ) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
 
@@ -1132,6 +1137,10 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
             "INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
             "REGION": aConfig.region,
             "cloud_provider": "aws",
+            "subnetIds": configLoader.AWS.SUBNET_IDS, // TODO change for OSS based on selected account
+            "securityGroupIds": configLoader.AWS.SECURITY_GROUP_IDS, // TODO change for OSS based on selected account
+            "kinesisStreamArn": configLoader.AWS.KINESIS_LOGS_STREAM,
+            "platformRoleArn": 'arn:aws:iam::XXXXXXXXXXXXX:role/jazz_platform_services', // TODO hard-coded
             "serverless_framework_version": ">=1.0.0 <2.0.0"]
 
     if (doc && doc instanceof Map && doc['service']) doc.remove('service')
@@ -1164,6 +1173,54 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
       }
     }
   }
+
+    // inject log subscription ALWAYS - TODO implement in SBR
+    def logSubscriptionMap = [logSubscription:[enabled:true, destinationArn:context.kinesisStreamArn, roleArn:context.platformRoleArn]]
+    if (resultingDoc?.custom)
+    {
+        // overwriting if exists
+        resultingDoc.custom.logSubscription = logSubscriptionMap.logSubscription
+    }
+    else
+    {
+        // setting it
+        resultingDoc.custom = logSubscriptionMap
+    }
+
+    // check provider IAM Role Statements for Resource = "*"  - TODO implement in SBR
+    if (resultingDoc.provider?.iamRoleStatements)
+    {
+        // iterate through
+        resultingDoc.provider.iamRoleStatements.each { roleStatement ->
+            if (roleStatement.Resource?.trim()?.equals("*"))
+            {
+                throw new IllegalStateException("Your application definition - serverless.yml contains a wild-card Resource ${roleStatement} that is not supported. Please refer to documentation for supported Resource values.");
+            }
+        }
+    }
+    // check resources Policies for AWS::IAM::Role - TODO implement in SBR
+    if (resultingDoc.resources?.Resources)
+    {
+        resultingDoc.resources?.Resources.each { name, resource ->
+            if (resource.Type?.equals("AWS::IAM::Role"))
+            {
+                if (resource.Properties?.Policies)
+                {
+                    resource.Properties?.Policies.each { policy ->
+                        if (policy.PolicyDocument?.Statement)
+                        {
+                            policy.PolicyDocument.Statement.each { statement ->
+                                if (statement.Resource?.trim()?.equals("*"))
+                                {
+                                    throw new IllegalStateException("Your application definition - serverless.yml contains a wild-card Resource ${resource} that is not supported. Please refer to documentation for supported Resource values.");
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
 
   return resultingDoc
 }
