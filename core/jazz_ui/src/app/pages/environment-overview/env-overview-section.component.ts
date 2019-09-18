@@ -4,9 +4,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ToasterService} from 'angular2-toaster';
 import { DataService } from "../data-service/data.service";
 import { DataCacheService , AuthenticationService } from '../../core/services/index';
-import { environment } from './../../../environments/environment';
 import { environment as env_internal } from './../../../environments/environment.internal';
-
+import { environment as env_oss} from './../../../environments/environment.oss';
 @Component({
   selector: 'env-overview-section',
   templateUrl: './env-overview-section.component.html',
@@ -486,7 +485,7 @@ form_endplist(){
 }
   ngOnInit() {
     this.form_endplist();
-    if(environment.envName=='oss')this.isOSS=true;
+    if(env_oss.envName=='oss')this.isOSS=true;
     if(this.service.domain != undefined)
       this.callServiceEnv();
       this.data.currentMessage.subscribe(message => this.message = message)

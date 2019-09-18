@@ -95,6 +95,15 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   private slsLambdaselected;
   private metricSubscription: Subscription;
   private assetSubscription: Subscription;
+  assetNameFilterWhiteList = [
+    'lambda',
+    'cloudfront',
+    's3',
+    'dynamodb',
+    'sqs',
+    'kinesis',
+    'iam_role'
+  ];
   constructor(private request: RequestService,
     private utils: UtilsService,
     private messageservice: MessageService,
@@ -148,9 +157,33 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   refresh() {
     this.ngAfterViewInit();
   }
+  
+  fetchAssetName(type, name) {
+    let assetName;
+    let tokens;
+    switch(type) {
+      case 'lambda':
+      case 'sqs':
+      case 'iam_role':
+        tokens = name.split(':');
+        assetName = tokens[tokens.length - 1];
+        break;
+      case 'dynamodb':
+      case 'cloudfront':
+      case 'kinesis':
+        tokens = name.split('/');
+        assetName = tokens[tokens.length - 1];
+        break;
+      case 's3':
+        tokens = name.split(':::');
+        assetName = tokens[tokens.length - 1].split('/')[0];
+        break;
+    }
+    return assetName;
+  }
+
   setAssetName(val,selected){
     let assetIdentifierFilter = {};
-    if(this.service.serviceType === "sls-app"){
       this.slsapp = true;
       let assetObj = [];
       let assetNameObject = [];
@@ -159,19 +192,10 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
      })
      assetObj.map((item)=>{
        if(item.type === selected && item.env === this.selectedEnv){
-        let tokens = item.name.split(':');
-        this.selectedAssetName = tokens[tokens.length - 1];
-        // if(item.type === 'lambda') {
-        //   let value = this.selectedAssetName.split('-');
-        //   this.selectedAssetName = value[value.length - 1];
-        // }
-        // if(item.type==='apigateway'){
-        //   this.selectedAssetName = this.selectedAssetName.split('/').slice(2,5).join('/');
-        // }
-        if(this.selectedAssetName.startsWith("table/")){
-         this.selectedAssetName = this.selectedAssetName.replace('table/','');
+        this.selectedAssetName = this.fetchAssetName(item.type, item.name);
+        if (this.selectedAssetName) {
+          assetNameObject.push(this.selectedAssetName);
         }
-        assetNameObject.push(this.selectedAssetName);
         assetNameObject.sort();
        }
      })
@@ -195,8 +219,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       };
      }
      this.applyFilter(assetIdentifierFilter);
-    }
   }
+
   getAssetType(data?) {
     try{
       if(this.assetSubscription) {
@@ -239,7 +263,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
                 self.formFields.splice(1, 0, self.assetFilter);
                 self.filters.setFields(self.formFields);
               }
-              self.setAssetName(self.assetsNameArray, self.assetSelected);
+              if (this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1) {
+                self.setAssetName(self.assetsNameArray, self.assetSelected);
+              }
             }
             
           }          
@@ -376,8 +402,10 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         }
       }
       if (changedFilter.label === 'ASSET TYPE') {
-        this.assetSelected = changedFilter.selected.replace(/ /g, "_")
+        this.assetSelected = changedFilter.selected.replace(/ /g, "_");
+        if (this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1) {
         this.setAssetName(this.assetsNameArray,this.assetSelected);
+        }
       }
       if (changedFilter.label === 'ASSET NAME') {
         let lambda = changedFilter.selected;
@@ -392,8 +420,12 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       }
       if (changedFilter.label === 'ENVIRONMENT') {
           this.selectedEnv = changedFilter.selected;
-          this.setAssetName(this.assetsNameArray,this.assetSelected);
-      }     
+          if (this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1) {
+            this.setAssetName(this.assetsNameArray,this.assetSelected);
+            }
+      }
+
+
     }
   
     if (changedFilter && (changedFilter.label === 'ASSET' ||
@@ -401,6 +433,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       changedFilter.label === 'PATH' || changedFilter.label === 'ASSET NAME')) {
       this.setAsset();
     } else {
+      this.filters.removeField('Filter By:', 'ASSET NAME');
       return this.queryMetricsData();
     }
     
@@ -465,47 +498,38 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   setAssetsFilter() {
     this.filters.reset();
-    switch (this.serviceType) {
-      case 'api':
-        let methods = _(this.queryDataRaw.assets)
-          .map('asset_name.Method')
-          .uniq().value();
-        let paths = _(this.queryDataRaw.assets)
-          .map('asset_name.Resource')
-          .uniq().value();
-        this.filters.addField('Filter By:', 'METHOD', methods, 'select', null, 'GET');
-        this.filters.addField('Filter By:', 'PATH', paths, 'select', null, null);
-        break;
-      case 'website':
-        let websiteAssets = _(this.queryDataRaw.assets).map('type').uniq().value();
-        this.filters.addField('Filter By:', 'ASSET', websiteAssets, 'select', null, 'cloudfront');
-        break;
+    if (this.serviceType === 'api') {
+      if(this.assetSelected === 'apigateway' || this.assetSelected === 'apigee_proxy') {
+      let methods = _(this.queryDataRaw.assets)
+        .map('asset_name.Method')
+        .uniq().value();
+      let paths = _(this.queryDataRaw.assets)
+        .map('asset_name.Resource')
+        .uniq().value();
+      this.filters.removeField('Filter By:', 'ASSET NAME');
+      this.filters.addField('Filter By:', 'METHOD', methods, null);
+      this.filters.addField('Filter By:', 'PATH', paths);
+      }
     }
   }
-
 
   setAsset() {
     switch (this.serviceType) {
       case 'api':
         let method = this.filters.getFieldValueOfLabel('METHOD');
         let path = this.filters.getFieldValueOfLabel('PATH');
-        this.selectedAsset = _.find(this.queryDataRaw.assets, (asset) => {
+        this.selectedAsset = this.queryDataRaw && _.find(this.queryDataRaw.assets, (asset) => {
           return asset.asset_name.Method === method && asset.asset_name.Resource === path;
         });
         break;
       case 'function':
-        this.selectedAsset = this.queryDataRaw.assets[0];
-        break;
+      case 'website':
       case 'sls-app':
+      default:
         if(this.queryDataRaw){
           this.selectedAsset = this.queryDataRaw.assets[0];
 
         }
-        
-        break;
-      case 'website':
-        let assetType = this.filters.getFieldValueOfLabel('ASSET');
-        this.selectedAsset = _.find(this.queryDataRaw.assets, { type: assetType });
         break;
     }
 
@@ -532,7 +556,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       this.selectedMetric = this.selectedAsset.metrics[0]
     }
 
-    this.graphData = this.formatGraphData(this.selectedMetric.datapoints);
+    this.graphData = this.selectedMetric && this.formatGraphData(this.selectedMetric.datapoints);
   }
 
   formatGraphData(metricData) {

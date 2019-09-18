@@ -10,7 +10,6 @@ import { DataCacheService } from '../../core/services/index';
 import { AdvancedFiltersComponent } from './../../secondary-components/advanced-filters/internal/advanced-filters.component';
 import { AdvancedFilterService } from './../../advanced-filter.service';
 import { AdvFilters } from './../../adv-filter.directive';
-import { environment } from './../../../environments/environment';
 import { environment as env_internal } from './../../../environments/environment.internal';
 import { environment as env_oss } from './../../../environments/environment.oss';
 import * as _ from 'lodash';
@@ -196,16 +195,30 @@ export class ServiceLogsComponent implements OnInit {
 	regSelected: string = this.regList[0];
 
 	instance_yes;
-	getFilter(filterServ) {
-		this.service['islogs'] = false;
-		this.service['isServicelogs'] = true;
-		this.service['ismetrics'] = false;
-		this.service['logsData'] = this.logsData
-		this.service['assetList'] = this.assetList
-		if(this.service.serviceType == 'sls-app'){
+	assetNameFilterWhiteList = [
+		'all',
+		'lambda',
+		'cloudfront',
+		's3',
+		'dynamodb',
+		'sqs',
+		'kinesis',
+		'iam_role',
+		'iam role',
+		'apigateway',
+		'apigee_proxy'
+	  ];
+	
+	getFilter(filterServ){
+
+		this.service['islogs']=false;
+		this.service['isServicelogs']=true;
+		if(this.assetList){
+			this.service['assetList']=this.assetList;
+		}
 			this.service['allAssetsNameArray'] = this.allAssetsNameArray;
 			this.advanced_filter_input.sls_resource.show = true;
-		}
+		
 
 		let filtertypeObj = filterServ.addDynamicComponent({ "service": this.service, "advanced_filter_input": this.advanced_filter_input });
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
@@ -222,7 +235,7 @@ export class ServiceLogsComponent implements OnInit {
 		});
 		this.instance_yes.onAssetSelect.subscribe(event => {
 			comp.onAssetSelect(event);
-			if(this.service.serviceType == 'sls-app' && event !== 'all'){
+			if(event !== 'all'){
 				this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
 				this.advanced_filter_input.sls_resource.show = true;
 				(<AdvancedFiltersComponent>componentRef.instance).data = { "service": this.service, "advanced_filter_input": this.advanced_filter_input };
@@ -253,7 +266,7 @@ export class ServiceLogsComponent implements OnInit {
 		this.assetEvent = event
 		this.FilterTags.notify('filter-Asset', event);
 		this.assetSelected = event;	
-		if (event !== 'all'&& this.service.serviceType === 'sls-app') {
+		if (event !== 'all' && this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1){
 			this.setAssetName(this.responseArray, this.assetSelected);
 			this.onResourceSelect('all');	
 		}
@@ -281,64 +294,78 @@ export class ServiceLogsComponent implements OnInit {
 		this.FilterTags.notify('filter-Region', event);
 		this.regSelected = event;
 	}
+	
+	fetchAssetName(type, name) {
+		let assetName;
+		let tokens;
+		switch(type) {
+		  case 'lambda':
+		  case 'sqs':
+		  case 'iam_role':
+			tokens = name.split(':');
+			assetName = tokens[tokens.length - 1];
+			break;
+		  case 'dynamodb':
+		  case 'cloudfront':
+		  case 'kinesis':
+			tokens = name.split('/');
+			assetName = tokens[tokens.length - 1];
+			break;
+		  case 's3':
+			tokens = name.split(':::');
+			assetName = tokens[tokens.length - 1].split('/')[0];
+			break;
+		  case 'apigateway':
+		  case 'apigee_proxy':
+			tokens = name.split(this.selectedEnv + '/');
+			assetName = tokens[tokens.length - 1];
+			break;
+		}
+		return assetName;
+	  }
+
 	setAssetName(val, selected) {
-		if (this.service.serviceType === "sls-app") {
 			let assetObj = [];
-			this.allAssetsNameArray = []
 			this.lambdaResourceNameArr = [];
 			val.map((item) => {
-				assetObj.push({ type: item.asset_type, name: item.provider_id, env: item.environment });
+				assetObj.push({ type:item.asset_type, name: item.provider_id, env: item.environment });
 			})
 			if (selected === 'all') {
 				assetObj.map((item) => {
 					if(item.env === this.selectedEnv) {
-					let tokens = item.name.split(':');
-					this.selectedAssetName = tokens[tokens.length - 1];
-					// if(item.type === 'lambda') {
-					// 	let value = this.selectedAssetName.split('-');
-					// 	this.selectedAssetName = value[value.length - 1];
-					//   }
-					// if(item.type === 'apigateway'){
-					// 	this.selectedAssetName = this.selectedAssetName.split('/').splice(2,5).join('/');						
-					// }
-					this.allAssetsNameArray.push(this.selectedAssetName);
-					this.allAssetsNameArray.map((item,index)=>{
-						if(item === 'All'){
-							this.allAssetsNameArray.splice(index,1)
-						}
-					})
-					this.allAssetsNameArray.splice(0,0,'All')
-					this.allAssetsNameArray.sort();
-				}
-			})
-			}
-			else {
-				this.lambdaResourceNameArr = [];
-				assetObj.map((item) => {
-					if (item.type === selected && item.env === this.selectedEnv) {
-						let tokens = item.name.split(':');
-						this.selectedAssetName = tokens[tokens.length - 1];
-						// if(item.type === 'lambda') {
-						// 	let value = this.selectedAssetName.split('-');
-						// 	this.selectedAssetName = value[value.length - 1];
-						//   }
-						// if(item.type === 'apigateway'){
-						// 	this.selectedAssetName = this.selectedAssetName.split('/').splice(2,5).join('/');						
-						// }
-						this.lambdaResourceNameArr.push(this.selectedAssetName);
-						this.lambdaResourceNameArr.map((item,index)=>{
-							if(item === 'All'){
-								this.lambdaResourceNameArr.splice(index,1)
-							}
-						})
-						this.lambdaResourceNameArr.splice(0,0,'All')
-						this.lambdaResourceNameArr.sort()
-
+					this.selectedAssetName = this.fetchAssetName(item.type, item.name);
+					if (this.selectedAssetName) {
+						this.allAssetsNameArray.push(this.selectedAssetName);
+					}
+				}})
+				this.allAssetsNameArray.map((item,index)=>{
+					if(item === 'all'){
+						this.allAssetsNameArray.splice(index,1)
 					}
 				})
+				this.allAssetsNameArray.sort();
+				this.allAssetsNameArray.splice(0,0,'all');
 			}
-		}
+			else {
+				assetObj.map((item) => {
+					if (item.type === selected && item.env === this.selectedEnv) {
+						this.selectedAssetName = this.fetchAssetName(item.type, item.name);
+						if (this.selectedAssetName) {
+							this.lambdaResourceNameArr.push(this.selectedAssetName);
+						}
+					}
+				})
+				this.lambdaResourceNameArr.map((item,index)=>{
+					if(item === 'all'){
+						this.lambdaResourceNameArr.splice(index,1)
+					}
+				})
+				this.lambdaResourceNameArr.sort();
+				this.lambdaResourceNameArr.splice(0,0,'all');
+			}
 	}
+
+
 	getAssetType(data?) {
 		let self = this;
 		return this.http.get('/jazz/assets', {
@@ -350,13 +377,6 @@ export class ServiceLogsComponent implements OnInit {
 				let assets = _(response.data.assets).map('asset_type').uniq().value();
 				let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 				validAssetList.splice(0,0,'all');
-				if(self.service.serviceType === 'sls-app'){
-					validAssetList.map((item,index)=>{
-						if(item === 'dynamodb'){
-							validAssetList.splice(index,1)
-						}
-					})
-				}
 				this.responseArray = this.assetsNameArray[0].data.assets.filter(asset => (validAssetList.indexOf(asset.asset_type) > -1));
 				self.assetWithDefaultValue = validAssetList;
 				for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
@@ -367,7 +387,9 @@ export class ServiceLogsComponent implements OnInit {
 					self.assetSelected = validAssetList[0].replace(/_/g, " ");
 				}
 				self.assetSelected = validAssetList[0].replace(/_/g, " ");
-				self.setAssetName(self.responseArray,self.assetSelected);
+				if (this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1) {
+					self.setAssetName(self.assetsNameArray[0].data.assets, self.assetSelected);
+				}
 				self.getFilter(self.advancedFilters);
 			}
 		})
@@ -389,8 +411,10 @@ export class ServiceLogsComponent implements OnInit {
 		var env = env_list.env[index];
 		this.environment = envt;
 		this.selectedEnv = envt;
-		this.setAssetName(this.responseArray,this.assetSelected)
-		this.payload.environment = env;
+		if (this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1) {
+			this.setAssetName(this.responseArray,this.assetSelected)
+		}
+		this.payload.environment=env;
 		this.resetPayload();
 	}
 
@@ -759,7 +783,7 @@ export class ServiceLogsComponent implements OnInit {
 				this.errorRequest = this.payload;
 				this.errorUser = this.authenticationservice.getUserId();
 				try {
-					this.errorResponse = JSON.parse(err._body);
+					this.errorResponse = err._body;
 
 				}
 				catch (e) {
