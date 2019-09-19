@@ -287,7 +287,7 @@
 			<p class="invalidation" *ngIf="!isvalid">Oops! Incorrect YAML syntax.</p>
 		</div>
 	</div>
-	<div class="text-area-div"  *ngIf="startnew === true" >
+	<div class="text-area-div"  *ngIf="yaml && !isLoading" >
 		<div class="textbox relative">
 			<div class="line-numbers">
 				<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
@@ -298,10 +298,9 @@
 				spellcheck="false"
 				[disabled]="true"
 				[ngClass]="{'large': lineNumberCount > 15}"
-				(ngModelChange)="textChanged && lineNumbers()"
+				(ngModelChange)="lineNumbers()"
 				[(ngModel)]="yaml"
-				name="yaml"
-				(keyup)='checkYaml()'>
+				name="yaml">
 				<!-- TODO: Consider debouncing -->
 			</textarea>
 			<div class='copy-element' *ngIf='yaml'>
@@ -418,7 +417,7 @@
 	 <div class='app-definition-wrapper flex flex-col height-100'>
 		 <div class='flex flex-between flex-align-center app-heading-wrapper relative'>
 			 <div class='app-heading'>Application Definition</div>
-			 <div class='cross-icon icon-icon-close' (click)='showAppDetail = false; onCancel();'></div>
+			 <div class='cross-icon icon-icon-close' (click)='showAppDetail = false;'></div>
 		 </div>
 		 <div class='app-description'>This Application Definition reflects the actual state of your environment. This will get updated whenever there is a successful deployment to this environment with the latest changes to the serverless.yml in your code!
 		</div>
@@ -427,10 +426,10 @@
 					<div class= "text-line flex-col flex-grow">
 						<div class="text-box flex-grow">
 							<div class="line-num radius">
-						<div *ngFor="let value of lineNumberCounting; let i = index">{{i + 1}}</div>
+						<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
 					</div>
-					<textarea class="textChange" spellcheck="false" [disabled]="true"  (ngModelChange)="textChanged  && lineNumbersCount()"
-					[(ngModel)]="yaml" id="field" name="yaml" (keyup)='checkYaml()'></textarea>
+					<textarea class="textChange" spellcheck="false" [disabled]="true"  (ngModelChange)="lineNumbers()"
+					[(ngModel)]="yaml" id="field" name="yaml"></textarea>
 				</div>
 				</div>
 				<div class='copy-element' *ngIf='yaml'>

@@ -35,7 +35,6 @@ export class EnvOverviewSectionComponent implements OnInit {
   private env:any;
   branchname: any;
   friendlyChanged:boolean = false;
-  textChanged:boolean = true;
   tempFriendlyName:string;
   yaml:string = "";
   tempTextArea:string;
@@ -50,7 +49,6 @@ export class EnvOverviewSectionComponent implements OnInit {
   showCncl:boolean=false;
   environmnt:any;
   isDiv:boolean=true;
-  startnew: boolean = true;
   version: string = ">=1.0.0 <2.0.0";
   isvalid:boolean=false;
   envResponseEmpty:boolean = false;
@@ -80,10 +78,8 @@ export class EnvOverviewSectionComponent implements OnInit {
   toastmessage:any;
   is_function:boolean;
   copyLink:string="Copy Link";
-  public lineNumberCounts: any = new Array(7);
   isfunction: boolean = true;
   linenumber:number;
-  public lineNumberCounting: any = new Array(5);
   errMessage: string = "Something went wrong while fetching your data";
   message:string="lalalala"
   public lineNumberCount: any = new Array(7);
@@ -145,13 +141,6 @@ popup(state){
     this.saveBtn=true;
     this.editBtn=false;
   }
-  fetchfunction(){
-    this.isLoading = true;
-    this.http.get('/jazz/services/' + this.service.id, null, this.service.id).subscribe(response => {
-      this.startnew = true;
-      this.isLoading = false;
-    })
-  }
 
   lineNumbers() {
     let lines;
@@ -161,40 +150,10 @@ popup(state){
       if(line_numbers < 7){
         line_numbers = 7;
       }
-      if (this.isCancel && lines.length < 27) {
-        line_numbers = 27;
-      }
       this.lineNumberCount = new Array(line_numbers);
     }
   }
-  // TODO: ?
-  lineNumbersCount() {
-    let lines;
-    if(this.yaml)
-    {
-      lines = this.yaml.split(/\r*\n/);
-      let line_numbers = lines.length;
-      if(line_numbers < 5){
-        line_numbers = 5;
-      }
-      this.lineNumberCounting = new Array(line_numbers);
-    }
-  }
-  checkYaml(){
-    let yaml = this.yaml.trim();
-    if(yaml) {
-      this.isCancel = true;
-      const yamlLint = require('yaml-lint');
-      yamlLint.lint(yaml).then(() => {
-        this.isvalid = true;
-      }).catch((error) => {
-        this.isvalid = false;
-      });
-    }
-    else{
-      this.isCancel = false;
-    }
-  }
+
   onSaveClick(){
     this.showCancel=false;
     this.saveBtn=false;
@@ -233,14 +192,6 @@ popup(state){
     }
 
   }
-
-  onCancel(){
-    this.showCncl = false;
-    this.yaml = this.yamlName;
-    this.isCancel = false;
-    this.lineNumbers();
-    this.isvalid = false;
-}
   onCancelClick(){
     this.showCncl=false;
     this.saveBtn=false;
@@ -323,7 +274,7 @@ popup(state){
             this.frndload.emit(this.friendlyName);
             this.formatLastCommit();
             this.lineNumbers();
-            this.fetchfunction()
+            this.isLoading = false;
             this.envResponseTrue = true;
             this.envResponseEmpty = false;
           }
