@@ -62,7 +62,7 @@
                 </div>
             </div>
         </section>
-        <section id="platform-type" class="each-step-wrap type-of-platform in-active" [ngClass]="{'borderBottom': deploymentTargets[typeOfService.toUpperCase()].active && apigeeFeature && awsOnly}">
+        <section id="platform-type" class="each-step-wrap type-of-platform in-active" [ngClass]="{'borderBottom': deploymentTargets[typeOfService.toUpperCase() + '_DEPLOYMENT_TARGETS'].active && apigeeFeature && awsOnly}">
             <div class="sec-heading flex" (click)="deploymentOpen()">
                 <div class="sec-heading-text" >
                     Deployment details
@@ -102,7 +102,7 @@
             </div>
         </section>
 
-        <section class="form-row deployment-targets" *ngIf="deploymentTargets[typeOfService.toUpperCase()].active && apigeeFeature && awsOnly">
+        <section class="form-row deployment-targets" *ngIf="deploymentTargets[typeOfService.toUpperCase() + '_DEPLOYMENT_TARGETS'].active && apigeeFeature && awsOnly">
             <div class="row">
                 <div class="title-container">
                     <p class="step-title">Choose your API deployment target<span>*</span></p>

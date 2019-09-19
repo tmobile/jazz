@@ -122,9 +122,14 @@ export class ServiceDetailComponent implements OnInit {
         endpoints: service.endpoints,
         deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type],
         is_public_endpoint: service.is_public_endpoint,
-        created_by: service.created_by,
-        accountID: service.deployment_accounts[0].accountId,
-        region: service.deployment_accounts[0].region
+        created_by: service.created_by
+      }
+      if(service.deployment_accounts){
+        returnObject['accountID'] = service.deployment_accounts[0].accountId,
+        returnObject['region'] = service.deployment_accounts[0].region
+      } else {
+        returnObject['accountID'] = '102707241671',
+        returnObject['region'] = 'us-east-1'
       }
       if (service.metadata) {
         returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;
@@ -219,7 +224,11 @@ export class ServiceDetailComponent implements OnInit {
     this.isLoadingService = true;
     this.http.get('/jazz/services/' + id, null, id).subscribe(response => {
       let service = response.data;
-      this.provider = response.data.deployment_accounts[0].provider
+      if(response.data.deployment_accounts){
+        this.provider = response.data.deployment_accounts[0].provider
+      } else {
+        this.provider = 'aws'
+      }
       this.cache.set(id, service);
       this.onDataFetched(service);
       this.isGraphLoading = false;
