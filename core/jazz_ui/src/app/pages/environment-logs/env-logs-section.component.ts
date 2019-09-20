@@ -614,23 +614,23 @@ export class EnvLogsSectionComponent implements OnInit {
 					if (this.parsedErrBody.message != undefined && this.parsedErrBody.message != '') {
 						this.errMessage = this.errMessage || this.parsedErrBody.message;
 					}
+					this.getTime();
+					this.errorURL = window.location.href;
+					this.errorAPI = env_oss.baseurl+"/jazz/logs";
+					this.errorRequest = this.payload;
+					this.errorUser = this.authenticationservice.getUserId();
+					this.errorResponse = err._body;
+					this.cache.set('feedback', this.model.userFeedback)
+					this.cache.set('api', this.errorAPI)
+					this.cache.set('request', this.errorRequest)
+					this.cache.set('resoponse', this.errorResponse)
+					this.cache.set('url', this.errorURL)
+					this.cache.set('time', this.errorTime)
+					this.cache.set('user', this.errorUser)
+					this.cache.set('bugreport', this.json)
 				} catch (e) {
+					console.log(e);
 				}
-				this.getTime();
-				this.errorURL = window.location.href;
-				this.errorAPI = env_oss.baseurl+"/jazz/logs";
-				this.errorRequest = this.payload;
-				this.errorUser = this.authenticationservice.getUserId();
-				this.errorResponse = JSON.parse(err._body);
-				this.cache.set('feedback', this.model.userFeedback)
-				this.cache.set('api', this.errorAPI)
-				this.cache.set('request', this.errorRequest)
-				this.cache.set('resoponse', this.errorResponse)
-				this.cache.set('url', this.errorURL)
-				this.cache.set('time', this.errorTime)
-				this.cache.set('user', this.errorUser)
-				this.cache.set('bugreport', this.json)
-
 			})
 	};
 	cancelFilter(event){
@@ -659,7 +659,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		  
 			break;
 		  }
-		  case 'env':{          this.instance_yes.onEnvSelected('prod');
+		  case 'env':{          this.instance_yes.onEnvSelect('prod');
 		  
 			break;
 		  }
@@ -682,7 +682,7 @@ export class EnvLogsSectionComponent implements OnInit {
 				this.instance_yes.onStatisticSelected('Average');
 				this.instance_yes.onaccSelected('Acc 1');
 				this.instance_yes.onregSelected('reg 1');
-				this.instance_yes.onEnvSelected('prod');
+				this.instance_yes.onEnvSelect('prod');
 				this.instance_yes.onMethodListSelected('POST');
 				this.instance_yes.getAssetType('all');
 				this.instance_yes.getResourceType('all');
