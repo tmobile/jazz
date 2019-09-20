@@ -102,9 +102,9 @@
                 <span class="asset-title">Asset {{slNumber[i]}}</span><span class="asset-subtitle">{{type[i]}}</span>
             </div>
 
-            <div class="asset-content-row row">
+            <div class="asset-content-row assetsdata" >
                    
-                <ul class="section-left col-md-6 col-sm-12">
+                <ul class="section-left left-column">
                     <!-- <li>
                         <div class="det-label">Service</div>
                         <div class="det-value">{{serviceName[i]}}</div>
@@ -127,13 +127,12 @@
 
                     <li *ngIf='arn[i] != "-"'>
                             <div class="det-label">{{assetTypeToLabel(asset.type)}}</div>
-                            <div class="det-value arn-value">{{arn[i]}}</div>
+                            <div class="arn-value" *ngIf="arrayList[i].value === false">{{arn[i]}}</div> 
+                            <div class="arn-value " *ngIf="arrayList[i].value === true"><a class="endpoint-url" target="_blank" href="{{arn[i]}}">{{arn[i]}}</a></div>                      
                     </li>
 
-
-
                 </ul>
-                <ul class="section-right col-md-6 col-sm-12">
+                <ul class="section-right right-column">
 
                     <li *ngIf='endpoint[i] != "-"'>
                             <div class="det-label">URL</div>

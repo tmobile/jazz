@@ -82,7 +82,7 @@ var handler = (event, context, cb) => {
     // Validate and set deployment accounts
     let primaryAccountCount = 0;
 
-    if (Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts) {
+    if (service_creation_data.deployment_accounts && Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts) {
       for (let eachDeploymentAccount of service_creation_data.deployment_accounts) {
         if ((typeof eachDeploymentAccount.primary == "boolean") && eachDeploymentAccount.primary) {
           primaryAccountCount++
@@ -345,6 +345,28 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
           reject(cronExpValidator);
         }
       }
+      if (service_creation_data.rateInterval) {
+        var rateExpValidator = CronParser.validateRateExpression(service_creation_data.rateInterval);
+        if (rateExpValidator.result === 'valid') {
+          var rate_interval = service_creation_data.rateInterval;
+          var enable_eventschedule;
+          if (service_creation_data.enableEventSchedule === false) {
+            enable_eventschedule = service_creation_data.enableEventSchedule;
+          } else {
+            enable_eventschedule = true;
+          }
+          if (rate_interval && rate_interval.trim() !== "") {
+            serviceMetadataObj["eventScheduleRate"] = "rate(" + rate_interval + ")";
+          }
+          if (enable_eventschedule && enable_eventschedule !== "") {
+            serviceMetadataObj["eventScheduleEnable"] = enable_eventschedule;
+          }
+        } else {
+          logger.error('rateExpValidator : ', rateExpValidator);
+          reject(rateExpValidator);
+        }
+      }
+
 
       if (service_creation_data.events && service_creation_data.events.length) {
         //Process events into properties

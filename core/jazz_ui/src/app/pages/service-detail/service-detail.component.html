@@ -14,7 +14,7 @@
         <div *ngIf='!isError403' class='tab-component'>
             <div class="refresh-button" (click)="refreshTab()">
             </div>
-            <tabs [beforeEnv]= "!isENVavailable" [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [isAdminAccess]= "isAdminAccess" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
+            <tabs [beforeEnv]= "!isEnvAvailable" [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [isAdminAccess]= "isAdminAccess" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
 
         </div>
 

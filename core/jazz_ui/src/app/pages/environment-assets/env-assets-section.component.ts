@@ -96,6 +96,7 @@ export class EnvAssetsSectionComponent implements OnInit {
 	status: any = [];
 	time: any = [];
 	url : any = [];
+	arrayList = [];
 	endpoint : any = [];
 	envResponseEmpty:boolean = false;
   envResponseTrue:boolean = false;
@@ -187,6 +188,7 @@ ngOnInit()
 				let assets=_(response.data.assets).map('asset_type').uniq().value();
 				self.assetWithDefaultValue=assets;
 				self.assetWithDefaultValue.splice(0,0,'all');
+				self.assetWithDefaultValue.sort();
         for(var i=0;i<self.assetWithDefaultValue.length;i++){
         self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
         }
@@ -252,7 +254,6 @@ ngOnInit()
 
     this.subscription = this.http.get(this.relativeUrl, this.payload, this.service.id).subscribe(
       (response) => {
-
         if((response.data == undefined) || (response.data.count == 0)){
           this.envResponseEmpty = true;
           this.isLoading = false;
@@ -265,6 +266,9 @@ ngOnInit()
 					this.totalPageNum = Math.ceil(pageCount/this.limitValue);
 					if(this.totalPageNum === 1){
 						this.showPaginationtable = false;
+					}
+					else {
+						this.showPaginationtable = true;
 					}
         }
         else{
@@ -299,10 +303,15 @@ ngOnInit()
           }else{
           this.url[i] = response.data.assets[i].swagger_url;
           }
-          if( response.data.assets[i].provider_id == undefined ){
-            this.arn[i] = "-"
+          if( response.data.assets[i].provider_id == undefined ) {
+			this.arn[i] = "-"
           }else{
-          this.arn[i] = response.data.assets[i].provider_id;
+				this.arn[i] = response.data.assets[i].provider_id;
+			  if (response.data.assets[i].provider_id.includes("http") || response.data.assets[i].provider_id.includes("https")) {
+				  this.arrayList.push({value:true});
+			  } else {
+				 this.arrayList.push({value:false});
+			  }
           }
 
           this.lastCommitted = response.data.assets[i].timestamp;

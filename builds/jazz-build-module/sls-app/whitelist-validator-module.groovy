@@ -170,6 +170,8 @@ def validatePlugins(deploymentDescriptor) {
   def pluginsElem = deploymentDescriptorDoc['plugins']
   if(pluginsElem) {
     def outstandingPlugins = pluginsElem.clone()
+    // TODO hack - remove any empty arrays
+    outstandingPlugins.removeAll([[]])
     outstandingPlugins.removeAll(allowedPlugins)
     return outstandingPlugins
   } else {
@@ -217,12 +219,10 @@ def getarnTemplates( resourceType ) {
 }
 
 def checkAssetType( resourceType ) {
-  echo "Resource Type is ${resourceType}"
   def status = false
   if( assetTypes.contains(resourceType)) {
     status = true
   }
-  echo "Status is ${status}"
   return status
 }
 

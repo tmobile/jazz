@@ -77,6 +77,7 @@ events:
     - type: dynamodb
   sqs:
   s3:
+  http:
 
 actions:
   dynamodb:
@@ -461,7 +462,9 @@ plugins:
   - serverless-plugin-canary-deployments
   - serverless-mocha-plugin
   - serverless-kms-secrets
-    
+  - serverless-plugin-log-subscription
+  - '@silvermine/serverless-plugin-cloudfront-lambda-edge'
+
 arnTemplate:
   - AWS::Lambda::Function: "arn:aws:lambda:{region}:{account-id}:function:{resourceName}"
   - AWS::S3::Bucket: "arn:aws:s3:::{resourceName}"
@@ -470,7 +473,7 @@ arnTemplate:
   - AWS::Kinesis::Stream: "arn:aws:kinesis:{region}:{account-id}:stream/{resourceName}"
   - AWS::SQS::Queue: "arn:aws:sqs:{region}:{account-id}:{resourceName}"
   - AWS::Events::Rule: "arn:aws:events:{region}:{account-id}:rule/{resourceName}"
-  
+
 assetTypes:
   - AWS::Lambda::Function
   - AWS::S3::Bucket

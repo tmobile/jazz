@@ -11,7 +11,7 @@
 
     <section  *ngIf='!serviceRequested' id="service-type-section" class="type-section" [class.disable-color]="typeofserviceSelected" >
         <div class="sec-heading flex" (click)="typeofservice = !typeofservice">
-            
+
             <div class="sec-heading-text margin-15">
                 Type of service
             </div>
@@ -57,15 +57,15 @@
                                 </div>
                             </section>
                         </div>
-                        
-                        
+
+
                     </div>
-                    
-                   
+
+
                 </div>
             </section>
 
-            
+
         </div>
     </section>
 
@@ -80,7 +80,7 @@
 
             <section class="type-of-platform" [class.disable-color]="typeofplatformSelected">
                 <div class="service-type-width">
-                   
+
                     <div  id="platform-type" *ngIf="!typeofplatformSelected" class="space-between">
                         <section class="pad-left0 service-box-section">
                             <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'aws'}" (click)="changePlatformType('aws')">
@@ -110,8 +110,8 @@
                 <p id="deployment-type-label" class="step-title">Choose your API deployment target<span>*</span></p>
 
                 <div class="">
-                    
-                    
+
+
 
                     <div  id="deployment-type" *ngIf="!deploymenttargetSelected" class="">
                         <div class="service-type-width space-between">
@@ -132,27 +132,27 @@
                                     </div>
                                     <p>GCP APIGEE</p>
                                 </div>
-                            </section> 
+                            </section>
                             <section class="pad-left0 service-box-section">
                                 <div class="service-box ghost">
 
                                 </div>
-                            </section>                           
+                            </section>
                         </div>
                     </div>
                 </div>
             </section>
-            <section [class.disable-color]="typeofruntimeSelected" class="run-time" *ngIf="typeOfService != 'website'">
+            <section [class.disable-color]="typeofruntimeSelected" class="run-time" id="jz-runtime-container" *ngIf="typeOfService != 'website'">
                 <p class="step-title">Choose your runtime<span>*</span></p>
 
                 <div  class="">
                     <div id="runtime-type-label" class="col-lg-4 col-md-4">
-                        
+
                     </div>
                     <div  id="runtime-type" *ngIf="!typeofruntimeSelected" class="">
-                    
+
                         <div class="runtime-row1 service-type-width space-between">
-                            <section class="pad-left0 service-box-section">                  
+                            <section class="pad-left0 service-box-section">
                                 <div tabindex="0" class="service-box"  [ngClass]="{'service-box-selected': runtime == runtimeKeys[0]}"(keyup.enter)="onSelectionChange(runtimeKeys[0])"  (click)="onSelectionChange(runtimeKeys[0])">
                                     <div class="">
                                             <img *ngIf="runtime == runtimeKeys[0]" [class.selected-image]="runtime == runtimeKeys[0]" src="./../../../../assets/images/icons/nodejs.svg"/>
@@ -182,18 +182,18 @@
                         </div>
 
                         <div class="runtime-row2 service-type-width space-between">
-                            <section class="pad-left0 service-box-section">                  
+                            <section class="pad-left0 service-box-section">
                                 <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[3]}"(keyup.enter)="onSelectionChange(runtimeKeys[3])"  (click)="onSelectionChange(runtimeKeys[3])">
                                     <div class="icon-icon-go">
                                             <img *ngIf="runtime == runtimeKeys[3]" [class.selected-image]="runtime == runtimeKeys[3]" src="./../../../assets/images/icons/Java.svg"/>
                                             <img *ngIf="runtime != runtimeKeys[3]" [class.selected-image]="runtime == runtimeKeys[3]" src="./../../../../assets/images/icons/greyscale-icons/icon-java.svg"/>
                                         </div>
                                     <p>{{runtimeKeys[3]}}</p>
-                                </div>  
+                                </div>
                             </section>
-                            
-                            
-                            <section class="pad-left0 service-box-section" >                  
+
+
+                            <section class="pad-left0 service-box-section" >
                                     <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': runtime == runtimeKeys[4]}"(keyup.enter)="onSelectionChange(runtimeKeys[4])"  (click)="onSelectionChange(runtimeKeys[4])">
                                     <div class="icon-icon-go">
                                             <img *ngIf="runtime == runtimeKeys[4]" [class.selected-image]="runtime == runtimeKeys[4]" src="./../../../assets/images/icons/Go.svg"/>
@@ -202,8 +202,8 @@
                                     <p>{{runtimeKeys[4]}}</p>
                                 </div>
                             </section>
-    
-                            <section class="pad-left0 service-box-section disable-event">                  
+
+                            <section class="pad-left0 service-box-section disable-event">
                                 <div tabindex="0" class="service-box disabled-box" [ngClass]="{'service-box-selected': runtime == runtimeKeys[5]}" (keyup.enter)="onSelectionChange(runtimeKeys[5])" (click)="onSelectionChange(runtimeKeys[5])">
                                     <div class="icon-icon-go">
                                             <img  *ngIf="runtime == runtimeKeys[5]" [class.selected-image]="runtime == runtimeKeys[5]" src="./../../../assets/images/icons/C.svg"/>
@@ -211,15 +211,15 @@
                                         </div>
                                     <p>C#</p>
                                 </div>
-                            </section> 
+                            </section>
                         </div>
-                        
-                         
+
+
                     </div>
                 </div>
             </section>
 
-            
+
         </div>
     </section>
 
@@ -322,14 +322,14 @@
                                       <div *ngIf="deploymentTargetSelected === 'gcp_apigee'" class="defaultDropdown">us-west-2</div>
                                     </div>
                                   </div>
-      
+
                                 </div>
                             </section>
                         </div>
                     </div>
                 </section>
-      
-    
+
+
                 <section id="deployment-descriptor" class="each-step-wrap service-description" *ngIf="typeOfService == 'sls-app'">
                     <div class="">
                         <div class="">
@@ -338,13 +338,51 @@
                         </div>
                         <div class="">
                             <section class="pad-left0">
-                               
+
                                 <filters  class="filters" [filtersList]="deploymentDescriptorFilterData" [multiple]="false" [selectedList]="selectedList" (onSelected)="onFilterSelected($event)"></filters>
 
                                 <div  class="input-field-container">
                                     <div class="input-wrapper">
-                                        <textarea rows="2" cols="50" name="deploymentDescriptorText" type="text" class="textForm descriptor" id="deploymentDescriptorText" [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
+                                        <div class="main-div" *ngIf="!isstartNew">
+                                        <div class="div-line">
+                                        <div class="line-num border opac">
+                                         <div  *ngFor="let value of lineNumberCount;let i = index">{{i + 1}}</div>
+                                        </div>
+                                        <div class="myservice opac">
+                                            <p class="parameter">service:</p>
+                                            <div class="services-name">
+                                                <p class="service">name:</p>
+                                                <p class="magenta">{{model.serviceName}}</p>
+                                            </div>
+                                            <div class="services-name">
+                                                <p class="parameter">frameworkVersion:</p>
+                                                <p class="magenta">{{version}}</p>
+                                            </div>
+                                            <p class="parameter">provider:</p>
+                                                <div class="services-name">
+                                                    <p class="service">name:</p>
+                                                    <p class="magenta">{{typeOfPlatform}}</p>
+                                                </div>
+                                                <div class="services-name">
+                                                    <p class="service">runtime:</p>
+                                                    <p class="magenta">{{runtime}}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class= "text-line">
+                                            <div class="textbox">
+                                                <div class="line-num radius">
+                                            <div *ngFor="let value of lineNumberCounting; let i = index">{{i + 9}}</div>
+                                        </div>
+                                        <textarea rows="2" cols="50" id="field" name="deploymentDescriptorText" type="text" class="text-area"  [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"(ngModelChange)="lineNumbers()"></textarea>
+                                    </div>
+                                    </div>
+                                    </div>
+                                        <div *ngIf="isstartNew" class="startnew">
+                                        <textarea rows="2" cols="50"  name="deploymentDescriptorText" type="text" class="textForm deployment"  [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
                                         <p class="descriptorError" *ngIf="isDescriptorEmpty">Please enter the valid Deployment Descriptor.</p>
+                                    </div>
+
                                     </div>
                                 </div>
                                 <div class="form-error" *ngIf="!isyamlValid">Invalid Yaml Text</div>
@@ -352,7 +390,7 @@
                         </div>
                     </div>
                 </section>
-    
+
                 <section id="slack-channel" class="each-step-wrap slack-channel-integration">
                     <div class="">
                         <div class="">
@@ -407,7 +445,7 @@
                         </div>
                     </div>
                 </section>
-                
+
                 <!-- end of aws events -->
                 <section id="cdn-config" class="each-step-wrap cloudfront-url" *ngIf="typeOfService == 'website'">
                     <div class="">
@@ -428,7 +466,7 @@
                         </div>
                     </div>
                 </section>
-                
+
         </div>
     </section>
 
@@ -438,7 +476,7 @@
                 Security Details
             </div>
         </div>
-        
+
     </section>
 
     <section id="typeevents" [class.hide]='serviceRequested' class="type-section" *ngIf="typeOfService == 'function'" [class.disable-color]="">
@@ -462,7 +500,7 @@
                                         <span>
                                             <span class="background"></span>
                                         </span>
-                                        
+
                                     None</label>
                                 </div>
                             </section>
@@ -473,7 +511,7 @@
                                         <span>
                                             <span class="background"></span>
                                         </span>
-                                       
+
                                     Fixed Rate of</label>
                                 </div>
                             </section>
@@ -484,7 +522,7 @@
                                         <span>
                                             <span class="background"></span>
                                         </span>
-                                        
+
                                     Cron Expression</label>
                                 </div>
                             </section>
@@ -691,7 +729,7 @@
                 </div>
             </section>
         </div>
-    </section> 
+    </section>
 
     <p  *ngIf='!serviceRequested' class="requiredInfo"><span>*</span>Indicates required fields</p>
     <section  *ngIf='!serviceRequested' class="submit-form">
@@ -720,7 +758,7 @@
                 </section>
                 <section >
                     <p class="refer">You can find more details on next steps <a  target="_blank" href="{{docs_link}}">here</a>.</p>
-    
+
                 </section>
             <section class="footer-btn">
                 <btn-jazz-primary text="DONE" newclass="back-btn" (click)="closeCreateService(serviceRequestSuccess)"></btn-jazz-primary>
@@ -738,5 +776,5 @@
             </section>
         </section>
     </div>
-        
+
 </div>

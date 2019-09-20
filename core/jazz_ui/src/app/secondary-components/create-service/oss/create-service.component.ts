@@ -56,6 +56,7 @@ export class CreateServiceComponent implements OnInit {
   isyamlValid:boolean = true;
   typeform:boolean=false;
   typeevents:boolean=false;
+  version: string = ">=1.0.0 <2.0.0";
   deploymentDescriptorFilterData = ["Function Template", "Start New"];
   selectedList:string='Function Template';
   sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
@@ -66,7 +67,7 @@ export class CreateServiceComponent implements OnInit {
   typeOfService:string = "api";
   typeOfPlatform:string = "aws";
   disablePlatform = true;
-  selected:string = "Minutes";
+  selected:string = "minutes";
   runtime:string = Object.keys(env_oss.envLists)[0];
   webtime:string = Object.keys(env_oss.webLists)[0];
   eventSchedule:string = 'fixedRate';
@@ -82,6 +83,7 @@ export class CreateServiceComponent implements OnInit {
   isLoading: boolean = false;
   slackChannelLoader: boolean = false;
   serviceAvailable : boolean = false;
+  validrate: boolean = false;
   serviceNotAvailable : boolean = false;
   isDomainDefined : boolean = false;
   invalidttl : boolean = false;
@@ -89,7 +91,7 @@ export class CreateServiceComponent implements OnInit {
   serviceRequestFailure = false;
   serviceRequestSuccess = false;
   serviceLink:string;
-  Currentinterval : string = 'Minutes';
+  Currentinterval : string = 'minutes';
   rateExpressionIsValid : boolean = false;
   rateExpressionError : string = '';
   cronFieldValidity : any;
@@ -99,6 +101,10 @@ export class CreateServiceComponent implements OnInit {
   isDescriptorEmpty: boolean = false;
   resMessage:string='';
   cdnConfigSelected:boolean = false;
+  public lineNumberCount: any = new Array(8);
+  isfunction: boolean = true;
+  is_function: boolean = false;
+  linenumber:number;
   focusindex:any = -1;
   scrollList:any = '';
   toast : any;
@@ -114,7 +120,7 @@ export class CreateServiceComponent implements OnInit {
 
   model = new ServiceFormData('','','', '','','');
   cronObj = new CronObject('0/5','*','*','*','?','*')
-  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
+  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '', '');
   eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
   private doctors = [];
   private toastmessage:any;
@@ -135,7 +141,9 @@ export class CreateServiceComponent implements OnInit {
   webObject : any;
   selectedDescriptorField: any;
   webKeys : any;
+  isstartNew: boolean = false;
   deploymentTargetSelected: any;
+  public lineNumberCounting: any = new Array(5);
 
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
@@ -167,7 +175,7 @@ export class CreateServiceComponent implements OnInit {
   scrollTo(id) {
     const ele = document.getElementById(id);
     if(ele){
-      ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
+      ele.scrollIntoView({ behavior: 'smooth', block: 'start'});
     }
   }
   selectAccountsRegions(){
@@ -191,7 +199,6 @@ export class CreateServiceComponent implements OnInit {
     this.kinesisStreamString = "arn:aws:kinesis:" + this.regionSelected + ":" + this.accountSelected + ":stream/";
     this.dynamoStreamString = "arn:aws:dynamo:" + this.regionSelected + ":" + this.accountSelected + ":table/";
   }
-
 
   chkDynamodb() {
     this.focusDynamo.emit(true);
@@ -238,20 +245,37 @@ export class CreateServiceComponent implements OnInit {
     this.onFilterSelected(this.selectedList);
   }
 
+  lineNumbers() {
+    let lines;
+    if(this.deploymentDescriptorText)
+    {
+      lines = this.deploymentDescriptorText.split(/\r*\n/);
+      let line_numbers = lines.length;
+      if(line_numbers < 5){
+        line_numbers = 5;
+      }
+      this.lineNumberCounting = new Array(line_numbers);
+    }
+  }
 
   onFilterSelected(event){
     if(event == "Function Template"){
       this.startNew = false;
+      this.isfunction = true;
+      this.isstartNew = false;
+      this.is_function = true;
       this.onSelectionChange(this.runtime);
     }
     else if(event == "Start New"){
       this.startNew = true;
+      this.isstartNew = true;
+      this.is_function = false;
+      this.isfunction = false;
       this.deploymentDescriptorText = "";
     }
     this.selectedDescriptorField = event[0];
     this.isDescriptorEmpty = false;
   }
-
   onaccountSelected(event){
     this.accountMap.map((item,index)=>{
       if((item.account + ' (' + item.accountName + ')') === event){
@@ -295,19 +319,19 @@ export class CreateServiceComponent implements OnInit {
 
   selectedApprovers = [];
 
-  rateData = ['Minutes','Hours','Days'];
+  rateData = ['minutes','hours','days','minute','hour','day'];
 
   // function for changing service type
   changeServiceType(serviceType){
     this.typeOfService = serviceType;
-    this.scrollTo('platform-type');
+    this.scrollTo('deployment-type-section');
   }
 
 
 
   changeDeploymentTarget(deploymentTarget){
     this.selectedDeploymentTarget =  deploymentTarget;
-    this.scrollTo('runtime-type');
+    this.scrollTo('jz-runtime-container');
   }
 
   changeRuntimeType(runtimeType){
@@ -321,10 +345,10 @@ export class CreateServiceComponent implements OnInit {
       this.typeOfPlatform = platformType;
     }
     if(document.getElementById('deployment-type')){
-      this.scrollTo('deployment-type');
+      this.scrollTo('deployment-type-section');
     }
     else{
-      this.scrollTo('runtime-type');
+      this.scrollTo('jz-runtime-container');
     }
 
   }
@@ -360,6 +384,7 @@ export class CreateServiceComponent implements OnInit {
     if(val !== `none`){
       this.eventExpression.type = 'awsEventsNone';
     }
+    this.generateExpression(this.rateExpression);
   }
   onAWSEventChange(val){
     this.invalidEventName = false;
@@ -523,12 +548,20 @@ export class CreateServiceComponent implements OnInit {
       payload["deployment_targets"] = {
         "function": "aws_lambda"
       }
-      if(this.rateExpression.type != 'none'){
+      if(this.rateExpression.type === 'cron' && this.rateExpression.cronStr !== undefined){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
         if (this.rateExpression.cronStr == 'invalid') {
             return;
         } else if (this.rateExpression.cronStr !== undefined) {
             payload["rateExpression"] = this.rateExpression.cronStr;
+        }
+      }
+      if (this.rateExpression.type === 'rate' && this.rateExpression.rateStr !== undefined) {
+        this.rateExpression.rateStr = `${this.rateExpression.duration} ${this.rateExpression.interval}`
+        if (this.rateExpression.rateStr == 'invalid') {
+          return;
+        } else if (this.rateExpression.rateStr !== undefined) {
+          payload["rateInterval"] =  this.rateExpression.rateStr;
         }
       }
 
@@ -559,11 +592,12 @@ export class CreateServiceComponent implements OnInit {
       }
     }
     else if(this.typeOfService == 'sls-app'){
-      payload["service_type"] = "sls-app";        
+      payload["service_type"] = "sls-app";
       payload["deployment_descriptor"] = this.deploymentDescriptorText;
       payload["deployment_targets"]={"sls-app":"aws_sls-app"};
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
+      payload["is_function_template"] = this.is_function;
     }
     if(this.slackSelected){
         payload["slack_channel"] = this.model.slackName;
@@ -859,6 +893,7 @@ export class CreateServiceComponent implements OnInit {
   }
 
 
+
   onScroll(event){
     let el = document.getElementById('crs');
     for(let i=0;i<this.ids.length;i++){
@@ -922,14 +957,13 @@ export class CreateServiceComponent implements OnInit {
 
       }
     }
-
-
   }
 
   ngOnInit() {
     this.selectAccountsRegions();
     this.getData();
     this.loadMaxLength();
+    this.onFilterSelected('Function Template')
     if(env_oss.slack_support) this.SlackEnabled=true;
   };
 
@@ -971,6 +1005,25 @@ export class CreateServiceComponent implements OnInit {
       }
     }
 
+    validRate(val,int){
+      if (val === 1) {
+        if (int.includes('s')) {
+          this.validrate = false;
+        }
+        else {
+          this.validrate = true;
+        }
+      }
+      else if(val > 1)
+      {
+        if(int.includes('s')){
+          this.validrate = true;
+        }
+        else{
+          this.validrate = false;
+        }
+      }
+    }
 
   generateExpression(rateExpression){
     if (this.rateExpression !== undefined) {
@@ -982,20 +1035,14 @@ export class CreateServiceComponent implements OnInit {
       var duration, interval;
       duration = rateExpression['duration'];
       interval = rateExpression['interval'];
+      this.validRate(duration, interval);
+      this.rateExpression.rateStr = `${duration} ${interval}`
 
-      if (duration === undefined || duration === null || duration <= 0) {
+      if (duration === undefined || duration === null || duration <= 0 || this.validrate === false) {
         this.rateExpression.isValid = false;
-        this.rateExpression.error = 'Please enter a valid duration';
+        this.rateExpression.error = 'Please enter a valid rate expression';
       } else {
-        if (interval == 'Minutes') {
-          this.cronObj = new CronObject(('0/' + duration),'*','*','*','?','*');
-        } else if (interval == 'Hours') {
-          this.cronObj = new CronObject('0', ('0/' + duration),'*','*','?','*');
-        } else if (interval == 'Days') {
-          this.cronObj = new CronObject('0', '0', ('1/' + duration), '*', '?', '*');
-        }
         this.rateExpression.isValid = true;
-        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
       }
     } else if (rateExpression['type'] == 'cron') {
       var cronExpression;
@@ -1016,8 +1063,12 @@ export class CreateServiceComponent implements OnInit {
       return undefined;
     } else if (this.rateExpression.isValid === false) {
       return 'invalid';
-    } else if (this.rateExpression.isValid === true) {
+    } else if (this.rateExpression.isValid === true && this.rateExpression.type === 'cron') {
       return this.rateExpression.cronStr;
     }
+    else if (this.rateExpression.isValid === true  && this.rateExpression.type === 'rate') {
+      return this.rateExpression.rateStr;
+    }
   };
+
 }
