@@ -7,14 +7,7 @@ import { Component, OnInit, Input } from '@angular/core';
   styleUrls: ['./copy-element.component.scss']
 })
  
-export class CopyElementComponent implements OnInit {
-
-
-  constructor(
-    ) { }
-
-  ngOnInit() {
-  }
+export class CopyElementComponent {
 
   @Input() CopyElement;
   @Input() iconSize;
