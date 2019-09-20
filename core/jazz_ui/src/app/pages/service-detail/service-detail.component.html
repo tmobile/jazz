@@ -35,7 +35,7 @@
 
         <div *ngIf='!err_flag'>
             <section class="page-content" *ngIf="selectedTab == 'overview'">
-                <service-overview #selectedTabComponent (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isAdminAccess]= "isAdminAccess" [isLoadingService]="isLoadingService"></service-overview>
+                <service-overview #selectedTabComponent (open_sidebar)='opnSidebar($event)'(onload)='env($event)' (onEnvGet)='envList($event)' [service]="service" [isAdminAccess]= "isAdminAccess" [isLoadingService]="isLoadingService" [provider]="provider"></service-overview>
             </section>
             <section class="page-content" *ngIf="selectedTab == 'access control'">
                 <service-access-control #selectedTabComponent [service]="service" (updateAdminAccess)='setAdminAccess($event)' [isAdminAccess]= "isAdminAccess" ></service-access-control>

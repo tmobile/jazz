@@ -13,7 +13,6 @@ import { ToasterService } from 'angular2-toaster';
 import { BarGraphComponent } from '../../secondary-components/bar-graph/bar-graph.component';
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
 import { ServiceMetricsComponent } from '../service-metrics/service-metrics.component';
-import { environment } from './../../../environments/environment';
 import { environment as env_oss } from './../../../environments/environment.oss';
 
 
@@ -122,9 +121,15 @@ export class ServiceDetailComponent implements OnInit {
         endpoints: service.endpoints,
         deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type],
         is_public_endpoint: service.is_public_endpoint,
-        created_by: service.created_by,
-        accountID: service.deployment_accounts[0].accountId,
-        region: service.deployment_accounts[0].region
+        created_by: service.created_by
+      }
+      if(service.deployment_accounts){
+        returnObject['accountID'] = service.deployment_accounts[0].accountId,
+        returnObject['region'] = service.deployment_accounts[0].region
+      } else {
+        // If no deployment_accounts is present, then fetch from default aws region and account, otherwise fetch from provider (aws/azure) specific values. We are not assigning any default azure values.
+        returnObject['accountID'] = env_oss.aws.default_account,
+        returnObject['region'] = env_oss.aws.default_region
       }
       if (service.metadata) {
         returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;
@@ -219,7 +224,12 @@ export class ServiceDetailComponent implements OnInit {
     this.isLoadingService = true;
     this.http.get('/jazz/services/' + id, null, id).subscribe(response => {
       let service = response.data;
-      this.provider = response.data.deployment_accounts[0].provider
+      if(response.data.deployment_accounts){
+        this.provider = response.data.deployment_accounts[0].provider
+      } else {
+        // core services will always be in aws
+        this.provider = 'aws'
+      }
       this.cache.set(id, service);
       this.onDataFetched(service);
       this.isGraphLoading = false;

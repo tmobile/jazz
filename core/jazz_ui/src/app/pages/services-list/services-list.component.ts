@@ -167,7 +167,6 @@ private intervalSubscription: Subscription;
       let serviceRow = {
         name: service.service,
         type: service.type,
-        platform: service.deployment_accounts[0].provider,
         domain: service.domain,
         health: 2,
         status: service.status.replace('_',' '),
@@ -176,6 +175,9 @@ private intervalSubscription: Subscription;
         id: service.id,
         data: service
       };
+      if(service.deployment_accounts){
+        serviceRow['platform'] = service.deployment_accounts[0].provider
+      }
       _serviceList.push(serviceRow);
     });
 

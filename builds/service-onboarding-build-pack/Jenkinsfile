@@ -1,4 +1,5 @@
 #!groovy.
+import groovy.json.JsonSlurperClassic
 import groovy.json.JsonOutput
 import java.text.SimpleDateFormat
 import groovy.transform.Field
@@ -68,7 +69,7 @@ node  {
     def serviceRunTime = service_config['runtime'].toLowerCase()​
     def provider = service_config['provider'].toLowerCase()​
 
-    if (!(serviceType in ["api","function","website"])) {
+    if (!(serviceType in ["api","function","website","sls-app"])) {
         events.sendFailureEvent('VALIDATE_INPUT', "Invalid service type", context_map)
         sendStatusEmailNotification("FAILED")
         error "Invalid service type: ${serviceType}"
@@ -141,11 +142,17 @@ node  {
 
 	stage('Get Service Template'){
 		try {
+			try {
+				sh 'rm -rf *'
+				sh 'rm -rf .*'
+			}
+			catch (error) {
+				//do nothing
+			}
+
+			echo "service_template : $service_template"
 			events.sendStartedEvent("CLONE_TEMPLATE", 'cloning template starts', context_map)
-      
-      // clean existing directory
-			sh 'rm -rf .*'
-            sh 'mkdir ' + service_template
+			sh 'mkdir ' + service_template
       
 			dir(service_template){
                 checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getTemplateUrl(service_template)]]])
