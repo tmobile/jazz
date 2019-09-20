@@ -163,6 +163,7 @@ export class CreateServiceComponent implements OnInit {
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
   public apigeeFeature = this.buildEnvironment.INSTALLER_VARS.feature.apigee && this.buildEnvironment.INSTALLER_VARS.feature.apigee.toString() === "true" ? true : false;
   public selectedDeploymentTarget = "aws_apigateway";
+  public azureEnabled: boolean = false;
 
   constructor (
     private toasterService: ToasterService,
@@ -1124,6 +1125,9 @@ export class CreateServiceComponent implements OnInit {
   }
 
   ngOnInit() {
+    if(typeof env_oss.azure.azure_enabled === "boolean" && env_oss.azure.azure_enabled === true){
+      this.azureEnabled = true;
+    }
     this.selectAccountsRegions();
     this.getData();
     this.loadMaxLength();
