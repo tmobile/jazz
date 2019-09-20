@@ -399,21 +399,15 @@ provider:
   vpc: # Optional VPC. But if you use VPC then both subproperties (securityGroupIds and subnetIds) are required
     securityGroupIds:
       sbr-type: "[aws-id]"
-      sbr-render: config-wins
-      sbr-mandatory: true
+      sbr-render: user-only
       sbr-value:
-        sbr-formula:
-          ${context.securityGroupIds}
         sbr-example:
           - securityGroupId1
           - securityGroupId2
     subnetIds:
       sbr-type: "[aws-id]"
-      sbr-render: config-wins
-      sbr-mandatory: true
+      sbr-render: user-only
       sbr-value:
-        sbr-formula:
-          ${context.subnetIds}
         sbr-example:
           - subnetId1
           - subnetId2

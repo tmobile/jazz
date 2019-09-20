@@ -1198,10 +1198,7 @@
         "dynamodb_stream",
         "iam_role",
         "sqs",
-        "kinesis_stream",
-        "sequence_diagram_url",
-        "certificate",
-        "dns_record"
+        "kinesis_stream"
       ]
     },
     "AssetStatus": {
