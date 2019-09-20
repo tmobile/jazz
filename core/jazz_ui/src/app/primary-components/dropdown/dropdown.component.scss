@@ -1,5 +1,6 @@
 .dropdown-btn {
   background-color: #fff;
+  width: 100%;
   min-width: 100%;
   text-align: left;
   position: relative;
@@ -20,11 +21,16 @@
 }
 
 .dropdown-menu {
+  width: 100%;
   min-width: 100%;
   font-size: 12px;
   a {
     cursor: pointer;
     line-height: 30px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    text-transform: capitalize;
     &:hover {
       background-color: #ed008c;
       color: #fff;
@@ -48,9 +54,15 @@
   min-width: 142px;
 }
 
-// .dropdown {
-//     min-width: 200px;
-// }
 /deep/.padding-right {
   padding-right: 1.5rem !important;
+}
+
+.selected-item {
+  display: inline-block;
+  overflow: hidden;
+  width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-transform: capitalize;
 }

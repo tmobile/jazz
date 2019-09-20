@@ -188,6 +188,7 @@ ngOnInit()
 				let assets=_(response.data.assets).map('asset_type').uniq().value();
 				self.assetWithDefaultValue=assets;
 				self.assetWithDefaultValue.splice(0,0,'all');
+				self.assetWithDefaultValue.sort();
         for(var i=0;i<self.assetWithDefaultValue.length;i++){
         self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
         }

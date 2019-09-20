@@ -5,7 +5,7 @@
             <div [class.show]='filterSelected' class="filter-wrap">
                 <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterClick()"></span>                    
                 <div class='filter-inner'>
-                    <div class="filter-inner-wrap" *ngIf='showEnvironment' [ngClass]="{'env-class':isSlsapp === false,'environment':isSlsapp === true}">
+                    <div class="filter-inner-wrap environment" *ngIf='showEnvironment'>
                         <div class='view-label'>Filter by:</div>
                         <div class="eachFilter" *ngIf='advanced_filter_input.path.show'>
                             <div><div class='hori-line'></div>PATH</div>
@@ -35,11 +35,17 @@
 
                         <div class="eachFilter" *ngIf='advanced_filter_input.sls_resource.show && !isAllSelected'>
                             <div><div class='hori-line'></div>ASSET NAME</div>
-                            <radio-group  #assetName [idName]="'identifier'" [radioContent]="lambdaResourceNameArr" title="Select Resource" [selected]="resourceSelected" (onRadioSelected)="getResourceType($event)"></radio-group>
+                            <dropdown #assetName [dropdwnContent]="lambdaResourceNameArr"
+                             [selected]="resourceSelected"
+                             (onSelected)="getResourceType($event)">
+                            </dropdown>
                         </div>
                         <div class="eachFilter assetName" *ngIf='advanced_filter_input.sls_resource.show && isAllSelected'>
                             <div><div class='hori-line' ></div>ASSET NAME</div>
-                            <radio-group  #assetName [idName]="'identifier'" [radioContent]="allAssetsNameArray" title="Select Resource" [selected]="resourceSelected" (onRadioSelected)="getResourceType($event)"></radio-group>
+                            <dropdown #assetName [dropdwnContent]="allAssetsNameArray"
+                             [selected]="resourceSelected"
+                             (onSelected)="getResourceType($event)">
+                            </dropdown>
                         </div>
                     </div>
                     <div class="filter-inner-wrap">
@@ -47,11 +53,11 @@
                         <div class="eachFilter slider-wrap" *ngIf='advanced_filter_input.time_range.show'>
                             <div><div class='hori-line'></div>TIME RANGE</div>
                             <dropdown class="dropdown-3" title="Select range" [dropdwnContent]="rangeList" [selected]="selectedTimeRange" (onSelected)="onRangeListSelected($event)"></dropdown>
-
+                            <div class='eachFilter'>
                             <div><div class='hori-line'></div>PERIOD</div>
                                <dropdown class="dropdown-3" title="Select period" [dropdwnContent]="timePeriodList" [selected]="selectedTimePeriod" (onSelected)="onTimePeriodSelected($event)"></dropdown>
-                            
                             </div>
+                        </div>
         
                         <div class="eachFilter" *ngIf='advanced_filter_input.period.show'>
                             <div><div class='hori-line'></div>PERIOD</div>

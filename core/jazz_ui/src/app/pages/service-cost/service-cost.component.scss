@@ -377,9 +377,6 @@ dropdown {
   }
   @media (min-width: 853px) {
     width: auto;
-    .dropdown-1 {
-      margin-left: 2rem;
-    }
     /deep/ .dropdown {
       min-width: 91px;
     }
@@ -428,12 +425,12 @@ dropdown {
     top: 0;
   }
   .eachFilter {
-    border-bottom: 1px solid #aaa;
-    padding-top: 1.5rem;
+    padding: 1em 0;
     font-weight: 500;
     div {
-      // line-height: 2.5rem;
       font-weight: bold;
+      margin-bottom: 0.5em;
+      vertical-align: middle;
     }
     &:last-child {
       border-bottom: none; // padding:0;
