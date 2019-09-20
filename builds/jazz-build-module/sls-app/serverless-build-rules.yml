@@ -39,12 +39,13 @@ frameworkVersion:
   sbr-render: config-wins
   sbr-mandatory: true
   sbr-value:
-    sbr-formula: ${context.serverless_framework_version}
+    sbr-formula: ${context.serverlessFrameworkVersion}
     sbr-example: '>=1.0.0 <2.0.0'
 
 custom:
   sbr-type: "[aws-var-name:aws-tag-value]"
-  sbr-render: user-only
+  sbr-render: merge
+  sbr-mandatory: true
   sbr-value:
     sbr-example:
       key1: value1
@@ -59,7 +60,7 @@ provider:
         - aws
         - azure
     sbr-value:
-      sbr-formula: ${context.cloud_provider}
+      sbr-formula: ${context.cloudProvider}
       sbr-example: aws
     sbr-mandatory: true
 
@@ -143,26 +144,27 @@ provider:
     sbr-value:
       sbr-example: $request.body.route # custom route selection expression
 
-  memorySize:
+  memorySize: # in MB
     sbr-type: int
     sbr-render: user-wins
+    sbr-mandatory: true
     sbr-constraint:
-      sbr-from: 256
+      sbr-from: 128
       sbr-to: 2048
     sbr-value:
       sbr-formula: ${config.providerMemorySize}
-      sbr-example: 1024
+      sbr-example: 256
 
-  timeout:
+  timeout: # in seconds 1 sec to 15 mins
     sbr-type: int
     sbr-render: user-wins
     sbr-constraint:
-      sbr-from: 100
-      sbr-to: 500
+      sbr-from: 1
+      sbr-to: 900
     sbr-value:
       sbr-formula: ${config.providerTimeout}
-      sbr-example: 160
-
+      sbr-example: 30
+      
   logRetentionInDays:  # Set the default RetentionInDays for a CloudWatch LogGroup
     sbr-type: int
     sbr-render: user-only
@@ -207,9 +209,9 @@ provider:
     sbr-value:
       sbr-example: serverless
 
-  role:  # Overwrite the default IAM role which is used for all functions
+  role:  # do NOT overwrite the default IAM role which is used for all functions
     sbr-type: arn-iam
-    sbr-render: config-wins
+    sbr-render: user-only # was config-wins
     sbr-mandatory: true
     sbr-value:
       sbr-formula: ${config.iamRoleARN}
@@ -449,14 +451,14 @@ package: # Optional deployment packaging configuration
     sbr-type: "[path]"
     sbr-render: user-only
     sbr-value:
-      sbr-examples:
+      sbr-example:
         - .git/**
         - .travis.yml
   exclude: # Specify the directories and files which should be excluded in the deployment package
     sbr-type: "[path]"
     sbr-render: user-only
     sbr-value:
-      sbr-examples:
+      sbr-example:
         - .git/**
         - .travis.yml
   excludeDevDependencies:
@@ -464,7 +466,7 @@ package: # Optional deployment packaging configuration
     sbr-render: user-only
     sbr-value:
       sbr-default: false
-      sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
+      sbr-example: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
   artifact:
     sbr-type: path
     sbr-render: user-only
@@ -476,15 +478,20 @@ package: # Optional deployment packaging configuration
     sbr-render: user-only
     sbr-value:
       sbr-default: false
-      sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
+      sbr-example: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
 
 functions:
     sbr-type: "[aws-var-name:function]"
     sbr-render: user-only
 
+# works as expected when using sbr-formula only NOT with sbr-example
 plugins:
-    sbr-type: "[aws-var-name:plugin]"
-    sbr-render: user-only
+    sbr-type: "[plugin]"
+    sbr-render: merge
+    sbr-mandatory: true
+    sbr-value:
+      sbr-formula:
+       - serverless-plugin-log-subscription
 
 # The "Resources" your "Functions" use.  Raw AWS CloudFormation goes in here.
 resources:
@@ -555,15 +562,16 @@ function:
       sbr-value:
         sbr-formula: Description for ${context.asterisk0} function
 
-    memorySize: # memorySize for this specific function.
+    memorySize: # memorySize in MB for this specific function.
       sbr-type: int
       sbr-render: user-wins
+      sbr-mandatory: true
       sbr-constraint:
-        sbr-from: 256
+        sbr-from: 128
         sbr-to: 2048
       sbr-value:
         sbr-formula: ${config.providerMemorySize}
-        sbr-example: 512
+        sbr-example: 256
 
     runtime:
       sbr-type: enum
@@ -579,20 +587,21 @@ function:
         sbr-formula: ${config.providerRuntime}
         sbr-example: nodejs8.10
 
-    timeout:
+    timeout: # in seconds 1 sec to 15 mins
       sbr-type: int
       sbr-render: user-wins
       sbr-constraint:
-        sbr-from: 100
-        sbr-to: 500
+        sbr-from: 1
+        sbr-to: 900
       sbr-value:
         sbr-formula: ${config.providerTimeout}
-        sbr-example: 160
+        sbr-example: 30
 
-    role:  # Overwrite the default IAM role which is used for all functions
+    role: # none provided in config, serverless creates if not user provided
       sbr-type: arn-iam
-      sbr-render: user-wins
+      sbr-render: user-only
       sbr-value:
+        sbr-formula: ${config.role}
         sbr-example: arn:aws:iam::XXXXXX:role/role
 
     onError: # Optional SNS topic / SQS arn (Ref, Fn::GetAtt and Fn::ImportValue are supported as well) which will be used for the DeadLetterConfig
@@ -642,14 +651,14 @@ function:
         sbr-type: "[path]"
         sbr-render: user-only
         sbr-value:
-          sbr-examples:
+          sbr-example:
             - .git/**
             - .travis.yml
       exclude: # Specify the directories and files which should be excluded in the deployment package
         sbr-type: "[path]"
         sbr-render: user-only
         sbr-value:
-          sbr-examples:
+          sbr-example:
             - .git/**
             - .travis.yml
     excludeDevDependencies:
@@ -657,7 +666,7 @@ function:
       sbr-render: user-only
       sbr-value:
         sbr-default: false
-        sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
+        sbr-example: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
     artifact:
       sbr-type: path
       sbr-render: user-only
@@ -669,7 +678,7 @@ function:
       sbr-render: user-only
       sbr-value:
         sbr-default: false
-        sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
+        sbr-example: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
 
     layers: # An optional list Lambda Layers to use
       sbr-type: "[arn-layer]"
@@ -690,6 +699,23 @@ function:
     events: # The Events that trigger this Function
       sbr-type: "[event]"
       sbr-render: user-only
+
+    lambdaAtEdge:
+      distribution:
+        sbr-type: str
+        sbr-render: user-only
+        sbr-value:
+          sbr-example: 'WebsiteDistribution'
+      eventType:
+        sbr-type: str
+        sbr-render: user-only
+        sbr-value:
+          sbr-example: 'origin-request'
+      pathPattern:
+        sbr-type: str
+        sbr-render: user-only
+        sbr-value:
+          sbr-example: 'images/*.jpg'
 
 event:
   sbr-primary: false

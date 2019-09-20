@@ -149,9 +149,16 @@ node() {
   events.sendStartedEvent('CREATE_DEPLOYMENT', 'Serverless application deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
 
   dir(repo_name) {
-  /* Writing the file from config */
+    // copy the application.yml (Backward Compatible) from codebase to serverless.yml if it exists and always returns true
+    sh "[[ -e application.yml ]] && cp application.yml serverless.yml || true"
+
+    // copy serverless.yml from codebase to application.yml if it exists before it is overwritten and always returns true
+    sh "[[ -e serverless.yml ]] && cp serverless.yml application.yml || true"
+
+    // if neither exist serverless.yml or application.yml - create it from environment config 
     def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, environment_logical_id, configLoader, env_deployment_descriptor) // Generating the deployment descriptor
-    echo "prepareServerlessYml = ${deploymentDescriptor}"
+    echo "prepareServerlessYml => ${deploymentDescriptor}"
+    sh "rm -rf ./serverless.yml"
     writeYaml(file: './serverless.yml', data: deploymentDescriptor)
 
     stage('Pre-Build Validation') {
@@ -163,6 +170,10 @@ node() {
         send_status_email(config, 'FAILED', "")
         events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map, environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+        def stackTraceElements = ex.stackTrace
+        stackTraceElements.each { element ->
+          echo "stack: ${element.toString()}"
+        }
         error ex.getMessage()
       }
       events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
@@ -170,7 +181,7 @@ node() {
     stage('Install Plugins') {
       events.sendStartedEvent('INSTALL_PLUGINS', 'Plugin Installation started', context_map, environment_logical_id)
       try {
-        installplugins()
+        installServerlessPlugins()
       } catch (ex) {
         send_status_email(config, 'FAILED', "")
         events.sendFailureEvent('INSTALL_PLUGINS', ex.getMessage(), context_map, environment_logical_id)
@@ -185,6 +196,7 @@ node() {
       stage('Code Quality Check') {
         events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
         try {
+          clearVirtualEnv(runtime)
           runValidation(runtime)
           sonarModule.doAnalysis()
         } catch (ex) {
@@ -226,14 +238,21 @@ node() {
         try {
           def randomString = utilModule.generateRequestId();
           credsId = "jazz-${randomString}";
+          def envBucketKey = "${env_key}"
           sh "aws configure set profile.${credsId}.region ${config.region}"
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-          sh "serverless package --stage ${environment_logical_id} --profile ${credsId} -v > output.log"
+          def s3bucketvalue = getS3BucketValue(accountDetails , config, envBucketKey)
+
+          // outputs the stdout and stderr to output.log and doesn't fail here
+          sh "serverless package --stage ${environment_logical_id} --bucket ${s3bucketvalue} --profile ${credsId} -v > output.log 2>&1 || true"
           // Printing out the resulting stdout and the cloud-formation template
           def outputLog = readFile('output.log').trim()
           echo "serverless packaging log $outputLog"
+
+          // will fail if ./.serverless/cloudformation-template-update-stack.json file DOES NOT exist
+          // because of error in the previous step
           def cft = readFile('./.serverless/cloudformation-template-update-stack.json').trim()
           echo "CFT: $cft"
           // when we reached here then sending the success event out
@@ -306,7 +325,6 @@ node() {
 
     stage("Deployment to ${env_key} environment") {
       events.sendStartedEvent('DEPLOY_TO_AWS', 'Deployment started to staging AWS environment', context_map, environment_logical_id)
-      events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
 
       echo "starts Deployment to ${env_key} Env"
       events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
@@ -358,10 +376,12 @@ node() {
           }
 
           if (domain != "jazz") {
-            createSubscriptionFilters(config, accountDetails, env_key, credsId);
+            // Add log subscription filters - added support for plugin
+            // this call and method can be removed!
+            // createSubscriptionFilters(config, accountDetails, env_key, credsId);
           }
 
-          def svc_response = echoServiceInfo(environment_logical_id)
+          def svc_response = echoServiceInfo(environment_logical_id, envBucketKey)
           send_status_email(config, 'COMPLETED', svc_response)
 
         } catch (ex) {
@@ -376,8 +396,8 @@ node() {
         }
 
         def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
-
-        events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null), environment_logical_id)
+        def deployment_descriptor = readFile("./serverless.yml")
+        events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null, deployment_descriptor), environment_logical_id)
         events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion Event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
         events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)
 
@@ -461,7 +481,7 @@ def getStackResources(env, credsId){
 
 def echoServerlessFile() {
   def serverlessyml = readFile('serverless.yml').trim()
-  echo "serverless file data $serverlessyml"
+  echo "serverless.yml => $serverlessyml"
 }
 
 def servelessDeploy(env, envBucketKey, credsId){
@@ -469,12 +489,12 @@ def servelessDeploy(env, envBucketKey, credsId){
     def s3bucketvalue = getS3BucketValue(accountDetails, config, envBucketKey)
     sh "serverless deploy --stage ${env} -v --bucket ${s3bucketvalue} --profile ${credsId} > output.log"
     def outputLog = readFile('output.log').trim()
-    echo "serverless deployment log $outputLog"
+    echo "serverless deployment log: $outputLog"
     return outputLog
   } catch (ex) {
-    echo "Serverless deployment failed due to $ex"
+    echo "Serverless deployment failed due to: $ex"
     def outputLog = readFile('output.log').trim()
-    echo "serverless deployment log $outputLog"
+    echo "serverless deployment log: $outputLog"
     throw ex
   }
 }
@@ -557,13 +577,27 @@ def buildSlsApp(String runtime, String repo_name) {
 		sh "mkdir library"
 		sh "pip install -r requirements.txt -t library"
 		sh "touch library/__init__.py"
-		// create virtual environment and install pytest
-		sh """
-		pip install virtualenv
-		virtualenv venv
-		. venv/bin/activate
-		pip install pytest
-		"""
+    if (runtime == 'python3.6') {
+      //Installing dependencies
+      sh "pip3 install -r requirements.txt -t library"
+      // create virtual environment and install pytest
+      sh """
+      python3 -m venv virtualenv
+      . virtualenv/bin/activate
+      pip3 install pytest
+      pytest test
+      """
+    } else {
+      //Installing dependencies
+      sh "pip install -r requirements.txt -t library"
+      // create virtual environment and install pytest
+      sh """
+      pip install virtualenv
+      virtualenv venv
+      . venv/bin/activate
+      pip install pytest
+      """
+    }
 	} else if (runtime.indexOf("go") > -1 ) {
     // Installing dependencies using dep ensure
     // golang build scripts
@@ -571,7 +605,7 @@ def buildSlsApp(String runtime, String repo_name) {
       sh "mkdir -p $GOPATH/src"
       sh "rsync -a --exclude='.*' $GOPATH/" + repo_name + " $GOPATH/src"
       sh "cd $GOPATH/src/"+ repo_name+" && dep ensure"
-      dirs = readDir()
+      dirs = getFunctionPaths()
       def size = dirs.size()
       if( size > 0) {
         for(item in dirs) {
@@ -640,7 +674,7 @@ def validateDeploymentConfigurations(def prop) {
 
 }
 
-def installplugins(){
+def installServerlessPlugins(){
   try {
     def serverlessyml = readFile('./serverless.yml').trim()
     def outstandingPlugins = whiteListModule.validatePlugins(serverlessyml)
@@ -661,10 +695,12 @@ def installplugins(){
   }
 }
 
-def echoServiceInfo(String env) {
+def echoServiceInfo(String env, String envBucketKey) {
   try {
-    echo "Deployment info:"
-    sh "serverless --stage $env info -v > deploy-info.txt"
+    echo "Deployment output information - "
+    def s3bucketvalue = getS3BucketValue(accountDetails , config, envBucketKey)
+
+    sh "serverless --stage $env --bucket ${s3bucketvalue} info -v > deploy-info.txt"
 
     def arn = "unknown"
     def svc_response = "unknown"
@@ -703,29 +739,31 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
   } else {
     deploymentDescriptor = config['deployment_descriptor']
   }
-  def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
+   // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harmful as Map not String is expected below
+  def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:]
   def functionsElem = doc['functions']
-  def logGroupName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-  functionsElem.each{funcName, funcConfig ->
-    def name = funcConfig['name'] ? funcConfig['name'] : funcName
-    def lambda = "/aws/lambda/${logGroupName}-${name}"
+  // changing variable names appropriately
+  def serviceDomain = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+  functionsElem.each{functionName, funcConfig ->
+    def lambdaName = funcConfig['name'] ? funcConfig['name'] : functionName
+    def logGroupName = "/aws/lambda/${serviceDomain}-${lambdaName}"
     def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
     try {
-      sh "aws logs create-log-group --log-group-name ${lambda} --profile ${credsId}"
+      sh "aws logs create-log-group --log-group-name ${logGroupName} --profile ${credsId}"
     } catch (Exception ex) { } // ignore if already existing
 
     try {
       filter_json = sh(
-        script: "aws logs describe-subscription-filters --output json --log-group-name \"${lambda}\" --profile ${credsId}",
+        script: "aws logs describe-subscription-filters --output json --log-group-name \"${logGroupName}\" --profile ${credsId}",
         returnStdout: true
       ).trim()
       echo "${filter_json}"
       def resultJson = parseJson(filter_json)
       filtername = resultJson.subscriptionFilters[0].filterName
       echo "removing existing filter... $filtername"
-      if (filtername != "" && !filtername.equals(lambda)) {
-        sh "aws logs delete-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${filtername}\"  --profile ${credsId}"
+      if (filtername != "" && !filtername.equals(logGroupName)) {
+        sh "aws logs delete-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${filtername}\"  --profile ${credsId}"
       }
     } catch (Exception ex) { } // ignore error if not created yet
     try {
@@ -739,9 +777,9 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
             }
           }
           updatePolicy(env_key, destARN);
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\"  --profile ${credsId}"
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${destARN}\"  --profile ${credsId}"
         } else {
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
         }
       }
     }
@@ -920,10 +958,17 @@ def getEventsArn(config, env) {
   }
 }
 
+def clearVirtualEnv(String runtime) {
+  if (runtime.indexOf("python") > -1) {
+      sh "rm -rf venv"
+      sh "rm -rf virtualenv"
+  }
+}
+
 /** Run validation based on runtime
  */
 def runValidation(String runtime) {
-  echo "running validations for $runtime"
+  echo "Running linter for $runtime (if applicable)"
   if (runtime.indexOf("nodejs") > -1) {
     sh "jshint *.js"
   } else if (runtime.indexOf("java") > -1) {
@@ -935,14 +980,17 @@ def runValidation(String runtime) {
   }
 }
 
-def readDir() {
+/** 
+* Get list of paths for functions. They are expected in functions/ directory
+*/
+def getFunctionPaths() {
   sh "ls -al"
-  def targetPaths
+  def targetPaths = null
   try {
     targetPaths = sh(returnStdout: true, script: 'ls -d functions/*').split("\n")
     echo "completed : $targetPaths"
   } catch (ex) {
-      echo "Error Occured while Fetching functions... $ex"
+      echo "Error occured while getting the functions list. Please make sure that your functions are available in functions/ directory"
   }
   return targetPaths
 }
@@ -982,12 +1030,13 @@ def loadBuildModules(buildModuleUrl) {
     echo "Service metadata loader module loaded successfully."
 
     utilModule = load "utility-loader.groovy"
+    utilModule.initialize(configLoader)
     echo "Util module loaded successfully."
 
     sonarModule = load "sonar-module.groovy"
     echo "Sonar module loaded successfully."
 
-    whiteListModule = load "whitelist-validator-module.groovy"
+    whiteListModule = load "sls-app/whitelist-validator-module.groovy"
     whiteListModule.initialize()
     echo "whitelist-validator-module module loaded successfully"
 
