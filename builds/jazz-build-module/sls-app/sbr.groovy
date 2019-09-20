@@ -1134,28 +1134,13 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
 
     def doc = deploymentDescriptor  ? readYaml(text: deploymentDescriptor ) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
 
-    def envKinesisStreamArn = null
-    
-    switch (env)
-    {
-      case 'prod': 
-        envKinesisStreamArn = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD;
-        break;
-      case 'stg': 
-        envKinesisStreamArn = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.STG;
-        break;
-      default: 
-        envKinesisStreamArn = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.DEV;
-        break;
-    }
-
     context =["environment_logical_id": env,
             "INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
             "REGION": aConfig.region,
-            "cloud_provider": "aws",
-            "kinesisStreamArn": envKinesisStreamArn,
+            "cloudProvider": "aws",
+            "kinesisStreamArn": configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD,
             "platformRoleArn": configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == aConfig.accountId}.IAM.PLATFORMSERVICES_ROLEID, // pick the role for selected account
-            "serverless_framework_version": ">=1.0.0 <2.0.0"]
+            "serverlessFrameworkVersion": ">=1.0.0 <2.0.0"]
 
     if (doc && doc instanceof Map && doc['service']) doc.remove('service')
     if (doc && doc instanceof Map && doc['frameworkVersion']) doc.remove('frameworkVersion')

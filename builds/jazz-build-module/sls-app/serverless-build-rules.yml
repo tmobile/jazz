@@ -39,7 +39,7 @@ frameworkVersion:
   sbr-render: config-wins
   sbr-mandatory: true
   sbr-value:
-    sbr-formula: ${context.serverless_framework_version}
+    sbr-formula: ${context.serverlessFrameworkVersion}
     sbr-example: '>=1.0.0 <2.0.0'
 
 custom:
@@ -59,7 +59,7 @@ provider:
         - aws
         - azure
     sbr-value:
-      sbr-formula: ${context.cloud_provider}
+      sbr-formula: ${context.cloudProvider}
       sbr-example: aws
     sbr-mandatory: true
 
