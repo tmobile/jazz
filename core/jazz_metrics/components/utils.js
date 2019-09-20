@@ -79,6 +79,8 @@ function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset, provider) {
     output_obj["nameSpace"] = `Invalid`;
     return output_obj;
   }
+
+  // mapping source: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/aws-services-cloudwatch-metrics.html
   var supportedNamespace = namespacesList[provider][nameSpace];
   let awsNameSpace;
   if (nameSpaceFrmAsset && supportedNamespace && provider === 'aws') {
@@ -101,7 +103,7 @@ function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset, provider) {
     } else {
       output_obj["isError"] = true;
       output_obj["message"] = "AWS namespace not defined";
-      output_obj["nameSpace"] = "Invalid";
+      output_obj["nameSpace"] = "Invalid Namespace: " + awsAddedNameSpace;
     }
 
     output_obj["paramMetrics"] = paramMetrics;
@@ -130,13 +132,14 @@ function extractValueFromString(string, keyword) {
 
 function getApiName(string) {
   var value;
-  if (Object.keys(global_config.APINAME).indexOf(string) > -1) {
-    value = global_config.APINAME[string];
+  if( string == "stg"){
+    value = global_config.STACK_PREFIX + "-stg"
+  } else if( string == "prod"){
+    value = global_config.STACK_PREFIX + "-prod"
   } else {
-    value = "*"
+    value = global_config.STACK_PREFIX + "-dev"
   }
   return value;
-
 };
 
 function getAssetsObj(assetsArray, userStatistics) {
@@ -150,6 +153,7 @@ function getAssetsObj(assetsArray, userStatistics) {
   }
   assetsArray.forEach((asset) => {
 
+    
     var assetType = asset.asset_type;
     if (!namespaces[asset.provider]) {
       newAssetArr.push({
@@ -187,13 +191,13 @@ function getAssetsObj(assetsArray, userStatistics) {
     } else if (assetType) {
       // type not supported
       newAssetArr.push({
-        "message": `Metric not supported for asset type ${assetType}`,
+        "message": `Metric not supported for asset type: ${assetType}`,
         "isError": true
       });
     } else {
       // type not found
       newAssetArr.push({
-        "message": `Asset type not found `,
+        "message": `Asset type not found: ${assetType}`,
         "isError": true
       });
     }
@@ -258,7 +262,7 @@ function updateAWSAsset(newAssetObj, asset) {
 
     default:
       newAssetObj = {
-        "message": "Metric not supported for asset type " + assetType,
+        "message": "Metric not supported for asset type: " + assetType,
         "isError": true
       }
   }
@@ -320,11 +324,12 @@ function updateApigatewayAsset(newAssetObj, relativeId, assetEnvironment) {
 
   var parts = relativeId.split("/");
 
-  var apiId = parts[0];
-  newAssetObj.asset_name.ApiName = getApiName(apiId);
+  //var apiId = parts[0];
 
   var stgValue = parts[1] === '*' ? assetEnvironment : parts[1];
   newAssetObj.asset_name.Stage = stgValue || "*";
+
+  newAssetObj.asset_name.ApiName = getApiName(stgValue);
 
   var methodValue = parts[2];
   newAssetObj.asset_name.Method = methodValue;

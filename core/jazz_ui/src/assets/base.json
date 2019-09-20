@@ -1,0 +1,16 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "version": "1.0.0",
+    "title": "Jazz API",
+    "description": "Jazz API specification",
+    "contact": {
+      "name": "",
+      "email": ""
+    }
+  },
+  "basePath": "/api/jazz",
+  "schemes": [
+    "https"
+  ]
+}

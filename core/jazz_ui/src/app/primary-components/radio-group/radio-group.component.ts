@@ -22,14 +22,14 @@ export class RadioGroupComponent implements OnInit {
   @Input() public statusFilter: Function;
   @Output() onRadioSelected:EventEmitter<boolean> = new EventEmitter<boolean>();
 
-  itemselected = "All";
+  itemselected = "all";
   onSelectionChange(value){
     this.selected = value;
     this.onRadioSelected.emit(value)
   }
 
-  clearRadioFilter(){
-    this.onSelectionChange("All");
+  setRadio(value){
+    this.selected = value;
   }
 
   constructor() { }

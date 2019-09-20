@@ -279,7 +279,7 @@ def generateEnvironmentMap(status, environment_logical_id, metadata) {
 	return serviceCtxMap;
 }
 
-def generateDeploymentMap(status, environment_logical_id, gitCommitHash) {
+def generateDeploymentMap(status, environment_logical_id, gitCommitHash, deployment_descriptor = null) {
 	def env_logical_id
 	if (environment_logical_id == null) {
 		env_logical_id = getEnvironmentLogicalId()
@@ -298,6 +298,10 @@ def generateDeploymentMap(status, environment_logical_id, gitCommitHash) {
 		scm_branch: g_service_branch,
 		request_id: g_request_id
 	]
+	if (deployment_descriptor != null) {
+		serviceCtxMap.deployment_descriptor = deployment_descriptor
+	}
+		
 	return serviceCtxMap;
 }
 
