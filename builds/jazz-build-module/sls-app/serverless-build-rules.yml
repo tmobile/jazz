@@ -44,7 +44,8 @@ frameworkVersion:
 
 custom:
   sbr-type: "[aws-var-name:aws-tag-value]"
-  sbr-render: user-only
+  sbr-render: merge
+  sbr-mandatory: true
   sbr-value:
     sbr-example:
       key1: value1
@@ -398,15 +399,21 @@ provider:
   vpc: # Optional VPC. But if you use VPC then both subproperties (securityGroupIds and subnetIds) are required
     securityGroupIds:
       sbr-type: "[aws-id]"
-      sbr-render: user-only
+      sbr-render: config-wins
+      sbr-mandatory: true
       sbr-value:
+        sbr-formula:
+          ${context.securityGroupIds}
         sbr-example:
           - securityGroupId1
           - securityGroupId2
     subnetIds:
       sbr-type: "[aws-id]"
-      sbr-render: user-only
+      sbr-render: config-wins
+      sbr-mandatory: true
       sbr-value:
+        sbr-formula:
+          ${context.subnetIds}
         sbr-example:
           - subnetId1
           - subnetId2
@@ -450,14 +457,14 @@ package: # Optional deployment packaging configuration
     sbr-type: "[path]"
     sbr-render: user-only
     sbr-value:
-      sbr-examples:
+      sbr-example:
         - .git/**
         - .travis.yml
   exclude: # Specify the directories and files which should be excluded in the deployment package
     sbr-type: "[path]"
     sbr-render: user-only
     sbr-value:
-      sbr-examples:
+      sbr-example:
         - .git/**
         - .travis.yml
   excludeDevDependencies:
@@ -465,7 +472,7 @@ package: # Optional deployment packaging configuration
     sbr-render: user-only
     sbr-value:
       sbr-default: false
-      sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
+      sbr-example: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
   artifact:
     sbr-type: path
     sbr-render: user-only
@@ -477,15 +484,20 @@ package: # Optional deployment packaging configuration
     sbr-render: user-only
     sbr-value:
       sbr-default: false
-      sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
+      sbr-example: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
 
 functions:
     sbr-type: "[aws-var-name:function]"
     sbr-render: user-only
 
+# works as expected when using sbr-formula only NOT with sbr-example
 plugins:
-    sbr-type: "[aws-var-name:plugin]"
-    sbr-render: user-only
+    sbr-type: "[plugin]"
+    sbr-render: merge
+    sbr-mandatory: true
+    sbr-value:
+      sbr-formula:
+       - serverless-plugin-log-subscription
 
 # The "Resources" your "Functions" use.  Raw AWS CloudFormation goes in here.
 resources:
@@ -645,14 +657,14 @@ function:
         sbr-type: "[path]"
         sbr-render: user-only
         sbr-value:
-          sbr-examples:
+          sbr-example:
             - .git/**
             - .travis.yml
       exclude: # Specify the directories and files which should be excluded in the deployment package
         sbr-type: "[path]"
         sbr-render: user-only
         sbr-value:
-          sbr-examples:
+          sbr-example:
             - .git/**
             - .travis.yml
     excludeDevDependencies:
@@ -660,7 +672,7 @@ function:
       sbr-render: user-only
       sbr-value:
         sbr-default: false
-        sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
+        sbr-example: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
     artifact:
       sbr-type: path
       sbr-render: user-only
@@ -672,7 +684,7 @@ function:
       sbr-render: user-only
       sbr-value:
         sbr-default: false
-        sbr-examples: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
+        sbr-example: false # Config if Serverless should automatically exclude dev dependencies in the deployment package. Defaults to true
 
     layers: # An optional list Lambda Layers to use
       sbr-type: "[arn-layer]"
@@ -693,6 +705,23 @@ function:
     events: # The Events that trigger this Function
       sbr-type: "[event]"
       sbr-render: user-only
+
+    lambdaAtEdge:
+      distribution:
+        sbr-type: str
+        sbr-render: user-only
+        sbr-value:
+          sbr-example: 'WebsiteDistribution'
+      eventType:
+        sbr-type: str
+        sbr-render: user-only
+        sbr-value:
+          sbr-example: 'origin-request'
+      pathPattern:
+        sbr-type: str
+        sbr-render: user-only
+        sbr-value:
+          sbr-example: 'images/*.jpg'
 
 event:
   sbr-primary: false
