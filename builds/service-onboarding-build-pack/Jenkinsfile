@@ -144,7 +144,6 @@ node  {
 		try {
 			try {
 				sh 'rm -rf *'
-				sh 'rm -rf .*'
 			}
 			catch (error) {
 				//do nothing
