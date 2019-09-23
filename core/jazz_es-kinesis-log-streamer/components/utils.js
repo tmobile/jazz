@@ -68,7 +68,8 @@ function getApiLogsData(payload) {
   let bulkRequestBody = '',
     data = {},
     indexName = "apilogs";
-  data.asset_type = "apigateway"
+  data.asset_type = "apigateway";
+  data.provider = "aws";
   data.timestamp = new Date();
   data.platform_log_group = payload.logGroup;
   data.platform_log_stream = payload.logStream;
@@ -92,6 +93,7 @@ function getApiLogsData(payload) {
     data.domain = "";
     data.servicename = apiDomainAndService;
   }
+  data.asset_identifier = data.method + "/" + apiDomainAndService;
 
   data.path = getInfo(payload.logEvents, config.PATTERNS.path);
   data.application_logs_id = getInfo(payload.logEvents, config.PATTERNS.lambda_ref_id);
@@ -138,7 +140,8 @@ function getLambdaLogsData(payload) {
   let bulkRequestBody = '',
     data = {},
     domainAndservice = '';
-  data.asset_type = "lambda"
+  data.asset_type = "lambda";
+  data.provider = "aws";
   data.request_id = getInfo(payload.logEvents, config.PATTERNS.lambda_request_id);
   if (data.request_id) {
     let lastSubstring = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment, 2);

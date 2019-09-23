@@ -462,6 +462,8 @@ plugins:
   - serverless-plugin-canary-deployments
   - serverless-mocha-plugin
   - serverless-kms-secrets
+  - serverless-plugin-log-subscription
+  - '@silvermine/serverless-plugin-cloudfront-lambda-edge'
 
 arnTemplate:
   - AWS::Lambda::Function: "arn:aws:lambda:{region}:{account-id}:function:{resourceName}"

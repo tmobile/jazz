@@ -24,6 +24,7 @@ import { routes } from './app.route';
 import {UserJourneyComponent} from "./pages/user-journey/user-journey.component";
 import {UtilsService} from './core/services/utils.service';
 import { RefactorFieldService } from './core/services/refactor-field.service';
+import { AngularFontAwesomeModule } from 'angular-font-awesome/angular-font-awesome';
 let environmentval = environment.envName;
 let loadedModule;
 if (environmentval == "oss") {
@@ -50,6 +51,7 @@ else{
     RouterModule.forRoot(routes),
     NgIdleKeepaliveModule.forRoot(),
     SharedModule,
+    AngularFontAwesomeModule
   ],
   providers: [
     AuthenticationService,

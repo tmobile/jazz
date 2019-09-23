@@ -1,9 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "2017-01-30T23:30:18Z",
+    "version": "1.0",
     "title": "{api_deployment_node_title}",
-    "description": "CRUD APIs for assets Catalog"
+    "description": "API to manage Jazz assets"
   },
   "host": "{api_host_name}",
   "basePath": "/{domain}",
@@ -13,7 +13,7 @@
   "paths": {
     "/{service_name}": {
       "options": {
-        "description": "CORS Support",
+        "summary": "Method to support CORS",
         "consumes": [
           "application/json"
         ],
@@ -21,7 +21,7 @@
           "application/json"
         ],
         "tags": [
-          "CORS"
+          "Assets"
         ],
         "x-amazon-apigateway-integration": {
           "type": "mock",
@@ -90,70 +90,101 @@
         }
       },
       "get": {
-        "description": "Get list of assets",
+        "summary": "Search for assets",
         "consumes": [
           "application/json"
         ],
         "produces": [
           "application/json"
         ],
+        "tags": [
+          "Assets"
+        ],
         "parameters": [
           {
-            "name": "services",
+            "name": "service",
             "in": "query",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "service name"
           },
           {
             "name": "domain",
             "in": "query",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "domain/namespace name"
           },
           {
             "name": "environment",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "description": "environment name - prod/stg/dev"
           },
           {
-            "name": "asset_type",
+            "name": "type",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "description": "type of the asset",
+            "enum": [
+              "lambda",
+              "apigateway",
+              "cloudfront",
+              "s3",
+              "dynamodb",
+              "cloudwatch_event",
+              "swagger_url",
+              "endpoint_url",
+              "apigee_proxy",
+              "dynamodb_stream",
+              "iam_role",
+              "sqs",
+              "kinesis_stream"
+            ]
           },
           {
             "name": "provider",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "description": "cloud provider where the asset is created",
+            "enum": [
+              "aws",
+              "azure",
+              "gcp"
+            ]
           },
           {
             "name": "provider_id",
             "in": "query",
             "required": false,
-            "type": "string"
+            "type": "string",
+            "description": "identifier provided by the cloud provider (ARN in case of AWS)"
           },
           {
             "name": "limit",
             "in": "query",
             "required": false,
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "description": "limit for number of assets in the response"
           },
           {
             "name": "offset",
             "in": "query",
             "required": false,
             "type": "integer",
-            "format": "int32"
+            "format": "int32",
+            "description": "starting record for next set of records"
           }
         ],
         "responses": {
           "200": {
             "description": "Successful Execution",
             "schema": {
-              "$ref": "#/definitions/GetAssetListSuccessResponse"
+              "$ref": "#/definitions/SearchAssetsResponse"
             },
             "headers": {
               "Access-Control-Allow-Headers": {
@@ -338,36 +369,35 @@
         }
       },
       "post": {
-        "description": "create an asset",
+        "summary": "Creates a new asset",
         "parameters": [{
             "name": "param",
             "in": "body",
-            "description": "post body parameter.",
+            "description": "Request object for creating a new asset",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/CreateAssetsObj"
+              "$ref": "#/definitions/CreateAssetRequest"
             }
           },
           {
             "name": "Jazz-Service-ID",
             "in": "header",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "service id"
           }
         ],
         "consumes": [
-          "application/json",
-          "application/x-www-form-urlencoded"
+          "application/json"
         ],
         "produces": [
-          "application/json",
-          "application/x-www-form-urlencoded"
+          "application/json"
         ],
         "responses": {
           "200": {
             "description": "Successful Execution",
             "schema": {
-              "$ref": "#/definitions/PostSuccessResponse"
+              "$ref": "#/definitions/CreateAssetResponse"
             },
             "headers": {
               "Access-Control-Allow-Headers": {
@@ -552,7 +582,7 @@
     },
     "/assets/{id}": {
       "options": {
-        "description": "CORS Support",
+        "summary": "Method to support CORS",
         "consumes": [
           "application/json"
         ],
@@ -563,17 +593,19 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "asset id"
           },
           {
             "name": "Jazz-Service-ID",
             "in": "header",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "service id"
           }
         ],
         "tags": [
-          "CORS"
+          "Assets"
         ],
         "x-amazon-apigateway-integration": {
           "type": "mock",
@@ -642,7 +674,7 @@
         }
       },
       "get": {
-        "description": "Get asset details for asset id",
+        "description": "Get details of a specific asset",
         "consumes": [
           "application/json"
         ],
@@ -653,20 +685,25 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "asset id"
           },
           {
             "name": "Jazz-Service-ID",
             "in": "header",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "service id"
           }
+        ],
+        "tags": [
+          "Assets"
         ],
         "responses": {
           "200": {
             "description": "Successful Execution",
             "schema": {
-              "$ref": "#/definitions/AssetsObj"
+              "$ref": "#/definitions/Asset"
             },
             "headers": {
               "Access-Control-Allow-Headers": {
@@ -851,42 +888,42 @@
         }
       },
       "put": {
-        "description": "update details of an asset",
+        "summary": "Update details for a specific asset",
         "parameters": [{
             "name": "id",
             "in": "path",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "asset id"
           },
           {
             "name": "param",
             "in": "body",
-            "description": "post body parameter.",
+            "description": "payload for asset update request",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/UpdateAssetsObj"
+              "$ref": "#/definitions/UpdateAssetRequest"
             }
           },
           {
             "name": "Jazz-Service-ID",
             "in": "header",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "service id"
           }
         ],
         "consumes": [
-          "application/json",
-          "application/x-www-form-urlencoded"
+          "application/json"
         ],
         "produces": [
-          "application/json",
-          "application/x-www-form-urlencoded"
+          "application/json"
         ],
         "responses": {
           "200": {
             "description": "Successful Execution",
             "schema": {
-              "$ref": "#/definitions/PutSuccessResponse"
+              "$ref": "#/definitions/UpdateAssetResponse"
             },
             "headers": {
               "Access-Control-Allow-Headers": {
@@ -1145,8 +1182,97 @@
         }
       }
     },
-    "UpdateAssetsObj": {
-      "description": "Input object with set of fields that can be updated",
+    "AssetType": {
+      "type": "string",
+      "description": "type of the asset",
+      "enum": [
+        "lambda",
+        "apigateway",
+        "cloudfront",
+        "s3",
+        "dynamodb",
+        "cloudwatch_event",
+        "swagger_url",
+        "endpoint_url",
+        "apigee_proxy",
+        "dynamodb_stream",
+        "iam_role",
+        "sqs",
+        "kinesis_stream"
+      ]
+    },
+    "AssetStatus": {
+      "type": "string",
+      "description": "status of the asset",
+      "enum": [
+        "active",
+        "deleted"
+      ]
+    },
+    "Provider": {
+      "type": "string",
+      "description": "cloud provider where the asset is created",
+      "enum": [
+        "aws",
+        "azure",
+        "gcp"
+      ]
+    },
+    "Asset": {
+      "allOf": [{
+          "$ref": "#/definitions/CreateAssetRequest"
+        },
+        {
+          "type": "object",
+          "required": [
+            "id",
+            "timestamp"
+          ],
+          "properties": {
+            "id": {
+              "type": "string",
+              "description": "asset id"
+            },
+            "timestamp": {
+              "type": "string",
+              "description": "asset creation timestamp",
+              "format": "date-time"
+            }
+          }
+        }
+      ]
+    },
+    "Assets": {
+      "type": "object",
+      "description": "list of assets",
+      "properties": {
+        "count": {
+          "type": "integer",
+          "description": "total number of assets"
+        },
+        "assets": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/Asset"
+          }
+        }
+      }
+    },
+    "SearchAssetsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Assets"
+        },
+        "input": {
+          "type": "object",
+          "description": "Search Assets Request"
+        }
+      },
+      "title": "Success Response"
+    },
+    "UpdateAssetRequest": {
+      "description": "Request payload to update an asset",
       "type": "object",
       "properties": {
         "tags": {
@@ -1154,20 +1280,38 @@
           "items": {
             "type": "string"
           },
-          "description": "Tags for the service"
+          "description": "asset tags"
         },
         "status": {
-          "enum": [
-            "active",
-            "deleted"
-          ],
-          "description": "Status of the asset - active if created, inactive if deleted."
+          "$ref": "#/definitions/AssetStatus"
+        },
+        "metadata": {
+          "type": "object",
+          "description": "metadata specific to an asset"
         }
       }
     },
-    "CreateAssetsObj": {
+    "UpdateAssetResponse": {
       "type": "object",
-      "description": "Input object for creation of new asset",
+      "description": "Response payload for update asset request",
+      "properties": {
+        "data": {
+          "type": "object",
+          "properties": {
+            "message": {
+              "type": "string",
+              "description": "success message from the service"
+            }
+          }
+        },
+        "input": {
+          "$ref": "#/definitions/UpdateAssetRequest"
+        }
+      }
+    },
+    "CreateAssetRequest": {
+      "type": "object",
+      "description": "Asset",
       "required": [
         "service",
         "domain",
@@ -1178,234 +1322,67 @@
       ],
       "properties": {
         "provider": {
-          "type": "string",
-          "description": "Name of cloud provider (aws, azure, google, etc.)"
+          "$ref": "#/definitions/Provider",
         },
         "provider_id": {
           "type": "string",
-          "description": "Identifier provided by the cloud provider (ARN in case of AWS)"
+          "description": "identifier provided by the cloud provider (ARN in case of AWS)"
         },
         "service": {
           "type": "string",
-          "description": "Service name"
+          "description": "service name"
         },
         "domain": {
           "type": "string",
-          "description": "Domain for the service"
+          "description": "domain/namespace for the service"
         },
         "environment": {
           "type": "string",
-          "description": "Environment that created the asset"
+          "description": "environment tagged with the asset"
         },
         "type": {
-          "type": "string",
-          "enum": [
-            "apigateway",
-            "s3",
-            "lambda",
-            "cloudfront",
-            "cloudwatch_event",
-            "dynamodb"
-          ],
-          "description": "Asset Type"
+          "$ref": "#/definitions/AssetType"
         },
         "status": {
-          "enum": [
-            "active",
-            "deleted"
-          ],
-          "description": "Status of the asset - active if created, inactive if deleted."
+          "$ref": "#/definitions/AssetStatus"
         },
         "created_by": {
           "type": "string",
-          "description": "Entity that created the asset, typically a service account"
+          "description": "entity that created the asset"
         },
         "tags": {
           "type": "array",
           "items": {
             "type": "string"
           },
-          "description": "Tags for the service"
-        }
-      }
-    },
-    "GetAssetsObj": {
-      "type": "object",
-      "description": "Input object for creation of new asset",
-      "properties": {
-        "id": {
-          "type": "string",
-          "description": "String id to uniquely identify a asset"
+          "description": "tags for the asset"
         },
-        "provider": {
-          "type": "string",
-          "description": "Name of cloud provider (aws, azure, google, etc.)"
-        },
-        "provider_id": {
-          "type": "string",
-          "description": "Identifier provided by the cloud provider (ARN in case of AWS)"
-        },
-        "service": {
-          "type": "string",
-          "description": "Service name"
-        },
-        "domain": {
-          "type": "string",
-          "description": "Domain for the service"
-        },
-        "environment": {
-          "type": "string",
-          "description": "Environment that created the asset"
-        },
-        "type": {
-          "type": "string",
-          "enum": [
-            "apigateway",
-            "s3",
-            "lambda",
-            "cloudfront",
-            "cloudwatch_event",
-            "dynamodb"
-          ],
-          "description": "Asset Type"
-        },
-        "status": {
-          "enum": [
-            "active",
-            "deleted"
-          ],
-          "description": "Status of the asset - active if created, inactive if deleted."
-        },
-        "created_by": {
-          "type": "string",
-          "description": "Entity that created the asset, typically a service account"
-        },
-        "timestamp": {
-          "type": "string",
-          "description": "Event timestamp",
-          "format": "date-time"
-        }
-      }
-    },
-    "AssetsObj": {
-      "allOf": [{
-          "$ref": "#/definitions/CreateAssetsObj"
-        },
-        {
+        "metadata": {
           "type": "object",
-          "required": [
-            "id"
-          ],
+          "description": "asset matadata"
+        }
+      }
+    },
+    "CreateAssetResponse": {
+      "type": "object",
+      "description": "Response payload for create asset request",
+      "properties": {
+        "data": {
+          "type": "object",
+          "description": "Response payload",
           "properties": {
             "id": {
               "type": "string",
-              "description": "String id to uniquely identify a asset"
-            }
-          }
-        }
-      ]
-    },
-    "AssetsListObj": {
-      "allOf": [{
-          "$ref": "#/definitions/CreateAssetsObj"
-        },
-        {
-          "type": "object",
-          "required": [
-            "id"
-          ],
-          "properties": {
-            "id": {
-              "type": "string",
-              "description": "String id to uniquely identify a asset"
-            }
-          }
-        }
-      ]
-    },
-    "PutSuccessResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object",
-          "description": "The response payload",
-          "properties": {
-            "message": {
-              "type": "string",
-              "description": "Message for Successful updation of asset"
-            }
-          }
-        },
-        "input": {
-          "$ref": "#/definitions/UpdateAssetsObj"
-        }
-      },
-      "description": "200 Success Response payload for update asset"
-    },
-    "PostSuccessResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "object",
-          "description": "The response payload",
-          "properties": {
-            "asset_id": {
-              "type": "string",
-              "description": "The unique ID returned for created asset"
+              "description": "asset id"
             },
             "message": {
               "type": "string",
-              "description": "Message for Successful Creation of asset"
+              "description": "success message from the service"
             }
           }
         },
         "input": {
-          "$ref": "#/definitions/CreateAssetsObj"
-        }
-      },
-      "description": "200 Success Response payload for create new asset"
-    },
-    "GetAssetSuccessResponse": {
-      "type": "object",
-      "description": "List of all matched assets.",
-      "properties": {
-        "data": {
-          "type": "array",
-          "description": "The response payload",
-          "items": {
-            "allOf": [{
-              "$ref": "#/definitions/AssetsObj"
-            }]
-          }
-        },
-        "input": {
-          "$ref": "#/definitions/GetAssetsObj"
-        }
-      }
-    },
-    "GetAssetListSuccessResponse": {
-      "type": "object",
-      "description": "List of all matched assets.",
-      "properties": {
-        "data": {
-          "properties": {
-            "count": {
-              "type": "string",
-              "description": "Total number of services pulled"
-            },
-            "assets": {
-              "type": "array",
-              "description": "The response payload",
-              "items": {
-                "allOf": [{
-                  "$ref": "#/definitions/AssetsObj"
-                }]
-              }
-            }
-          }
-        },
-        "input": {
-          "$ref": "#/definitions/GetAssetsObj"
+          "$ref": "#/definitions/CreateAssetRequest"
         }
       }
     }

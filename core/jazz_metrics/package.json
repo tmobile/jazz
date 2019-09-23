@@ -14,14 +14,14 @@
     "aws-arn-parser": "*",
     "lodash": "*",
     "moment": "^2.22.2",
-    "request": "*",
-    "aws-sdk": "*"
+    "request": "*"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.1.1",
     "aws-sdk-mock": "^1.7.0",
     "chai": "^3.5.0",
     "mocha": "^v3.0.0",
-    "sinon": "^5.0.10"
+    "sinon": "^5.0.10",
+    "aws-sdk": "*"
   }
 }
