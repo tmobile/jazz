@@ -78,11 +78,6 @@ $graph-title-height: 2.6rem;
     border-radius: 3px;
     height: 100%;
   }
-  /deep/ line-graph {
-    // height: calc(100% - #{$graph-title-height});
-    // padding-left: 1rem;
-    // padding-right: 1rem;
-  }
 }
 
 .page-section {
@@ -120,15 +115,8 @@ $graph-title-height: 2.6rem;
 
 .filter-wrp {
   display: flex;
-  align-items: center; // margin-bottom: 0.75rem;
-  @media (min-width: $screen-lg) {
-    .dropdown-1, .dropdown-2 {
-      // width: 200px;
-      // /deep/ .dropdown .dropdown-btn{
-      //     font-size: 14px;
-      // }
-    }
-  }
+  align-items: center;
+
   /deep/ .dropdown-btn .caret {
     right: 3px !important;
   }
@@ -174,14 +162,6 @@ $graph-title-height: 2.6rem;
   }
 }
 
-// .filter-icon {
-//     margin: 0 0 0 0rem;
-//     // margin-left: 25px;
-//     .icon-icon-filter-unselected{
-//         box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
-//         border-radius: 3px;
-//     }
-// }
 search-box {
   display: inline-block;
   margin-left: auto;
@@ -306,15 +286,6 @@ search-box {
   font-weight: 500;
 }
 
-// .empty-row {
-//     position: absolute;
-//     text-align: center;
-//     padding: 0rem 1.25rem;
-//     /* top: 10%; */
-//     width: 100%;
-//     font-size: 18px;
-//     font-weight: 500;
-// }
 .with-refresh.show {
   left: 25% !important;
   width: 50% !important;
@@ -340,6 +311,7 @@ search-box {
   display: none;
   position: absolute;
   top: 0;
+  background-color: white;
   right: 0;
   padding: 1rem;
   font-size: 1rem;
@@ -347,7 +319,6 @@ search-box {
   border-radius: 5px;
   z-index: $zindex-dropdown;
   transition: all 0.3s ease-in-out;
-  background-color: #ddd;
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
   /deep/.dropdown-btn {
     width: 156px;

@@ -41,15 +41,20 @@ export class EnvOverviewSectionComponent implements OnInit {
   friendlyName : string;
   yamlName:string;
   lastCommitted: any;
-  isCancel:boolean=false;
   editBtn:boolean = true;
   showAppDetail:boolean = false;
   saveBtn:boolean = false;
-  showCancel:boolean = false;
+  slsapp:boolean = false;
   showCncl:boolean=false;
+  editButton:boolean=true;
+  saveButton:boolean=false;
+  isCancel:boolean=false;
+  version: string = ">=1.0.0 <2.0.0";
+  isValid:boolean=false;
+  startNew: boolean = true;
+  showCancel:boolean = false;
   environmnt:any;
   isDiv:boolean=true;
-  version: string = ">=1.0.0 <2.0.0";
   isvalid:boolean=false;
   envResponseEmpty:boolean = false;
   envResponseTrue:boolean = false;
@@ -73,16 +78,17 @@ export class EnvOverviewSectionComponent implements OnInit {
 	errorChecked:boolean=true;
 	errorInclude:any="";
   json:any={};
-  slsapp:boolean = false;
   desc_temp:any;
-  toastmessage:any;
   is_function:boolean;
-  copyLink:string="Copy Link";
   isfunction: boolean = true;
   linenumber:number;
+  private toastmessage: any = '';
+  public lineNumberCount: any = new Array(7);
+  copyLink:string="Copy Link";
+  disableSave:boolean = true;
+
   errMessage: string = "Something went wrong while fetching your data";
   message:string="lalalala"
-  public lineNumberCount: any = new Array(7);
   private subscription:any;
 
   @Input() service: any = {};
@@ -158,14 +164,18 @@ popup(state){
     this.showCancel=false;
     this.saveBtn=false;
     this.editBtn=true;
+    let self=this;
+
     var errMsgBody;
     if(this.friendlyChanged){
       this.put_payload.friendly_name= this.tempFriendlyName;
       this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload, this.service.id)
             .subscribe(
                 (Response)=>{
-                  let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
-                  this.toast_pop('success',"",successMessage);
+                  let successMessage = self.toastmessage.successMessage(Response,"updateEnv");
+                  self.toast_pop('success',"",successMessage);
+                  self.callServiceEnv(false);
+                  self.tempFriendlyName='';
 
                   this.callServiceEnv();
                   this.tempFriendlyName='';
@@ -179,9 +189,10 @@ popup(state){
                   let errorMessage='';
                   if(errMsgBody!=undefined)
                     errorMessage = errMsgBody.message;
-                  this.errMessage = this.toastmessage.errorMessage(error, "updateEnv");
-                  this.toast_pop('error', 'Oops!', errorMessage)
-                  this.callServiceEnv();
+
+                  self.errMessage = self.toastmessage.errorMessage(Error, 'updateEnv');
+                  self.toast_pop('error', 'Oops!', errorMessage);
+                  self.callServiceEnv();
 
                 }
               );
@@ -192,6 +203,7 @@ popup(state){
     }
 
   }
+
   onCancelClick(){
     this.showCncl=false;
     this.saveBtn=false;
@@ -241,7 +253,8 @@ popup(state){
     this.open_sidebar.emit(true);
 
 }
-   callServiceEnv() {
+
+  callServiceEnv(shouldUpdateYaml = true) {
     if ( this.subscription ) {
       this.subscription.unsubscribe();
     }
@@ -265,10 +278,13 @@ popup(state){
 
             this.envstatus = deployment_status[this.status_val].replace("_"," ");
 
+            if (shouldUpdateYaml) {
+              this.yamlName = response.data.environment[0].deployment_descriptor;
+              this.yaml = this.yamlName;
+            }
+
             var envResponse = response.data.environment[0];
             this.friendlyName = envResponse.friendly_name;
-            this.yamlName= envResponse.deployment_descriptor;
-            this.yaml = this.yamlName;
             this.branchname = envResponse.physical_id;
             this.lastCommitted = envResponse.last_updated;
             this.frndload.emit(this.friendlyName);

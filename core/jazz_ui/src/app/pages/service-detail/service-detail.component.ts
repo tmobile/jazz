@@ -191,13 +191,13 @@ export class ServiceDetailComponent implements OnInit {
     let serviceType = this.service.type || this.service.serviceType;
     switch (serviceType) {
       case 'api':
-        this.tabData = ['overview', 'access control', 'metrics', 'cost', 'logs'];
+        this.tabData = ['overview', 'access control', 'metrics', 'logs', 'cost'];
         break;
       case 'website':
         this.tabData = ['overview', 'access control', 'metrics', 'cost'];
         break;
       case 'function':
-        this.tabData = ['overview', 'access control', 'metrics', 'cost', 'logs'];
+        this.tabData = ['overview', 'access control', 'metrics', 'logs', 'cost'];
         break;
     }
   }

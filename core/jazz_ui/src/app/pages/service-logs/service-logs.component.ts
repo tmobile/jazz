@@ -207,8 +207,8 @@ export class ServiceLogsComponent implements OnInit {
 		'iam role',
 		'apigateway',
 		'apigee_proxy'
-	  ];
-	
+	];
+
 	getFilter(filterServ){
 
 		this.service['islogs']=false;
@@ -218,7 +218,7 @@ export class ServiceLogsComponent implements OnInit {
 		}
 			this.service['allAssetsNameArray'] = this.allAssetsNameArray;
 			this.advanced_filter_input.sls_resource.show = true;
-		
+
 
 		let filtertypeObj = filterServ.addDynamicComponent({ "service": this.service, "advanced_filter_input": this.advanced_filter_input });
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
@@ -265,13 +265,13 @@ export class ServiceLogsComponent implements OnInit {
 	onAssetSelect(event) {
 		this.assetEvent = event
 		this.FilterTags.notify('filter-Asset', event);
-		this.assetSelected = event;	
+		this.assetSelected = event;
 		if (event !== 'all' && this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1){
 			this.setAssetName(this.responseArray, this.assetSelected);
-			this.onResourceSelect('all');	
+			this.onResourceSelect('all');
 		}
 	}
-	
+
 	onResourceSelect(event){
 		this.FilterTags.notifyLogs('filter-Asset-Name', event);
 		this.resourceSelected = event;
@@ -294,35 +294,35 @@ export class ServiceLogsComponent implements OnInit {
 		this.FilterTags.notify('filter-Region', event);
 		this.regSelected = event;
 	}
-	
+
 	fetchAssetName(type, name) {
 		let assetName;
 		let tokens;
 		switch(type) {
-		  case 'lambda':
-		  case 'sqs':
-		  case 'iam_role':
+			case 'lambda':
+			case 'sqs':
+			case 'iam_role':
 				tokens = name.split(':');
 				assetName = tokens[tokens.length - 1];
 				break;
-		  case 'dynamodb':
-		  case 'cloudfront':
-		  case 'kinesis':
+			case 'dynamodb':
+			case 'cloudfront':
+			case 'kinesis':
 				tokens = name.split('/');
 				assetName = tokens[tokens.length - 1];
 				break;
-		  case 's3':
+			case 's3':
 				tokens = name.split(':::');
 				assetName = tokens[tokens.length - 1].split('/')[0];
 				break;
-		  case 'apigateway':
-		  case 'apigee_proxy':
+			case 'apigateway':
+			case 'apigee_proxy':
 				tokens = name.split(this.selectedEnv + '/');
 				assetName = tokens[tokens.length - 1];
 				break;
 		}
 		return assetName;
-	  }
+		}
 
 	setAssetName(val, selected) {
 			let assetObj = [];
@@ -371,10 +371,19 @@ export class ServiceLogsComponent implements OnInit {
 		return this.http.get('/jazz/assets', {
 			domain: self.service.domain,
 			service: self.service.name,
+			limit: 1e3, // TODO: Address design shortcomings
+			offset: 0,
 		}, self.service.id).toPromise().then((response: any) => {
 			if (response && response.data && response.data.assets) {
 				this.assetsNameArray.push(response);
 				let assets = _(response.data.assets).map('asset_type').uniq().value();
+
+				// TODO: Consider hoisting to member or configuration
+				const filterWhitelist = [
+					'lambda',
+				];
+				assets = assets.filter(item => filterWhitelist.includes(item));
+
 				let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 				validAssetList.splice(0,0,'all');
 				this.responseArray = this.assetsNameArray[0].data.assets.filter(asset => (validAssetList.indexOf(asset.asset_type) > -1));
@@ -505,7 +514,7 @@ export class ServiceLogsComponent implements OnInit {
 			value.checked = true;
 		}
 		if(resValue != null) {
-		   resValue.checked = true;
+			resValue.checked = true;
 		}
 		delete this.payload['asset_identifier'];
 		delete this.payload['asset_type'];
@@ -821,11 +830,11 @@ export class ServiceLogsComponent implements OnInit {
 			this.payload.offset = this.offsetValue;
 			this.callLogsFunc();
 			//  ** call service
-      /*
-      * Required:- we need the total number of records from the api, which will be equal to totalPagesTable.
-      * We should be able to pass start number, size/number of records on each page to the api, where,
-      * start = (size * currentlyActivePage) + 1
-      */
+			/*
+			* Required:- we need the total number of records from the api, which will be equal to totalPagesTable.
+			* We should be able to pass start number, size/number of records on each page to the api, where,
+			* start = (size * currentlyActivePage) + 1
+			*/
 		}
 		else {
 		}

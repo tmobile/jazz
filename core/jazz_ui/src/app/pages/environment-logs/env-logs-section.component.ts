@@ -87,6 +87,9 @@ export class EnvLogsSectionComponent implements OnInit {
 	sliderMax: number = 7;
 	rangeList: Array<string> = ['Day', 'Week', 'Month', 'Year'];
 	selectedTimeRange: string = this.rangeList[0];
+	selectedAssetName: any;
+	assetsNameArray:any = [];
+	allAssetsNameArray: any = [];
 
 
 
@@ -126,7 +129,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		}
 	]
 
-	logs = [];	
+	logs = [];
 
 	filtersList = ['ERROR', 'WARN', 'INFO', 'DEBUG', 'VERBOSE'];
 	selected = ['ERROR'];
@@ -143,9 +146,6 @@ export class EnvLogsSectionComponent implements OnInit {
 	errorTime: any;
 	errorURL: any;
 	errorAPI: any;
-	selectedAssetName: any;
-	assetsNameArray:any = [];
-	allAssetsNameArray: any = [];
 	errorRequest: any = {};
 	errorResponse: any = {};
 	errorUser: any;
@@ -163,7 +163,7 @@ export class EnvLogsSectionComponent implements OnInit {
 	regList=env_internal.urls.regions;
 	accSelected:string = this.accList[0];
 	regSelected:string=this.regList[0];
-  	public assetSelected:string;
+		public assetSelected:string;
 	public resourceSelected: any;
 	lambdaResourceNameArr;
 	lambdaResource;
@@ -181,19 +181,20 @@ export class EnvLogsSectionComponent implements OnInit {
 		'iam role',
 		'apigateway',
 		'apigee_proxy'
-	  ];
-	
+	];
+
 	getFilter(filterServ){
 		this.service['islogs']=true;
 		this.service['isServicelogs']=true;
 		if(this.assetList){
 			this.service['assetList']=this.assetList;
 		}
-		
+
 			this.service['allAssetsNameArray'] = this.allAssetsNameArray;
 			this.advanced_filter_input.sls_resource.show = true;
-		
-		
+
+
+
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
 		var comp = this;
@@ -206,7 +207,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
 			comp.onFilterSelect(event);
 		});
-		this.instance_yes.onAssetSelect.subscribe(event => {		
+		this.instance_yes.onAssetSelect.subscribe(event => {
 			comp.onAssetSelect(event);
 			if(event !== 'all'){
 				this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
@@ -214,30 +215,26 @@ export class EnvLogsSectionComponent implements OnInit {
 				(<AdvancedFiltersComponent>componentRef.instance).data = {"service" : this.service, "advanced_filter_input" : this.advanced_filter_input};
 			}
 		});
-		this.instance_yes.onResourceSelect.subscribe(event => {
-			comp.onResourceSelect(event);
-		});
-
 	}
 
 	onAssetSelect(event){
 		this.FilterTags.notify('filter-Asset',event);
 		this.assetSelected=event;
 		if(event != 'all' && this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1){
-		this.setAssetName(this.responseArray,this.assetSelected);
-		this.onResourceSelect('all');	
+			this.setAssetName(this.responseArray,this.assetSelected);
+			this.onResourceSelect('all');
 		}
-	} 	
+	}
 	onResourceSelect(event){
 		this.FilterTags.notifyLogs('filter-Asset-Name', event);
 		this.resourceSelected = event;
 	}
 	 onaccSelected(event){
-	  this.accSelected=event;
-  
+		this.accSelected=event;
+
 	 }
-	  onregSelected(event){
-	  this.regSelected=event;
+		onregSelected(event){
+		this.regSelected=event;
 	 }
 	expandall() {
 		for (var i = 0; i < this.logs.length; i++) {
@@ -251,19 +248,19 @@ export class EnvLogsSectionComponent implements OnInit {
 		let assetName;
 		let tokens;
 		switch(type) {
-		  case 'lambda':
-		  case 'sqs':
-		  case 'iam_role':
+			case 'lambda':
+			case 'sqs':
+			case 'iam_role':
 				tokens = name.split(':');
 				assetName = tokens[tokens.length - 1];
 				break;
-		  case 'dynamodb':
-		  case 'cloudfront':
-		  case 'kinesis':
+			case 'dynamodb':
+			case 'cloudfront':
+			case 'kinesis':
 				tokens = name.split('/');
 				assetName = tokens[tokens.length - 1];
 				break;
-		  case 's3':
+			case 's3':
 				tokens = name.split(':::');
 				assetName = tokens[tokens.length - 1].split('/')[0];
 				break;
@@ -274,7 +271,7 @@ export class EnvLogsSectionComponent implements OnInit {
 				break;
 		}
 		return assetName;
-	  }
+		}
 
 	setAssetName(val, selected) {
 			let assetObj = [];
@@ -297,7 +294,7 @@ export class EnvLogsSectionComponent implements OnInit {
 				})
 				this.allAssetsNameArray.sort();
 				this.allAssetsNameArray.splice(0,0,'all');
-				
+
 			}
 			else {
 				assetObj.map((item) => {
@@ -315,7 +312,7 @@ export class EnvLogsSectionComponent implements OnInit {
 				})
 				this.lambdaResourceNameArr.sort();
 				this.lambdaResourceNameArr.splice(0,0,'all');
-				
+
 			}
 	}
 
@@ -425,19 +422,19 @@ export class EnvLogsSectionComponent implements OnInit {
 		this.payload.start_time = resetdate;
 		this.resetPayload();
 
-		
+
 
 	}
 	getRangefunc(e){
-    
+
 		this.FilterTags.notify('filter-TimeRangeSlider',e);
-		
+
 		this.sliderFrom=1;
 		this.sliderPercentFrom=1;
 		var resetdate = this.getStartDate(this.selectedTimeRange, this.sliderFrom);
 		this.callLogsFunc();
-		
-	  }
+
+		}
 
 	onRangeListSelected(range) {
 		this.sliderFrom = 1;
@@ -456,8 +453,8 @@ export class EnvLogsSectionComponent implements OnInit {
 			case 'Week':{   this.FilterTags.notify('filter-Period','1 Hour')
 				break;
 			}
-			case 'Month':{ 
-			   this.FilterTags.notify('filter-Period','6 Hours')
+			case 'Month':{
+				 this.FilterTags.notify('filter-Period','6 Hours')
 				break;
 			}
 			case 'Year':{   this.FilterTags.notify('filter-Period','7 Days')
@@ -536,18 +533,25 @@ export class EnvLogsSectionComponent implements OnInit {
 		},10);
 	}
 
-  refresh() {
-    this.callLogsFunc();
-  }
-  getAssetType(data?){
+	refresh() {
+		this.callLogsFunc();
+	}
+	getAssetType(data?){
 	let self=this;
-   return this.http.get('/jazz/assets',{
-	   domain: self.service.domain,
-				   service: self.service.name,              
-   }, self.service.id).toPromise().then((response:any)=>{
-	   if(response&&response.data&&response.data.assets){
+	return this.http.get('/jazz/assets',{
+		domain: self.service.domain,
+		service: self.service.name,
+	}, self.service.id).toPromise().then((response:any)=>{
+		if(response&&response.data&&response.data.assets){
 			this.assetsNameArray.push(response);
-			let assets=_(response.data.assets).map('asset_type').uniq().value();		
+			let assets=_(response.data.assets).map('asset_type').uniq().value();
+
+			// TODO: Consider hoisting to member or configuration
+			const filterWhitelist = [
+				'lambda',
+			];
+
+			assets = assets.filter(item => filterWhitelist.includes(item));
 			 let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 			 validAssetList.splice(0, 0, 'all');
 			this.responseArray = this.assetsNameArray[0].data.assets.filter(asset=>(validAssetList.indexOf(asset.asset_type)>-1));
@@ -566,12 +570,11 @@ export class EnvLogsSectionComponent implements OnInit {
 			self.instance_yes.showAsset = true;
 			self.instance_yes.assetSelected = validAssetList[0].replace(/_/g ," ");
 		}
-   })
-   .catch((error) => {
-	   return Promise.reject(error);
-   })
+	 })
+	 .catch((error) => {
+		 return Promise.reject(error);
+	 })
 }
-
 
 	callLogsFunc() {
 		this.loadingState = 'loading';
@@ -582,13 +585,13 @@ export class EnvLogsSectionComponent implements OnInit {
 			response => {
 				if(response.data.logs !== undefined) {
 				this.logs = response.data.logs  || response.data.data.logs;
-				if(this.logs != undefined)
+				if(this.logs !== undefined)
 				if (this.logs && this.logs.length != 0) {
 					var pageCount = response.data.count;
 					if (pageCount) {
 						this.totalPagesTable = Math.ceil(pageCount / this.limitValue);
 						if(this.totalPagesTable === 1){
-						   this.paginationSelected = false;
+							 this.paginationSelected = false;
 						}
 					}
 					else {
@@ -635,48 +638,48 @@ export class EnvLogsSectionComponent implements OnInit {
 	};
 	cancelFilter(event){
 		switch(event){
-		  case 'time-range':{  this.instance_yes.onRangeListSelected('Day'); 
-			
-		    break;
-		  }
-		  case 'time-range-slider':{  this.instance_yes.onTimePeriodSelected(1);
-		  
+			case 'time-range':{  this.instance_yes.onRangeListSelected('Day');
+
+				break;
+			}
+			case 'time-range-slider':{  this.instance_yes.onTimePeriodSelected(1);
+
 			break;
-		  }
-		  case 'period':{       this.instance_yes.onPeriodSelected('15 Minutes');
-			
-		  break;
-		  }
-		  case 'statistic':{    this.instance_yes.onStatisticSelected('Average');
-		  
+			}
+			case 'period':{       this.instance_yes.onPeriodSelected('15 Minutes');
+
 			break;
-		  }
-		  case 'account':{      this.instance_yes.onaccSelected('Acc 1');
-		  
+			}
+			case 'statistic':{    this.instance_yes.onStatisticSelected('Average');
+
 			break;
-		  }
-		  case 'region':{       this.instance_yes.onregSelected('reg 1');
-		  
+			}
+			case 'account':{      this.instance_yes.onaccSelected('Acc 1');
+
 			break;
-		  }
-		  case 'env':{          this.instance_yes.onEnvSelect('prod');
-		  
+			}
+			case 'region':{       this.instance_yes.onregSelected('reg 1');
+
 			break;
-		  }
-		  case 'method':{       this.instance_yes.onMethodListSelected('POST');
-		  
+			}
+			case 'env':{          this.instance_yes.onEnvSelect('prod');
+
 			break;
-		  }
-		  case 'asset':{        this.instance_yes.getAssetType('all');
-		  
-		    break;
-		  }
-		  case 'asset-iden':{	this.instance_yes.getResourceType('all');
+			}
+			case 'method':{       this.instance_yes.onMethodListSelected('POST');
+
+			break;
+			}
+			case 'asset':{        this.instance_yes.getAssetType('all');
+
+				break;
+			}
+			case 'asset-iden':{	this.instance_yes.getResourceType('all');
 
 			break;
 		}
-		  case 'all':{
-		        this.instance_yes.onRangeListSelected('Day');    
+			case 'all':{
+						this.instance_yes.onRangeListSelected('Day');
 				this.instance_yes.onPeriodSelected('15 Minutes');
 				this.instance_yes.onTimePeriodSelected(1);
 				this.instance_yes.onStatisticSelected('Average');
@@ -687,21 +690,21 @@ export class EnvLogsSectionComponent implements OnInit {
 				this.instance_yes.getAssetType('all');
 				this.instance_yes.getResourceType('all');
 				break;
-		  	}
+				}
 		}
-	   
+
 		this.getRangefunc(1);
 }
 	onFilterSelect(event){
 		switch(event.key){
-		  case 'slider':{
+			case 'slider':{
 			this.getRange(event.value);
 			break;
-		  }
-		  
-		  case 'range':{
+			}
+
+			case 'range':{
 			this.sendDefaults(event.value);
-			this.FilterTags.notifyLogs('filter-TimeRange',event.value);		
+			this.FilterTags.notifyLogs('filter-TimeRange',event.value);
 			this.sliderFrom =1;
 			this.FilterTags.notifyLogs('filter-TimeRangeSlider',this.sliderFrom);
 			var resetdate = this.getStartDate(event.value, this.sliderFrom);
@@ -709,23 +712,23 @@ export class EnvLogsSectionComponent implements OnInit {
 			this.selectedTimeRange = event.value;
 			this.payload.start_time = resetdate;
 			this.resetPayload();
-			
+
 			break;
-		  }
-		  
-		  case 'account':{
+			}
+
+			case 'account':{
 			this.FilterTags.notify('filter-Account',event.value);
 			this.accSelected=event.value;
 			break;
-		  }
-		  case 'region':{ 
+			}
+			case 'region':{
 			this.FilterTags.notify('filter-Region',event.value);
 			this.regSelected=event.value;
 			break;
-				
-		  }
-		  case 'asset' :{
-			  this.FilterTags.notify('filter-Asset',event.value)
+
+			}
+			case 'asset' :{
+				this.FilterTags.notify('filter-Asset',event.value)
 				this.assetSelected=event.value;
 				if (this.assetSelected !== 'all') {
 					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
@@ -738,10 +741,10 @@ export class EnvLogsSectionComponent implements OnInit {
 				else {
 					delete this.payload['asset_type'];
 				}
-			  this.resetPayload();
-			  break;
-		  }
-		  case "resource" : {
+				this.resetPayload();
+				break;
+			}
+			case "resource" : {
 			this.resourceSelected = event.value;
 			this.payload.asset_identifier = this.resourceSelected;
 			if(this.resourceSelected.toLowerCase() === 'all'){
@@ -749,7 +752,7 @@ export class EnvLogsSectionComponent implements OnInit {
 			}
 			this.resetPayload();
 			break;
-		  }
+			}
 		}
 	}
 	getTime() {
@@ -791,7 +794,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		this.callLogsFunc();
 		this.filter = new Filter(this.logs);
 		this.sort = new Sort(this.logs);
-		
+
 	}
- 
+
 }

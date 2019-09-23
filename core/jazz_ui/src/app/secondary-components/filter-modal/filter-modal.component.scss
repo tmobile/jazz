@@ -55,3 +55,13 @@
   }
 }
 
+.jz-modals {
+  background-color: #fff;
+  border-radius: 0.8em;
+  box-shadow: 0 20px 15px rgba(102, 102, 102, 0.26);
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  flex-direction: column;
+}
+

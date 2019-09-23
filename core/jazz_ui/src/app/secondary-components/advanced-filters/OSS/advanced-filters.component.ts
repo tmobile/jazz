@@ -26,13 +26,13 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   @Output() onResourceSelect: EventEmitter<any> = new EventEmitter<any>();
   @ViewChild('filters') filters;
   public assetFilter;
+  assetSelectedValue: any;
   public formFields: any = [];
   public assetList: any = [];
   @Output() onFilterClick: EventEmitter<any> = new EventEmitter<any>();
 
   slider: any;
   sliderFrom = 1;
-  assetSelectedValue: any;
   sliderPercentFrom = 0;
   sliderMax: number = 7;
   showAsset: boolean = false;
@@ -69,12 +69,13 @@ export class AdvancedFiltersComponentOSS implements OnInit {
   resourceSelected:string;
   isAllSelected: boolean = true;
   isSlsapp: boolean = false;
+  allAssetsNameArray:any;
+  available: boolean = false;
 
   envList: any = ['prod', 'stg'];
   envSelected: string = this.envList[0];
 
   lambdaResourceNameArr:string;
-  allAssetsNameArray:any;
 
   getRange(e) {
     this.selectFilter["key"] = 'slider';
@@ -209,7 +210,7 @@ export class AdvancedFiltersComponentOSS implements OnInit {
         }
       }
     }
-    
+
   }
 
   onStatisticSelected(statistics) {
@@ -254,8 +255,16 @@ export class AdvancedFiltersComponentOSS implements OnInit {
     this.advanced_filter_input = this.data.advanced_filter_input;
     this.service = this.data.service;
     this.assetList = this.service.assetList
-    if(this.assetList){
+    if (this.assetList) {
       this.assetSelected = this.assetList[0];
+      this.available = true
+      if(this.assetList.length !== 0){
+          this.advanced_filter_input.asset.show = true;
+      }
+    } else {
+        if(this.advanced_filter_input.asset){
+            this.advanced_filter_input.asset.show = false;
+        }
     }
     if(this.assetSelected == "all"){
       this.isAllSelected = true;

@@ -1,5 +1,5 @@
 import {
-  Component, OnInit, Input, ViewChild, AfterViewInit
+  Component, OnInit, Input, ViewChild, AfterViewInit, ChangeDetectorRef
 } from '@angular/core';
 import * as moment from 'moment';
 import { UtilsService } from '../../core/services/utils.service';
@@ -30,10 +30,11 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   selectedEnv: any;
   public assetFilter;
   lambdaResourceNameArr:any;
-  //public assetIdentifierFilter;
+  public assetIdentifierFilter;
   public environmentFilter;
   public assetList: any = [];
   selectedAssetName: any;
+  assetSelected;
   public formFields: any = [
     {
       column: 'View By:',
@@ -87,9 +88,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public errorData = {};
   public graphData;
   private http;
-  public assetType = [];
-  public assetSelected: any;
   slsapp: boolean = false;
+  public assetType = [];
+
   errMessage: any;
   private toastmessage: any = '';
   private slsLambdaselected;
@@ -106,6 +107,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   ];
   constructor(private request: RequestService,
     private utils: UtilsService,
+    private cdr: ChangeDetectorRef,
     private messageservice: MessageService,
     private activatedRoute: ActivatedRoute) {
     this.http = this.request;
@@ -157,7 +159,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   refresh() {
     this.ngAfterViewInit();
   }
-  
+
   fetchAssetName(type, name) {
     let assetName;
     let tokens;
@@ -230,9 +232,25 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       return self.http.get('/jazz/assets', {
         domain: self.service.domain,
         service: self.service.name,
+        limit: 1e3, // TODO: Address design shortcomings
+        offset: 0,
       }, self.service.id).toPromise().then((response: any) => {
         if (response && response.data && response.data.assets) {
           let assets = _(response.data.assets).map('asset_type').uniq().value();
+
+          // TODO: Consider hoisting to member or configuration
+          const filterWhitelist = [
+            'lambda',
+            'apigateway',
+            'cloudfront',
+            's3',
+            'dynamodb',
+            'sqs',
+            'kinesis_stream',
+            'apigee_proxy',
+          ];
+          assets = assets.filter(item => filterWhitelist.includes(item));
+
           if(assets){
             this.assetsNameArray = [];
             self.assetWithDefaultValue = assets;
@@ -252,7 +270,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
                 values: validAssetList,
                 selected: validAssetList[0].replace(/_/g, " ")
               };
-              
+
               if (!data) {
                 self.assetSelected = validAssetList[0].replace(/_/g, " ");
               }
@@ -267,8 +285,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
                 self.setAssetName(self.assetsNameArray, self.assetSelected);
               }
             }
-            
-          }          
+
+          }
         }
       })
       .catch((error) => {
@@ -278,7 +296,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     catch(ex){
       console.log('ex:',ex);
     }
-    
+
   }
 
   getEnvironments() {
@@ -416,7 +434,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
             }
           })
           this.formFields.splice(2, 0, changedFilter);
-          this.filters.setFields(this.formFields); 
+          this.filters.setFields(this.formFields);
       }
       if (changedFilter.label === 'ENVIRONMENT') {
           this.selectedEnv = changedFilter.selected;
@@ -427,7 +445,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
 
     }
-  
+
     if (changedFilter && (changedFilter.label === 'ASSET' ||
       changedFilter.label === 'METHOD' ||
       changedFilter.label === 'PATH' || changedFilter.label === 'ASSET NAME')) {
@@ -436,7 +454,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       this.filters.removeField('Filter By:', 'ASSET NAME');
       return this.queryMetricsData();
     }
-    
+
   }
 
   queryMetricsData() {
@@ -444,6 +462,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       this.metricSubscription.unsubscribe();
     }
     this.sectionStatus = 'loading';
+
+    // TODO: Leverage TypeScript interfaces for data contracts at minimum
     let request = {
       url: '/jazz/metrics',
       body: {
