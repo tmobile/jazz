@@ -63,7 +63,7 @@ import { MetricsCarouselComponent } from "../secondary-components/metrics-carous
 import { RouterModule } from "@angular/router";
 import { Error403Component } from "../pages/error403/error403.component";
 import { RadioCheckboxComponent } from "../primary-components/radio-checkbox/radio-checkbox.component";
-
+import {OrderByPipe} from '../core/pipes/order-by.pipe';
 let specificComponents: any
 let specificModules: any;
 if (environment.envName == 'oss') {
@@ -141,6 +141,7 @@ for (let i in specificComponents) {
     CheckboxGroupRegionComponent,
     FilterTagComponent,
     Error403Component,
+    OrderByPipe,
     ...declarationsArray,
 
 
@@ -192,6 +193,7 @@ for (let i in specificComponents) {
     Error403Component,
     RadioCheckboxComponent,
     RadioGroupComponent,
+    OrderByPipe,
     ...declarationsArray
 
   ],
