@@ -28,9 +28,9 @@ function handler(event, context, cb) {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("Method cannot be empty")));
     }
 
-    // if (event && !event.principalId) {
-    //   return cb(JSON.stringify(errorHandler.throwUnauthorizedError("User is not authorized to access this service. ")));
-    // }
+    if (event && !event.principalId) {
+      return cb(JSON.stringify(errorHandler.throwUnauthorizedError("User is not authorized to access this service. ")));
+    }
 
     //SAFE
     if (event && event.method === 'POST' && resourcePath.endsWith("/safes")) {
