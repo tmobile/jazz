@@ -13,7 +13,6 @@ import { ToasterService } from 'angular2-toaster';
 import { BarGraphComponent } from '../../secondary-components/bar-graph/bar-graph.component';
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
 import { ServiceMetricsComponent } from '../service-metrics/service-metrics.component';
-import { environment } from './../../../environments/environment';
 import { environment as env_oss } from './../../../environments/environment.oss';
 
 

@@ -167,8 +167,8 @@ private intervalSubscription: Subscription;
       let serviceRow = {
         name: service.service,
         type: service.type,
-        platform: service.deployment_accounts[0].provider,
         domain: service.domain,
+        platform: service.deployment_accounts[0].provider,
         health: 2,
         status: service.status.replace('_',' '),
         lastModified: service.timestamp.split("T")[0],

@@ -55,7 +55,9 @@ export const environment = {
     account_number: '{account_number}',
     region: '{region}',
     envLists: {"nodejs8.10": "Nodejs 8.10", "python2.7": "Python 2.7", "python3.6": "Python 3.6", "java8": "Java 8", "go1.x": "Go 1.x"},
-    accountMap: {accountMap}
+    accountMap: {accountMap},
+    default_region: '{default_region}',
+    default_account: '{default_account}'
   },
   azure: {
     azure_account_number: '{azure_account_number}',

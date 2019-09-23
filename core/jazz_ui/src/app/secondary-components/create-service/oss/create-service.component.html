@@ -22,7 +22,7 @@
                 <div class="space-between content">
                     <section class="pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')" (click)="changeServiceType('api')">
-                            <div class="icon-icon-api" [ngClass]="{'selected': typeOfService == 'function'}"></div>
+                            <div class="icon-icon-api selected"></div>
                         </div>
                         <div class="icon-name" [ngClass]="{'service-box-selected': typeOfService == 'api'}">
                             <p class="name-style">Api</p>
@@ -41,7 +41,7 @@
                     </section>
                     <section class="pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'website'}" (keyup.enter)="changeServiceType('website')" (click)="changeServiceType('website')">
-                            <div class="icon-icon-web" [ngClass]="{'selected': typeOfService == 'function'}"></div>
+                            <div class="icon-icon-web selected"></div>
                         </div>
                         <div class="icon-name" [ngClass]="{'service-box-selected': typeOfService == 'website'}">
                             <p class="name-style">Website</p>
@@ -50,9 +50,8 @@
                     <section class="service-box-section align-self">OR</section>
                     <section class="pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'sls-app'}" (keyup.enter)="changeServiceType('sls-app')" (click)="changeServiceType('sls-app')">
-                            <div class="icon-icon-sls-app" [ngClass]="{'selected': typeOfService == 'sls-app'}">
-                                <img *ngIf="typeOfService == 'sls-app'" src="./../../../assets/images/icons/Build-custom.svg"/>
-                                <img *ngIf="typeOfService != 'sls-app'" src="./../../../assets/images/icons/Build-custom-gray.svg"/>
+                            <div class="icon-icon-sls-app selected">
+                                <img src="./../../../assets/images/icons/Build-custom.svg"/>
                             </div>
                         </div>
                         <div class="icon-name" [ngClass]="{'service-box-selected': typeOfService == 'sls-app'}">
@@ -82,7 +81,7 @@
                         </div>
                     </section>
                     <section class="pad-left0 service-box-section">
-                        <div id="tile-azure" tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure','disabled-azure':typeOfPlatform != 'azure'}" (click)="changePlatformType('azure')">
+                        <div id="tile-azure" tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure','disabled-azure':typeOfPlatform != 'azure','disabled-box':azureEnabled == false}" (click)="changePlatformType('azure')">
                             <img *ngIf=" typeOfPlatform != 'azure'" src="./../../../../assets/images/azure-deselected.png">
                             <img *ngIf=" typeOfPlatform == 'azure'" src="./../../../../assets/images/azure-logo.svg">
                         </div>

@@ -425,10 +425,6 @@ node() {
                   error "Deployment targets are not defined"
               }
 
-              if (domain != "jazz") {
-                createSubscriptionFilters(stackName, configLoader.AWS.DEFAULTS.REGION, roleId, accountDetails, env_key, credsId);
-              }
-
               updateSwagger();
 
               swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
