@@ -1,5 +1,5 @@
 /**
-API for establishing tvault communication
+API specification for jazz t-valut api
 @author:
 @version: 1.0
  **/

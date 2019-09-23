@@ -1,7 +1,7 @@
 {
-  "name": "api-nodejs-template",
+  "name": "jazz_t-vault",
   "version": "0.0.1",
-  "description": "Nodejs Template project",
+  "description": "API specification for jazz t-valut api",
   "main": "index.js",
   "private": true,
   "author": [],

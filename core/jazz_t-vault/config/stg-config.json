@@ -1,3 +1,14 @@
 {
-  "configKey": "ConfigValueStg"
+  "T_VAULT_API": "https://stg-jazz.vault.corporate.t-mobile.com/vault/v2",
+  "T_VAULT_USERNAME": "{tvault-username}",
+  "T_VAULT_PASSWORD": "{tvault-password}",
+  "T_VAULT_LOGIN_API": "/auth/tvault/login",
+  "SAFE_API": "/ss/sdb",
+  "USER_IN_SAFE_API": "/user",
+  "ROLE_IN_SAFE_API": "/role",
+  "DELETE_SAFE": "/delete?path=shared/",
+  "GET_SAFE_DETAILS": "?path=shared/",
+  "GET_ROLE_DETAILS": "/auth/aws/role/",
+  "CREATE_ROLE_IN_VAULT": "/ss/auth/aws/iam/role?path=shared/",
+  "USER_IN_VAULT": "/auth/userpass/users"
 }

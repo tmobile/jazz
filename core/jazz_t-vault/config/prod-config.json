@@ -1,7 +1,7 @@
 {
   "T_VAULT_API": "https://stg-jazz.vault.corporate.t-mobile.com/vault/v2",
-  "T_VAULT_USERNAME": "SWilson162",
-  "T_VAULT_PASSWORD": "T-mobile@9446429123",
+  "T_VAULT_USERNAME": "{tvault-username}",
+  "T_VAULT_PASSWORD": "{tvault-password}",
   "T_VAULT_LOGIN_API": "/auth/tvault/login",
   "SAFE_API": "/ss/sdb",
   "USER_IN_SAFE_API": "/user",

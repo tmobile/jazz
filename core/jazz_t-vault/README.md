@@ -1,1 +1,1 @@
-## Node API template
+## API specification for jazz t-valut api
