@@ -1,0 +1,20 @@
+{
+  "CREATE_SAFE_REQUIRED_FIELDS": [
+    "safeName",
+    "owner"
+  ],
+  "CREATE_USER_IN_SAFE_REQUIRED_FIELDS": [
+    "userName"
+  ],
+  "CREATE_ROLE_IN_SAFE_REQUIRED_FIELDS": [
+    "roleName"
+  ],
+  "CREATE_USER_IN_VAULT_REQUIRED_FIELDS": [
+    "userName",
+    "password",
+    "policies"
+  ],
+  "ACCESS_LEVEL_IN_SAFE": "write",
+  "ACCOUNTID": "{conf_account}",
+  "INSTANCE_PREFIX": "{instance_prefix}"
+}
