@@ -367,6 +367,14 @@
                 "tags": [
                     "CORS"
                 ],
+                "parameters": [
+                    {
+                        "name": "safeName",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Default response for CORS method",
@@ -912,7 +920,8 @@
                         "name": "safeName",
                         "in": "path",
                         "required": true,
-                        "type": "string"
+                        "type": "string",
+                        "description": "safe name to delete"
                     }
                 ],
                 "consumes": [
@@ -1119,6 +1128,14 @@
                 "tags": [
                     "CORS"
                 ],
+                "parameters": [
+                    {
+                        "name": "safeName",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Default response for CORS method",
@@ -1255,6 +1272,12 @@
                     "application/json"
                 ],
                 "parameters": [
+                    {
+                        "name": "safeName",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    },
                     {
                         "name": "roleName",
                         "in": "query",
@@ -1664,12 +1687,13 @@
                         "name": "safeName",
                         "in": "path",
                         "required": true,
-                        "type": "string"
+                        "type": "string",
+                        "description": "safe name to delete"
                     },
                     {
                         "name": "param",
                         "in": "body",
-                        "description": "post body parameter.",
+                        "description": "body parameter.",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/DeleteRoleFromSafeObj"
@@ -1880,6 +1904,14 @@
                 "tags": [
                     "CORS"
                 ],
+                "parameters": [
+                    {
+                        "name": "safeName",
+                        "in": "path",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "Default response for CORS method",
@@ -2014,7 +2046,8 @@
                         "name": "safeName",
                         "in": "path",
                         "required": true,
-                        "type": "string"
+                        "type": "string",
+                        "description": "safe name for identifying the safe."
                     },
                     {
                         "name": "param",
@@ -2224,12 +2257,13 @@
                         "name": "safeName",
                         "in": "path",
                         "required": true,
-                        "type": "string"
+                        "type": "string",
+                        "description": "safe name to delete"
                     },
                     {
                         "name": "param",
                         "in": "body",
-                        "description": "post body parameter.",
+                        "description": "body parameter.",
                         "required": true,
                         "schema": {
                             "$ref": "#/definitions/UserDetailsForSafeObj"
@@ -2775,10 +2809,13 @@
                 "description": "To remove a user from Safe",
                 "parameters": [
                     {
-                        "name": "userName",
+                        "name": "param",
                         "in": "body",
-                        "description": "post body parameter.",
-                        "required": true
+                        "description": "body parameter.",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UserDetailsForVaultObj"
+                        }
                     }
                 ],
                 "consumes": [
@@ -3009,13 +3046,15 @@
             "type": "object",
             "description": "Details of safe",
             "properties": {
-                "allOf": [
-                    {
-                        "$ref": "#/definitions/CreateSafeObj"
-                    }
-                ],
+                "items": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/CreateSafeObj"
+                        }
+                    ]
+                },
                 "users": {
-                    "type": "Object",
+                    "type": "object",
                     "description": "User and permission associated with the safe",
                     "items": {
                         "allOf": [
@@ -3103,7 +3142,7 @@
                     "description": "auth type of the role"
                 },
                 "policies": {
-                    "type": "Object",
+                    "type": "object",
                     "description": "policies of the role"
                 }
             }
@@ -3132,7 +3171,7 @@
             "description": "Details of safe.",
             "properties": {
                 "data": {
-                    "type": "Object",
+                    "type": "object",
                     "description": "The response payload",
                     "items": {
                         "allOf": [
@@ -3287,12 +3326,6 @@
                             "description": "Message for Successful Deletion of user from vault"
                         }
                     }
-                },
-                "properties": {
-                    "userName": {
-                        "type": "string",
-                        "description": "user name to uniquely identify a user"
-                    }
                 }
             },
             "description": "200 Success Response payload for delete user from vault"
@@ -3302,7 +3335,7 @@
             "description": "Details of role.",
             "properties": {
                 "data": {
-                    "type": "Object",
+                    "type": "object",
                     "description": "The response payload",
                     "items": {
                         "allOf": [
