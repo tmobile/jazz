@@ -168,6 +168,7 @@ private intervalSubscription: Subscription;
         name: service.service,
         type: service.type,
         domain: service.domain,
+        platform: service.deployment_accounts[0].provider,
         health: 2,
         status: service.status.replace('_',' '),
         lastModified: service.timestamp.split("T")[0],
@@ -175,9 +176,6 @@ private intervalSubscription: Subscription;
         id: service.id,
         data: service
       };
-      if(service.deployment_accounts){
-        serviceRow['platform'] = service.deployment_accounts[0].provider
-      }
       _serviceList.push(serviceRow);
     });
 
