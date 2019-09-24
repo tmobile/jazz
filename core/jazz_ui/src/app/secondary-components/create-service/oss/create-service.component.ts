@@ -128,11 +128,11 @@ export class CreateServiceComponent implements OnInit {
   eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
   azureEventExpression = new AzureEventExpression("azureEventsNone",undefined,undefined,undefined,undefined);
 
-  eventLabels = new EventLabels("Lambda","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
+  eventLabels = new EventLabels("Function","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
 
   azureEventLabels = new AzureEventLabels("Function", "DocumentDB", "Table Name","Event Hubs", "Event Hub Name", "Storage", "Storage Account","Service Bus Queue", "Service Bus Name");
 
-  amazonEventLabels = new EventLabels("Lambda","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
+  amazonEventLabels = new EventLabels("Function","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
 
   private doctors = [];
   private toastmessage:any;
