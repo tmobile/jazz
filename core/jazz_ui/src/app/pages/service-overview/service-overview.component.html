@@ -139,7 +139,12 @@
           </li>
           <li>
             <div class="det-label">Service Type</div>
-            <div class="det-value service-type">{{ service.serviceType || 'Pick your service type'}}</div>
+            <div *ngIf="service.serviceType !== 'sls-app'" class="det-value">
+              {{ service.serviceType || 'Pick your service type' }}
+            </div>
+            <div *ngIf="service.serviceType === 'sls-app'" class="det-value">
+              {{ (service.serviceType && 'custom') || 'Pick your service type' }}
+            </div>
           </li>
           <li>
             <div class="det-label">Description</div>

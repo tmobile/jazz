@@ -13,6 +13,12 @@
         <div class="metrics-footer" *ngIf="getRecentValue(metric) && options.footerProperty">
           {{metric[options.listProperty][0][options.footerProperty]}}
         </div>
+        <div class="metrics-footer" *ngIf="!getRecentValue(metric) || !options.footerProperty">
+          &nbsp;
+        </div>
+        <div class="tooltip-status">
+          {{metricName(metric)}}
+        </div>
       </div>
     </div>
   </div>

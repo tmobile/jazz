@@ -113,6 +113,7 @@
 
 .service-details {
   border-radius: 3px;
+  height: 100%;
   margin: 0;
   padding: 1.6rem;
   padding-top: 2.5rem;
@@ -526,7 +527,7 @@
   cursor: pointer;
   margin: 10px 0 0 0;
   span{
-      color:#ed008c;  
+      color:#ed008c;
       text-transform: uppercase;
       font-size: 12px;
   }

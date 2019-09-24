@@ -128,8 +128,8 @@ private intervalSubscription: Subscription;
 
   //'Name','Type','Namespace','Last modified','health','status'
   statusData = ['Status (All)','Status (Active)','Status (Pending)','Status (Stopped)'];
-  
-  tabData = ['all','api','function','website','sls app'];
+
+  tabData = ['all','api','function','website','custom'];
 
   filterSelected: Boolean = false;
   paginationSelected: Boolean = true;
@@ -157,7 +157,7 @@ private intervalSubscription: Subscription;
     serviceList.forEach(function _processService(service) {
       let serviceRow = {
         name: service.service,
-        type: service.type,
+        type: service.type === 'sls-app' ? 'custom' : service.type,
         domain: service.domain,
         health: 2,
         status: service.status.replace('_',' '),
@@ -527,9 +527,14 @@ onFilterCancel(event) {
     this.addQueryParam(queryParamKey, offsetValue, false );
 
     queryParamKey = 'type=';
+
+    // TODO: Address extant smells
     var queryParamValue = this.selectedListData[0].replace(/ /g,"-");
     if(queryParamValue == "all"){
       queryParamValue = "";
+    }
+    if (queryParamValue === 'custom') {
+      queryParamValue = 'sls-app';
     }
     this.addQueryParam(queryParamKey, queryParamValue,  true);
   }
