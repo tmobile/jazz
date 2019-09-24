@@ -302,24 +302,24 @@ export class ServiceLogsComponent implements OnInit {
 		  case 'lambda':
 		  case 'sqs':
 		  case 'iam_role':
-			tokens = name.split(':');
-			assetName = tokens[tokens.length - 1];
-			break;
+				tokens = name.split(':');
+				assetName = tokens[tokens.length - 1];
+				break;
 		  case 'dynamodb':
 		  case 'cloudfront':
 		  case 'kinesis':
-			tokens = name.split('/');
-			assetName = tokens[tokens.length - 1];
-			break;
+				tokens = name.split('/');
+				assetName = tokens[tokens.length - 1];
+				break;
 		  case 's3':
-			tokens = name.split(':::');
-			assetName = tokens[tokens.length - 1].split('/')[0];
-			break;
+				tokens = name.split(':::');
+				assetName = tokens[tokens.length - 1].split('/')[0];
+				break;
 		  case 'apigateway':
 		  case 'apigee_proxy':
-			tokens = name.split(this.selectedEnv + '/');
-			assetName = tokens[tokens.length - 1];
-			break;
+				tokens = name.split(this.selectedEnv + '/');
+				assetName = tokens[tokens.length - 1];
+				break;
 		}
 		return assetName;
 	  }

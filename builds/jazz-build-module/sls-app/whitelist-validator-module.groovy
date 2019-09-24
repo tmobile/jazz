@@ -170,6 +170,8 @@ def validatePlugins(deploymentDescriptor) {
   def pluginsElem = deploymentDescriptorDoc['plugins']
   if(pluginsElem) {
     def outstandingPlugins = pluginsElem.clone()
+    // TODO hack - remove any empty arrays
+    outstandingPlugins.removeAll([[]])
     outstandingPlugins.removeAll(allowedPlugins)
     return outstandingPlugins
   } else {

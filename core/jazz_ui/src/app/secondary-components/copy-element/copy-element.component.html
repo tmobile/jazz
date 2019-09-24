@@ -1,0 +1,8 @@
+
+<a (click)="CopyTextToClipboard(CopyElement, $event)">
+    <i class="fa fa-clone" [style.fontSize]="iconSize"></i>
+</a>
+<div class='new-pop' [class.popup]='displayPopup'>								
+    {{copyLink}}                        
+</div>
+
