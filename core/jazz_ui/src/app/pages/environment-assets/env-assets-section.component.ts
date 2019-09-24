@@ -13,14 +13,14 @@ import { environment as env_oss} from './../../../environments/environment.oss';
 import * as moment from 'moment';
 import * as _ from 'lodash';
 import { UtilsService } from '../../core/services/utils.service';
-import { RefactorFieldService} from '../../core/services/refactor-field.service';
+import { RenameFieldService } from '../../core/services/rename-field.service';
 declare let Promise;
 
 
 @Component({
   selector: 'env-assets-section',
 	templateUrl: './env-assets-section.component.html',
-	providers: [RequestService, MessageService, RefactorFieldService],
+	providers: [RequestService, MessageService, RenameFieldService],
   styleUrls: ['./env-assets-section.component.scss']
 })
 export class EnvAssetsSectionComponent {
@@ -37,7 +37,6 @@ export class EnvAssetsSectionComponent {
 	public assetType:any;
 	componentFactoryResolver:ComponentFactoryResolver;
 	type: any = [];
-  public asset_type:any=[]
 	length: any;
 	serviceName: any = [];
 	domain: any = [];
@@ -63,7 +62,6 @@ export class EnvAssetsSectionComponent {
 	lastCommitted: any;
 	islink:boolean = false;
 	count: any = [];
-	public assetSelected:any;
 	relativeUrl:string = '/jazz/assets';
 	payload:any = {}
 	errMessage: string = "Something went wrong while fetching your data"
@@ -110,7 +108,7 @@ export class EnvAssetsSectionComponent {
 		private cache: DataCacheService,
 		private authenticationservice: AuthenticationService,
 		private utilsService: UtilsService,
-		private refactorFieldService: RefactorFieldService,
+		private renameFieldService: RenameFieldService,
 		@Inject(ComponentFactoryResolver) componentFactoryResolver,private advancedFilters: AdvancedFilterService ,
 
   ) {
@@ -147,12 +145,6 @@ export class EnvAssetsSectionComponent {
 		this.payload['domain'] = this.service.domain;
 		this.payload['environment'] = this.env;
 		this.payload['offset'] = this.offsetval;
-		if (this.assetSelected !== 'all') {
-			this.payload['asset_type'] = this.assetSelected;
-		}	else {
-			delete this.payload['asset_type'];
-		}
-
     this.subscription = this.http.get(this.relativeUrl, this.payload, this.service.id).subscribe(
       (response) => {
 		var res = response.data.assets;
@@ -170,7 +162,7 @@ export class EnvAssetsSectionComponent {
         for(var i=0; i < this.length ; i++){
 			this.type[i] = {
 				'key': res[i].type,
-				'assetTypeDisplayName': this.refactorFieldService.getDisplayNameOfKey(res[i].type) || res[i].type
+				'assetTypeDisplayName': this.renameFieldService.getDisplayNameOfKey(res[i].type) || res[i].type
 		   }
 
           this.lastCommitted = response.data.assets[i].timestamp;

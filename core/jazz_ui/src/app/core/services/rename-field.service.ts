@@ -3,7 +3,7 @@ import {Injectable} from '@angular/core';
 import {MAPPING} from '../constants/field-name-mapping';
 
 @Injectable()
-export class RefactorFieldService {
+export class RenameFieldService {
     constructor() {}
 
     getMappingObject() {

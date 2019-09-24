@@ -23,7 +23,7 @@ import { SharedModule } from './shared-module/shared.module';
 import { routes } from './app.route';
 import {UserJourneyComponent} from "./pages/user-journey/user-journey.component";
 import {UtilsService} from './core/services/utils.service';
-import { RefactorFieldService } from './core/services/refactor-field.service';
+import { RenameFieldService } from './core/services/rename-field.service';
 let environmentval = environment.envName;
 let loadedModule;
 if (environmentval == "oss") {
@@ -61,7 +61,7 @@ else{
     MessageService,
     ConfigService,
     UtilsService,
-    RefactorFieldService,
+    RenameFieldService,
     {
       provide: APP_INITIALIZER,
       useFactory: ConfigLoader,
