@@ -1,5 +1,5 @@
 {
-  "T_VAULT_API": "https://stg-jazz.vault.corporate.t-mobile.com/vault/v2",
+  "T_VAULT_API": "{tvault-host-name}/vault/v2",
   "T_VAULT_USERNAME": "{tvault-username}",
   "T_VAULT_PASSWORD": "{tvault-password}",
   "T_VAULT_LOGIN_API": "/auth/tvault/login",

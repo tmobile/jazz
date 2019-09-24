@@ -25,7 +25,7 @@ function getVaultToken(configData) {
       headers: {
         "Content-Type" : "application/json"
       },
-      body: {
+      json: {
         "username": configData.T_VAULT_USERNAME,
         "password": configData.T_VAULT_PASSWORD
       }
@@ -55,7 +55,7 @@ function createSafe(safeDetails, configData, vaultToken, onComplete) {
     headers: {
       "vault-token": vaultToken
     },
-    body: {
+    json: {
       "path": `shared/${safeDetails.safeName}`,
       "data": {
         "name": `${safeDetails.safeName}`,
@@ -139,7 +139,7 @@ function updateSafe(safeDetails, configData, vaultToken, onComplete) {
     headers: {
       "vault-token": vaultToken
     },
-    body: {
+    json: {
       "path": `shared/${safeDetails.safeName}`,
       "data": {
         "name": `${safeDetails.safeName}`,
@@ -173,7 +173,7 @@ function createUserInSafe(safeDetails, configData, vaultToken, onComplete) {
     headers: {
       "vault-token": vaultToken
     },
-    body: {
+    json: {
       "path": `shared/${safeDetails.safeName}`,
       "access": `${global.globalConfig.ACCESS_LEVEL_FOR_USER_IN_SAFE}`,
       "username": `${safeDetails.userName}`
@@ -203,7 +203,7 @@ function deleteUserFromSafe(safeDetails, configData, vaultToken, onComplete) {
     headers: {
       "vault-token": vaultToken
     },
-    body: {
+    json: {
       "path": `shared/${safeDetails.safeName}`,
       "access": `${global.globalConfig.ACCESS_LEVEL_FOR_USER_IN_SAFE}`,
       "username": `${safeDetails.userName}`
@@ -259,7 +259,7 @@ function createRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
     headers: {
       "vault-token": vaultToken
     },
-    body: {
+    json: {
       "path": `shared/${safeDetails.safeName}`,
       "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`,
       "role": safeDetails.roleName
@@ -289,7 +289,7 @@ function deleteRoleFromSafe(safeDetails, configData, vaultToken, onComplete) {
     headers: {
       "vault-token": vaultToken
     },
-    body: {
+    json: {
       "path": `shared/${safeDetails.safeName}`,
       "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`,
       "role": safeDetails.roleName
@@ -319,7 +319,7 @@ function createUserInVault(userDetails, configData, vaultToken, onComplete) {
     headers: {
       "vault-token": vaultToken
     },
-    body: {
+    json: {
       "username": `${userDetails.userName}`,
       "password": `${userDetails.password}`,
       "policies": `${userDetails.policies}`
@@ -349,7 +349,7 @@ function deleteUserFromVault(userDetails, configData, vaultToken, onComplete) {
     headers: {
       "vault-token": vaultToken
     },
-    body: {
+    json: {
       "username": `${userDetails.userName}`
     },
     rejectUnauthorized: false
@@ -378,7 +378,7 @@ function createRoleInTvault(safeName, configData, vaultToken, onComplete) {
     headers: {
       "vault-token": vaultToken
     },
-    body: {
+    json: {
       "auth_type": "iam",
       "role": "basic",
       "bound_iam_principal_arn": [
