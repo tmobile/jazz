@@ -65,9 +65,9 @@ node  {
     auth_token = getAuthToken()
     scmModule.setServiceConfig(service_config)
 
-    def serviceType = service_config['type'].toLowerCase()​
-    def serviceRunTime = service_config['runtime'].toLowerCase()​
-    def provider = service_config['provider'].toLowerCase()​
+    def serviceType = service_config['type'].toLowerCase()
+    def serviceRunTime = service_config['runtime'].toLowerCase()
+    def provider = service_config['provider'].toLowerCase()
 
     if (!(serviceType in ["api","function","website","sls-app"])) {
         events.sendFailureEvent('VALIDATE_INPUT', "Invalid service type", context_map)
@@ -81,7 +81,7 @@ node  {
         error "Invalid deployment target provider: ${provider}"
     }
     // website uses runTime = n/a
-    if (serviceRunTime == "n/a" || serviceRunTime.matches("(java|go|nodejs|python|c#).*")​){
+    if (serviceRunTime == "n/a" || serviceRunTime.matches("(java|go|nodejs|python|c#).*")){
         if (serviceType == "website"){
             def framework = service_config['framework']
             if(framework in ['angular','react']) {
