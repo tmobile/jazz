@@ -161,8 +161,8 @@ export class EnvAssetsSectionComponent {
         this.length = response.data.assets.length;
         for(var i=0; i < this.length ; i++){
 			this.type[i] = {
-				'key': res[i].type,
-				'assetTypeDisplayName': this.renameFieldService.getDisplayNameOfKey(res[i].type) || res[i].type
+				'key': res[i].asset_type,
+				'assetTypeDisplayName': this.renameFieldService.getDisplayNameOfKey(res[i].asset_type) || res[i].asset_type
 		   }
 
           this.lastCommitted = response.data.assets[i].timestamp;
@@ -193,7 +193,7 @@ export class EnvAssetsSectionComponent {
 			res[i]['last_update_count'] = this.count[i];
           	}
 		  	this.type = _.uniqBy(this.type, 'key');
-			this.assetListbyType = this.utilsService.groupByKey(res, 'type');
+			this.assetListbyType = this.utilsService.groupByKey(res, 'asset_type');
 			this.currentType = this.type[0];
 
         }

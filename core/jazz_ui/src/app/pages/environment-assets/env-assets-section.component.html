@@ -73,14 +73,17 @@
                 </div>
               </div>
               <div class='table-wrapper height-100 flex-grow'>
-                  <table-template *ngIf="envResponseTrue && assetListbyType" class="table-container env-deployment-log"  
+                  <table-template *ngIf="envResponseTrue && assetListbyType" class="table-container"  
                       [header]="tableHeader" [showPaginationtable]="false" 
                        (paginatePage)="paginatePage($event)" [totalPageNum]="totalPageNum" (onSort)="sortTablebyKey($event)"
                        [isSort]="false">
-                          <div class="table-row" [class.hide]="envResponseEmpty" *ngFor="let row of assetListbyType[currentType['key']] | orderBy : { property: sortkey, direction: direction}; let i = index;"  >
-                              <div class="column" >
-                                  <a *ngIf='row.provider_id.includes("http" || "https")' title='{{row.provider_id}}' target="_blank" href='{{row.provider_id}}'>{{row.provider_id}}</a>
-                                  <span title='{{row.provider_id}}' *ngIf='!row.provider_id.includes("http" || "https")'>{{row.provider_id}}</span>
+                          <div class="table-row relative" [class.hide]="envResponseEmpty" *ngFor="let row of assetListbyType[currentType['key']] | orderBy : { property: sortkey, direction: direction}; let i = index;"  >
+                              <div class="column flex" >
+                                    <div class='copy-element'>
+                                        <app-copy-element class="copy-icon" [CopyElement]="row.provider_id" [iconSize]="'15px'"></app-copy-element>
+                                    </div>
+                                  <a class='col-link' *ngIf='row.provider_id.includes("http" || "https")' title='{{row.provider_id}}' target="_blank" href='{{row.provider_id}}'>{{row.provider_id}}</a>
+                                  <span class='col-text' title='{{row.provider_id}}' *ngIf='!row.provider_id.includes("http" || "https")'>{{row.provider_id}}</span>
                               </div>
                               <div class="column">
                                   <div class="det-value" *ngIf="row.last_update_count == 4" >{{row.last_updated}} month<span *ngIf='row.last_updated > 1'>s</span> ago </div>
