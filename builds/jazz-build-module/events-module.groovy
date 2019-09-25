@@ -210,8 +210,8 @@ def getEventName(eventTxt) {
 def sendEvent(event_name, event_status, message, moreCxtMap){
 
 	// generate a guid used for the payload file
-	// Util --> utility-loader.groovy is expected to be loaded here as global variable!
-	def guid = Util.generateRequestId()
+	// utilModule --> utility-loader.groovy is expected to be loaded here as global variable!
+	def guid = utilModule.generateRequestId()
 
 	def context_json = []
 	def event_json = []
