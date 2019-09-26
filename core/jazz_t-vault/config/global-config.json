@@ -1,7 +1,8 @@
 {
   "CREATE_SAFE_REQUIRED_FIELDS": [
     "safeName",
-    "owner"
+    "owner",
+    "description"
   ],
   "CREATE_USER_IN_SAFE_REQUIRED_FIELDS": [
     "userName"

@@ -28,206 +28,223 @@ function handler(event, context, cb) {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("Method cannot be empty")));
     }
 
-    if (event && !event.principalId) {
-      return cb(JSON.stringify(errorHandler.throwUnauthorizedError("User is not authorized to access this service. ")));
-    }
+
 
     //SAFE
     if (event && event.method === 'POST' && resourcePath.endsWith("/safes")) {
       exportable.validateCreateSafeInput(event)
-        .then(() => utils.getVaultToken(configData))
-        .then((vaultToken) => exportable.createSafe(event.body, configData, vaultToken))
-        .then(result => {
+        .then(() => { return exportable.genericInputValidation(event.body) })
+        .then(() => { return utils.getVaultToken(configData) })
+        .then((vaultToken) => { return exportable.createSafe(event.body, configData, vaultToken) })
+        .then((result) => {
           logger.info("Successfully created safes. ");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
           logger.error("Error creating safes: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
 
     if (event && event.method === 'GET' && resourcePath.endsWith("/safes/{safeName}")) {
       exportable.validateSafeInput(event)
-        .then(() => utils.getVaultToken(configData))
-        .then((vaultToken) => exportable.getSafeDetails(event.path.safeName, configData, vaultToken))
+        .then(() => { return exportable.genericInputValidation(event.path) })
+        .then(() => { return utils.getVaultToken(configData) })
+        .then((vaultToken) => { return exportable.getSafeDetails(event.path.safeName, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully got safe details. ");
-          return cb(null, responseObj(result, event.body));
+          return cb(null, responseObj(result, event.path));
         })
         .catch(err => {
           logger.error("Error getting safe details: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
 
     if (event && event.method === 'PUT' && resourcePath.endsWith("/safes/{safeName}")) {
       exportable.validateSafeInput(event)
-        .then(() => exportable.validateUpdateSafeInput(event))
-        .then(() => utils.getVaultToken(configData))
-        .then((vaultToken) => exportable.updateSafe(event.body, event.path.safeName, configData, vaultToken))
+        .then(() => { return exportable.validateUpdateSafeInput(event) })
+        .then(() => { return exportable.genericInputValidation(event.body) })
+        .then(() => { return exportable.genericInputValidation(event.path) })
+        .then(() => { return utils.getVaultToken(configData) })
+        .then((vaultToken) => { return exportable.updateSafe(event.body, event.path.safeName, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully updated safes. ");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
           logger.error("Error updating safes: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
 
     if (event && event.method === 'DELETE' && resourcePath.endsWith("/safes/{safeName}")) {
       exportable.validateSafeInput(event)
-        .then(() => utils.getVaultToken(configData))
-        .then((vaultToken) => exportable.deleteSafe(event.path.safeName, configData, vaultToken))
+        .then(() => { return exportable.genericInputValidation(event.path) })
+        .then(() => { return utils.getVaultToken(configData) })
+        .then((vaultToken) => { return exportable.deleteSafe(event.path.safeName, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully deleted safe. ");
-          return cb(null, responseObj(result, event.body));
+          return cb(null, responseObj(result, event.path));
         })
         .catch(err => {
           logger.error("Error deleting safes: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
 
     //USER IN SAFE
     if (event && event.method === 'POST' && resourcePath.endsWith("/{safeName}/user")) {
       exportable.validateSafeInput(event)
-        .then(() => exportable.validateUserInSafeInput(event))
-        .then(() => utils.getVaultToken(configData))
-        .then((vaultToken) => exportable.createUserInSafe(event.body, event.path.safeName, configData, vaultToken))
+        .then(() => { return exportable.validateUserInSafeInput(event) })
+        .then(() => { return exportable.genericInputValidation(event.body) })
+        .then(() => { return exportable.genericInputValidation(event.path) })
+        .then(() => { return utils.getVaultToken(configData) })
+        .then((vaultToken) => { return exportable.createUserInSafe(event.body, event.path.safeName, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully created user in safe. ");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
           logger.error("Error creating user in safes: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
 
     if (event && event.method === 'DELETE' && resourcePath.endsWith("/{safeName}/user")) {
       exportable.validateSafeInput(event)
-        .then(() => exportable.validateUserInSafeInput(event))
-        .then(() => utils.getVaultToken(configData))
-        .then((vaultToken) => exportable.deleteUserFromSafe(event.body, event.path.safeName, configData, vaultToken))
+        .then(() => { return exportable.validateUserInSafeInput(event) })
+        .then(() => { return exportable.genericInputValidation(event.body) })
+        .then(() => { return exportable.genericInputValidation(event.path) })
+        .then(() => { return utils.getVaultToken(configData) })
+        .then((vaultToken) => { return exportable.deleteUserFromSafe(event.body, event.path.safeName, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully deleted user from safe. ");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
           logger.error("Error deleting user from safes: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
 
     //ROLE IN SAFE
     if (event && event.method === 'GET' && resourcePath.endsWith("/{safeName}/role")) {
       exportable.validateSafeInput(event)
-        .then(() => exportable.validateGetRoleInSafeInput(event))
-        .then(() => utils.getVaultToken(configData))
-        .then((vaultToken) => exportable.getRoleInSafe(event.body, event.path.safeName, configData, vaultToken))
+        .then(() => { return exportable.validateGetRoleInSafeInput(event) })
+        .then(() => { return exportable.genericInputValidation(event.body) })
+        .then(() => { return exportable.genericInputValidation(event.path) })
+        .then(() => { return utils.getVaultToken(configData) })
+        .then((vaultToken) => { return exportable.getRoleInSafe(event.body, event.path.safeName, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully got role details from safe. ");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
           logger.error("Error getting role from safes: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
 
     if (event && event.method === 'POST' && resourcePath.endsWith("/{safeName}/role")) {
       exportable.validateSafeInput(event)
-        .then(() => exportable.validateRoleInSafeInput(event))
-        .then(() => utils.getVaultToken(configData))
-        .then((vaultToken) => exportable.createRoleInSafe(event.body, event.path.safeName, configData, vaultToken))
+        .then(() => { return exportable.validateRoleInSafeInput(event) })
+        .then(() => { return exportable.genericInputValidation(event.body) })
+        .then(() => { return exportable.genericInputValidation(event.path) })
+        .then(() => { return utils.getVaultToken(configData) })
+        .then((vaultToken) => { return exportable.createRoleInSafe(event.body, event.path.safeName, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully created role in safe. ");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
           logger.error("Error creating role in safes: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
 
     if (event && event.method === 'DELETE' && resourcePath.endsWith("/{safeName}/role")) {
       exportable.validateSafeInput(event)
-        .then(() => utils.getVaultToken(configData))
-        .then(() => exportable.validateRoleInSafeInput(event))
-        .then((vaultToken) => exportable.deleteRoleFromSafe(event.body, event.path.safeName, configData, vaultToken))
+        .then(() => { return exportable.validateRoleInSafeInput(event) })
+        .then(() => { return exportable.genericInputValidation(event.body) })
+        .then(() => { return exportable.genericInputValidation(event.path) })
+        .then(() => { return utils.getVaultToken(configData) })
+        .then((vaultToken) => { return exportable.deleteRoleFromSafe(event.body, event.path.safeName, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully deleted role from safe. ");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
           logger.error("Error deleting role from safes: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
 
     //USER IN VAULT
     if (event && event.method === 'POST' && resourcePath.endsWith("{service_name}/user")) {
       exportable.validateUserInVaultInput(event)
-        .then(() => utils.getVaultToken(configData))
-        .then((vaultToken) => exportable.createUserInVault(event.body, configData, vaultToken))
+        .then(() => { return exportable.genericInputValidation(event.body) })
+        .then(() => { return utils.getVaultToken(configData) })
+        .then((vaultToken) => { return exportable.createUserInVault(event.body, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully created user in vault. ");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
           logger.error("Error creating user in vault: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
 
     if (event && event.method === 'DELETE' && resourcePath.endsWith("{service_name}/user")) {
       exportable.validateUserInVaultDeleteInput(event)
-        .then(() => utils.getVaultToken(configData))
-        .then((vaultToken) => exportable.deleteUserFromVault(event.body, event.path.safeName, configData, vaultToken))
+        .then(() => { return exportable.genericInputValidation(event.body) })
+        .then(() => { return utils.getVaultToken(configData) })
+        .then((vaultToken) => { return exportable.deleteUserFromVault(event.body, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully deleted user from vault. ");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
           logger.error("Error deleting user from vault: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
 
     //ROLE IN VAULT
+    /*
     if (event && event.method === 'POST' && resourcePath.endsWith("/{service_name}/role")) {
       exportable.validateSafeInput(event)
         .then(() => exportable.validateUserInSafeInput(event))
-        .then(() => utils.getVaultToken(configData))
-        .then((vaultToken) => exportable.createUserInSafe(event.body, event.path.safeName, configData, vaultToken))
+        .then(() => { return exportable.genericInputValidation(event.body) })
+        .then(() => { return utils.getVaultToken(configData) })
+        .then((vaultToken) => exportable.createUserInSafe(event.body,  configData, vaultToken))
         .then(result => {
           logger.info("Successfully created user in safe. ");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
           logger.error("Error creating user in safes: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
 
     if (event && event.method === 'DELETE' && resourcePath.endsWith("{service_name}/role")) {
       exportable.validateSafeInput(event)
         .then(() => exportable.validateUserInSafeInput(event))
-        .then(() => utils.getVaultToken(configData))
+        .then(() => { return utils.getVaultToken(configData) })
         .then((vaultToken) => exportable.deleteUserFromSafe(event.body, event.path.safeName, configData, vaultToken))
         .then(result => {
           logger.info("Successfully deleted user from safe. ");
@@ -235,10 +252,10 @@ function handler(event, context, cb) {
         })
         .catch(err => {
           logger.error("Error deleting user from safes: " + JSON.stringify(err));
-          if (err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.message)));
+          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
+          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
-    }
+    } */
 
   } catch (e) {
     cb(JSON.stringify(errorHandler.throwInternalServerError("Something went wrong. Please try again later.")));
@@ -327,11 +344,24 @@ const isEmpty = (obj) => {
   if (obj.length > 0) return false;
   if (obj.length === 0) return true;
   if (typeof obj !== "object") return true;
-  for (var key in obj) {
+  for (let key in obj) {
     if (hasOwnProperty.call(obj, key)) return false;
   }
   return true;
 };
+
+function genericInputValidation(obj) {
+  return new Promise((resolve, reject) => {
+    let emptyValueList = [];
+    for (let key in obj) {
+      if (obj[key] === null || obj[key] === "") {
+        emptyValueList.push(key);
+      }
+    }
+    if (emptyValueList.length > 0) return reject({ "errorType": "inputError", "message": "Following field(s) has empty value - " + emptyValueList.join(", ") });
+    return resolve();
+  });
+}
 
 function createSafe(safeDetails, configData, vaultToken) {
   return new Promise((resolve, reject) => {
@@ -481,6 +511,7 @@ const exportable = {
   validateRoleInSafeInput,
   validateUserInVaultInput,
   validateUserInVaultDeleteInput,
+  genericInputValidation,
   isEmpty,
   createSafe,
   getSafeDetails,

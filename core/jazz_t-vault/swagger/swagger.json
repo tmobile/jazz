@@ -2997,7 +2997,8 @@
             "description": "Input object for creation of a new safe in t-vault",
             "required": [
                 "safeName",
-                "owner"
+                "owner",
+                "description"
             ],
             "properties": {
                 "description": {
