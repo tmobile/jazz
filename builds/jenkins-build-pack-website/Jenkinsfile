@@ -1030,10 +1030,6 @@ def azureSync(storageName, framework){
 	def expiryDate = "${dateValue[2].toInteger() + 1}-${dateValue[0]}-${dateValue[1]}T00:00:00Z"
 	def container = '$web'
 
-	def primaryKey = sh (script:"az storage account keys list -n ${storageName}", returnStdout: true).trim()
-	def modifiedKey = jsonParse(primaryKey)
-	def keyData = modifiedKey[0]['value']
-
 	sh "cd ./app && rm -rf node_modules package-lock.json && ls && cd .."
 	withCredentials([
 		[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
@@ -1041,7 +1037,10 @@ def azureSync(storageName, framework){
 		[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
 		[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
 	]) {
-		sh "az login --service-principal -u ${AZ_CLIENTID} -p ${AZ_PASSWORD} --tenant ${AZ_TENANTID}"
+		sh "az login --service-principal -u ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID}"
+		def primaryKey = sh (script:"az storage account keys list -n ${storageName}", returnStdout: true).trim()
+		def modifiedKey = jsonParse(primaryKey)
+		def keyData = modifiedKey[0]['value']
 		def sasTokenRaw = sh (script:"az storage container generate-sas --name '\$web' --account-name ${storageName} --account-key ${keyData} --https-only --permissions rwlcd --expiry ${expiryDate}", returnStdout: true).trim()
 		sasTokenRaw = sasTokenRaw.replaceAll(/"/, '');
 		def sasToken = sasTokenRaw
