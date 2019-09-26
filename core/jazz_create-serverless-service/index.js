@@ -177,6 +177,10 @@ var startServiceOnboarding = (service_creation_data, config, service_id) => {
         admin_group: userlist,
         service_id: service_id
       };
+      if (service_creation_data.deployment_descriptor)
+      {
+        input.deployment_descriptor = service_creation_data.deployment_descriptor
+      }
       request({
         url: config.JOB_BUILD_URL,
         method: 'POST',
