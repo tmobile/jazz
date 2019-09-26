@@ -44,7 +44,7 @@ def setAzureVar(serviceInfo) {
 //TODO this is not needed after we fix the UI
 def getQueueName(serviceMetadata, env) {
 
-  def queueNameInput = serviceMetadata['event_source_servicebus']
+  def queueNameInput = serviceMetadata['event_source_servicebusqueue']
   def queueNameArray = queueNameInput.split(':')
   return resourceUtil.getResourceName(queueNameArray[queueNameArray.size() - 1], env)
 }
@@ -58,7 +58,7 @@ def getStreamName(serviceMetadata, env) {
 }
 
 def getStorageName(serviceMetadata, env) {
-  def nameInput = serviceMetadata['event_source_storage']
+  def nameInput = serviceMetadata['event_source_storageaccount']
   return resourceUtil.getResourceName(nameInput, env)
 }
 

@@ -1030,23 +1030,28 @@ def azureSync(storageName, framework){
 	def expiryDate = "${dateValue[2].toInteger() + 1}-${dateValue[0]}-${dateValue[1]}T00:00:00Z"
 	def container = '$web'
 
-	def primaryKey = sh (script:"az storage account keys list -n ${storageName}", returnStdout: true).trim()
-	def modifiedKey = jsonParse(primaryKey)
-	def keyData = modifiedKey[0]['value']
-
 	sh "cd ./app && rm -rf node_modules package-lock.json && ls && cd .."
-	sh "az login --service-principal -u ${azureAccount.CLIENT_USERNAME} -p ${azureAccount.CLIENT_PASSWORD} --tenant ${azureAccount.CLIENT_TENANT}"
-    
-	def sasTokenRaw = sh (script:"az storage container generate-sas --name '\$web' --account-name ${storageName} --account-key ${keyData} --https-only --permissions rwlcd --expiry ${expiryDate}", returnStdout: true).trim()
-	sasTokenRaw = sasTokenRaw.replaceAll(/"/, '');
-	def sasToken = sasTokenRaw
-	echo "sasToken now is ${sasToken}"
-	if(framework == 'angular'){
-		sh "azcopy sync ./app/dist 'https://${storageName}.blob.core.windows.net/${container}?${sasToken}' --delete-destination=true"
-	} else if(framework == 'react'){
-		sh "azcopy sync ./app/build 'https://${storageName}.blob.core.windows.net/${container}?${sasToken}' --delete-destination=true"
-	} else {
-		sh "azcopy sync ./app 'https://${storageName}.blob.core.windows.net/${container}?${sasToken}' --delete-destination=true"
+	withCredentials([
+		[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'AZURE_CLIENT_SECRET', usernameVariable: 'UNAME'],
+		[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'AZURE_CLIENT_ID', usernameVariable: 'UNAME'],
+		[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'AZURE_TENANT_ID', usernameVariable: 'UNAME'],
+		[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'AZURE_SUBSCRIPTION_ID', usernameVariable: 'UNAME']
+	]) {
+		sh "az login --service-principal -u ${AZURE_CLIENT_ID} -p ${AZURE_CLIENT_SECRET} --tenant ${AZURE_TENANT_ID}"
+		def primaryKey = sh (script:"az storage account keys list -n ${storageName}", returnStdout: true).trim()
+		def modifiedKey = jsonParse(primaryKey)
+		def keyData = modifiedKey[0]['value']
+		def sasTokenRaw = sh (script:"az storage container generate-sas --name '\$web' --account-name ${storageName} --account-key ${keyData} --https-only --permissions rwlcd --expiry ${expiryDate}", returnStdout: true).trim()
+		sasTokenRaw = sasTokenRaw.replaceAll(/"/, '');
+		def sasToken = sasTokenRaw
+		echo "sasToken now is ${sasToken}"
+		if(framework == 'angular'){
+			sh "azcopy sync ./app/dist 'https://${storageName}.blob.core.windows.net/${container}?${sasToken}' --delete-destination=true"
+		} else if(framework == 'react'){
+			sh "azcopy sync ./app/build 'https://${storageName}.blob.core.windows.net/${container}?${sasToken}' --delete-destination=true"
+		} else {
+			sh "azcopy sync ./app 'https://${storageName}.blob.core.windows.net/${container}?${sasToken}' --delete-destination=true"
+		}
 	}
 }
 
@@ -1206,11 +1211,13 @@ def buildWebsite(framework) {
 				sh "rm -rf dist"
 				sh "npm cache clean --force"
 				sh "npm install"
+				sh "ng build --output-path=dist"
 			break
 			case "react":
 				sh "rm -rf build"
 				sh "npm cache clean --force"
 				sh "npm install"
+				sh "npm run build"
 			break
 			default:
 			break
