@@ -1212,7 +1212,7 @@ def buildWebsite(framework) {
 				sh "rm -rf dist"
 				sh "npm cache clean --force"
 				sh "npm install"
-				sh "ng build --prod --output-path=dist"
+				sh "ng build --output-path=dist"
 			break
 			case "react":
 				sh "rm -rf build"
