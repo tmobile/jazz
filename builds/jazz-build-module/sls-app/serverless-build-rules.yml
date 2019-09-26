@@ -209,10 +209,9 @@ provider:
     sbr-value:
       sbr-example: serverless
 
-  role:  # do NOT overwrite the default IAM role which is used for all functions
+  role:
     sbr-type: arn-iam
     sbr-render: user-only # was config-wins
-    sbr-mandatory: true
     sbr-value:
       sbr-formula: ${config.iamRoleARN}
       sbr-example: arn:aws:iam::XXXXXX:role/role

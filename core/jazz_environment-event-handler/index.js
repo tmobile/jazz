@@ -442,6 +442,9 @@ function processEventUpdateEnvironment(environmentPayload, service_id, configDat
     if (environmentPayload.metadata) {
       updatePayload.metadata = environmentPayload.metadata;
     }
+    if (environmentPayload.deployment_descriptor) {
+      updatePayload.deployment_descriptor = environmentPayload.deployment_descriptor;
+    }
 
     var svcPayload = {
       uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE + "/" + environmentPayload.logical_id
