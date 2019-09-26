@@ -68,6 +68,7 @@ node  {
     def serviceType = service_config['type'].toLowerCase()
     def serviceRunTime = service_config['runtime'].toLowerCase()
     def provider = service_config['provider'].toLowerCase()
+	repo_name = "${service_config['domain']}_${service_config['service']}"
 
     if (!(serviceType in ["api","function","website","sls-app"])) {
         events.sendFailureEvent('VALIDATE_INPUT', "Invalid service type", context_map)
@@ -224,7 +225,6 @@ node  {
 		dir(service_template){
             events.sendStartedEvent("CREATE_SERVICE_REPO", 'service repo creation starts', context_map)
 			try {
-                repo_name = "${service_config['domain']}_${service_config['service']}"
 				scmModule.createProject(service_config['created_by'], repo_name)
 				events.sendCompletedEvent('CREATE_SERVICE_REPO', 'modify template completed', context_map)
 			}
