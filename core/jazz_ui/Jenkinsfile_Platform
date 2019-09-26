@@ -141,13 +141,6 @@ node ()  {
       aws_configure()
     }
 
-      /* If Azure extension is present, then UI will support azure related components*/
-      if(config_loader.AZURE && config_loader.AZURE.IS_ENABLED instanceof Boolean && config_loader.AZURE.IS_ENABLED){
-        sh "sed -i 's/{azure_enabled}/${config_loader.AZURE.IS_ENABLED}/g' ./src/environments/environment.oss.ts"
-        sh "sed -i 's/{azure_account_number}/${config_loader.AZURE.DEFAULTS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
-        sh "sed -i 's/{azure_region}/${config_loader.AZURE.DEFAULTS.REGION}/g' ./src/environments/environment.oss.ts"
-      }
-
     stage('Checking out Jazz_UI repo') {
       dir('jazz_ui') {
 
@@ -176,6 +169,13 @@ node ()  {
         else sh "sed -i 's/{slack_support}/false/g' ./src/environments/environment.oss.ts";
 
         sh "sed -i s!{swagger_editor}!${config_loader.JAZZ.SWAGGER.EDITOR_URL}!g ./src/environments/environment.oss.ts"
+
+        /* If Azure extension is present, then UI will support azure related components*/
+        if(config_loader.AZURE && config_loader.AZURE.IS_ENABLED instanceof Boolean && config_loader.AZURE.IS_ENABLED){
+          sh "sed -i 's/{azure_enabled}/${config_loader.AZURE.IS_ENABLED}/g' ./src/environments/environment.oss.ts"
+          sh "sed -i 's/{azure_account_number}/${config_loader.AZURE.DEFAULTS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
+          sh "sed -i 's/{azure_region}/${config_loader.AZURE.DEFAULTS.REGION}/g' ./src/environments/environment.oss.ts"
+        }
 
         /* Getting the accounts and regions */
         def accountMap = [:];
