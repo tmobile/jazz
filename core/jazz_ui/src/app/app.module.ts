@@ -23,6 +23,7 @@ import { SharedModule } from './shared-module/shared.module';
 import { routes } from './app.route';
 import {UserJourneyComponent} from "./pages/user-journey/user-journey.component";
 import {UtilsService} from './core/services/utils.service';
+import { RenameFieldService } from './core/services/rename-field.service';
 import { AngularFontAwesomeModule } from 'angular-font-awesome/angular-font-awesome';
 let environmentval = environment.envName;
 let loadedModule;
@@ -62,6 +63,7 @@ else{
     MessageService,
     ConfigService,
     UtilsService,
+    RenameFieldService,
     {
       provide: APP_INITIALIZER,
       useFactory: ConfigLoader,
