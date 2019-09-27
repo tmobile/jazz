@@ -32,11 +32,11 @@ function getVaultToken(configData) {
       }
     };
 
-    logger.info("login payload : " + JSON.stringify(payload));
+    logger.debug("login payload : " + JSON.stringify(payload));
     request(payload, function (error, response, body) {
-      logger.info("login response : " + JSON.stringify(response));
+      logger.debug("login response : " + JSON.stringify(response));
       if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body && body.client_token) {
-        logger.info("Successfully logined to tvault: ");
+        logger.debug("Successfully logined to tvault: ");
         return resolve(body.client_token);
       } else {
         logger.error("Error in getting vault token. " + JSON.stringify(response));
@@ -68,11 +68,11 @@ function createSafe(safeDetails, configData, vaultToken, onComplete) {
   };
 
 
-  logger.info("createSafe payload : " + JSON.stringify(payload));
+  logger.debug("createSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.info("createSafe response : " + JSON.stringify(response));
+    logger.debug("createSafe response : " + JSON.stringify(response));
     if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
-      logger.info("Successfully created safe: ");
+      logger.debug("Successfully created safe: ");
       return onComplete(null, body);
     } else {
       logger.error("Error in creating safe. " + JSON.stringify(response));
@@ -93,12 +93,12 @@ function getSafeDetails(safeName, configData, vaultToken, onComplete) {
     rejectUnauthorized: false
   };
 
-  logger.info("getSafeDetails payload : " + JSON.stringify(payload));
+  logger.debug("getSafeDetails payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.info("getSafeDetails response : " + JSON.stringify(response));
+    logger.debug("getSafeDetails response : " + JSON.stringify(response));
     if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201)) {
       const safeDetails = JSON.parse(body);
-      logger.info("Successfully got safe details: ");
+      logger.debug("Successfully got safe details: ");
       return onComplete(null, safeDetails.data);
     } else {
       logger.error("Error in getting safe details. " + JSON.stringify(response));
@@ -119,11 +119,11 @@ function deleteSafe(safeName, configData, vaultToken, onComplete) {
     rejectUnauthorized: false
   };
 
-  logger.info("deleteSafe payload : " + JSON.stringify(payload));
+  logger.debug("deleteSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.info("deleteSafe response : " + JSON.stringify(response));
+    logger.debug("deleteSafe response : " + JSON.stringify(response));
     if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201)) {
-      logger.info("Successfully deleted safe details: " + JSON.stringify(body));
+      logger.debug("Successfully deleted safe details: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
       logger.error("Error in deleting safe details. " + JSON.stringify(response));
@@ -152,11 +152,11 @@ function updateSafe(safeDetails, configData, vaultToken, onComplete) {
     rejectUnauthorized: false
   };
 
-  logger.info("updateSafe payload : " + JSON.stringify(payload));
+  logger.debug("updateSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.info("updateSafe response : " + JSON.stringify(response));
+    logger.debug("updateSafe response : " + JSON.stringify(response));
     if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
-      logger.info("Successfully updated safe: " + JSON.stringify(body));
+      logger.debug("Successfully updated safe: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
       logger.error("Error in updating safe. " + JSON.stringify(response));
@@ -182,11 +182,11 @@ function createUserInSafe(safeDetails, configData, vaultToken, onComplete) {
     rejectUnauthorized: false
   };
 
-  logger.info("createUserInSafe payload : " + JSON.stringify(payload));
+  logger.debug("createUserInSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.info("createUserInSafe response : " + JSON.stringify(response));
+    logger.debug("createUserInSafe response : " + JSON.stringify(response));
     if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
-      logger.info("Successfully created user in safe: " + JSON.stringify(body));
+      logger.debug("Successfully created user in safe: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
       logger.error("Error in creating user in safe. " + JSON.stringify(response));
@@ -212,11 +212,11 @@ function deleteUserFromSafe(safeDetails, configData, vaultToken, onComplete) {
     rejectUnauthorized: false
   };
 
-  logger.info("deleteUserFromSafe payload : " + JSON.stringify(payload));
+  logger.debug("deleteUserFromSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.info("deleteUserFromSafe response : " + JSON.stringify(response));
+    logger.debug("deleteUserFromSafe response : " + JSON.stringify(response));
     if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
-      logger.info("Successfully deleted user from safe: " + JSON.stringify(body));
+      logger.debug("Successfully deleted user from safe: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
       logger.error("Error in deleting user from safe. " + JSON.stringify(response));
@@ -238,11 +238,11 @@ function getRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
     rejectUnauthorized: false
   };
 
-  logger.info("getRoleInSafe payload : " + JSON.stringify(payload));
+  logger.debug("getRoleInSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.info("getRoleInSafe response : " + JSON.stringify(response));
+    logger.debug("getRoleInSafe response : " + JSON.stringify(response));
     if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201 ) && body) {
-      logger.info("Successfully got role details: " + JSON.stringify(body));
+      logger.debug("Successfully got role details: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
       logger.error("Error in getting role details. " + JSON.stringify(response));
@@ -268,11 +268,11 @@ function createRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
     rejectUnauthorized: false
   };
 
-  logger.info("createRoleInSafe payload : " + JSON.stringify(payload));
+  logger.debug("createRoleInSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.info("createRoleInSafe response : " + JSON.stringify(response));
+    logger.debug("createRoleInSafe response : " + JSON.stringify(response));
     if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
-      logger.info("Successfully created role in safe: " + JSON.stringify(body));
+      logger.debug("Successfully created role in safe: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
       logger.error("Error in creating role in safe. " + JSON.stringify(response));
@@ -298,11 +298,11 @@ function deleteRoleFromSafe(safeDetails, configData, vaultToken, onComplete) {
     rejectUnauthorized: false
   };
 
-  logger.info("deleteRoleFromSafe payload : " + JSON.stringify(payload));
+  logger.debug("deleteRoleFromSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.info("deleteRoleFromSafe response : " + JSON.stringify(response));
+    logger.debug("deleteRoleFromSafe response : " + JSON.stringify(response));
     if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
-      logger.info("Successfully deleted role from safe: " + JSON.stringify(body));
+      logger.debug("Successfully deleted role from safe: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
       logger.error("Error in deleting role from safe. " + JSON.stringify(response));
@@ -328,11 +328,11 @@ function createUserInVault(userDetails, configData, vaultToken, onComplete) {
     rejectUnauthorized: false
   };
 
-  logger.info("createUserInVault payload : " + JSON.stringify(payload));
+  logger.debug("createUserInVault payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.info("createUserInVault response : " + JSON.stringify(response));
+    logger.debug("createUserInVault response : " + JSON.stringify(response));
     if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
-      logger.info("Successfully created user in vault: " + JSON.stringify(body));
+      logger.debug("Successfully created user in vault: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
       logger.error("Error in creating user in vault. " + JSON.stringify(response));
@@ -356,11 +356,11 @@ function deleteUserFromVault(userDetails, configData, vaultToken, onComplete) {
     rejectUnauthorized: false
   };
 
-  logger.info("deleteUserFromVault payload : " + JSON.stringify(payload));
+  logger.debug("deleteUserFromVault payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.info("deleteUserFromVault response : " + JSON.stringify(response));
+    logger.debug("deleteUserFromVault response : " + JSON.stringify(response));
     if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
-      logger.info("Successfully deleted user from vault: " + JSON.stringify(body));
+      logger.debug("Successfully deleted user from vault: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
       logger.error("Error in deleting user from vault. " + JSON.stringify(response));
