@@ -293,7 +293,7 @@ node() {
               logicalId = environment_logical_id.split('-')[0] //13 + 10
             }
             endpointUrl="https://${AzureApim}.azure-api.net/${stackName}/sessions"
-            swaggerDocUrl = "https://${AzureApim}.portal.azure-api.net/docs/services/${stackName}/export?DocumentFormat%3DSwagger"
+            swaggerDocUrl = "https://${AzureApim}.portal.azure-api.net/docs/services/${stackName}"
             apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.ApiManagement/service/$AzureApim"
             def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
             def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
@@ -392,9 +392,9 @@ node() {
                   } else {
                     endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
                   }
-            if (domain != "jazz") {
-              createSubscriptionFilters(config, configLoader.AWS.DEFAULTS.REGION, roleId, accountDetails, env_key, credsId);
-            }
+                  if (domain != "jazz") {
+                    createSubscriptionFilters(config, configLoader.AWS.DEFAULTS.REGION, roleId, accountDetails, env_key, credsId);
+                  }
 
                   def apiArns = getSwaggerResourceARNs(aws_api_id, current_environment, "aws")
                   if (apiArns) {
