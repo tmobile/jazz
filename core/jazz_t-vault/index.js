@@ -24,11 +24,15 @@ function handler(event, context, cb) {
     const configData = configModule.getConfig(event, context);
     const resourcePath = event.resourcePath;
 
+    logger.info ("resourcePath : " + resourcePath);
+
     if (event && !event.method) {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("Method cannot be empty")));
     }
 
-
+    if (!event.principalId) {
+      return cb(JSON.stringify(errorHandler.throwUnauthorizedError("You aren't authorized to access this service.")));
+    }
 
     //SAFE
     if (event && event.method === 'POST' && resourcePath.endsWith("/safes")) {
@@ -138,13 +142,12 @@ function handler(event, context, cb) {
     if (event && event.method === 'GET' && resourcePath.endsWith("/{safeName}/role")) {
       exportable.validateSafeInput(event)
         .then(() => { return exportable.validateGetRoleInSafeInput(event) })
-        .then(() => { return exportable.genericInputValidation(event.body) })
         .then(() => { return exportable.genericInputValidation(event.path) })
         .then(() => { return utils.getVaultToken(configData) })
-        .then((vaultToken) => { return exportable.getRoleInSafe(event.body, event.path.safeName, configData, vaultToken) })
+        .then((vaultToken) => { return exportable.getRoleInSafe(event.query.roleName, event.path.safeName, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully got role details from safe. ");
-          return cb(null, responseObj(result, event.body));
+          return cb(null, responseObj(result, event.query));
         })
         .catch(err => {
           logger.error("Error getting role from safes: " + JSON.stringify(err));
@@ -190,7 +193,7 @@ function handler(event, context, cb) {
     }
 
     //USER IN VAULT
-    if (event && event.method === 'POST' && resourcePath.endsWith("{service_name}/user")) {
+    if (event && event.method === 'POST' && resourcePath.endsWith("/t-vault/user")) {
       exportable.validateUserInVaultInput(event)
         .then(() => { return exportable.genericInputValidation(event.body) })
         .then(() => { return utils.getVaultToken(configData) })
@@ -206,7 +209,7 @@ function handler(event, context, cb) {
         });
     }
 
-    if (event && event.method === 'DELETE' && resourcePath.endsWith("{service_name}/user")) {
+    if (event && event.method === 'DELETE' && resourcePath.endsWith("/t-vault/user")) {
       exportable.validateUserInVaultDeleteInput(event)
         .then(() => { return exportable.genericInputValidation(event.body) })
         .then(() => { return utils.getVaultToken(configData) })
@@ -221,42 +224,6 @@ function handler(event, context, cb) {
           else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
         });
     }
-
-    //ROLE IN VAULT
-    /*
-    if (event && event.method === 'POST' && resourcePath.endsWith("/{service_name}/role")) {
-      exportable.validateSafeInput(event)
-        .then(() => exportable.validateUserInSafeInput(event))
-        .then(() => { return exportable.genericInputValidation(event.body) })
-        .then(() => { return utils.getVaultToken(configData) })
-        .then((vaultToken) => exportable.createUserInSafe(event.body,  configData, vaultToken))
-        .then(result => {
-          logger.info("Successfully created user in safe. ");
-          return cb(null, responseObj(result, event.body));
-        })
-        .catch(err => {
-          logger.error("Error creating user in safes: " + JSON.stringify(err));
-          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
-        });
-    }
-
-    if (event && event.method === 'DELETE' && resourcePath.endsWith("{service_name}/role")) {
-      exportable.validateSafeInput(event)
-        .then(() => exportable.validateUserInSafeInput(event))
-        .then(() => { return utils.getVaultToken(configData) })
-        .then((vaultToken) => exportable.deleteUserFromSafe(event.body, event.path.safeName, configData, vaultToken))
-        .then(result => {
-          logger.info("Successfully deleted user from safe. ");
-          return cb(null, responseObj(result, event.body));
-        })
-        .catch(err => {
-          logger.error("Error deleting user from safes: " + JSON.stringify(err));
-          if (err.errorType && err.errorType === "inputError") return cb(JSON.stringify(errorHandler.throwInputValidationError(err.message)));
-          else return cb(JSON.stringify(errorHandler.throwInternalServerError(err.error)));
-        });
-    } */
-
   } catch (e) {
     cb(JSON.stringify(errorHandler.throwInternalServerError("Something went wrong. Please try again later.")));
   }
@@ -286,7 +253,7 @@ function validateSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.path) return reject({ "errorType": "inputError", "message": "Input path cannot be empty" });
     if (exportable.isEmpty(event.path)) return reject({ "errorType": "inputError", "message": "Input path cannot be empty" });
-    if (!event.path.safeName) return reject({ "errorType": "inputError", "message": "Following field(s) are required in path- " + event.path.safeName });
+    if (!event.path.safeName) return reject({ "errorType": "inputError", "message": "Following field(s) are required in path- safeName"  });
     return resolve();
   });
 }
@@ -315,7 +282,7 @@ function validateGetRoleInSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.query) return reject({ "errorType": "inputError", "message": "Query cannot be empty" });
     if (exportable.isEmpty(event.query)) return reject({ "errorType": "inputError", "message": "Query cannot be empty" });
-    if (!event.query.roleName) return reject({ "errorType": "inputError", "message": "Following field(s) are required in query- " + event.query.roleName });
+    if (!event.query.roleName) return reject({ "errorType": "inputError", "message": "Following field(s) are required in query- roleName"  });
     return resolve();
   });
 }
@@ -324,7 +291,8 @@ function validateUserInVaultInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.body) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
     if (exportable.isEmpty(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    if (!event.body.userName) return reject({ "errorType": "inputError", "message": "Following field(s) are required - " + event.body.userName });
+    let missingFieldList = globalConfig.CREATE_USER_IN_VAULT_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
+    if (missingFieldList.length > 0) return reject({ "errorType": "inputError", "message": "Following field(s) are required - " + missingFieldList.join(", ") });
     return resolve();
   });
 }
@@ -438,9 +406,11 @@ function deleteUserFromSafe(safeDetails, safeName, configData, vaultToken) {
   });
 }
 
-function getRoleInSafe(safeDetails, safeName, configData, vaultToken) {
+function getRoleInSafe(roleName, safeName, configData, vaultToken) {
   return new Promise((resolve, reject) => {
+    let safeDetails = {};
     safeDetails.safeName = safeName;
+    safeDetails.roleName = roleName;
     utils.getRoleInSafe(safeDetails, configData, vaultToken, function (err, data) {
       if (err) {
         return reject(err);
@@ -491,7 +461,7 @@ function createUserInVault(userDetails, configData, vaultToken) {
 
 function deleteUserFromVault(userDetails, configData, vaultToken) {
   return new Promise((resolve, reject) => {
-    utils.createUserInVault(userDetails, configData, vaultToken, function (err, data) {
+    utils.deleteUserFromVault(userDetails, configData, vaultToken, function (err, data) {
       if (err) {
         return reject(err);
       } else {
