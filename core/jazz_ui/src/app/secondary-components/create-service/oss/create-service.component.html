@@ -20,9 +20,9 @@
                     <p class="step-title">Choose the type of service you want to create<span>*</span></p>
                 </div>
                 <div class="space-between content">
-                    <section class="pad-left0 service-box-section">
-                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')" (click)="changeServiceType('api')">
-                            <div class="icon-icon-api selected"></div>
+                    <section class="pad-left0 service-box-section disabled-box">
+                        <div tabindex="0" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')">
+                            <div class="icon-icon-api disbaled"></div>
                         </div>
                         <div class="icon-name" [ngClass]="{'service-box-selected': typeOfService == 'api'}">
                             <p class="name-style">Api</p>

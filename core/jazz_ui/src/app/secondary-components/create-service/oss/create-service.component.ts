@@ -70,7 +70,7 @@ export class CreateServiceComponent implements OnInit {
   serviceBusStreamString: string;
   invalidAzureEventName: boolean = false;
   docs_link = env_oss.urls.docs_link;
-  typeOfService:string = "api";
+  typeOfService:string = "function";
   typeOfPlatform:string = "aws";
   disablePlatform = false;
   selected:string = "Minutes";
@@ -396,7 +396,7 @@ export class CreateServiceComponent implements OnInit {
       this.typeOfPlatform = platformType;
       if(this.typeOfPlatform == 'azure'){
         if(this.typeOfService == 'sls-app'){
-          this.changeServiceType('api')
+          this.changeServiceType('function')
         }
         this.awsOnly = false;
       } else {
@@ -839,7 +839,7 @@ export class CreateServiceComponent implements OnInit {
     this.submitted = true;
     this.getData();
     this.createService();
-    this.typeOfService = 'api';
+    this.typeOfService = 'function';
     this.selectedApprovers = [];
   }
 

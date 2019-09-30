@@ -231,11 +231,7 @@ export class EnvironmentDetailComponent implements OnInit {
               return asset.asset_type === 'swagger_url';
             });
             if (foundAsset) {
-              if(foundAsset.provider == 'azure'){
-                return window.open(foundAsset.provider_id);
-              } else {
-                return window.open(environment.urls['swagger_editor'] + foundAsset.provider_id);
-              }
+              return window.open(environment.urls['swagger_editor'] + foundAsset.provider_id);
             } else {
               return window.open('/404');
             }
