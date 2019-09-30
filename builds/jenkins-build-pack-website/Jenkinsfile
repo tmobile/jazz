@@ -35,6 +35,7 @@ import groovy.transform.Field
 @Field def service_config
 @Field def websiteType
 @Field def azureAccount
+@Field def angularVersion
 
 node()  {
   try {
@@ -1163,6 +1164,7 @@ def validateAngularTemplate() {
 		def angularVersionString = new groovy.json.JsonSlurperClassic().parseText(packageString).dependencies.'@angular/core'
 
 		def version = angularVersionString.substring(1, angularVersionString.indexOf('.'))
+		angularVersion = version;
 		echo "Angular Project version $version"
 	} catch(ex) {
 		error "Error while checking version::"+ ex.getMessage();
@@ -1211,7 +1213,11 @@ def buildWebsite(framework) {
 				sh "rm -rf dist"
 				sh "npm cache clean --force"
 				sh "npm install"
-				sh "ng build --output-path=dist"
+				if(angularVersion >= 6){
+					sh "ng build --output-path=dist"
+				} else {
+					sh "ng build --prod --output-path=dist"
+				}
 			break
 			case "react":
 				sh "rm -rf build"
