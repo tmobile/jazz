@@ -610,31 +610,33 @@ export class ServiceLogsComponent implements OnInit {
 		}
 		this.subscription = this.http.post('/jazz/logs', this.payload, this.service.id).subscribe(
 			response => {
-
-				this.logs = response.data.logs || response.data.data.logs;
-				if (this.logs != undefined)
-					if (this.logs.length != 0) {
-						var pageCount = response.data.count;
-						this.totalPagesTable = 0;
-						if (pageCount) {
-							this.totalPagesTable = Math.ceil(pageCount / this.limitValue);
-							if (this.totalPagesTable === 1) {
-								this.paginationSelected = false;
-							}
-						}
-						else {
+				if(response.data !== ""){
+					this.logs = response.data.logs || response.data.data.logs;
+					if (this.logs != undefined)
+						if (this.logs.length != 0) {
+							var pageCount = response.data.count;
 							this.totalPagesTable = 0;
+							if (pageCount) {
+								this.totalPagesTable = Math.ceil(pageCount / this.limitValue);
+								if (this.totalPagesTable === 1) {
+									this.paginationSelected = false;
+								}
+							}
+							else {
+								this.totalPagesTable = 0;
+							}
+							this.backupLogs = this.logs;
+
+							this.sort = new Sort(this.logs);
+							this.loadingState = 'default'
+						} else {
+							this.loadingState = 'empty';
 						}
-						this.backupLogs = this.logs;
-
-						this.sort = new Sort(this.logs);
-						this.loadingState = 'default'
-					} else {
-						this.loadingState = 'empty';
-					}
-				this.trim_Message();
-
-
+					this.trim_Message();
+				} else {
+					this.loadingState = 'error';
+					this.errMessage = "Doesn't look like there is any data available here.";
+				}
 			},
 			err => {
 				this.loadingState = 'error';

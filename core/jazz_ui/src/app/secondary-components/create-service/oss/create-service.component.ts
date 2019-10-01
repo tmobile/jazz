@@ -70,7 +70,7 @@ export class CreateServiceComponent implements OnInit {
   serviceBusStreamString: string;
   invalidAzureEventName: boolean = false;
   docs_link = env_oss.urls.docs_link;
-  typeOfService:string = "function";
+  typeOfService:string = "api";
   typeOfPlatform:string = "aws";
   disablePlatform = false;
   selected:string = "Minutes";
@@ -164,6 +164,7 @@ export class CreateServiceComponent implements OnInit {
   public apigeeFeature = this.buildEnvironment.INSTALLER_VARS.feature.apigee && this.buildEnvironment.INSTALLER_VARS.feature.apigee.toString() === "true" ? true : false;
   public selectedDeploymentTarget = "aws_apigateway";
   public azureEnabled: boolean = false;
+  public disableFunction: boolean = false;
 
   constructor (
     private toasterService: ToasterService,
@@ -370,7 +371,18 @@ export class CreateServiceComponent implements OnInit {
     if(serviceType === 'sls-app'){
       this.changePlatformType('aws');
     }
-    this.typeOfService = serviceType;
+    if(this.typeOfPlatform == 'azure'){
+      if(serviceType === 'api'){
+        this.typeOfService = 'function';
+      } else {
+        this.typeOfService = serviceType;
+      }
+    } else {
+      this.typeOfService = serviceType;
+    }
+    if(this.typeOfService === 'function'){
+      this.disableFunction = true;
+    }
     this.scrollTo('platform-type');
   }
 
@@ -395,12 +407,13 @@ export class CreateServiceComponent implements OnInit {
     if(typeof env_oss.azure.azure_enabled === "boolean" && env_oss.azure.azure_enabled === true && platformType !== 'gcloud'){
       this.typeOfPlatform = platformType;
       if(this.typeOfPlatform == 'azure'){
-        if(this.typeOfService == 'sls-app'){
+        // if(this.typeOfService == 'sls-app'){
           this.changeServiceType('function')
-        }
+        // }
         this.awsOnly = false;
       } else {
-        this.awsOnly = true
+        this.awsOnly = true;
+        this.changeServiceType('api');
       }
     } else {
       this.awsOnly = true;
@@ -478,6 +491,9 @@ export class CreateServiceComponent implements OnInit {
       else if (this.typeOfPlatform === 'azure') {
         this.azureEventExpression.type = 'azureEventsNone';
       }
+      this.disableFunction = false;
+    } else {
+      this.disableFunction = true;
     }
   }
   onAWSEventChange(val){
@@ -486,6 +502,9 @@ export class CreateServiceComponent implements OnInit {
     this.eventExpression.type = val;
     if(val !== `none`){
       this.rateExpression.type = 'none';
+      this.disableFunction = false;
+    } else if(val == 'awsEventsNone'){
+      this.disableFunction = true;
     }
   }
   onAzureEventChange(val) {
@@ -494,6 +513,9 @@ export class CreateServiceComponent implements OnInit {
     this.azureEventExpression.type = val;
     if(val !== `none`){
       this.rateExpression.type = 'none';
+      this.disableFunction = false;
+    } else if(val == 'azureEventsNone'){
+      this.disableFunction = true;
     }
   }
   onSelectedDr(selected){
@@ -839,7 +861,7 @@ export class CreateServiceComponent implements OnInit {
     this.submitted = true;
     this.getData();
     this.createService();
-    this.typeOfService = 'function';
+    this.typeOfService = 'api';
     this.selectedApprovers = [];
   }
 
@@ -948,6 +970,9 @@ export class CreateServiceComponent implements OnInit {
     if(this.eventExpression.type == 's3' && this.eventExpression.S3BucketName == undefined){
         return true
     }
+    if(this.eventExpression.type == 'sqs' && this.eventExpression.SQSstreamARN == undefined){
+      return true
+    }
     if(this.azureEventExpression.type == 'cosmosdb' && this.azureEventExpression.cosmosdb == undefined){
       return true
     }
@@ -955,6 +980,9 @@ export class CreateServiceComponent implements OnInit {
       return true
     }
     if(this.azureEventExpression.type == 'storageaccount' && this.azureEventExpression.storageaccount == undefined){
+      return true
+    }
+    if(this.azureEventExpression.type == 'servicebusqueue' && this.azureEventExpression.servicebusqueue == undefined){
       return true
     }
     if(this.invalidServiceName || this.invalidDomainName){

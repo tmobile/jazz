@@ -20,9 +20,9 @@
                     <p class="step-title">Choose the type of service you want to create<span>*</span></p>
                 </div>
                 <div class="space-between content">
-                    <section class="pad-left0 service-box-section disabled-box">
-                        <div tabindex="0" class="service-box disabled-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')">
-                            <div class="icon-icon-api disbaled"></div>
+                    <section class="pad-left0 service-box-section" [ngClass]="{'disabled-box': typeOfPlatform == 'azure'}">
+                        <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api', 'disabled-box': typeOfPlatform == 'azure'}" (keyup.enter)="changeServiceType('api')" (click)="changeServiceType('api')">
+                            <div class="icon-icon-api" [ngClass]="{'disabled': typeOfPlatform == 'azure'}"></div>
                         </div>
                         <div class="icon-name" [ngClass]="{'service-box-selected': typeOfService == 'api'}">
                             <p class="name-style">Api</p>
@@ -82,8 +82,8 @@
                     </section>
                     <section class="pad-left0 service-box-section">
                         <div id="tile-azure" tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure','disabled-azure':typeOfPlatform != 'azure','disabled-box':azureEnabled == false}" (click)="changePlatformType('azure')">
-                            <img *ngIf=" typeOfPlatform != 'azure'" src="./../../../../assets/images/azure-deselected.png">
-                            <img *ngIf=" typeOfPlatform == 'azure'" src="./../../../../assets/images/azure-logo.svg">
+                            <img *ngIf=" azureEnabled == false" src="./../../../../assets/images/azure-deselected.png">
+                            <img *ngIf=" azureEnabled == true" src="./../../../../assets/images/azure-logo.svg">
                         </div>
                         <div class="icon-name" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}">
                             <p class="name-style">Azure</p>
@@ -841,13 +841,13 @@
                                             (ngModelChange)="invalidAzureEventName = false;"
                                             [ngClass]="{'full-width' : typeOfPlatform !== 'azure'}"
                                             class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required"
-                                            placeholder="Table Name">
+                                            placeholder="Event Hub Name">
                                     </div>
                                 </div>
                                 <p class="termsConditions error-message"
-                                    *ngIf="((chkEventHub()) && (!eventhub.valid && (eventhub.dirty || eventhub.touched)))">Table name
+                                    *ngIf="((chkEventHub()) && (!eventhub.valid && (eventhub.dirty || eventhub.touched)))">Event Hub name
                                     must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
-                                <p class="termsConditions error-message" *ngIf="(chkEventHub() && invalidAzureEventName)">Table name Should not
+                                <p class="termsConditions error-message" *ngIf="(chkEventHub() && invalidAzureEventName)">Event Hub name Should not
                                     begin or end with special character.</p>
                                 <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function trigger to respond to an event sent to an event hub event stream.</p>
                             </div>
@@ -868,13 +868,13 @@
                                             (ngModelChange)="invalidAzureEventName = false;"
                                             [ngClass]="{'full-width' : typeOfPlatform !== 'azure'}"
                                             class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required"
-                                            placeholder="Table Name">
+                                            placeholder="Storage Account">
                                     </div>
                                 </div>
                                 <p class="termsConditions error-message"
-                                    *ngIf="((chkStorageAccount()) && (!storageaccount.valid && (storageaccount.dirty || storageaccount.touched)))">Table
-                                    name must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
-                                <p class="termsConditions error-message" *ngIf="(chkStorageAccount() && invalidAzureEventName)">Table name
+                                    *ngIf="((chkStorageAccount()) && (!storageaccount.valid && (storageaccount.dirty || storageaccount.touched)))">Storage
+                                    Account must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
+                                <p class="termsConditions error-message" *ngIf="(chkStorageAccount() && invalidAzureEventName)">Storage Account
                                     Should not begin or end with special character.</p>
                                 <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Blob storage trigger starts a function when a new or updated blob is detected. The blob contents are provided as input to the function.</p>
                             </div>
@@ -891,13 +891,13 @@
                                             (ngModelChange)="invalidAzureEventName = false;"
                                             [ngClass]="{'full-width' : typeOfPlatform !== 'azure'}"
                                             class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required"
-                                            placeholder="Table Name">
+                                            placeholder="Service Bus Name">
                                     </div>
                                 </div>
                                 <p class="termsConditions error-message"
-                                    *ngIf="((chkServiceBus()) && (!servicebusqueue.valid && (servicebusqueue.dirty || servicebusqueue.touched)))">Table name
+                                    *ngIf="((chkServiceBus()) && (!servicebusqueue.valid && (servicebusqueue.dirty || servicebusqueue.touched)))">Service Bus name
                                     must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
-                                <p class="termsConditions error-message" *ngIf="(chkServiceBus() && invalidAzureEventName)">Table name Should
+                                <p class="termsConditions error-message" *ngIf="(chkServiceBus() && invalidAzureEventName)">Service Bus name Should
                                     not begin or end with special character.</p>
                                 <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function trigger to respond to messages from a Service Bus Queue.</p>
                             </div>
@@ -927,7 +927,7 @@
             </section>
             <p class="requiredInfo"><span>*</span>Indicates required fields</p>
             <section class="submit-form">
-                <button type="submit" [disabled]="!serviceForm.valid || (disableForm())" class="btn btn-primary">SUBMIT</button>
+                <button type="submit" [disabled]="!serviceForm.valid || (disableForm()) || disableFunction" class="btn btn-primary">SUBMIT</button>
             </section>
         </form>
     </div>
