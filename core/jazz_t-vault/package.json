@@ -1,7 +1,7 @@
 {
   "name": "jazz_t-vault",
   "version": "0.0.1",
-  "description": "API specification for jazz t-valut api",
+  "description": "Specification for APIs to manage secrets using Jazz & T-Vault",
   "main": "index.js",
   "private": true,
   "author": [],

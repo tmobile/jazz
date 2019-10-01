@@ -1,9 +1,9 @@
 {
     "swagger": "2.0",
     "info": {
-        "version": "2017-01-30T23:30:18Z",
+        "version": "1.0.0",
         "title": "{api_deployment_node_title}",
-        "description": "API specification for jazz t-valut api"
+        "description": "Specification for APIs to manage secrets using Jazz & T-Vault"
     },
     "host": "{api_host_name}",
     "basePath": "/{domain}",
@@ -21,7 +21,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "CORS"
+                    "Secret Management"
                 ],
                 "x-amazon-apigateway-integration": {
                     "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
@@ -152,32 +152,35 @@
             },
             "post": {
                 "description": "create a safe in t-vault",
-                "parameters": [
-                    {
-                        "name": "param",
-                        "in": "body",
-                        "description": "post body parameter.",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/CreateSafeObj"
-                        }
-                    },
-                    {
-                      "name": "Jazz-Service-ID",
-                      "in": "header",
-                      "required": true,
-                      "type": "string"
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Secret Management"
+                ],
+                "parameters": [
+                    {
+                        "name": "param",
+                        "in": "body",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/Safe"
+                        }
+                    },
+                    {
+                        "name": "Jazz-Service-ID",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
                 "security": [
                     {
-                        "{envPrefix}-{domain}-cognito-authorizer": []
+                        "{envPrefix}-{domain}-cognito-admin-authorizer": []
                     }
                 ],
                 "x-amazon-apigateway-integration": {
@@ -366,7 +369,7 @@
                 }
             }
         },
-        "/{service_name}/safes/{safeName}": {
+        "/{service_name}/safes/{safename}": {
             "options": {
                 "description": "CORS Support",
                 "consumes": [
@@ -376,11 +379,11 @@
                     "application/json"
                 ],
                 "tags": [
-                    "CORS"
+                    "Secret Management"
                 ],
                 "parameters": [
                     {
-                        "name": "safeName",
+                        "name": "safename",
                         "in": "path",
                         "required": true,
                         "type": "string"
@@ -521,18 +524,21 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Secret Management"
+                ],
                 "parameters": [
                     {
-                        "name": "safeName",
+                        "name": "safename",
                         "in": "path",
                         "required": true,
                         "type": "string"
                     },
                     {
-                      "name": "Jazz-Service-ID",
-                      "in": "header",
-                      "required": true,
-                      "type": "string"
+                        "name": "Jazz-Service-ID",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -641,7 +647,7 @@
                 },
                 "security": [
                     {
-                        "{envPrefix}-{domain}-cognito-authorizer": []
+                        "{envPrefix}-{domain}-cognito-admin-authorizer": []
                     }
                 ],
                 "x-amazon-apigateway-integration": {
@@ -727,9 +733,18 @@
             },
             "put": {
                 "description": "update a safe in t-vault",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Secret Management"
+                ],
                 "parameters": [
                     {
-                        "name": "safeName",
+                        "name": "safename",
                         "in": "path",
                         "required": true,
                         "type": "string"
@@ -737,24 +752,18 @@
                     {
                         "name": "param",
                         "in": "body",
-                        "description": "post body parameter.",
+                        "description": "",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/updateSafeObj"
+                            "$ref": "#/definitions/UpdateSafeDetails"
                         }
                     },
                     {
-                      "name": "Jazz-Service-ID",
-                      "in": "header",
-                      "required": true,
-                      "type": "string"
+                        "name": "Jazz-Service-ID",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
                     }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
                 ],
                 "responses": {
                     "200": {
@@ -862,7 +871,7 @@
                 },
                 "security": [
                     {
-                        "{envPrefix}-{domain}-cognito-authorizer": []
+                        "{envPrefix}-{domain}-cognito-admin-authorizer": []
                     }
                 ],
                 "x-amazon-apigateway-integration": {
@@ -948,26 +957,29 @@
             },
             "delete": {
                 "description": "Removing a safe from t-vault",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Secret Management"
+                ],
                 "parameters": [
                     {
-                        "name": "safeName",
+                        "name": "safename",
                         "in": "path",
                         "required": true,
                         "type": "string",
                         "description": "safe name to delete"
                     },
                     {
-                      "name": "Jazz-Service-ID",
-                      "in": "header",
-                      "required": true,
-                      "type": "string"
+                        "name": "Jazz-Service-ID",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
                     }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
                 ],
                 "responses": {
                     "200": {
@@ -1075,7 +1087,7 @@
                 },
                 "security": [
                     {
-                        "{envPrefix}-{domain}-cognito-authorizer": []
+                        "{envPrefix}-{domain}-cognito-admin-authorizer": []
                     }
                 ],
                 "x-amazon-apigateway-integration": {
@@ -1160,7 +1172,7 @@
                 }
             }
         },
-        "/{service_name}/safes/{safeName}/role": {
+        "/{service_name}/safes/{safename}/role": {
             "options": {
                 "description": "CORS Support",
                 "consumes": [
@@ -1170,11 +1182,11 @@
                     "application/json"
                 ],
                 "tags": [
-                    "CORS"
+                    "Secret Management"
                 ],
                 "parameters": [
                     {
-                        "name": "safeName",
+                        "name": "safename",
                         "in": "path",
                         "required": true,
                         "type": "string"
@@ -1315,24 +1327,27 @@
                 "produces": [
                     "application/json"
                 ],
+                "tags": [
+                    "Secret Management"
+                ],
                 "parameters": [
                     {
-                        "name": "safeName",
+                        "name": "safename",
                         "in": "path",
                         "required": true,
                         "type": "string"
                     },
                     {
-                        "name": "roleName",
+                        "name": "rolename",
                         "in": "query",
                         "required": true,
                         "type": "string"
                     },
                     {
-                      "name": "Jazz-Service-ID",
-                      "in": "header",
-                      "required": true,
-                      "type": "string"
+                        "name": "Jazz-Service-ID",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -1527,9 +1542,18 @@
             },
             "post": {
                 "description": "To associate a role to a Safe",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Secret Management"
+                ],
                 "parameters": [
                     {
-                        "name": "safeName",
+                        "name": "safename",
                         "in": "path",
                         "required": true,
                         "type": "string"
@@ -1537,24 +1561,18 @@
                     {
                         "name": "param",
                         "in": "body",
-                        "description": "post body parameter.",
+                        "description": "",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/CreateRoleToSafeObj"
+                            "$ref": "#/definitions/AssignRoleToSafeDetails"
                         }
                     },
                     {
-                      "name": "Jazz-Service-ID",
-                      "in": "header",
-                      "required": true,
-                      "type": "string"
+                        "name": "Jazz-Service-ID",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
                     }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
                 ],
                 "responses": {
                     "200": {
@@ -1747,36 +1765,39 @@
                 }
             },
             "delete": {
-                "description": "Removing a safe from t-vault",
-                "parameters": [
-                    {
-                        "name": "safeName",
-                        "in": "path",
-                        "required": true,
-                        "type": "string",
-                        "description": "safe name to delete"
-                    },
-                    {
-                        "name": "param",
-                        "in": "body",
-                        "description": "body parameter.",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/DeleteRoleFromSafeObj"
-                        }
-                    },
-                    {
-                      "name": "Jazz-Service-ID",
-                      "in": "header",
-                      "required": true,
-                      "type": "string"
-                    }
-                ],
+                "description": "Removing association of the role from the safe.",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Secret Management"
+                ],
+                "parameters": [
+                    {
+                        "name": "safename",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "safe name to identify the safe from where the role association is to be removed."
+                    },
+                    {
+                        "name": "param",
+                        "in": "body",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/RoleDetailsOfSafe"
+                        }
+                    },
+                    {
+                        "name": "Jazz-Service-ID",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -1969,7 +1990,7 @@
                 }
             }
         },
-        "/{service_name}/safes/{safeName}/user": {
+        "/{service_name}/safes/{safename}/user": {
             "options": {
                 "description": "CORS Support",
                 "consumes": [
@@ -1979,11 +2000,11 @@
                     "application/json"
                 ],
                 "tags": [
-                    "CORS"
+                    "Secret Management"
                 ],
                 "parameters": [
                     {
-                        "name": "safeName",
+                        "name": "safename",
                         "in": "path",
                         "required": true,
                         "type": "string"
@@ -2117,10 +2138,19 @@
                 }
             },
             "post": {
-                "description": "create a user in safe ",
+                "description": "Adding a user to the safe ",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Secret Management"
+                ],
                 "parameters": [
                     {
-                        "name": "safeName",
+                        "name": "safename",
                         "in": "path",
                         "required": true,
                         "type": "string",
@@ -2129,24 +2159,18 @@
                     {
                         "name": "param",
                         "in": "body",
-                        "description": "post body parameter.",
+                        "description": "",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UserDetailsForSafeObj"
+                            "$ref": "#/definitions/UserDetails"
                         }
                     },
                     {
-                      "name": "Jazz-Service-ID",
-                      "in": "header",
-                      "required": true,
-                      "type": "string"
+                        "name": "Jazz-Service-ID",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
                     }
-                ],
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
                 ],
                 "responses": {
                     "200": {
@@ -2254,7 +2278,7 @@
                 },
                 "security": [
                     {
-                        "{envPrefix}-{domain}-cognito-authorizer": []
+                        "{envPrefix}-{domain}-cognito-admin-authorizer": []
                     }
                 ],
                 "x-amazon-apigateway-integration": {
@@ -2339,36 +2363,39 @@
                 }
             },
             "delete": {
-                "description": "To remove a user from Safe",
-                "parameters": [
-                    {
-                        "name": "safeName",
-                        "in": "path",
-                        "required": true,
-                        "type": "string",
-                        "description": "safe name to delete"
-                    },
-                    {
-                        "name": "param",
-                        "in": "body",
-                        "description": "body parameter.",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/UserDetailsForSafeObj"
-                        }
-                    },
-                    {
-                      "name": "Jazz-Service-ID",
-                      "in": "header",
-                      "required": true,
-                      "type": "string"
-                    }
-                ],
+                "description": "Removes user from T-Vault",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Secret Management"
+                ],
+                "parameters": [
+                    {
+                        "name": "safename",
+                        "in": "path",
+                        "required": true,
+                        "type": "string",
+                        "description": "Safe name to remove the user from the safe."
+                    },
+                    {
+                        "name": "param",
+                        "in": "body",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UserDetails"
+                        }
+                    },
+                    {
+                        "name": "Jazz-Service-ID",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -2476,7 +2503,7 @@
                 },
                 "security": [
                     {
-                        "{envPrefix}-{domain}-cognito-authorizer": []
+                        "{envPrefix}-{domain}-cognito-admin-authorizer": []
                     }
                 ],
                 "x-amazon-apigateway-integration": {
@@ -2571,7 +2598,7 @@
                     "application/json"
                 ],
                 "tags": [
-                    "CORS"
+                    "Secret Management"
                 ],
                 "responses": {
                     "200": {
@@ -2701,29 +2728,32 @@
                 }
             },
             "post": {
-                "description": "create a user in t-vault ",
-                "parameters": [
-                    {
-                        "name": "param",
-                        "in": "body",
-                        "description": "post body parameter.",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/UserDetailsForVaultObj"
-                        }
-                    },
-                    {
-                      "name": "Jazz-Service-ID",
-                      "in": "header",
-                      "required": true,
-                      "type": "string"
-                    }
-                ],
+                "description": "Create a user in t-vault ",
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Secret Management"
+                ],
+                "parameters": [
+                    {
+                        "name": "param",
+                        "in": "body",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UserDetailsForVault"
+                        }
+                    },
+                    {
+                        "name": "Jazz-Service-ID",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -2917,28 +2947,31 @@
             },
             "delete": {
                 "description": "To remove a user from Safe",
-                "parameters": [
-                    {
-                        "name": "param",
-                        "in": "body",
-                        "description": "body parameter.",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/UserDetailsForVaultObj"
-                        }
-                    },
-                    {
-                      "name": "Jazz-Service-ID",
-                      "in": "header",
-                      "required": true,
-                      "type": "string"
-                    }
-                ],
                 "consumes": [
                     "application/json"
                 ],
                 "produces": [
                     "application/json"
+                ],
+                "tags": [
+                    "Secret Management"
+                ],
+                "parameters": [
+                    {
+                        "name": "param",
+                        "in": "body",
+                        "description": "",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/UserDetailsForVault"
+                        }
+                    },
+                    {
+                        "name": "Jazz-Service-ID",
+                        "in": "header",
+                        "required": true,
+                        "type": "string"
+                    }
                 ],
                 "responses": {
                     "200": {
@@ -3219,32 +3252,31 @@
                 }
             }
         },
-        "CreateSafeObj": {
+        "Safe": {
             "type": "object",
-            "description": "Input object for creation of a new safe in t-vault",
+            "description": "Details of creating a new safe in t-vault",
             "required": [
-                "safeName",
+                "name",
                 "owner",
                 "description"
             ],
             "properties": {
-                "description": {
-                    "type": "string",
-                    "description": "Description of the safe"
+                "items": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/UpdateSafeDetails"
+                        }
+                    ]
                 },
-                "safeName": {
+                "name": {
                     "type": "string",
                     "description": "Name of the safe"
-                },
-                "owner": {
-                    "type": "string",
-                    "description": "Owner of the safe"
                 }
             }
         },
-        "updateSafeObj": {
+        "UpdateSafeDetails": {
             "type": "object",
-            "description": "Input object for creation of a new safe in t-vault",
+            "description": "Details of a updating a safe in t-vault",
             "properties": {
                 "description": {
                     "type": "string",
@@ -3256,28 +3288,35 @@
                 }
             }
         },
-        "UserPermDetailObj": {
+        "UserPermissions": {
             "type": "object",
-            "description": "user permission details",
+            "description": "user and permission details",
             "properties": {
-                "username": {
-                    "type": "string",
-                    "description": "name of the user"
+                "items": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/UserDetails"
+                        }
+                    ]
                 },
                 "permission": {
                     "type": "string",
-                    "description": "permission of the user"
+                    "description": "Access level of the user to the safe",
+                    "enum": [
+                        "read",
+                        "write"
+                      ]
                 }
             }
         },
-        "SafeDetailObj": {
+        "SafeDetails": {
             "type": "object",
             "description": "Details of safe",
             "properties": {
                 "items": {
                     "allOf": [
                         {
-                            "$ref": "#/definitions/CreateSafeObj"
+                            "$ref": "#/definitions/Safe"
                         }
                     ]
                 },
@@ -3287,81 +3326,72 @@
                     "items": {
                         "allOf": [
                             {
-                                "$ref": "#/definitions/UserPermDetailObj"
+                                "$ref": "#/definitions/UserPermissions"
+                            }
+                        ]
+                    }
+                },
+                "aws-roles": {
+                    "type": "object",
+                    "description": "Role and access associated with the safe",
+                    "items": {
+                        "allOf": [
+                            {
+                                "$ref": "#/definitions/AssignRoleToSafeDetails"
                             }
                         ]
                     }
                 }
             }
         },
-        "CreateRoleToSafeObj": {
+        "RoleDetailsOfSafe": {
             "type": "object",
-            "description": "Input object for creation of a new role for a safe",
+            "description": "Role details of the safe",
             "required": [
-                "roleName"
+                "rolename"
             ],
             "properties": {
-                "roleName": {
+                "rolename": {
                     "type": "string",
-                    "description": "Name of the role which is to be created"
+                    "description": "Name of the role which is associated with the safe."
                 }
             }
         },
-        "DeleteRoleFromSafeObj": {
+        "UserDetails": {
             "type": "object",
-            "description": "Input object for creation of a new role for a safe",
+            "description": "Details of the user wh is associated with the safe",
             "required": [
-                "roleName"
+                "username"
             ],
             "properties": {
-                "roleName": {
-                    "type": "string",
-                    "description": "Name of the role which is to be created"
-                }
-            }
-        },
-        "UserDetailsForSafeObj": {
-            "type": "object",
-            "description": "Input object for creation of a new role for a safe",
-            "required": [
-                "userName",
-                "access"
-            ],
-            "properties": {
-                "userName": {
+                "username": {
                     "type": "string",
                     "description": "Name of the user who is to be asociated with the safe"
-                },
-                "access": {
-                    "type": "string",
-                    "description": "access level for the user to the safe"
                 }
             }
         },
-        "UserDetailsForVaultObj": {
+        "UserDetailsForVault": {
             "type": "object",
             "description": "Input object for creation of a new user for a vault",
             "required": [
-                "userName",
-                "password",
-                "policies"
+                "username",
+                "password"
             ],
             "properties": {
-                "userName": {
-                    "type": "string",
-                    "description": "Name of the user to be created in vault"
+                "items": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/UserDetails"
+                        }
+                    ]
                 },
                 "password": {
                     "type": "string",
                     "description": "password of the user to the vault"
-                },
-                "policies": {
-                    "type": "string",
-                    "description": "policies for the user to the vault"
                 }
             }
         },
-        "roleDetailObj": {
+        "RoleDetails": {
             "type": "object",
             "description": "Role details",
             "properties": {
@@ -3375,21 +3405,34 @@
                 }
             }
         },
-        "CreateSafeSuccessResponse": {
+        "ResponseDataDetails": {
             "type": "object",
+            "description": "response data details",
             "properties": {
                 "data": {
                     "type": "object",
-                    "description": "The response payload",
+                    "description": "The response data payload",
                     "properties": {
                         "message": {
                             "type": "string",
-                            "description": "Message for Successful Creation of safe"
+                            "description": "Success message"
                         }
                     }
+                }
+            }
+        },
+        "CreateSafeSuccessResponse": {
+            "type": "object",
+            "properties": {
+                "items": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ResponseDataDetails"
+                        }
+                    ]
                 },
                 "input": {
-                    "$ref": "#/definitions/CreateSafeObj"
+                    "$ref": "#/definitions/Safe"
                 }
             },
             "description": "200 Success Response payload for create new safe"
@@ -3404,7 +3447,7 @@
                     "items": {
                         "allOf": [
                             {
-                                "$ref": "#/definitions/SafeDetailObj"
+                                "$ref": "#/definitions/SafeDetails"
                             }
                         ]
                     }
@@ -3413,9 +3456,9 @@
                     "type": "object",
                     "description": "Input for getting the details of the safe",
                     "properties": {
-                        "safeName": {
+                        "safename": {
                             "type": "string",
-                            "description": "safe name to uniquely identify a safe"
+                            "description": "Safe name to uniquely identify a safe"
                         }
                     }
                 }
@@ -3424,21 +3467,18 @@
         "DeleteSafeSuccessResponse": {
             "type": "object",
             "properties": {
-                "data": {
-                    "type": "object",
-                    "description": "The response payload",
-                    "properties": {
-                        "message": {
-                            "type": "string",
-                            "description": "Message for Successful Deletion of safe"
+                "items": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ResponseDataDetails"
                         }
-                    }
+                    ]
                 },
                 "input": {
                     "type": "object",
                     "description": "Input for deleting the details of the safe",
                     "properties": {
-                        "safeName": {
+                        "safename": {
                             "type": "string",
                             "description": "safe name to uniquely identify a safe"
                         }
@@ -3450,18 +3490,15 @@
         "AddRoleToSafeSuccessResponse": {
             "type": "object",
             "properties": {
-                "data": {
-                    "type": "object",
-                    "description": "The response payload",
-                    "properties": {
-                        "message": {
-                            "type": "string",
-                            "description": "Message for Successful creation of the role to the safe"
+                "items": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ResponseDataDetails"
                         }
-                    }
+                    ]
                 },
                 "input": {
-                    "$ref": "#/definitions/CreateRoleToSafeObj"
+                    "$ref": "#/definitions/AssignRoleToSafeDetails"
                 }
             },
             "description": "200 Success Response payload for create new role to safe"
@@ -3469,18 +3506,15 @@
         "DeleteRoleFromSafeSuccessResponse": {
             "type": "object",
             "properties": {
-                "data": {
-                    "type": "object",
-                    "description": "The response payload",
-                    "properties": {
-                        "message": {
-                            "type": "string",
-                            "description": "Message for Successful Deletion of role from safe"
+                "items": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ResponseDataDetails"
                         }
-                    }
+                    ]
                 },
                 "input": {
-                    "$ref": "#/definitions/DeleteRoleFromSafeObj"
+                    "$ref": "#/definitions/RoleDetailsOfSafe"
                 }
             },
             "description": "200 Success Response payload for delete role from safe"
@@ -3488,18 +3522,15 @@
         "CreateUserInSafeSuccessResponse": {
             "type": "object",
             "properties": {
-                "data": {
-                    "type": "object",
-                    "description": "The response payload",
-                    "properties": {
-                        "message": {
-                            "type": "string",
-                            "description": "Message for Successful Creation of user in safe"
+                "items": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ResponseDataDetails"
                         }
-                    }
+                    ]
                 },
                 "input": {
-                    "$ref": "#/definitions/UserDetailsForSafeObj"
+                    "$ref": "#/definitions/UserDetails"
                 }
             },
             "description": "200 Success Response payload for create user in safe"
@@ -3507,18 +3538,15 @@
         "DeleteUserFromSafeSuccessResponse": {
             "type": "object",
             "properties": {
-                "data": {
-                    "type": "object",
-                    "description": "The response payload",
-                    "properties": {
-                        "message": {
-                            "type": "string",
-                            "description": "Message for Successful Deletion of user from safe"
+                "items": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ResponseDataDetails"
                         }
-                    }
+                    ]
                 },
                 "input": {
-                    "$ref": "#/definitions/UserDetailsForSafeObj"
+                    "$ref": "#/definitions/UserDetails"
                 }
             },
             "description": "200 Success Response payload for delete user from safe"
@@ -3526,18 +3554,15 @@
         "CreateUserInVaultSuccessResponse": {
             "type": "object",
             "properties": {
-                "data": {
-                    "type": "object",
-                    "description": "The response payload",
-                    "properties": {
-                        "message": {
-                            "type": "string",
-                            "description": "Message for Successful Creation of user in T-Vault"
+                "items": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ResponseDataDetails"
                         }
-                    }
+                    ]
                 },
                 "input": {
-                    "$ref": "#/definitions/UserDetailsForVaultObj"
+                    "$ref": "#/definitions/UserDetailsForVault"
                 }
             },
             "description": "200 Success Response payload for create user in vault"
@@ -3545,15 +3570,15 @@
         "DeleteUserFromVaultSuccessResponse": {
             "type": "object",
             "properties": {
-                "data": {
-                    "type": "object",
-                    "description": "The response payload",
-                    "properties": {
-                        "message": {
-                            "type": "string",
-                            "description": "Message for Successful Deletion of user from vault"
+                "items": {
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/ResponseDataDetails"
                         }
-                    }
+                    ]
+                },
+                "input": {
+                    "$ref": "#/definitions/UserDetailsForVault"
                 }
             },
             "description": "200 Success Response payload for delete user from vault"
@@ -3568,7 +3593,7 @@
                     "items": {
                         "allOf": [
                             {
-                                "$ref": "#/definitions/roleDetailObj"
+                                "$ref": "#/definitions/RoleDetails"
                             }
                         ]
                     }
@@ -3577,7 +3602,7 @@
                     "type": "object",
                     "description": "Input for getting the details of the role",
                     "properties": {
-                        "roleName": {
+                        "rolename": {
                             "type": "string",
                             "description": "role name to uniquely identify a safe"
                         }

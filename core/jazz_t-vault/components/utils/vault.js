@@ -15,12 +15,12 @@
 // =========================================================================
 
 const request = require("request");
-const logger = require('./logger.js');
+const logger = require('../logger.js');
 
 function getVaultToken(configData) {
   return new Promise((resolve, reject) => {
     let payload = {
-      uri: `${configData.T_VAULT_API}${configData.T_VAULT_LOGIN_API}`,
+      uri: `${configData.T_VAULT_API}${global.globalConfig.API.LOGIN}`,
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -32,10 +32,8 @@ function getVaultToken(configData) {
       }
     };
 
-    logger.debug("login payload : " + JSON.stringify(payload));
     request(payload, function (error, response, body) {
-      logger.debug("login response : " + JSON.stringify(response));
-      if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body && body.client_token) {
+      if (response.statusCode && response.statusCode === 200 && body && body.client_token) {
         logger.debug("Successfully logined to tvault: ");
         return resolve(body.client_token);
       } else {
@@ -51,15 +49,15 @@ function getVaultToken(configData) {
 function createSafe(safeDetails, configData, vaultToken, onComplete) {
 
   let payload = {
-    uri: `${configData.T_VAULT_API}${configData.SAFE_API}`,
+    uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}`,
     method: "POST",
     headers: {
       "vault-token": vaultToken
     },
     json: {
-      "path": `shared/${safeDetails.safeName.toLowerCase()}`,
+      "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.name.toLowerCase()}`,
       "data": {
-        "name": `${safeDetails.safeName.toLowerCase()}`,
+        "name": `${safeDetails.name.toLowerCase()}`,
         "owner": `${safeDetails.owner}`,
         "description": `${safeDetails.description}`
       }
@@ -71,11 +69,11 @@ function createSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("createSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("createSafe response : " + JSON.stringify(response));
-    if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
+    if (response.statusCode && response.statusCode === 200 && body) {
       logger.debug("Successfully created safe: ");
       return onComplete(null, body);
     } else {
-      logger.error("Error in creating safe. " + JSON.stringify(response));
+      logger.error("Error in creating safe. " + JSON.stringify(error));
       return onComplete({
         "error": "Error in creating safe. " + response.body.errors
       });
@@ -83,9 +81,9 @@ function createSafe(safeDetails, configData, vaultToken, onComplete) {
   });
 }
 
-function getSafeDetails(safeName, configData, vaultToken, onComplete) {
+function getSafeDetails(safename, configData, vaultToken, onComplete) {
   let payload = {
-    uri: `${configData.T_VAULT_API}${configData.SAFE_API}${configData.GET_SAFE_DETAILS}${safeName.toLowerCase()}`,
+    uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.GET_SAFE}${safename.toLowerCase()}`,
     method: "GET",
     headers: {
       "vault-token": vaultToken
@@ -96,12 +94,12 @@ function getSafeDetails(safeName, configData, vaultToken, onComplete) {
   logger.debug("getSafeDetails payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("getSafeDetails response : " + JSON.stringify(response));
-    if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201)) {
+    if (response.statusCode && response.statusCode === 200) {
       const safeDetails = JSON.parse(body);
       logger.debug("Successfully got safe details: ");
       return onComplete(null, safeDetails.data);
     } else {
-      logger.error("Error in getting safe details. " + JSON.stringify(response));
+      logger.error("Error in getting safe details. " + JSON.stringify(error));
       return onComplete({
         "error": "Error in getting safe details. " + response.body
       });
@@ -109,9 +107,9 @@ function getSafeDetails(safeName, configData, vaultToken, onComplete) {
   });
 }
 
-function deleteSafe(safeName, configData, vaultToken, onComplete) {
+function deleteSafe(safename, configData, vaultToken, onComplete) {
   let payload = {
-    uri: `${configData.T_VAULT_API}${configData.SAFE_API}${configData.DELETE_SAFE}${safeName.toLowerCase()}`,
+    uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.DELETE_SAFE}${safename.toLowerCase()}`,
     method: "DELETE",
     headers: {
       "vault-token": vaultToken
@@ -122,11 +120,11 @@ function deleteSafe(safeName, configData, vaultToken, onComplete) {
   logger.debug("deleteSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("deleteSafe response : " + JSON.stringify(response));
-    if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201)) {
+    if (response.statusCode && response.statusCode === 200) {
       logger.debug("Successfully deleted safe details: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
-      logger.error("Error in deleting safe details. " + JSON.stringify(response));
+      logger.error("Error in deleting safe details. " + JSON.stringify(error));
       return onComplete({
         "error": "Error in deleting safe details. " + response.body.errors
       });
@@ -136,15 +134,15 @@ function deleteSafe(safeName, configData, vaultToken, onComplete) {
 
 function updateSafe(safeDetails, configData, vaultToken, onComplete) {
   let payload = {
-    uri: `${configData.T_VAULT_API}${configData.SAFE_API}`,
+    uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}`,
     method: "PUT",
     headers: {
       "vault-token": vaultToken
     },
     json: {
-      "path": `shared/${safeDetails.safeName.toLowerCase()}`,
+      "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.safename.toLowerCase()}`,
       "data": {
-        "name": `${safeDetails.safeName.toLowerCase()}`,
+        "name": `${safeDetails.safename.toLowerCase()}`,
         "owner": `${safeDetails.owner}`,
         "description": `${safeDetails.description}`
       }
@@ -155,11 +153,11 @@ function updateSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("updateSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("updateSafe response : " + JSON.stringify(response));
-    if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
+    if (response.statusCode && response.statusCode === 200 && body) {
       logger.debug("Successfully updated safe: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
-      logger.error("Error in updating safe. " + JSON.stringify(response));
+      logger.error("Error in updating safe. " + JSON.stringify(error));
       return onComplete({
         "error": "Error in updating safe. " + response.body.errors
       });
@@ -169,15 +167,15 @@ function updateSafe(safeDetails, configData, vaultToken, onComplete) {
 
 function createUserInSafe(safeDetails, configData, vaultToken, onComplete) {
   let payload = {
-    uri: `${configData.T_VAULT_API}${configData.SAFE_API}${configData.USER_IN_SAFE_API}`,
+    uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.SAFE_USERS}`,
     method: "POST",
     headers: {
       "vault-token": vaultToken
     },
     json: {
-      "path": `shared/${safeDetails.safeName.toLowerCase()}`,
+      "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.safename.toLowerCase()}`,
       "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`, 
-      "username": `${safeDetails.userName}`
+      "username": `${safeDetails.username}`
     },
     rejectUnauthorized: false
   };
@@ -185,11 +183,11 @@ function createUserInSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("createUserInSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("createUserInSafe response : " + JSON.stringify(response));
-    if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
+    if (response.statusCode && response.statusCode === 200 && body) {
       logger.debug("Successfully created user in safe: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
-      logger.error("Error in creating user in safe. " + JSON.stringify(response));
+      logger.error("Error in creating user in safe. " + JSON.stringify(error));
       return onComplete({
         "error": "Error in creating user in safe. " + response.body.errors
       });
@@ -199,15 +197,15 @@ function createUserInSafe(safeDetails, configData, vaultToken, onComplete) {
 
 function deleteUserFromSafe(safeDetails, configData, vaultToken, onComplete) {
   let payload = {
-    uri: `${configData.T_VAULT_API}${configData.SAFE_API}${configData.USER_IN_SAFE_API}`,
+    uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.SAFE_USERS}`,
     method: "DELETE",
     headers: {
       "vault-token": vaultToken
     },
     json: {
-      "path": `shared/${safeDetails.safeName.toLowerCase()}`,
+      "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.safename.toLowerCase()}`,
       "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`,
-      "username": `${safeDetails.userName}`
+      "username": `${safeDetails.username}`
     },
     rejectUnauthorized: false
   };
@@ -215,11 +213,11 @@ function deleteUserFromSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("deleteUserFromSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("deleteUserFromSafe response : " + JSON.stringify(response));
-    if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
+    if (response.statusCode && response.statusCode === 200 && body) {
       logger.debug("Successfully deleted user from safe: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
-      logger.error("Error in deleting user from safe. " + JSON.stringify(response));
+      logger.error("Error in deleting user from safe. " + JSON.stringify(error));
       return onComplete({
         "error": "Error in deleting user from safe. " + response.body.errors
       });
@@ -230,7 +228,7 @@ function deleteUserFromSafe(safeDetails, configData, vaultToken, onComplete) {
 
 function getRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
   let payload = {
-    uri: `${configData.T_VAULT_API}${configData.GET_ROLE_DETAILS}${safeDetails.roleName}`,
+    uri: `${configData.T_VAULT_API}${global.globalConfig.API.GET_ROLE}${safeDetails.rolename}`,
     method: "GET",
     headers: {
       "vault-token": vaultToken
@@ -245,7 +243,7 @@ function getRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
       logger.debug("Successfully got role details: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
-      logger.error("Error in getting role details. " + JSON.stringify(response));
+      logger.error("Error in getting role details. " + JSON.stringify(error));
       return onComplete({
         "error": "Error in getting role details. " + response.body
       });
@@ -255,15 +253,15 @@ function getRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
 
 function createRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
   let payload = {
-    uri: `${configData.T_VAULT_API}${configData.SAFE_API}${configData.ROLE_IN_SAFE_API}`,
+    uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.SAFE_ROLES}`,
     method: "POST",
     headers: {
       "vault-token": vaultToken
     },
     json: {
-      "path": `shared/${safeDetails.safeName.toLowerCase()}`,
+      "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.safename.toLowerCase()}`,
       "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`,
-      "role": safeDetails.roleName
+      "role": safeDetails.rolename
     },
     rejectUnauthorized: false
   };
@@ -271,11 +269,11 @@ function createRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("createRoleInSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("createRoleInSafe response : " + JSON.stringify(response));
-    if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
+    if (response.statusCode && response.statusCode === 200 && body) {
       logger.debug("Successfully created role in safe: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
-      logger.error("Error in creating role in safe. " + JSON.stringify(response));
+      logger.error("Error in creating role in safe. " + JSON.stringify(error));
       return onComplete({
         "error": "Error in creating role in safe. " + response.body.errors
       });
@@ -285,15 +283,15 @@ function createRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
 
 function deleteRoleFromSafe(safeDetails, configData, vaultToken, onComplete) {
   let payload = {
-    uri: `${configData.T_VAULT_API}${configData.SAFE_API}${configData.ROLE_IN_SAFE_API}`,
+    uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.SAFE_ROLES}`,
     method: "DELETE",
     headers: {
       "vault-token": vaultToken
     },
     json: {
-      "path": `shared/${safeDetails.safeName.toLowerCase()}`,
+      "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.safename.toLowerCase()}`,
       "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`,
-      "role": safeDetails.roleName
+      "role": safeDetails.rolename
     },
     rejectUnauthorized: false
   };
@@ -301,11 +299,11 @@ function deleteRoleFromSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("deleteRoleFromSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("deleteRoleFromSafe response : " + JSON.stringify(response));
-    if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
+    if (response.statusCode && response.statusCode === 200 && body) {
       logger.debug("Successfully deleted role from safe: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
-      logger.error("Error in deleting role from safe. " + JSON.stringify(response));
+      logger.error("Error in deleting role from safe. " + JSON.stringify(error));
       return onComplete({
         "error": "Error in deleting role from safe. " + response.body.errors
       });
@@ -315,15 +313,15 @@ function deleteRoleFromSafe(safeDetails, configData, vaultToken, onComplete) {
 
 function createUserInVault(userDetails, configData, vaultToken, onComplete) {
   let payload = {
-    uri: `${configData.T_VAULT_API}${configData.USER_IN_VAULT}`,
+    uri: `${configData.T_VAULT_API}${global.globalConfig.API.USERS}`,
     method: "POST",
     headers: {
       "vault-token": vaultToken
     },
     json: {
-      "username": `${userDetails.userName}`,
+      "username": `${userDetails.username}`,
       "password": `${userDetails.password}`,
-      "policies": `${userDetails.policies}`
+      "policies": `${global.globalConfig.DEFAULT_USER_POLICY}`
     },
     rejectUnauthorized: false
   };
@@ -331,11 +329,11 @@ function createUserInVault(userDetails, configData, vaultToken, onComplete) {
   logger.debug("createUserInVault payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("createUserInVault response : " + JSON.stringify(response));
-    if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
+    if (response.statusCode && response.statusCode === 200 && body) {
       logger.debug("Successfully created user in vault: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
-      logger.error("Error in creating user in vault. " + JSON.stringify(response));
+      logger.error("Error in creating user in vault. " + JSON.stringify(error));
       return onComplete({
         "error": "Error in creating user in vault. " + response.body.errors
       });
@@ -345,13 +343,13 @@ function createUserInVault(userDetails, configData, vaultToken, onComplete) {
 
 function deleteUserFromVault(userDetails, configData, vaultToken, onComplete) {
   let payload = {
-    uri: `${configData.T_VAULT_API}${configData.USER_IN_VAULT}/${userDetails.userName}`,
+    uri: `${configData.T_VAULT_API}${global.globalConfig.API.USERS}/${userDetails.username}`,
     method: "DELETE",
     headers: {
       "vault-token": vaultToken
     },
     json: {
-      "username": `${userDetails.userName}`
+      "username": `${userDetails.username}`
     },
     rejectUnauthorized: false
   };
@@ -359,11 +357,11 @@ function deleteUserFromVault(userDetails, configData, vaultToken, onComplete) {
   logger.debug("deleteUserFromVault payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("deleteUserFromVault response : " + JSON.stringify(response));
-    if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
+    if (response.statusCode && response.statusCode === 200 && body) {
       logger.debug("Successfully deleted user from vault: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
-      logger.error("Error in deleting user from vault. " + JSON.stringify(response));
+      logger.error("Error in deleting user from vault. " + JSON.stringify(error));
       return onComplete({
         "error": "Error in deleting user from vault. " + response.body.errors
       });
