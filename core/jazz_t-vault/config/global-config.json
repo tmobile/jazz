@@ -24,6 +24,9 @@
     "username",
     "password"
   ],
+  "USER_IN_VAULT_REQUIRED_FIELDS": [
+    "username"
+  ],
   "PATH_TO_SAFE": "shared/",
   "ACCESS_LEVEL_IN_SAFE": "write",
   "DEFAULT_USER_POLICY": "default"

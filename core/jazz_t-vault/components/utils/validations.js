@@ -85,7 +85,7 @@ function validateUserInVaultDeleteInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.body) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
     if (isEmpty(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    let missingFieldList = global.globalConfig.CREATE_USER_IN_VAULT_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
+    let missingFieldList = global.globalConfig.USER_IN_VAULT_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
     if (missingFieldList.length > 0) return reject({ "errorType": "inputError", "message": "Following field(s) are required - " + missingFieldList.join(", ") });
     return resolve();
   });

@@ -311,7 +311,8 @@ function deleteRoleFromSafe(safeDetails, configData, vaultToken, onComplete) {
   });
 }
 
-function createUserInVault(userDetails, configData, vaultToken, onComplete) {
+function createUserInVault(userDetails, configData, vaultToken, onComplete) {  
+  const username = userDetails.username.replace(/[^a-zA-Z0-9_-]/g, '-');
   let payload = {
     uri: `${configData.T_VAULT_API}${global.globalConfig.API.USERS}`,
     method: "POST",
@@ -319,7 +320,7 @@ function createUserInVault(userDetails, configData, vaultToken, onComplete) {
       "vault-token": vaultToken
     },
     json: {
-      "username": `${userDetails.username}`,
+      "username": `${username}`,
       "password": `${userDetails.password}`,
       "policies": `${global.globalConfig.DEFAULT_USER_POLICY}`
     },
@@ -342,6 +343,7 @@ function createUserInVault(userDetails, configData, vaultToken, onComplete) {
 }
 
 function deleteUserFromVault(userDetails, configData, vaultToken, onComplete) {
+  const username = userDetails.username.replace(/[^a-zA-Z0-9_-]/g, '-');
   let payload = {
     uri: `${configData.T_VAULT_API}${global.globalConfig.API.USERS}/${userDetails.username}`,
     method: "DELETE",
@@ -349,7 +351,7 @@ function deleteUserFromVault(userDetails, configData, vaultToken, onComplete) {
       "vault-token": vaultToken
     },
     json: {
-      "username": `${userDetails.username}`
+      "username": `${username}`
     },
     rejectUnauthorized: false
   };
