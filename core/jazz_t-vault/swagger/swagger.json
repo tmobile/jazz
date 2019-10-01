@@ -1564,7 +1564,7 @@
                         "description": "",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/AssignRoleToSafeDetails"
+                            "$ref": "#/definitions/RoleDetailsOfSafe"
                         }
                     },
                     {
@@ -3305,7 +3305,7 @@
                     "enum": [
                         "read",
                         "write"
-                      ]
+                    ]
                 }
             }
         },
@@ -3331,13 +3331,13 @@
                         ]
                     }
                 },
-                "aws-roles": {
+                "roles": {
                     "type": "object",
                     "description": "Role and access associated with the safe",
                     "items": {
                         "allOf": [
                             {
-                                "$ref": "#/definitions/AssignRoleToSafeDetails"
+                                "$ref": "#/definitions/RoleDetailsOfSafe"
                             }
                         ]
                     }
@@ -3498,7 +3498,7 @@
                     ]
                 },
                 "input": {
-                    "$ref": "#/definitions/AssignRoleToSafeDetails"
+                    "$ref": "#/definitions/RoleDetailsOfSafe"
                 }
             },
             "description": "200 Success Response payload for create new role to safe"
