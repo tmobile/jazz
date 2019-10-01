@@ -166,6 +166,7 @@ function updateSafe(safeDetails, configData, vaultToken, onComplete) {
 }
 
 function createUserInSafe(safeDetails, configData, vaultToken, onComplete) {
+  const username = safeDetails.username.replace(/[^a-zA-Z0-9_-]/g, '-');
   let payload = {
     uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.SAFE_USERS}`,
     method: "POST",
@@ -175,7 +176,7 @@ function createUserInSafe(safeDetails, configData, vaultToken, onComplete) {
     json: {
       "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.safename.toLowerCase()}`,
       "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`,
-      "username": `${safeDetails.username}`
+      "username": `${username}`
     },
     rejectUnauthorized: false
   };
@@ -196,6 +197,7 @@ function createUserInSafe(safeDetails, configData, vaultToken, onComplete) {
 }
 
 function deleteUserFromSafe(safeDetails, configData, vaultToken, onComplete) {
+  const username = safeDetails.username.replace(/[^a-zA-Z0-9_-]/g, '-');
   let payload = {
     uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.SAFE_USERS}`,
     method: "DELETE",
@@ -205,7 +207,7 @@ function deleteUserFromSafe(safeDetails, configData, vaultToken, onComplete) {
     json: {
       "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.safename.toLowerCase()}`,
       "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`,
-      "username": `${safeDetails.username}`
+      "username": `${username}`
     },
     rejectUnauthorized: false
   };
@@ -345,7 +347,7 @@ function createUserInVault(userDetails, configData, vaultToken, onComplete) {
 function deleteUserFromVault(userDetails, configData, vaultToken, onComplete) {
   const username = userDetails.username.replace(/[^a-zA-Z0-9_-]/g, '-');
   let payload = {
-    uri: `${configData.T_VAULT_API}${global.globalConfig.API.USERS}/${userDetails.username}`,
+    uri: `${configData.T_VAULT_API}${global.globalConfig.API.USERS}/${username}`,
     method: "DELETE",
     headers: {
       "vault-token": vaultToken
