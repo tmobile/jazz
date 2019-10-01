@@ -18,7 +18,8 @@
     "average",
     "maximum",
     "minimum",
-    "samplecount"
+    "samplecount",
+    "total"
   ],
   "CF_REGION": "{cf-region}",
   "APINAME": {

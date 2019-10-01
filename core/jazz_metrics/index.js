@@ -55,6 +55,7 @@ function handler(event, context, cb) {
          *    }
          */
     var eventBody = event.body;
+    var provider = "";
     var metricsResponse = [];
     let headers = exportable.changeToLowerCase(event.headers);
     let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
@@ -77,17 +78,30 @@ function handler(event, context, cb) {
                   deploymentAccounts.forEach(function (item) {
                     const accountId = item.accountId;
                     const region = item.region;
-                    var getpromise = utils.AssumeRole(accountId, configJson)
-                      .then((creds) => exportable.getMetricsDetails(res, eventBody, config, creds, region))
+                    provider = item.provider;
+                    if(provider == 'aws'){
+                      var getpromise = utils.AssumeRole(accountId, configJson)
+                        .then((creds) => exportable.getMetricsDetails(res, eventBody, config, creds, region))
+                        .then((res) => {
+                          var finalObj = utils.massageData(res, eventBody, item);
+                          metricsResponse.push(finalObj);
+                        })
+                      promiseCollection.push(getpromise);
+                    } else if(provider == 'azure'){
+                      exportable.getMetricsDetails(res, eventBody, config, null, region)
                       .then((res) => {
                         var finalObj = utils.massageData(res, eventBody, item);
                         metricsResponse.push(finalObj);
                       })
-                    promiseCollection.push(getpromise);
+                    }
                   })
-                  Promise.all(promiseCollection).then(() => {
+                  if(provider == 'aws'){
+                    Promise.all(promiseCollection).then(() => {
+                      return cb(null, responseObj(metricsResponse, eventBody))
+                    })
+                  } else if(provider == 'azure'){
                     return cb(null, responseObj(metricsResponse, eventBody))
-                  })
+                  }
                 })
             })
         })

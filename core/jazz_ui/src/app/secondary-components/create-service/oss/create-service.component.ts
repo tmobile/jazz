@@ -862,6 +862,7 @@ export class CreateServiceComponent implements OnInit {
     this.getData();
     this.createService();
     this.typeOfService = 'api';
+    this.typeOfPlatform = 'aws';
     this.selectedApprovers = [];
   }
 
