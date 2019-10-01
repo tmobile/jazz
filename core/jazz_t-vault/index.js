@@ -1,5 +1,5 @@
 // =========================================================================
-// Copyright © 2017 T-Mobile USA, Inc.
+// Copyright © 2019 T-Mobile USA, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -41,14 +41,14 @@ function handler(event, context, cb) {
     const configData = configModule.getConfig(event, context);
     const resourcePath = event.resourcePath;
 
-    logger.debug("resourcePath : " + resourcePath);
+    logger.debug("resourcePath: " + resourcePath);
 
     if (event && !event.method) {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("Method cannot be empty")));
     }
 
     if (!event.principalId) {
-      return cb(JSON.stringify(errorHandler.throwUnauthorizedError("You aren't authorized to access this service.")));
+      return cb(JSON.stringify(errorHandler.throwUnauthorizedError("You aren't authorized to access this service")));
     }
 
     //SAFE
@@ -74,7 +74,7 @@ function handler(event, context, cb) {
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.getSafeDetails(event.path.safename, configData, vaultToken) })
         .then(result => {
-          logger.info("Successfully got safe details. ");
+          logger.info("Successfully got safe details");
           return cb(null, responseObj(result, event.path));
         })
         .catch(err => {
@@ -92,7 +92,7 @@ function handler(event, context, cb) {
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.updateSafe(event.body, event.path.safename, configData, vaultToken) })
         .then(result => {
-          logger.info("Successfully updated safe. ");
+          logger.info("Successfully updated safe");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
@@ -108,7 +108,7 @@ function handler(event, context, cb) {
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.deleteSafe(event.path.safename, configData, vaultToken) })
         .then(result => {
-          logger.info("Successfully deleted safe. ");
+          logger.info("Successfully deleted safe");
           return cb(null, responseObj(result, event.path));
         })
         .catch(err => {
@@ -127,7 +127,7 @@ function handler(event, context, cb) {
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.createUserInSafe(event.body, event.path.safename, configData, vaultToken) })
         .then(result => {
-          logger.info("Successfully created user in safe. ");
+          logger.info("Successfully created user in safe");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
@@ -145,7 +145,7 @@ function handler(event, context, cb) {
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.deleteUserFromSafe(event.body, event.path.safename, configData, vaultToken) })
         .then(result => {
-          logger.info("Successfully deleted user from safe. ");
+          logger.info("Successfully deleted user from safe");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
@@ -163,7 +163,7 @@ function handler(event, context, cb) {
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.getRoleInSafe(event.query.rolename, event.path.safename, configData, vaultToken) })
         .then(result => {
-          logger.info("Successfully got role details from safe. ");
+          logger.info("Successfully got role details from safe");
           return cb(null, responseObj(result, event.query));
         })
         .catch(err => {
@@ -181,7 +181,7 @@ function handler(event, context, cb) {
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.createRoleInSafe(event.body, event.path.safename, configData, vaultToken) })
         .then(result => {
-          logger.info("Successfully created role in safe. ");
+          logger.info("Successfully created role in safe");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
@@ -199,7 +199,7 @@ function handler(event, context, cb) {
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.deleteRoleFromSafe(event.body, event.path.safename, configData, vaultToken) })
         .then(result => {
-          logger.info("Successfully deleted role from safe. ");
+          logger.info("Successfully deleted role from safe");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
@@ -216,7 +216,7 @@ function handler(event, context, cb) {
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.createUserInVault(event.body, configData, vaultToken) })
         .then(result => {
-          logger.info("Successfully created user in vault. ");
+          logger.info("Successfully created user in vault");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
@@ -232,7 +232,7 @@ function handler(event, context, cb) {
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.deleteUserFromVault(event.body, configData, vaultToken) })
         .then(result => {
-          logger.info("Successfully deleted user from vault. ");
+          logger.info("Successfully deleted user from vault");
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
@@ -246,6 +246,7 @@ function handler(event, context, cb) {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("The requested method is not supported.")));
     }
   } catch (e) {
+    logger.error("Unknown internal error occured: " + JSON.stringify(e));
     cb(JSON.stringify(errorHandler.throwInternalServerError("Something went wrong. Please try again later.")));
   }
 }
