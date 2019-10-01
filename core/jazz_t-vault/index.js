@@ -25,8 +25,8 @@ const responseObj = require("./components/response.js");
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
 const globalConfig = require("./config/global-config.json");
-const vault = require("./components/vault/vault.js");
-const validations = require("./components/vault/validations.js");
+const vault = require("./components/utils/vault.js");
+const validations = require("./components/utils/validations.js");
 
 
 //Initializations

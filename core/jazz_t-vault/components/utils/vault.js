@@ -174,7 +174,7 @@ function createUserInSafe(safeDetails, configData, vaultToken, onComplete) {
     },
     json: {
       "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.safename.toLowerCase()}`,
-      "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`, 
+      "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`,
       "username": `${safeDetails.username}`
     },
     rejectUnauthorized: false
@@ -239,7 +239,7 @@ function getRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("getRoleInSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("getRoleInSafe response : " + JSON.stringify(response));
-    if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201 ) && body) {
+    if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
       logger.debug("Successfully got role details: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {

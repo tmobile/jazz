@@ -18,8 +18,8 @@
 function validateCreateSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.body) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    if (validations.genericInputValidation(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    let missingFieldList = globalConfig.CREATE_SAFE_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
+    if (isEmpty(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
+    let missingFieldList = global.globalConfig.CREATE_SAFE_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
     if (missingFieldList.length > 0) return reject({ "errorType": "inputError", "message": "Following field(s) are required - " + missingFieldList.join(", ") });
     return resolve();
   });
@@ -28,7 +28,7 @@ function validateCreateSafeInput(event) {
 function validateUpdateSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.body) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    if (validations.genericInputValidation(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
+    if (isEmpty(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
     return resolve();
   });
 }
@@ -36,7 +36,7 @@ function validateUpdateSafeInput(event) {
 function validateSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.path) return reject({ "errorType": "inputError", "message": "Input path cannot be empty" });
-    if (validations.genericInputValidation(event.path)) return reject({ "errorType": "inputError", "message": "Input path cannot be empty" });
+    if (isEmpty(event.path)) return reject({ "errorType": "inputError", "message": "Input path cannot be empty" });
     if (!event.path.safename) return reject({ "errorType": "inputError", "message": "Following field(s) are required in path- safename" });
     return resolve();
   });
@@ -45,8 +45,8 @@ function validateSafeInput(event) {
 function validateUserInSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.body) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    if (validations.genericInputValidation(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    let missingFieldList = globalConfig.CREATE_USER_IN_SAFE_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
+    if (isEmpty(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
+    let missingFieldList = global.globalConfig.CREATE_USER_IN_SAFE_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
     if (missingFieldList.length > 0) return reject({ "errorType": "inputError", "message": "Following field(s) are required - " + missingFieldList.join(", ") });
     return resolve();
   });
@@ -55,8 +55,8 @@ function validateUserInSafeInput(event) {
 function validateRoleInSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.body) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    if (validations.genericInputValidation(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    let missingFieldList = globalConfig.CREATE_ROLE_IN_SAFE_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
+    if (isEmpty(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
+    let missingFieldList = global.globalConfig.CREATE_ROLE_IN_SAFE_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
     if (missingFieldList.length > 0) return reject({ "errorType": "inputError", "message": "Following field(s) are required - " + missingFieldList.join(", ") });
     return resolve();
   });
@@ -65,7 +65,7 @@ function validateRoleInSafeInput(event) {
 function validateGetRoleInSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.query) return reject({ "errorType": "inputError", "message": "Query cannot be empty" });
-    if (validations.genericInputValidation(event.query)) return reject({ "errorType": "inputError", "message": "Query cannot be empty" });
+    if (isEmpty(event.query)) return reject({ "errorType": "inputError", "message": "Query cannot be empty" });
     if (!event.query.rolename) return reject({ "errorType": "inputError", "message": "Following field(s) are required in query- rolename" });
     return resolve();
   });
@@ -74,8 +74,8 @@ function validateGetRoleInSafeInput(event) {
 function validateUserInVaultInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.body) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    if (validations.genericInputValidation(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    let missingFieldList = globalConfig.CREATE_USER_IN_VAULT_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
+    if (isEmpty(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
+    let missingFieldList = global.globalConfig.CREATE_USER_IN_VAULT_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
     if (missingFieldList.length > 0) return reject({ "errorType": "inputError", "message": "Following field(s) are required - " + missingFieldList.join(", ") });
     return resolve();
   });
@@ -84,8 +84,8 @@ function validateUserInVaultInput(event) {
 function validateUserInVaultDeleteInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.body) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    if (validations.genericInputValidation(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
-    let missingFieldList = globalConfig.CREATE_USER_IN_VAULT_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
+    if (isEmpty(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
+    let missingFieldList = global.globalConfig.CREATE_USER_IN_VAULT_REQUIRED_FIELDS.filter(x => !Object.keys(event.body).includes(x));
     if (missingFieldList.length > 0) return reject({ "errorType": "inputError", "message": "Following field(s) are required - " + missingFieldList.join(", ") });
     return resolve();
   });
@@ -115,7 +115,7 @@ function genericInputValidation(obj) {
   });
 }
 
-module.exports = { 
+module.exports = {
   validateCreateSafeInput,
   validateSafeInput,
   validateUpdateSafeInput,

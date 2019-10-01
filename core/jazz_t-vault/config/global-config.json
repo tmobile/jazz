@@ -8,7 +8,7 @@
     "GET_SAFE": "?path=shared/",
     "GET_ROLE": "/auth/aws/role/",
     "USERS": "/auth/userpass/users"
-},
+  },
   "CREATE_SAFE_REQUIRED_FIELDS": [
     "name",
     "owner",
