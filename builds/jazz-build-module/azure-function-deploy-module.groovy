@@ -33,6 +33,7 @@ def createFunction(serviceInfo){
   def masterKey = invokeAzureCreation(serviceInfo)
 
   def endpoint = "https://${serviceInfo.stackName}.azurewebsites.net/admin/functions/${serviceInfo.stackName}?code=$masterKey"
+  events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceInfo.serviceCatalog['provider'], endpoint, 'endpoint_url', serviceInfo.serviceCatalog), serviceInfo.envId)
   return endpoint
 
 }
