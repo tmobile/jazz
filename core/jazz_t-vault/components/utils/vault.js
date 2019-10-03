@@ -34,12 +34,12 @@ function getVaultToken(configData) {
 
     request(payload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200 && body && body.client_token) {
-        logger.debug("Successfully logined to tvault: ");
+        logger.debug("Successfully logged into tvault");
         return resolve(body.client_token);
       } else {
-        logger.error("Error in getting vault token. " + JSON.stringify(response));
+        logger.error("Error in getting vault token: " + JSON.stringify(response));
         return reject({
-          "error": "Error in getting vault token. " + response.body.errors
+          "error": "Error in getting vault token: " + response.body.errors
         });
       }
     });
@@ -70,12 +70,12 @@ function createSafe(safeDetails, configData, vaultToken, onComplete) {
   request(payload, function (error, response, body) {
     logger.debug("createSafe response : " + JSON.stringify(response));
     if (response.statusCode && response.statusCode === 200 && body) {
-      logger.debug("Successfully created safe: ");
+      logger.debug("Successfully created safe");
       return onComplete(null, body);
     } else {
-      logger.error("Error in creating safe. " + JSON.stringify(error));
+      logger.error("Error in creating safe: " + JSON.stringify(error));
       return onComplete({
-        "error": "Error in creating safe. " + response.body.errors
+        "error": "Error in creating safe: " + response.body.errors
       });
     }
   });
@@ -93,13 +93,13 @@ function getSafeDetails(safename, configData, vaultToken, onComplete) {
 
   logger.debug("getSafeDetails payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.debug("getSafeDetails response : " + JSON.stringify(response));
+    logger.debug("getSafeDetails response: " + JSON.stringify(response));
     if (response.statusCode && response.statusCode === 200) {
       const safeDetails = JSON.parse(body);
-      logger.debug("Successfully got safe details: ");
+      logger.debug("Successfully got safe details");
       return onComplete(null, safeDetails.data);
     } else {
-      logger.error("Error in getting safe details. " + JSON.stringify(error));
+      logger.error("Error in getting safe details: " + JSON.stringify(error));
       return onComplete({
         "error": "Error in getting safe details. " + response.body
       });
@@ -119,14 +119,14 @@ function deleteSafe(safename, configData, vaultToken, onComplete) {
 
   logger.debug("deleteSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
-    logger.debug("deleteSafe response : " + JSON.stringify(response));
+    logger.debug("deleteSafe response: " + JSON.stringify(response));
     if (response.statusCode && response.statusCode === 200) {
       logger.debug("Successfully deleted safe details: " + JSON.stringify(body));
       return onComplete(null, body);
     } else {
-      logger.error("Error in deleting safe details. " + JSON.stringify(error));
+      logger.error("Error in deleting safe details: " + JSON.stringify(error));
       return onComplete({
-        "error": "Error in deleting safe details. " + response.body.errors
+        "error": "Error in deleting safe details: " + response.body.errors
       });
     }
   });
