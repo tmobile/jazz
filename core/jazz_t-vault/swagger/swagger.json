@@ -972,7 +972,7 @@
                         "in": "path",
                         "required": true,
                         "type": "string",
-                        "description": "safe name to delete"
+                        "description": ""
                     },
                     {
                         "name": "Jazz-Service-ID",
@@ -1781,7 +1781,7 @@
                         "in": "path",
                         "required": true,
                         "type": "string",
-                        "description": "safe name to identify the safe from where the role association is to be removed."
+                        "description": ""
                     },
                     {
                         "name": "param",
@@ -2154,7 +2154,7 @@
                         "in": "path",
                         "required": true,
                         "type": "string",
-                        "description": "safe name for identifying the safe."
+                        "description": ""
                     },
                     {
                         "name": "param",
@@ -2379,7 +2379,7 @@
                         "in": "path",
                         "required": true,
                         "type": "string",
-                        "description": "Safe name to remove the user from the safe."
+                        "description": ""
                     },
                     {
                         "name": "param",
@@ -2963,7 +2963,7 @@
                         "description": "",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/UserDetailsForVault"
+                            "$ref": "#/definitions/UserDetails"
                         }
                     },
                     {
@@ -3253,30 +3253,30 @@
             }
         },
         "Safe": {
-            "type": "object",
-            "description": "Details of creating a new safe in t-vault",
-            "required": [
-                "name",
-                "owner",
-                "description"
-            ],
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/UpdateSafeDetails"
-                        }
-                    ]
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UpdateSafeDetails"
                 },
-                "name": {
-                    "type": "string",
-                    "description": "Name of the safe"
+                {
+                    "type": "object",
+                    "description": "Details of creating a new safe in t-vault",
+                    "required": [
+                        "name",
+                        "owner",
+                        "description"
+                    ],
+                    "properties": {
+                        "name": {
+                            "type": "string",
+                            "description": "Name of the safe"
+                        }
+                    }
                 }
-            }
+            ]
         },
         "UpdateSafeDetails": {
             "type": "object",
-            "description": "Details of a updating a safe in t-vault",
+            "description": "Details of updating a safe in t-vault",
             "properties": {
                 "description": {
                     "type": "string",
@@ -3289,60 +3289,56 @@
             }
         },
         "UserPermissions": {
-            "type": "object",
-            "description": "user and permission details",
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/UserDetails"
-                        }
-                    ]
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UserDetails"
                 },
-                "permission": {
-                    "type": "string",
-                    "description": "Access level of the user to the safe",
-                    "enum": [
-                        "read",
-                        "write"
-                    ]
+                {
+                    "type": "object",
+                    "description": "User and permission details",
+                    "properties": {
+                        "permission": {
+                            "type": "string",
+                            "description": "Access level of the user to the safe",
+                            "enum": [
+                                "read",
+                                "write"
+                            ]
+                        }
+                    }
                 }
-            }
+            ]
         },
         "SafeDetails": {
-            "type": "object",
-            "description": "Details of safe",
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/Safe"
+            "allOf": [
+                {
+                    "$ref": "#/definitions/Safe"
+                },
+                {
+                    "type": "object",
+                    "description": "Details of safe",
+                    "properties": {
+                        "users": {
+                            "type": "object",
+                            "description": "User and permission associated with the safe",
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/UserPermissions"
+                                }
+                            ]
+                        },
+                        "roles": {
+                            "type": "object",
+                            "description": "Role and access associated with the safe",
+                            "allOf": [
+                                {
+                                    "$ref": "#/definitions/RoleDetailsOfSafe"
+                                }
+                            ]
                         }
-                    ]
-                },
-                "users": {
-                    "type": "object",
-                    "description": "User and permission associated with the safe",
-                    "items": {
-                        "allOf": [
-                            {
-                                "$ref": "#/definitions/UserPermissions"
-                            }
-                        ]
-                    }
-                },
-                "roles": {
-                    "type": "object",
-                    "description": "Role and access associated with the safe",
-                    "items": {
-                        "allOf": [
-                            {
-                                "$ref": "#/definitions/RoleDetailsOfSafe"
-                            }
-                        ]
                     }
                 }
-            }
+            ]
         },
         "RoleDetailsOfSafe": {
             "type": "object",
@@ -3353,43 +3349,42 @@
             "properties": {
                 "rolename": {
                     "type": "string",
-                    "description": "Name of the role which is associated with the safe."
+                    "description": ""
                 }
             }
         },
         "UserDetails": {
             "type": "object",
-            "description": "Details of the user wh is associated with the safe",
+            "description": "Details of the user to be associated with the safe",
             "required": [
                 "username"
             ],
             "properties": {
                 "username": {
                     "type": "string",
-                    "description": "Name of the user who is to be asociated with the safe"
+                    "description": "Name of the user to be asociated with the safe"
                 }
             }
         },
         "UserDetailsForVault": {
-            "type": "object",
-            "description": "Input object for creation of a new user for a vault",
-            "required": [
-                "username",
-                "password"
-            ],
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/UserDetails"
-                        }
-                    ]
+            "allOf": [
+                {
+                    "$ref": "#/definitions/UserDetails"
                 },
-                "password": {
-                    "type": "string",
-                    "description": "password of the user to the vault"
+                {
+                    "type": "object",
+                    "description": "Details of the user for crating in vault",
+                    "required": [
+                        "password"
+                    ],
+                    "properties": {
+                        "password": {
+                            "type": "string",
+                            "description": "Password of the user to the vault"
+                        }
+                    }
                 }
-            }
+            ]
         },
         "RoleDetails": {
             "type": "object",
@@ -3397,17 +3392,20 @@
             "properties": {
                 "authType": {
                     "type": "string",
-                    "description": "auth type of the role"
+                    "description": "Auth type of the role"
                 },
                 "policies": {
-                    "type": "object",
-                    "description": "policies of the role"
+                    "type": "array",
+                    "description": "Policies of the role",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },
         "ResponseDataDetails": {
             "type": "object",
-            "description": "response data details",
+            "description": "Response data details",
             "properties": {
                 "data": {
                     "type": "object",
@@ -3422,20 +3420,20 @@
             }
         },
         "CreateSafeSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ResponseDataDetails"
-                        }
-                    ]
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ResponseDataDetails"
                 },
-                "input": {
-                    "$ref": "#/definitions/Safe"
+                {
+                    "type": "object",
+                    "properties": {
+                        "input": {
+                            "$ref": "#/definitions/Safe"
+                        }
+                    },
+                    "description": "200 Success Response payload for create new safe"
                 }
-            },
-            "description": "200 Success Response payload for create new safe"
+            ]
         },
         "GetSafeSuccessResponse": {
             "type": "object",
@@ -3444,13 +3442,11 @@
                 "data": {
                     "type": "object",
                     "description": "The response payload",
-                    "items": {
-                        "allOf": [
-                            {
-                                "$ref": "#/definitions/SafeDetails"
-                            }
-                        ]
-                    }
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/SafeDetails"
+                        }
+                    ]
                 },
                 "input": {
                     "type": "object",
@@ -3465,123 +3461,123 @@
             }
         },
         "DeleteSafeSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ResponseDataDetails"
-                        }
-                    ]
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ResponseDataDetails"
                 },
-                "input": {
+                {
                     "type": "object",
-                    "description": "Input for deleting the details of the safe",
                     "properties": {
-                        "safename": {
-                            "type": "string",
-                            "description": "safe name to uniquely identify a safe"
+                        "input": {
+                            "type": "object",
+                            "description": "Input for deleting the details of the safe",
+                            "properties": {
+                                "safename": {
+                                    "type": "string",
+                                    "description": "Safe name to uniquely identify a safe"
+                                }
+                            }
                         }
-                    }
+                    },
+                    "description": "200 Success Response payload for delete safe"
                 }
-            },
-            "description": "200 Success Response payload for delete safe"
+            ]
         },
         "AddRoleToSafeSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ResponseDataDetails"
-                        }
-                    ]
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ResponseDataDetails"
                 },
-                "input": {
-                    "$ref": "#/definitions/RoleDetailsOfSafe"
+                {
+                    "type": "object",
+                    "properties": {
+                        "input": {
+                            "$ref": "#/definitions/RoleDetailsOfSafe"
+                        }
+                    },
+                    "description": "200 Success Response payload for create new role to safe"
                 }
-            },
-            "description": "200 Success Response payload for create new role to safe"
+            ]
         },
         "DeleteRoleFromSafeSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ResponseDataDetails"
-                        }
-                    ]
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ResponseDataDetails"
                 },
-                "input": {
-                    "$ref": "#/definitions/RoleDetailsOfSafe"
+                {
+                    "type": "object",
+                    "properties": {
+                        "input": {
+                            "$ref": "#/definitions/RoleDetailsOfSafe"
+                        }
+                    },
+                    "description": "200 Success Response payload for delete role from safe"
                 }
-            },
-            "description": "200 Success Response payload for delete role from safe"
+            ]
         },
         "CreateUserInSafeSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ResponseDataDetails"
-                        }
-                    ]
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ResponseDataDetails"
                 },
-                "input": {
-                    "$ref": "#/definitions/UserDetails"
+                {
+                    "type": "object",
+                    "properties": {
+                        "input": {
+                            "$ref": "#/definitions/UserDetails"
+                        }
+                    },
+                    "description": "200 Success Response payload for create user in safe"
                 }
-            },
-            "description": "200 Success Response payload for create user in safe"
+            ]
         },
         "DeleteUserFromSafeSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ResponseDataDetails"
-                        }
-                    ]
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ResponseDataDetails"
                 },
-                "input": {
-                    "$ref": "#/definitions/UserDetails"
+                {
+                    "type": "object",
+                    "properties": {
+                        "input": {
+                            "$ref": "#/definitions/UserDetails"
+                        }
+                    },
+                    "description": "200 Success Response payload for delete user from safe"
                 }
-            },
-            "description": "200 Success Response payload for delete user from safe"
+            ]
         },
         "CreateUserInVaultSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ResponseDataDetails"
-                        }
-                    ]
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ResponseDataDetails"
                 },
-                "input": {
-                    "$ref": "#/definitions/UserDetailsForVault"
+                {
+                    "type": "object",
+                    "properties": {
+                        "input": {
+                            "$ref": "#/definitions/UserDetailsForVault"
+                        }
+                    },
+                    "description": "200 Success Response payload for create user in vault"
                 }
-            },
-            "description": "200 Success Response payload for create user in vault"
+            ]
         },
         "DeleteUserFromVaultSuccessResponse": {
-            "type": "object",
-            "properties": {
-                "items": {
-                    "allOf": [
-                        {
-                            "$ref": "#/definitions/ResponseDataDetails"
-                        }
-                    ]
+            "allOf": [
+                {
+                    "$ref": "#/definitions/ResponseDataDetails"
                 },
-                "input": {
-                    "$ref": "#/definitions/UserDetailsForVault"
+                {
+                    "type": "object",
+                    "properties": {
+                        "input": {
+                            "$ref": "#/definitions/UserDetails"
+                        }
+                    },
+                    "description": "200 Success Response payload for delete user from vault"
                 }
-            },
-            "description": "200 Success Response payload for delete user from vault"
+            ]
         },
         "GetRoleSuccessResponse": {
             "type": "object",
@@ -3590,13 +3586,11 @@
                 "data": {
                     "type": "object",
                     "description": "The response payload",
-                    "items": {
-                        "allOf": [
-                            {
-                                "$ref": "#/definitions/RoleDetails"
-                            }
-                        ]
-                    }
+                    "allOf": [
+                        {
+                            "$ref": "#/definitions/RoleDetails"
+                        }
+                    ]
                 },
                 "input": {
                     "type": "object",
@@ -3604,7 +3598,7 @@
                     "properties": {
                         "rolename": {
                             "type": "string",
-                            "description": "role name to uniquely identify a safe"
+                            "description": "Role name to uniquely identify a safe"
                         }
                     }
                 }
