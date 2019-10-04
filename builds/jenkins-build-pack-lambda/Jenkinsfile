@@ -286,6 +286,7 @@ node() {
             def endpoint = azureDeployer.createFunction(serviceInfo)
             environmentDeploymentMetadata.setEnvironmentEndpoint(endpoint)
             def svc_response = "Your service endpoint: $endpoint"
+            events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], endpoint, 'endpoint_url', config), environment_logical_id)
             sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response)
           } catch (ex) {
             handleFail(ex, context_map, environment_logical_id, config, gitCommitHash)
