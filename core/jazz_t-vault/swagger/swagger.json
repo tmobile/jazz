@@ -151,7 +151,7 @@
                 }
             },
             "post": {
-                "description": "create a safe in t-vault",
+                "description": "Create a safe in t-vault",
                 "consumes": [
                     "application/json"
                 ],
@@ -732,7 +732,7 @@
                 }
             },
             "put": {
-                "description": "update a safe in t-vault",
+                "description": "Update a safe in t-vault",
                 "consumes": [
                     "application/json"
                 ],
@@ -1320,7 +1320,7 @@
                 }
             },
             "get": {
-                "description": "Get a safe details",
+                "description": "Get role details that's assigned to a safe",
                 "consumes": [
                     "application/json"
                 ],
@@ -2363,7 +2363,7 @@
                 }
             },
             "delete": {
-                "description": "Removes user from T-Vault",
+                "description": "Remove user from a safe",
                 "consumes": [
                     "application/json"
                 ],
@@ -2946,7 +2946,7 @@
                 }
             },
             "delete": {
-                "description": "To remove a user from Safe",
+                "description": "Remove a user from T-Vault",
                 "consumes": [
                     "application/json"
                 ],

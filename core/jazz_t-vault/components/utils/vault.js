@@ -95,8 +95,10 @@ function getSafeDetails(safename, configData, vaultToken, onComplete) {
   request(payload, function (error, response, body) {
     logger.debug("getSafeDetails response: " + JSON.stringify(response));
     if (response.statusCode && response.statusCode === 200) {
-      const safeDetails = JSON.parse(body);
       logger.debug("Successfully got safe details");
+      const safeDetails = JSON.parse(body);
+      safeDetails.data.roles = safeDetails.data['aws-roles'];
+      delete safeDetails.data['aws-roles'];
       return onComplete(null, safeDetails.data);
     } else {
       logger.error("Error in getting safe details: " + JSON.stringify(error));
@@ -243,7 +245,7 @@ function getRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
     logger.debug("getRoleInSafe response : " + JSON.stringify(response));
     if (response.statusCode && (response.statusCode === 200 || response.statusCode === 201) && body) {
       logger.debug("Successfully got role details: " + JSON.stringify(body));
-      return onComplete(null, body);
+      return onComplete(null, JSON.parse(body));
     } else {
       logger.error("Error in getting role details. " + JSON.stringify(error));
       return onComplete({
