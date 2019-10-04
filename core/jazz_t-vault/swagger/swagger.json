@@ -3195,7 +3195,7 @@
         "400ErrorResponse": {
             "type": "object",
             "properties": {
-                "error_type": {
+                "errorType": {
                     "type": "string",
                     "default": "Bad Request format"
                 },
@@ -3231,7 +3231,7 @@
         "404ErrorResponse": {
             "type": "object",
             "properties": {
-                "error_type": {
+                "errorType": {
                     "type": "string",
                     "default": "Resource Not Found"
                 },
@@ -3243,7 +3243,7 @@
         "500ErrorResponse": {
             "type": "object",
             "properties": {
-                "error_type": {
+                "errorType": {
                     "type": "string",
                     "default": "Internal Server Error"
                 },
