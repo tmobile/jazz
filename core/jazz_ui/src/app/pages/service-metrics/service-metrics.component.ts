@@ -536,19 +536,12 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   setAsset() {
     switch (this.serviceType) {
       case 'api':
-        let method = this.filters.getFieldValueOfLabel('METHOD');
-        let path = this.filters.getFieldValueOfLabel('PATH');
-        this.selectedAsset = this.queryDataRaw && _.find(this.queryDataRaw.assets, (asset) => {
-          return asset.asset_name.Method === method && asset.asset_name.Resource === path;
-        });
-        break;
       case 'function':
       case 'website':
       case 'sls-app':
       default:
-        if(this.queryDataRaw){
+        if (this.queryDataRaw) {
           this.selectedAsset = this.queryDataRaw.assets[0];
-
         }
         break;
     }
