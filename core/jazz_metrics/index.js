@@ -21,6 +21,8 @@
  **/
 
 const moment = require('moment');
+const MonitorManagementClient = require("@azure/arm-monitor").MonitorManagementClient;
+const msRestNodeAuth = require("@azure/ms-rest-nodeauth");
 const errorHandlerModule = require("./components/error-handler.js"); //Import the error codes module.
 const responseObj = require("./components/response.js"); //Import the response module.
 const configObj = require("./components/config.js"); //Import the environment data.
@@ -31,9 +33,6 @@ const request = require('request');
 const momentDurationFormatSetup = require("moment-duration-format");
 const global_config = require("./config/global-config.json");
 const metricConfig = require("./components/metrics.json");
-
-var armMonitor = require("@azure/arm-monitor");
-var msRestNodeAuth = require("@azure/ms-rest-nodeauth");
 
 
 function handler(event, context, cb) {
@@ -55,12 +54,14 @@ function handler(event, context, cb) {
          *    }
          */
     var eventBody = event.body;
+    var provider = "";
     var metricsResponse = [];
     let headers = exportable.changeToLowerCase(event.headers);
     let header_key = config.SERVICE_ID_HEADER_KEY.toLowerCase();
     var genValidation = exportable.genericValidation(event, header_key, headers);
     var token = exportable.getToken(config);
     var valGenFields = validateUtils.validateGeneralFields(eventBody);
+    
     Promise.all([genValidation, token, valGenFields])
       .then((results) => {
         const authToken = results[1];
@@ -77,17 +78,29 @@ function handler(event, context, cb) {
                   deploymentAccounts.forEach(function (item) {
                     const accountId = item.accountId;
                     const region = item.region;
-                    var getpromise = utils.AssumeRole(accountId, configJson)
-                      .then((creds) => exportable.getMetricsDetails(res, eventBody, config, creds, region))
+                    provider = item.provider;
+                    if(provider == 'aws'){
+                      var getpromise = utils.AssumeRole(accountId, configJson)
+                        .then((creds) => exportable.getMetricsDetails(res, eventBody, config, creds, region))
+                        .then((res) => {
+                          var finalObj = utils.massageData(res, eventBody, item);
+                          metricsResponse.push(finalObj);
+                        })
+                      promiseCollection.push(getpromise);
+                    } else if(provider == 'azure'){
+                      exportable.getMetricsDetails(res, eventBody, config, null, region)
                       .then((res) => {
                         var finalObj = utils.massageData(res, eventBody, item);
                         metricsResponse.push(finalObj);
+                        cb(null, responseObj(metricsResponse, eventBody))
                       })
-                    promiseCollection.push(getpromise);
+                    }
                   })
-                  Promise.all(promiseCollection).then(() => {
-                    return cb(null, responseObj(metricsResponse, eventBody))
-                  })
+                  if(provider == 'aws'){
+                    Promise.all(promiseCollection).then(() => {
+                      return cb(null, responseObj(metricsResponse, eventBody))
+                    })
+                  }
                 })
             })
         })
@@ -265,7 +278,6 @@ function getAssetsDetails(config, eventBody, authToken, serviceId) {
           }
 
           var userStatistics = eventBody.statistics.toLowerCase();
-
           if (eventBody.asset_type) {
             let requiredAsset = apiAssetsArray.filter(asset => (asset.asset_type === eventBody.asset_type));
             if (requiredAsset.length){
@@ -497,7 +509,8 @@ function getMetricsDetails(newAssetArray, eventBody, config, tempCreds, region) 
     // call azure api if 'azure' is found as a provider
     newAssetArray.filter(assetParam => assetParam.provider == 'azure').forEach(assetParam => {
       exportable.azureMetricDefinitions(config, assetParam)
-        .then( definitions => exportable.azureMetricDetails(definitions, config, assetParam, eventBody))
+        .then( definitions => 
+          exportable.azureMetricDetails(definitions, config, assetParam, eventBody))
         .then(res => {
           metricsStatsArray.push(res);
           resolve(metricsStatsArray);
@@ -606,6 +619,18 @@ function cloudWatchDetails(assetParam, tempCreds, region) {
   });
 }
 
+async function azureLogin(config){
+  try {
+    const authResponse = await msRestNodeAuth.loginWithServicePrincipalSecretWithAuthResponse(config.AZURE.CLIENTID, config.AZURE.PASSWORD, config.AZURE.TENANTID);
+    logger.info('authResponse ' + JSON.stringify(authResponse.credentials));
+    return authResponse.credentials;
+  } catch (err) {
+    logger.info('ERROR ' + JSON.stringify(err));
+    return 'error'
+  }
+}
+
+
 /*
 * Prepare to obtain azure metrics definiations
 */
@@ -617,52 +642,37 @@ function azureMetricDefinitions(config, assetParam) {
     expectedMetrics.push(item.MetricName);
   });
 
-
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     subscriptionId = config.AZURE.SUBSCRIPTIONID;
-
     // to obtain the azure credentials
-    msRestNodeAuth.loginWithServicePrincipalSecretWithAuthResponse(
-      config.AZURE.CLIENTID,
-      config.AZURE.PASSWORD,
-      config.AZURE.TENANTID,
-      (err, credentials) => {
+    let credentials = await azureLogin(config);
+   
+      // to create an azure client
+      const client = await new MonitorManagementClient(credentials, subscriptionId);
+      //const uri = `/subscriptions/${subscriptionId}${resourceid}`
+      const uri = `${resourceid}`
 
-        if (err) {
-          logger.error("Error while obtaining azure credentials " + JSON.stringify(err));
+      // to get the metrics definitions
+      return client.metricDefinitions.list(uri).then((items) => {
+        if (items == null || items == undefined)
           reject({
             "result": "inputError",
-            "message": err.message
+            "message": "Failed in obtaining metric definitions"
           });
-        } else {
 
-          // to create an azure client
-          const client = new armMonitor.MonitorManagementClient(credentials, subscriptionId);
-          //const uri = `/subscriptions/${subscriptionId}${resourceid}`
-          const uri = `${resourceid}`
-
-          // to get the metrics definitions
-          return client.metricDefinitions.list(uri).then((items) => {
-            if (items == null || items == undefined)
-              reject({
-                "result": "inputError",
-                "message": "Failed in obtaining metric definitions"
-              });
-
-            items.forEach(item => {
-              if (expectedMetrics.includes(item.name.value)){
-                var attrs = {};
-                attrs["unit"] = item.unit;
-                attrs["aggregationtype"] = item.primaryAggregationType;
-                attrs["supportedAggregationTypes"] = item.supportedAggregationTypes; //array type
-                attrs["namespace"] = item.namespace;
-                data[item.name.value] = attrs;
-              }
-            });
-            resolve(data);
-          });
-        }
+        items.forEach(item => {
+          if (expectedMetrics.includes(item.name.value)){
+            var attrs = {};
+            attrs["unit"] = item.unit;
+            attrs["aggregationtype"] = item.primaryAggregationType;
+            attrs["supportedAggregationTypes"] = item.supportedAggregationTypes; //array type
+            attrs["namespace"] = item.namespace;
+            data[item.name.value] = attrs;
+          }
+        });
+        resolve(data);
       });
+    // })
   });
 };
 
@@ -681,76 +691,70 @@ function azureMetricDetails(definitions, config, assetParam, eventBody) {
     names.push(name);
   }
 
-  return new Promise((resolve, reject) => {
+
+  return new Promise(async (resolve, reject) => {
     subscriptionId = config.AZURE.SUBSCRIPTIONID;
-
+    let credentials = await azureLogin(config);
     // to obtain the azure credentials
-    msRestNodeAuth.loginWithServicePrincipalSecretWithAuthResponse(
-      config.AZURE.CLIENTID,
-      config.AZURE.PASSWORD,
-      config.AZURE.TENANTID,
-      (err, credentials) => {
+      // create an azure client
+      const client = await new MonitorManagementClient(credentials, subscriptionId);
+      var options = {'metricnames': names.join()}
+      options['interval'] = moment.duration(60, "minutes");
+      options['timespan'] = eventBody.start_time + "/" + eventBody.end_time;
+      options['aggregation'] = statistics;
+      const uri = `${resourceid}`
+      logger.info('options ' + JSON.stringify(options));
+      // query azure to get the multiple metric results
+      return client.metrics.list(uri, options).then((result) => {
+        var metrics = [];
 
-        // create an azure client
-        const client = new armMonitor.MonitorManagementClient(credentials, subscriptionId);
-        var options = {'metricnames': names.join()}
-        options['interval'] = moment.duration(60, "minutes");
-        options['timespan'] = eventBody.start_time + "/" + eventBody.end_time;
-        options['aggregation'] = statistics;
-        const uri = `${resourceid}`
+        if (!(result && result.value)) {
+          logger.error("Failed in obtaining metric results. Here is the response:  " + JSON.stringify(result));
+          return reject({"result": "inputError", "message": "Failed in obtaining metric results"});
+        }
 
-        // query azure to get the multiple metric results
-        return client.metrics.list(uri, options).then((result) => {
-          var metrics = [];
-
-          if (!(result && result.value)) {
-            logger.error("Failed in obtaining metric results. Here is the response:  " + JSON.stringify(result));
-            return reject({"result": "inputError", "message": "Failed in obtaining metric results"});
+        result.value.forEach(item => {
+          if (item.name && item.name.value) {
+            var defname = item.name.value; // "UsedCapacity", "Availabilty", etc
+            var datapoints = [];
+          } else {
+            logger.error("Returned metric does not have 'name' property. Here is the metric: " + JSON.stringify(item));
+            return reject({"result": "inputError", "message": "Returned metric does not have a name"});
           }
 
-          result.value.forEach(item => {
-            if (item.name && item.name.value) {
-              var defname = item.name.value; // "UsedCapacity", "Availabilty", etc
-              var datapoints = [];
-            } else {
-              logger.error("Returned metric does not have 'name' property. Here is the metric: " + JSON.stringify(item));
-              return reject({"result": "inputError", "message": "Returned metric does not have a name"});
+          if (!item.timeseries){
+            logger.error("Returned metric does not have 'timeseries' property: Here is the metric: " + JSON.stringify(item));
+            return reject({"result": "inputError", "message": "Returned metric does not have timeseries"});
+          }
+          item.timeseries.forEach(dot => {
+            if (!dot.data){
+              logger.error("Timeseries does not have 'data' property. Here is the Timeseries: " + JSON.stringify(dot));
+              return reject({"result": "inputError", "message": "Timeseries does not have data"});
             }
-
-            if (!item.timeseries){
-              logger.error("Returned metric does not have 'timeseries' property: Here is the metric: " + JSON.stringify(item));
-              return reject({"result": "inputError", "message": "Returned metric does not have timeseries"});
-            }
-            item.timeseries.forEach(dot => {
-              if (!dot.data){
-                logger.error("Timeseries does not have 'data' property. Here is the Timeseries: " + JSON.stringify(dot));
-                return reject({"result": "inputError", "message": "Timeseries does not have data"});
-              }
-              dot.data.forEach(p => {
-                definitions[defname]["supportedAggregationTypes"].forEach(aggr=> {
-                  if (aggr.toUpperCase() === statistics.toUpperCase()){
-                    if (p[aggr.toLowerCase()]>0){
-                      point = {"Timestamp": p.timeStamp, "Unit": definitions[defname]["unit"]};
-                      point[statistics] = p[aggr.toLowerCase()];
-                      datapoints.push(point);
-                    }
+            dot.data.forEach(p => {
+              definitions[defname]["supportedAggregationTypes"].forEach(aggr=> {
+                if (aggr.toUpperCase() === statistics.toUpperCase()){
+                  if (p[aggr.toLowerCase()]>0){
+                    point = {"Timestamp": p.timeStamp, "Unit": definitions[defname]["unit"]};
+                    point[statistics] = p[aggr.toLowerCase()];
+                    datapoints.push(point);
                   }
-                })
-              });
+                }
+              })
             });
-            points = {
-              "metric_name": defname,
-              "datapoints": datapoints
-            };
-            metrics.push(points);
-            data = {
-              "type": assetParam.asset_type,
-              "asset_name": {"provider_id": assetParam.provider_id, "asset_type": assetParam.asset_type},
-              "statistics": statistics,
-              "metrics": metrics
-            };
-            resolve(data);
           });
+          points = {
+            "metric_name": defname,
+            "datapoints": datapoints
+          };
+          metrics.push(points);
+          data = {
+            "type": assetParam.asset_type,
+            "asset_name": {"provider_id": assetParam.provider_id, "asset_type": assetParam.asset_type},
+            "statistics": statistics,
+            "metrics": metrics
+          };
+          resolve(data);
         });
       });
   });

@@ -22,7 +22,8 @@ export const environment = {
     "iam_role",
     "sqs",
     "kinesis_stream",
-    "apigee_proxy"
+    "apigee_proxy",
+    "storage_account"
   ],
   charachterLimits: {
     eventMaxLength: {

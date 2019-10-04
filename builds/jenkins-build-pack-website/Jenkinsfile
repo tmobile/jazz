@@ -200,7 +200,10 @@ node()  {
 			if(service_config['framework'] == 'angular' || service_config['framework'] == 'react') {
 				events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
 				try {
-					buildWebsite(service_config['framework'])
+					def packageJson = readFile("app/package.json")
+					def angularVersionData = new groovy.json.JsonSlurperClassic().parseText(packageJson).dependencies.'@angular/core'
+					def version = angularVersionData.substring(1, angularVersionData.indexOf('.'))
+					buildWebsite(service_config['framework'], version)
 				} catch(ex) {
 					events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
         			events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -1163,6 +1166,7 @@ def validateAngularTemplate() {
 		def angularVersionString = new groovy.json.JsonSlurperClassic().parseText(packageString).dependencies.'@angular/core'
 
 		def version = angularVersionString.substring(1, angularVersionString.indexOf('.'))
+		def angularVersion = version;
 		echo "Angular Project version $version"
 	} catch(ex) {
 		error "Error while checking version::"+ ex.getMessage();
@@ -1203,7 +1207,7 @@ def validateReactTemplate() {
 /**
   * Function to do build of angular/react
 */
-def buildWebsite(framework) {
+def buildWebsite(framework, angularVersion) {
 	def websiteCodeFolder = "app/"
 	dir(websiteCodeFolder) {
 		switch(framework) {
@@ -1211,7 +1215,11 @@ def buildWebsite(framework) {
 				sh "rm -rf dist"
 				sh "npm cache clean --force"
 				sh "npm install"
-				sh "ng build --output-path=dist"
+				if(angularVersion >= 6){
+					sh "ng build --output-path=dist"
+				} else {
+					sh "ng build --prod --output-path=dist"
+				}
 			break
 			case "react":
 				sh "rm -rf build"

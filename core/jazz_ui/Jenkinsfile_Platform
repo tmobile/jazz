@@ -175,6 +175,8 @@ node ()  {
           sh "sed -i 's/{azure_enabled}/${config_loader.AZURE.IS_ENABLED}/g' ./src/environments/environment.oss.ts"
           sh "sed -i 's/{azure_account_number}/${config_loader.AZURE.DEFAULTS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
           sh "sed -i 's/{azure_region}/${config_loader.AZURE.DEFAULTS.REGION}/g' ./src/environments/environment.oss.ts"
+        } else {
+          sh "sed -i 's/{azure_enabled}/false/g' ./src/environments/environment.oss.ts"
         }
 
         /* Getting the accounts and regions */

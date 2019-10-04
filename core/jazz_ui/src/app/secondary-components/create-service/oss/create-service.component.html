@@ -22,7 +22,7 @@
                 <div class="space-between content">
                     <section class="pad-left0 service-box-section">
                         <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfService == 'api'}" (keyup.enter)="changeServiceType('api')" (click)="changeServiceType('api')">
-                            <div class="icon-icon-api selected"></div>
+                            <div class="icon-icon-api"></div>
                         </div>
                         <div class="icon-name" [ngClass]="{'service-box-selected': typeOfService == 'api'}">
                             <p class="name-style">Api</p>
@@ -82,8 +82,8 @@
                     </section>
                     <section class="pad-left0 service-box-section">
                         <div id="tile-azure" tabindex="0" class="service-box" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure','disabled-azure':typeOfPlatform != 'azure','disabled-box':azureEnabled == false}" (click)="changePlatformType('azure')">
-                            <img *ngIf=" typeOfPlatform != 'azure'" src="./../../../../assets/images/azure-deselected.png">
-                            <img *ngIf=" typeOfPlatform == 'azure'" src="./../../../../assets/images/azure-logo.svg">
+                            <img *ngIf=" azureEnabled == false" src="./../../../../assets/images/azure-deselected.png">
+                            <img *ngIf=" azureEnabled == true" src="./../../../../assets/images/azure-logo.svg">
                         </div>
                         <div class="icon-name" [ngClass]="{'service-box-selected': typeOfPlatform == 'azure'}">
                             <p class="name-style">Azure</p>
@@ -727,7 +727,7 @@
                                     <div class="text">{{eventLabels.databaseNameLabel}}</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input *ngIf="typeOfPlatform == 'aws'" type="text" disabled="disabled" class="inline-input input-label aws-events-left-block" value="{{dynamoStreamString}}">
-                                        <input id="dynamoTable" name="dynamoTable" type="text" minlength="3" maxlength="{{eventMaxLength.table_name}}" #dynamoTable='ngModel' pattern="{{servicePatterns.tableName}}" [(ngModel)]="eventExpression.dynamoTable"  [focus]="focusDynamo" (blur)="validateEvents(eventExpression.dynamoTable)" (ngModelChange)="invalidEventName = false;" [ngClass]="{'full-width' : typeOfPlatform !== 'aws'}" class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Table Name" >
+                                        <input id="dynamoTable" name="dynamoTable" type="text" minlength="3" maxlength="{{eventMaxLength.table_name}}" #dynamoTable='ngModel' pattern="{{servicePatterns.tableName}}" [(ngModel)]="eventExpression.dynamoTable"  [focus]="focusDynamo" (blur)="validateEvents(eventExpression.dynamoTable)" (ngModelChange)="invalidEventName = false;onChangeText('dynamoTable')" [ngClass]="{'full-width' : typeOfPlatform !== 'aws'}" class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="Table Name" >
                                   </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkDynamodb()) && (!dynamoTable.valid && (dynamoTable.dirty || dynamoTable.touched)))">Table name must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
@@ -747,7 +747,7 @@
                                     <div class="text">{{eventLabels.streamNameLabel}}</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
                                         <input *ngIf="typeOfPlatform == 'aws'" type="text" disabled="disabled" class="inline-input input-label stream aws-events-left-block" value="{{kinesisStreamString}}">
-                                        <input id="streamARN" name="streamARN" type="text" #streamARN="ngModel" maxlength="{{eventMaxLength.stream_name}}" pattern="{{servicePatterns.streamName}}" [(ngModel)]="eventExpression.streamARN" [focus]="focusKinesis" (blur)="validateEvents(eventExpression.streamARN)" (ngModelChange)="invalidEventName = false;" [ngClass]="{'full-width' : typeOfPlatform !== 'aws'}"  class="inline-input stream aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="{{eventLabels.streamNameLabel}}" >
+                                        <input id="streamARN" name="streamARN" type="text" #streamARN="ngModel" maxlength="{{eventMaxLength.stream_name}}" pattern="{{servicePatterns.streamName}}" [(ngModel)]="eventExpression.streamARN" [focus]="focusKinesis" (blur)="validateEvents(eventExpression.streamARN)" (ngModelChange)="invalidEventName = false;onChangeText('streamARN')" [ngClass]="{'full-width' : typeOfPlatform !== 'aws'}"  class="inline-input stream aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="{{eventLabels.streamNameLabel}}" >
                                   </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkfrKinesis()) && (!streamARN.valid && (streamARN.dirty || streamARN.touched)))">Stream name must contain only letters, numbers, hyphens, underscores or periods.</p>
@@ -766,7 +766,7 @@
                                 <div class="col-lg-9">
                                     <div class="text">{{eventLabels.storageNameLabel}}</div>
                                     <div class="label-input slct-bx-selected input-wrapper">
-                                        <input id="S3BucketName" name="S3BucketName" type="text"  minlength="3" maxlength="{{eventMaxLength.bucket_name}}" pattern="{{servicePatterns.bucketName}}" #S3BucketName="ngModel" [(ngModel)]="eventExpression.S3BucketName" [focus]="focusS3" (blur)="validateEvents(eventExpression.S3BucketName)" (ngModelChange)="invalidEventName = false;" class="inline-input aws-events-left-block aw-events-s3 ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="{{eventLabels.storageNameLabel}}"  autofocus>
+                                        <input id="S3BucketName" name="S3BucketName" type="text"  minlength="3" maxlength="{{eventMaxLength.bucket_name}}" pattern="{{servicePatterns.bucketName}}" #S3BucketName="ngModel" [(ngModel)]="eventExpression.S3BucketName" [focus]="focusS3" (blur)="validateEvents(eventExpression.S3BucketName)" (ngModelChange)="invalidEventName = false;onChangeText('S3BucketName')" class="inline-input aws-events-left-block aw-events-s3 ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="{{eventLabels.storageNameLabel}}"  autofocus>
                                   </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkS3()) && (!S3BucketName.valid && (S3BucketName.dirty || S3BucketName.touched)))">Bucket name must contain only lowercase letters, numbers or hyphens. Enter atleast 3 characters</p>
@@ -781,7 +781,7 @@
                                   <div class="text">{{eventLabels.queueNameLabel}}</div>
                                   <div class="label-input slct-bx-selected input-wrapper">
                                       <input *ngIf="typeOfPlatform == 'aws'" type="text" disabled="disabled" class="inline-input input-label stream-sqs aws-events-left-block" value="{{sqsStreamString}}">
-                                      <input id="SQSstreamARN" name="SQSstreamARN" type="text" #SQSstreamARN="ngModel" [(ngModel)]="eventExpression.SQSstreamARN" pattern="{{servicePatterns.queueName}}" maxlength="{{eventMaxLength.queue_name}}" [focus]="focusSQS" (blur)="validateEvents(eventExpression.SQSstreamARN)" (ngModelChange)="invalidEventName = false;" [ngClass]="{'full-width' : typeOfPlatform !== 'aws'}" class="inline-input stream aws-events-right-block aws-events-right-block-sqs ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="{{eventLabels.queueNameLabel}}" >
+                                      <input id="SQSstreamARN" name="SQSstreamARN" type="text" #SQSstreamARN="ngModel" [(ngModel)]="eventExpression.SQSstreamARN" pattern="{{servicePatterns.queueName}}" maxlength="{{eventMaxLength.queue_name}}" [focus]="focusSQS" (blur)="validateEvents(eventExpression.SQSstreamARN)" (ngModelChange)="invalidEventName = false;onChangeText('SQSstreamARN')" [ngClass]="{'full-width' : typeOfPlatform !== 'aws'}" class="inline-input stream aws-events-right-block aws-events-right-block-sqs ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required" placeholder="{{eventLabels.queueNameLabel}}" >
                                   </div>
                                 </div>
                                 <p class="termsConditions error-message" *ngIf="((chkSQS()) && (!SQSstreamARN.valid && (SQSstreamARN.dirty || SQSstreamARN.touched)))">Queue name must contain only letters, numbers, hyphens or underscores.</p>
@@ -809,7 +809,7 @@
                                             maxlength="{{eventMaxLength.table_name}}" #cosmosdb='ngModel'
                                             pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.cosmosdb"
                                             [focus]="focusDocumentDB" (blur)="validateEvents(azureEventExpression.cosmosdb)"
-                                            (ngModelChange)="invalidAzureEventName = false;"
+                                            (ngModelChange)="invalidAzureEventName = false;onChangeText('cosmosdb')"
                                             [ngClass]="{'full-width' : typeOfPlatform !== 'azure'}"
                                             class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required"
                                             placeholder="Table Name">
@@ -838,16 +838,16 @@
                                             maxlength="{{eventMaxLength.table_name}}" #eventhub='ngModel'
                                             pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.eventhub"
                                             [focus]="focusEventHub" (blur)="validateEvents(azureEventExpression.eventhub)"
-                                            (ngModelChange)="invalidAzureEventName = false;"
+                                            (ngModelChange)="invalidAzureEventName = false;onChangeText('eventhub')"
                                             [ngClass]="{'full-width' : typeOfPlatform !== 'azure'}"
                                             class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required"
-                                            placeholder="Table Name">
+                                            placeholder="Event Hub Name">
                                     </div>
                                 </div>
                                 <p class="termsConditions error-message"
-                                    *ngIf="((chkEventHub()) && (!eventhub.valid && (eventhub.dirty || eventhub.touched)))">Table name
+                                    *ngIf="((chkEventHub()) && (!eventhub.valid && (eventhub.dirty || eventhub.touched)))">Event Hub name
                                     must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
-                                <p class="termsConditions error-message" *ngIf="(chkEventHub() && invalidAzureEventName)">Table name Should not
+                                <p class="termsConditions error-message" *ngIf="(chkEventHub() && invalidAzureEventName)">Event Hub name Should not
                                     begin or end with special character.</p>
                                 <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function trigger to respond to an event sent to an event hub event stream.</p>
                             </div>
@@ -865,16 +865,16 @@
                                             maxlength="{{eventMaxLength.table_name}}" #storageaccount='ngModel'
                                             pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.storageaccount"
                                             [focus]="focusStorageAccount" (blur)="validateEvents(azureEventExpression.storageaccount)"
-                                            (ngModelChange)="invalidAzureEventName = false;"
+                                            (ngModelChange)="invalidAzureEventName = false;onChangeText('storageaccount')"
                                             [ngClass]="{'full-width' : typeOfPlatform !== 'azure'}"
                                             class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required"
-                                            placeholder="Table Name">
+                                            placeholder="Storage Account">
                                     </div>
                                 </div>
                                 <p class="termsConditions error-message"
-                                    *ngIf="((chkStorageAccount()) && (!storageaccount.valid && (storageaccount.dirty || storageaccount.touched)))">Table
-                                    name must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
-                                <p class="termsConditions error-message" *ngIf="(chkStorageAccount() && invalidAzureEventName)">Table name
+                                    *ngIf="((chkStorageAccount()) && (!storageaccount.valid && (storageaccount.dirty || storageaccount.touched)))">Storage
+                                    Account must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
+                                <p class="termsConditions error-message" *ngIf="(chkStorageAccount() && invalidAzureEventName)">Storage Account
                                     Should not begin or end with special character.</p>
                                 <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Blob storage trigger starts a function when a new or updated blob is detected. The blob contents are provided as input to the function.</p>
                             </div>
@@ -888,16 +888,16 @@
                                             maxlength="{{eventMaxLength.table_name}}" #servicebusqueue='ngModel'
                                             pattern="{{servicePatterns.tableName}}" [(ngModel)]="azureEventExpression.servicebusqueue"
                                             [focus]="focusServiceBus" (blur)="validateEvents(azureEventExpression.servicebusqueue)"
-                                            (ngModelChange)="invalidAzureEventName = false;"
+                                            (ngModelChange)="invalidAzureEventName = false;onChangeText('servicebusqueue')"
                                             [ngClass]="{'full-width' : typeOfPlatform !== 'azure'}"
                                             class="inline-input aws-events-right-block ng-touched ng-not-empty ng-dirty ng-valid-parse ng-valid ng-valid-required"
-                                            placeholder="Table Name">
+                                            placeholder="Service Bus Name">
                                     </div>
                                 </div>
                                 <p class="termsConditions error-message"
-                                    *ngIf="((chkServiceBus()) && (!servicebusqueue.valid && (servicebusqueue.dirty || servicebusqueue.touched)))">Table name
+                                    *ngIf="((chkServiceBus()) && (!servicebusqueue.valid && (servicebusqueue.dirty || servicebusqueue.touched)))">Service Bus name
                                     must contain only letters, numbers, hyphens, underscores or periods. Enter atleast 3 characters</p>
-                                <p class="termsConditions error-message" *ngIf="(chkServiceBus() && invalidAzureEventName)">Table name Should
+                                <p class="termsConditions error-message" *ngIf="(chkServiceBus() && invalidAzureEventName)">Service Bus name Should
                                     not begin or end with special character.</p>
                                 <p class="learn-more" *ngIf="typeOfPlatform === 'azure'">Function trigger to respond to messages from a Service Bus Queue.</p>
                             </div>
@@ -927,7 +927,7 @@
             </section>
             <p class="requiredInfo"><span>*</span>Indicates required fields</p>
             <section class="submit-form">
-                <button type="submit" [disabled]="!serviceForm.valid || (disableForm())" class="btn btn-primary">SUBMIT</button>
+                <button type="submit" [disabled]="!serviceForm.valid || (disableForm()) || disableFunction" class="btn btn-primary">SUBMIT</button>
             </section>
         </form>
     </div>

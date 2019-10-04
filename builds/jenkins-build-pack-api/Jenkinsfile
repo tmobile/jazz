@@ -392,9 +392,9 @@ node() {
                   } else {
                     endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
                   }
-            if (domain != "jazz") {
-              createSubscriptionFilters(config, configLoader.AWS.DEFAULTS.REGION, roleId, accountDetails, env_key, credsId);
-            }
+                  if (domain != "jazz") {
+                    createSubscriptionFilters(config, configLoader.AWS.DEFAULTS.REGION, roleId, accountDetails, env_key, credsId);
+                  }
 
                   def apiArns = getSwaggerResourceARNs(aws_api_id, current_environment, "aws")
                   if (apiArns) {

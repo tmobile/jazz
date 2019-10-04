@@ -67,9 +67,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       column: 'View By:',
       label: 'AGGREGATION',
       type: 'select',
-      options: ['Sum', 'Average'],
-      values: ['Sum', 'average'],
-      selected: 'Sum'
+      options: ['Average', 'Sum'],
+      values: ['average', 'Sum'],
+      selected: 'Average'
     }
   ];
 

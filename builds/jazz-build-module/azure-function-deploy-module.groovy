@@ -106,7 +106,14 @@ def invokeAzureCreation(serviceInfo){
     def data = azureUtil.getAzureRequestPayload(serviceInfo)
     data.tags = tags
     data.runtime = runtimeType
-    data.resourceName = serviceInfo.resourceName
+    def resourceNameData = serviceInfo.resourceName
+    if(resourceNameData != null){
+      resourceNameData = resourceNameData.split('/')
+      resourceNameData = resourceNameData[resourceNameData.length - 1]
+      data.resourceName = resourceNameData
+    } else {
+      data.resourceName = resourceNameData
+    }
 
 
     def repo_name = "jazz_azure-create-service"

@@ -164,6 +164,7 @@ export class CreateServiceComponent implements OnInit {
   public apigeeFeature = this.buildEnvironment.INSTALLER_VARS.feature.apigee && this.buildEnvironment.INSTALLER_VARS.feature.apigee.toString() === "true" ? true : false;
   public selectedDeploymentTarget = "aws_apigateway";
   public azureEnabled: boolean = false;
+  public disableFunction: boolean = false;
 
   constructor (
     private toasterService: ToasterService,
@@ -367,10 +368,20 @@ export class CreateServiceComponent implements OnInit {
 
   // function for changing service type
   changeServiceType(serviceType){
-    if(serviceType === 'sls-app'){
-      this.changePlatformType('aws');
-    }
     this.typeOfService = serviceType;
+    if(serviceType === 'sls-app' || serviceType == 'api'){
+      this.changePlatformType('aws');
+      this.azureEnabled = false;
+    } else {
+      if(typeof env_oss.azure.azure_enabled === "boolean" && env_oss.azure.azure_enabled === true){
+        this.azureEnabled = true;
+      }
+    }
+    if(this.typeOfService === 'function'){
+      this.disableFunction = true;
+    } else {
+      this.disableFunction = false;
+    }
     this.scrollTo('platform-type');
   }
 
@@ -393,14 +404,17 @@ export class CreateServiceComponent implements OnInit {
   // function for changing platform type
   changePlatformType(platformType){
     if(typeof env_oss.azure.azure_enabled === "boolean" && env_oss.azure.azure_enabled === true && platformType !== 'gcloud'){
-      this.typeOfPlatform = platformType;
-      if(this.typeOfPlatform == 'azure'){
-        if(this.typeOfService == 'sls-app'){
-          this.changeServiceType('api')
+      if(this.typeOfService === 'api' || this.typeOfService === 'sls-app'){
+        this.awsOnly = true;
+        this.typeOfPlatform = 'aws';
+      } else {
+        this.typeOfPlatform = platformType;
+        if(this.typeOfService === 'function'){
+          this.disableFunction = true;
+        } else {
+          this.disableFunction = false;
         }
         this.awsOnly = false;
-      } else {
-        this.awsOnly = true
       }
     } else {
       this.awsOnly = true;
@@ -478,22 +492,38 @@ export class CreateServiceComponent implements OnInit {
       else if (this.typeOfPlatform === 'azure') {
         this.azureEventExpression.type = 'azureEventsNone';
       }
+      this.disableFunction = false;
+    } else {
+      this.disableFunction = true;
+    }
+  }
+  onChangeText(val){
+    if((<HTMLInputElement>document.getElementById(val)).value.length > 2){
+      this.disableFunction = false;
+    } else {
+      this.disableFunction = true;
     }
   }
   onAWSEventChange(val){
     this.invalidEventName = false;
     this.eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
     this.eventExpression.type = val;
-    if(val !== `none`){
+    if(val !== `awsEventsNone`){
       this.rateExpression.type = 'none';
+      this.disableFunction = false;
+    } else{
+      this.disableFunction = true;
     }
   }
   onAzureEventChange(val) {
     this.invalidAzureEventName = false;
     this.azureEventExpression = new AzureEventExpression("azureEventsNone",undefined,undefined,undefined,undefined);
     this.azureEventExpression.type = val;
-    if(val !== `none`){
+    if(val !== `azureEventsNone`){
       this.rateExpression.type = 'none';
+      this.disableFunction = false;
+    } else{
+      this.disableFunction = true;
     }
   }
   onSelectedDr(selected){
@@ -840,6 +870,7 @@ export class CreateServiceComponent implements OnInit {
     this.getData();
     this.createService();
     this.typeOfService = 'api';
+    this.typeOfPlatform = 'aws';
     this.selectedApprovers = [];
   }
 
@@ -948,6 +979,9 @@ export class CreateServiceComponent implements OnInit {
     if(this.eventExpression.type == 's3' && this.eventExpression.S3BucketName == undefined){
         return true
     }
+    if(this.eventExpression.type == 'sqs' && this.eventExpression.SQSstreamARN == undefined){
+      return true
+    }
     if(this.azureEventExpression.type == 'cosmosdb' && this.azureEventExpression.cosmosdb == undefined){
       return true
     }
@@ -955,6 +989,9 @@ export class CreateServiceComponent implements OnInit {
       return true
     }
     if(this.azureEventExpression.type == 'storageaccount' && this.azureEventExpression.storageaccount == undefined){
+      return true
+    }
+    if(this.azureEventExpression.type == 'servicebusqueue' && this.azureEventExpression.servicebusqueue == undefined){
       return true
     }
     if(this.invalidServiceName || this.invalidDomainName){
@@ -1127,6 +1164,10 @@ export class CreateServiceComponent implements OnInit {
   ngOnInit() {
     if(typeof env_oss.azure.azure_enabled === "boolean" && env_oss.azure.azure_enabled === true){
       this.azureEnabled = true;
+    }
+    if(this.typeOfService == 'api'){
+      this.typeOfPlatform = 'aws';
+      this.azureEnabled = false;
     }
     this.selectAccountsRegions();
     this.getData();
