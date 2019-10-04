@@ -53,6 +53,7 @@
     "sqs",
     "kinesis_stream",
     "apigee_proxy",
-    "dynamodb_stream"
+    "dynamodb_stream",
+    "storage_account"
   ]
 }
