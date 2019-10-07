@@ -35,9 +35,11 @@ export class ServicesListComponent implements OnInit {
   private toastMessage:any;
   private subscription:any;
   errBody: any;
+  errCode: number;
   parsedErrBody: any;
   errMessage: any;
   selectedList:string='all';
+  fromService: boolean;
   // @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
 
   constructor(private sharedService: SharedService,

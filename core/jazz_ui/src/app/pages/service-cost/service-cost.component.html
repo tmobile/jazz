@@ -31,8 +31,8 @@
                     </div>
                 <a (click)='openModal = !openModal;isLoading=false'  [class.invisible]="isLoading || feedbackRes">CANCEL</a>
                 <btn-jazz-primary text="{{buttonText}}" class="feedback-submit" [class.invisible]="isLoading" [disablePrimaryBtn]="!model.userFeedback && buttonText=='SUBMIT'" (click)='submitFeedback(buttonText)'></btn-jazz-primary>
-            </div> 
-    </div>    
+            </div>
+    </div>
 </div>
 
 <div class="disclaimer-static-data hide"><i>This data is for representational purpose only and is not accurate</i></div>
@@ -94,21 +94,21 @@
 <div class="row page-section">
     <div class="cost-category">
         <filter-tags #filtertags (OnCancel)='cancelFilter($event)'></filter-tags>
-<!-- 
+<!--
         <div class="filter-wrp">
             <filters class="filters" [multiple]="false" [selectedList]="selected" [filtersList]="filtersList" (onSelected)="onFilterSelected($event)"></filters>
             <div class="filter-icon relative">
                 <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; "></span>
                 <div [class.show]='filterSelected' class="filter-wrap">
-                    <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>                    
+                    <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>
                     <div class="filter-inner-wrap">
                         <div class='view-label'>View by:</div>
-                        
+
                         <div class="eachFilter">
                             <div><div class='hori-line'></div>ENVIRONMENT</div>
                             <dropdown class='dropdown-3' [IsEnvList]='environmentList.length > 5' [dropdwnContent]="environmentList" title="Select environment" [selected]="costGraphData.environment" (onSelected)="onEnvSelected($event)"></dropdown>
                         </div>
-                        
+
                         <div class="eachFilter">
                             <div><div class='hori-line'></div>ACCOUNT</div>
                             <dropdown class='dropdown-3' [IsEnvList]='environmentList.length > 5' [dropdwnContent]="environmentList" title="Select environment" [selected]="costGraphData.environment" (onSelected)="onEnvSelected($event)"></dropdown>
@@ -117,37 +117,37 @@
                             <div><div class='hori-line'></div>REGION</div>
                             <dropdown class='dropdown-3' [IsEnvList]='environmentList.length > 5' [dropdwnContent]="environmentList" title="Select environment" [selected]="costGraphData.environment" (onSelected)="onEnvSelected($event)"></dropdown>
                         </div>
-                        
+
                     </div>
                 </div>
             </div>
         </div> -->
 
-        <div class="filter-wrp hide"> 
+        <div class="filter-wrp hide">
                 <div class="filter-section-right">
                     <div class="filter-icon relative">
-                        <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected; onClickFilter()"></span>
+                        <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>
                         <div [class.show]='filterSelected' class="filter-wrap">
-                            <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>                    
+                            <span class="icon-icon-filter-unselected" title="Filter" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected"></span>
                             <div class='filter-inner'>
                                 <div class="filter-inner-wrap first-child" >
                                     <div class='view-label'>Filter by:</div>
-                                    
+
                                     <div class="eachFilter" >
                                         <div><div class='hori-line'></div>ENVIRONMENT</div>
                                         <dropdown class='dropdown-3' [IsEnvList]='environmentList.length > 5' [dropdwnContent]="environmentList" title="Select environment" [selected]="costGraphData.environment" (onSelected)="onEnvSelected($event)"></dropdown>
                                     </div>
                                     <div class="eachFilter no-border-no-padding" >
                                         <div><div class='hori-line'></div>METHOD</div>
-                                        <dropdown class="dropdown-3 method" title="Select method" [class.hide]='service_api'  [dropdwnContent]="methodList" [selected]="methodSelected" (onSelected)="onMethodListSelected($event)"></dropdown>
+                                        <dropdown class="dropdown-3 method" title="Select method" [dropdwnContent]="methodList" [selected]="methodSelected" (onSelected)="onMethodListSelected($event)"></dropdown>
                                     </div>
                                     <div class="eachFilter hide" *ngIf='service.serviceType == "function"'>
                                         <div><div class='hori-line'></div>ACCOUNT</div>
-                                        <dropdown class="dropdown-3 method" title="Select method" [class.hide]='service_api' [dropdwnContent]="accList" [selected]="accSelected" (onSelected)="onaccSelected($event)"></dropdown>
+                                        <dropdown class="dropdown-3 method" title="Select method" [dropdwnContent]="accList" [selected]="accSelected" (onSelected)="onaccSelected($event)"></dropdown>
                                     </div>
                                     <div class="eachFilter hide" *ngIf='service.serviceType == "function"'>
                                         <div><div class='hori-line'></div>REGION</div>
-                                        <dropdown class="dropdown-3 method" title="Select method" [class.hide]='service_api' [dropdwnContent]="regList" [selected]="regSelected" (onSelected)="onregSelected($event)"></dropdown>
+                                        <dropdown class="dropdown-3 method" title="Select method" [dropdwnContent]="regList" [selected]="regSelected" (onSelected)="onregSelected($event)"></dropdown>
                                     </div>
                                 </div>
                                 <div class="filter-inner-wrap">
@@ -170,11 +170,11 @@
                     </div>
                 </div>
                 <!-- <search-box (onChange)="onServiceSearch($event)"></search-box> -->
-               
+
         </div>
         <!-- (onFilterSelect)='onFilterSelect($event)' -->
         <div>
-         <template adv-filters></template>
+         <ng-template adv-filters></ng-template>
         </div>
 
         <div class="graph-wrp">

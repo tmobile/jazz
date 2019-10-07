@@ -57,6 +57,8 @@ export class EnvironmentDetailComponent implements OnInit {
   isAdminAccess: boolean =false;
   currentUser: any = {};
   isError403: boolean = false;
+  mobTabData: any;
+  mobSecState: number;
 
   constructor(
     private toasterService: ToasterService,
@@ -245,7 +247,7 @@ export class EnvironmentDetailComponent implements OnInit {
       }
   }
 
-  setSidebar(sidebar) {
+  setSidebar(sidebar = '') {
     this.sidebar = sidebar;
   }
 
@@ -279,6 +281,10 @@ export class EnvironmentDetailComponent implements OnInit {
         'link': ''
       }
     ];
+  }
+
+  public changeActivity(data){
+    this.mobSecState = data;
   }
 
   ngOnChanges(x: any) {

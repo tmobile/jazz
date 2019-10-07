@@ -27,25 +27,18 @@ import { FilterTagsServicesComponent } from '../secondary-components/filter-tags
 import { TabsComponent } from '../primary-components/tabs/tabs.component';
 import { JenkinsStatusComponent } from '../pages/jenkins-status/jenkins-status.component';
 import { FocusDirective } from '../secondary-components/create-service/focus.directive';
-import { JazzMobHeaderComponent } from '../secondary-components/jazz-mob-header/jazz-mob-header.component';
+import { JazzMobHeaderModule } from '../secondary-components/jazz-mob-header/jazz-mob-header.module';
 import { ClickOutsideDirective } from '../secondary-components/jazz-header/outside-click';
 import { FormsModule } from '@angular/forms';
-import { DropdownModule } from 'ng2-dropdown';
-import { PopoverModule } from 'ng2-popover';
+import { DropdownModule } from 'ngx-dropdown';
+import { PopoverModule } from 'ngx-popover';
 import { ChartsModule } from 'ng2-charts';
-import { BrowserModule } from '@angular/platform-browser';
-// import {ToasterModule} from 'angular2-toaster';
 import { DatePickerModule } from '../primary-components/daterange-picker/ng2-datepicker';
 import { MomentModule } from 'angular2-moment';
-
-// Importing The Required Components via Barrel
-// import * as CommonServiceComponents from './shared.module.declarations.common';
-import * as OssComponents from './shared.module.declarations.oss';
-import * as InternalComponents from './shared.module.declarations.internal';
 import { environment } from '../../environments/environment';
 
 
-// import {LoginComponent} from '../pages/login/login.component';
+import { LoginComponent } from '../pages/login/oss/login.component';
 import { LineGraphComponent } from '../secondary-components/line-graph/line-graph.component';
 import { SideTileFixedComponent } from '../secondary-components/side-tile-fixed/side-tile-fixed.component';
 import { FooterComponent } from '../secondary-components/footer/footer.component';
@@ -65,25 +58,8 @@ import { Error403Component } from "../pages/error403/error403.component";
 import { RadioCheckboxComponent } from "../primary-components/radio-checkbox/radio-checkbox.component";
 import {OrderByPipe} from '../core/pipes/order-by.pipe';
 import { CopyElementComponent } from '../secondary-components/copy-element/copy-element.component';
-let specificComponents: any
-let specificModules: any;
-if (environment.envName == 'oss') {
-  specificComponents = OssComponents;
-} else if (environment.envName == "jazz") {
-  specificComponents = InternalComponents;
-}
-let importsArray = [];
-let declarationsArray = [];
 
-// for(let i in specificModules){
-//  importsArray.push(specificModules[i]);
-// }
 
-for (let i in specificComponents) {
-  declarationsArray.push(specificComponents[i]);
-}
-
-//
 @NgModule({
   imports: [
     RouterModule,
@@ -92,9 +68,9 @@ for (let i in specificComponents) {
     DropdownModule,
     DatePickerModule,
     MomentModule,
-    // ToasterModule,
     PopoverModule,
-    ChartsModule
+    ChartsModule,
+    JazzMobHeaderModule,
   ],
   declarations: [
     BtnJazzPrimaryComponent,
@@ -103,7 +79,7 @@ for (let i in specificComponents) {
     JazzTableComponent,
     TabsComponent,
     DropdownComponent,
-    // LoginComponent,
+    LoginComponent,
     SidebarComponent,
     InputComponent,
     MyFilterPipe,
@@ -118,7 +94,6 @@ for (let i in specificComponents) {
     TableTemplateComponent,
     SearchBoxComponent,
     MobileSecondaryTabComponent,
-    JazzMobHeaderComponent,
     JazzToasterComponent,
     DaterangePickerComponent,
     JenkinsStatusComponent,
@@ -144,9 +119,6 @@ for (let i in specificComponents) {
     Error403Component,
     OrderByPipe,
     CopyElementComponent,
-    ...declarationsArray,
-
-
   ],
   exports: [
     BtnJazzPrimaryComponent,
@@ -161,7 +133,7 @@ for (let i in specificComponents) {
     TabsComponent,
     SidebarComponent,
     InputComponent,
-    // LoginComponent,
+    LoginComponent,
     MyFilterPipe,
     BtnPrimaryWithIconComponent,
     NavigationBarComponent,
@@ -172,7 +144,6 @@ for (let i in specificComponents) {
     TableTemplateComponent,
     SearchBoxComponent,
     MobileSecondaryTabComponent,
-    JazzMobHeaderComponent,
     JazzToasterComponent,
     DaterangePickerComponent,
     JenkinsStatusComponent,
@@ -197,8 +168,6 @@ for (let i in specificComponents) {
     RadioGroupComponent,
     OrderByPipe,
     CopyElementComponent,
-    ...declarationsArray
-
   ],
   entryComponents: [
     AdvancedFiltersComponentOSS,

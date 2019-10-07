@@ -225,7 +225,7 @@ node ()  {
       rm -rf node_modules
       npm install
       ng set --global warnings.versionMismatch=false
-      ng build --env=oss --${environment} --aot=false
+      ng build --env=oss --${environment} --aot
       cd ..
       """
     }
