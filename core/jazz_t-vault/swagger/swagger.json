@@ -3394,7 +3394,7 @@
                     "type": "string",
                     "description": "Auth type of the role"
                 },
-                "iamPrincipleArn": {
+                "arns": {
                     "type": "array",
                     "description": "IAM principle ARN of the role",
                     "items": {

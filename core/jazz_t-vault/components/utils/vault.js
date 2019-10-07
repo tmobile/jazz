@@ -249,7 +249,7 @@ function getRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
       let roleDetails = {};
       if(roleResponse ) {
         roleDetails.authType = roleResponse.auth_type;
-        roleDetails.iamPrincipleArn = roleResponse.bound_iam_principal_arn;
+        roleDetails.arns = roleResponse.bound_iam_principal_arn;
         roleDetails.policies = roleResponse.policies;
       }
       
