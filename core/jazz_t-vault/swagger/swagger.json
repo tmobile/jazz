@@ -3394,6 +3394,13 @@
                     "type": "string",
                     "description": "Auth type of the role"
                 },
+                "arns": {
+                    "type": "array",
+                    "description": "ARN of the role",
+                    "items": {
+                        "type": "string"
+                    }
+                },
                 "policies": {
                     "type": "array",
                     "description": "Policies of the role",
