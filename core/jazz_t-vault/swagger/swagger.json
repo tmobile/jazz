@@ -3396,7 +3396,7 @@
                 },
                 "arns": {
                     "type": "array",
-                    "description": "IAM principle ARN of the role",
+                    "description": "ARN of the role",
                     "items": {
                         "type": "string"
                     }
