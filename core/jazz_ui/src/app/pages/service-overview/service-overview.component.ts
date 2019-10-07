@@ -162,7 +162,7 @@ export class ServiceOverviewComponent implements OnInit {
   constructor(
     private router: Router,
     private request: RequestService,
-    private messageservice: MessageService,
+    public messageservice: MessageService,
     private cronParserService: CronParserService,
     private cache: DataCacheService,
     private toasterService: ToasterService,
@@ -522,7 +522,7 @@ export class ServiceOverviewComponent implements OnInit {
         this.cronObj.month = "*";
         this.cronObj.dayOfWeek = "?";
         this.cronObj.year = "*";
-      }     
+      }
     }
     this.rateExpression.duration = this.initialDuration;
     this.rateExpression.interval = this.initialRateInterval;
@@ -578,7 +578,7 @@ export class ServiceOverviewComponent implements OnInit {
         else {
           localEvenSchedule = localEvenSchedule.split(' ');
         }
-        
+
         if(this.rateExpression.type === 'cron'){
           this.cronObj.minutes = localEvenSchedule[0];
             this.cronObj.hours = localEvenSchedule[1];
@@ -593,7 +593,7 @@ export class ServiceOverviewComponent implements OnInit {
         }
       }
     }
-  
+
 
   onEventScheduleChange(val) {
     this.rateExpression.type = val;

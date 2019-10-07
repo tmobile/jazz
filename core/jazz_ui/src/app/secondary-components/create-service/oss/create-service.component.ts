@@ -155,7 +155,7 @@ export class CreateServiceComponent implements OnInit {
     private cronParserService: CronParserService,
     private http: RequestService,
     private cache: DataCacheService,
-    private messageService: MessageService,
+    public messageService: MessageService,
     private serviceList: ServicesListComponent,
     private authenticationService: AuthenticationService,
     private elementRef:ElementRef
