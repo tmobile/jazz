@@ -459,7 +459,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         break;
       case 'website':
         let websiteAssets = _(this.queryDataRaw.assets).map('type').uniq().value();
-        if (this.provider != 'azure'){
+        if (this.provider == 'aws'){
           this.filters.addField('Filter By:', 'ASSET', websiteAssets, 'select', null, 'cloudfront');
         }
         break;
