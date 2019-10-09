@@ -263,9 +263,9 @@ node()  {
 
           def origin_endpoint_url = "https://${storageName}.azureedge.net"
           def cdn_endpoint_url = "https://${storageName}.z22.web.core.windows.net"
-          def store_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$resourcegroup/providers/Microsoft.Storage/storageAccounts/$storageaccount"
-          def cnd_profile = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$resourcegroup/providers/Microsoft.Cdn/profiles/$storageaccount"
-          def cdn_endpoint = cnd_profile + "/endpoints/" + storageaccount
+          def store_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$resourcegroup/providers/Microsoft.Storage/storageAccounts/$storageName"
+          def cnd_profile = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$resourcegroup/providers/Microsoft.Cdn/profiles/$storageName"
+          def cdn_endpoint = cnd_profile + "/endpoints/" + storageName
           def svc_status = "You can access your website using following link: ${cdn_endpoint_url}"
           environmentDeploymentMetadata.setEnvironmentEndpoint(cdn_endpoint_url)
           send_status_email('COMPLETED', svc_status)
