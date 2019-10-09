@@ -129,7 +129,8 @@ export class EnvironmentDetailComponent implements OnInit {
         status: service.status,
         domain: service.domain,
         repository: service.repository,
-        deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type]
+        deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type],
+        provider: service.deployment_accounts[0].provider 
       }
     }
   };

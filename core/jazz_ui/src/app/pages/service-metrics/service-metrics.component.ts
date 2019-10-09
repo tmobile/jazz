@@ -89,6 +89,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   errMessage: any;
   private toastmessage: any = '';
   private slsLambdaselected;
+  public provider: any;
   constructor(private request: RequestService,
     private utils: UtilsService,
     private messageservice: MessageService,
@@ -126,6 +127,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit() {
+    if(this.service.provider == 'azure'){
+      this.setFilters();
+    }
     this.serviceType = this.service.type || this.service.serviceType;
     this.setPeriodFilters();
   }
@@ -160,6 +164,13 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     }
   }
 
+  setFilters(){
+    // we are targeting the second object in the FormFields where values for AGGREGATION is there
+    this.formFields[2].options = ['Average', 'Total', 'Maximum']
+    this.formFields[2].value = ['average', 'Total', 'Maximum']
+    this.formFields[2].values = ['average', 'Total', 'Maximum']
+  }
+
   refresh() {
     this.ngAfterViewInit();
   }
@@ -171,6 +182,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         service: self.service.name,
       }, self.service.id).toPromise().then((response: any) => {
         if (response && response.data && response.data.assets) {
+          self.provider = response.data.assets[0].provider;
           let assets = _(response.data.assets).map('asset_type').uniq().value();
           if(assets){
             self.assetWithDefaultValue = assets;
@@ -447,7 +459,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         break;
       case 'website':
         let websiteAssets = _(this.queryDataRaw.assets).map('type').uniq().value();
-        this.filters.addField('Filter By:', 'ASSET', websiteAssets, 'select', null, 'cloudfront');
+        if (this.provider != 'azure'){
+          this.filters.addField('Filter By:', 'ASSET', websiteAssets, 'select', null, 'cloudfront');
+        }
         break;
     }
   }
@@ -483,7 +497,11 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         break;
       case 'website':
         let assetType = this.filters.getFieldValueOfLabel('ASSET');
-        this.selectedAsset = _.find(this.queryDataRaw.assets, { type: assetType });
+        if (this.provider == 'azure'){
+          this.selectedAsset = this.queryDataRaw.assets[0];
+        } else {
+          this.selectedAsset = _.find(this.queryDataRaw.assets, { type: assetType });
+        }
         break;
     }
 
