@@ -69,9 +69,10 @@ function createSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("createSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("createSafe response : " + JSON.stringify(response));
-    if (response.statusCode && response.statusCode === 200 && body) {
+    if (response.statusCode && response.statusCode === 200) {
       logger.debug("Successfully created safe");
-      return onComplete(null, body);
+      const message = { "message": `Safe ${safeDetails.name.toLowerCase()} and associated read/write/deny policies are created.` };
+      return onComplete(null, message);
     } else {
       logger.error("Error in creating safe: " + JSON.stringify(error));
       return onComplete({
@@ -124,7 +125,8 @@ function deleteSafe(safename, configData, vaultToken, onComplete) {
     logger.debug("deleteSafe response: " + JSON.stringify(response));
     if (response.statusCode && response.statusCode === 200) {
       logger.debug("Successfully deleted safe details: " + JSON.stringify(body));
-      return onComplete(null, body);
+      const message = { "message": `Safe ${safename.toLowerCase()} deleted successfully.` };
+      return onComplete(null, message);
     } else {
       logger.error("Error in deleting safe details: " + JSON.stringify(error));
       return onComplete({
@@ -155,9 +157,10 @@ function updateSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("updateSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("updateSafe response : " + JSON.stringify(response));
-    if (response.statusCode && response.statusCode === 200 && body) {
+    if (response.statusCode && response.statusCode === 200) {
       logger.debug("Successfully updated safe: " + JSON.stringify(body));
-      return onComplete(null, body);
+      const message = { "message": `Safe ${safeDetails.safename.toLowerCase()} updated successfully.` };
+      return onComplete(null, message);
     } else {
       logger.error("Error in updating safe. " + JSON.stringify(error));
       return onComplete({
@@ -186,9 +189,10 @@ function createUserInSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("createUserInSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("createUserInSafe response : " + JSON.stringify(response));
-    if (response.statusCode && response.statusCode === 200 && body) {
+    if (response.statusCode && response.statusCode === 200) {
       logger.debug("Successfully created user in safe: " + JSON.stringify(body));
-      return onComplete(null, body);
+      const message = { "message": `User ${safeDetails.username} is successfully associated with safe ${safeDetails.safename.toLowerCase()}.` };
+      return onComplete(null, message);
     } else {
       logger.error("Error in creating user in safe. " + JSON.stringify(error));
       return onComplete({
@@ -217,9 +221,10 @@ function deleteUserFromSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("deleteUserFromSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("deleteUserFromSafe response : " + JSON.stringify(response));
-    if (response.statusCode && response.statusCode === 200 && body) {
+    if (response.statusCode && response.statusCode === 200) {
       logger.debug("Successfully deleted user from safe: " + JSON.stringify(body));
-      return onComplete(null, body);
+      const message = { "message": `User ${safeDetails.username} is successfully removed from safe ${safeDetails.safename.toLowerCase()}.` };
+      return onComplete(null, message);
     } else {
       logger.error("Error in deleting user from safe. " + JSON.stringify(error));
       return onComplete({
@@ -247,12 +252,12 @@ function getRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
       logger.debug("Successfully got role details: " + JSON.stringify(body));
       const roleResponse = JSON.parse(body);
       let roleDetails = {};
-      if(roleResponse ) {
+      if (roleResponse) {
         roleDetails.authType = roleResponse.auth_type;
         roleDetails.arns = roleResponse.bound_iam_principal_arn;
         roleDetails.policies = roleResponse.policies;
       }
-      
+
       return onComplete(null, roleDetails);
     } else {
       logger.error("Error in getting role details. " + JSON.stringify(error));
@@ -281,9 +286,10 @@ function createRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("createRoleInSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("createRoleInSafe response : " + JSON.stringify(response));
-    if (response.statusCode && response.statusCode === 200 && body) {
+    if (response.statusCode && response.statusCode === 200) {
       logger.debug("Successfully created role in safe: " + JSON.stringify(body));
-      return onComplete(null, body);
+      const message = { "message": `Role ${safeDetails.rolename} is successfully associated with safe ${safeDetails.safename.toLowerCase()}.` };
+      return onComplete(null, message);
     } else {
       logger.error("Error in creating role in safe. " + JSON.stringify(error));
       return onComplete({
@@ -311,9 +317,10 @@ function deleteRoleFromSafe(safeDetails, configData, vaultToken, onComplete) {
   logger.debug("deleteRoleFromSafe payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("deleteRoleFromSafe response : " + JSON.stringify(response));
-    if (response.statusCode && response.statusCode === 200 && body) {
+    if (response.statusCode && response.statusCode === 200) {
       logger.debug("Successfully deleted role from safe: " + JSON.stringify(body));
-      return onComplete(null, body);
+      const message = { "message": `Role ${safeDetails.rolename} is successfully removed from safe ${safeDetails.safename.toLowerCase()}.` };
+      return onComplete(null, message);
     } else {
       logger.error("Error in deleting role from safe. " + JSON.stringify(error));
       return onComplete({
@@ -323,7 +330,7 @@ function deleteRoleFromSafe(safeDetails, configData, vaultToken, onComplete) {
   });
 }
 
-function createUserInVault(userDetails, configData, vaultToken, onComplete) {  
+function createUserInVault(userDetails, configData, vaultToken, onComplete) {
   const username = userDetails.username.replace(/[^a-zA-Z0-9_-]/g, '-');
   let payload = {
     uri: `${configData.T_VAULT_API}${global.globalConfig.API.USERS}`,
@@ -342,9 +349,10 @@ function createUserInVault(userDetails, configData, vaultToken, onComplete) {
   logger.debug("createUserInVault payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("createUserInVault response : " + JSON.stringify(response));
-    if (response.statusCode && response.statusCode === 200 && body) {
+    if (response.statusCode && response.statusCode === 200) {
       logger.debug("Successfully created user in vault: " + JSON.stringify(body));
-      return onComplete(null, body);
+      const message = { "message": `User with username ${userDetails.username} is successfully created.` };
+      return onComplete(null, message);
     } else {
       logger.error("Error in creating user in vault. " + JSON.stringify(error));
       return onComplete({
@@ -371,9 +379,10 @@ function deleteUserFromVault(userDetails, configData, vaultToken, onComplete) {
   logger.debug("deleteUserFromVault payload : " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("deleteUserFromVault response : " + JSON.stringify(response));
-    if (response.statusCode && response.statusCode === 200 && body) {
+    if (response.statusCode && response.statusCode === 200) {
       logger.debug("Successfully deleted user from vault: " + JSON.stringify(body));
-      return onComplete(null, body);
+      const message = { "message": `User with username ${userDetails.username} is successfully deleted.` };
+      return onComplete(null, message);
     } else {
       logger.error("Error in deleting user from vault. " + JSON.stringify(error));
       return onComplete({
