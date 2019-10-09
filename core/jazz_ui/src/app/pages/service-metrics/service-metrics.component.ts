@@ -68,7 +68,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       label: 'AGGREGATION',
       type: 'select',
       options: ['Average', 'Sum'],
-      values: ['average', 'Sum'],
+      values: ['Average', 'Sum'],
       selected: 'Average'
     }
   ];
@@ -167,8 +167,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   setFilters(){
     // we are targeting the second object in the FormFields where values for AGGREGATION is there
     this.formFields[2].options = ['Average', 'Total', 'Maximum']
-    this.formFields[2].value = ['average', 'Total', 'Maximum']
-    this.formFields[2].values = ['average', 'Total', 'Maximum']
+    this.formFields[2].value = ['Average', 'Total', 'Maximum']
+    this.formFields[2].values = ['Average', 'Total', 'Maximum']
   }
 
   refresh() {
