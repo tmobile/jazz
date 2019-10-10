@@ -392,8 +392,30 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     
   }
 
+  massageDateTime(){
+    let endTimeValue;
+    let startTime = this.filters.getFieldValueOfLabel('TIME RANGE').range;
+    let endTime = moment().toISOString();
+    let startTimeMins = startTime.split('.');
+    startTimeMins = startTimeMins[0];
+    let endTimeString = endTime.split('.');
+    endTime = endTimeString[0];
+    startTimeMins = new Date(startTimeMins).getMinutes();
+    let endTimeMins = new Date(endTime).getMinutes();
+    if((endTimeMins - startTimeMins) > 0){
+      endTimeValue = endTime.split('T');
+      endTimeValue = endTimeValue[0] + 'T';
+      let startTimeMoment = startTime.split('T');
+      endTimeValue = endTimeValue + startTimeMoment[1];
+    } else {
+      endTimeValue = moment().toISOString();
+    }
+    return endTimeValue;
+  }
+
   queryMetricsData() {
     this.sectionStatus = 'loading';
+    let endDateTime = this.massageDateTime();
     let request = {
       url: '/jazz/metrics',
       body: {
@@ -401,11 +423,12 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         service: this.service.name,
         environment: this.filters.getFieldValueOfLabel('ENVIRONMENT') || this.activatedRoute.snapshot.params['env'] || 'prod',
         start_time: this.filters.getFieldValueOfLabel('TIME RANGE').range,
-        end_time: moment().toISOString(),
+        end_time: endDateTime,
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
         statistics: this.filters.getFieldValueOfLabel('AGGREGATION')
       }
     };
+
     if(this.assetSelected !== 'all') {
       request.body['asset_type'] = this.assetSelected;
     }
@@ -443,26 +466,30 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   setAssetsFilter() {
-    this.filters.reset();
-    switch (this.serviceType) {
-      case 'api':
+    if (this.platform != 'azure') {
+      if (this.serviceType === 'api') {
+        if(this.assetSelected === 'apigateway' || this.assetSelected === 'apigee_proxy') {
         let methods = _(this.queryDataRaw.assets)
           .map('asset_name.Method')
           .uniq().value();
         let paths = _(this.queryDataRaw.assets)
           .map('asset_name.Resource')
           .uniq().value();
-        if (this.platform != 'azure'){
-          this.filters.addField('Filter By:', 'METHOD', methods, 'select', null, 'GET');
-          this.filters.addField('Filter By:', 'PATH', paths, 'select', null, null);         
+        // this.filters.removeField('Filter By:', 'ASSET NAME');
+        const filterIndex = _.findIndex(this.filters.form.columns, {'label': "Filter By:"});
+         if ( filterIndex > -1) {
+            if(_.findIndex(this.filters.form.columns[filterIndex].fields, {'label': 'METHOD'}) == -1) {
+              this.filters.addField('Filter By:', 'METHOD', methods, 'select', null, 'GET');
+            }
+            if(_.findIndex(this.filters.form.columns[filterIndex].fields, {'label': 'PATH'}) == -1) {
+              this.filters.addField('Filter By:', 'PATH', paths, 'select', null, null); 
+            }
+          }
+        } else {
+          this.filters.removeField('Filter By:', 'METHOD');
+          this.filters.removeField('Filter By:', 'PATH');
         }
-        break;
-      case 'website':
-        let websiteAssets = _(this.queryDataRaw.assets).map('type').uniq().value();
-        if (this.provider == 'aws'){
-          this.filters.addField('Filter By:', 'ASSET', websiteAssets, 'select', null, 'cloudfront');
-        }
-        break;
+      } 
     }
   }
 
@@ -478,6 +505,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           this.selectedAsset = _.find(this.queryDataRaw.assets, (asset) => {
             return asset.asset_name.Method === method && asset.asset_name.Resource === path;
           });
+        }
+        if(this.selectedAsset == undefined && this.assetSelected == 'lambda'){
+          this.selectedAsset = this.queryDataRaw.assets[0]
         }
         break;
       case 'function':
@@ -501,6 +531,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           this.selectedAsset = this.queryDataRaw.assets[0];
         } else {
           this.selectedAsset = _.find(this.queryDataRaw.assets, { type: assetType });
+        }
+        if(this.selectedAsset == undefined){
+          this.selectedAsset = this.queryDataRaw.assets[0];
         }
         break;
     }
