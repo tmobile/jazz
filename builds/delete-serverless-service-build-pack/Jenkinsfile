@@ -157,7 +157,7 @@ node {
 				loadServerlessConfig()
 				updateSwaggerConfig()
 			} else if (fileExists('build.lambda') || fileExists('build.function')) {
-				flowType = "LAMBDA"
+				flowType = "FUNCTION"
 				loadServerlessConfig()
 			} else if (fileExists('build.website')) {
 				flowType = "WEBSITE"
@@ -253,7 +253,7 @@ node {
 					}
 					break
 
-			  case "LAMBDA":
+			  case "FUNCTION":
 					stage('Undeploy Service') {
 						updateServiceNameConfig()
 
