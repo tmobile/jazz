@@ -14,7 +14,7 @@
 // limitations under the License.
 // =========================================================================
 
-var https = require('https');
+var http = require('http');
 var zlib = require('zlib');
 
 const errorHandlerModule = require("./components/error-handler.js");
@@ -98,8 +98,8 @@ function handler(event, context, cb) {
 };
 
 function post(config, body, callback) {
-  let requestParams = utils.buildRequest(config.ES_ENDPOINT, body);
-  let request = https.request(requestParams, function (response) {
+  let requestParams = utils.buildRequest(config, body);
+  let request = http.request(requestParams, function (response) {
 
     let responseBody = '';
     response.on('data', function (chunk) {

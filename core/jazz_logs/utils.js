@@ -50,6 +50,12 @@ var set_query = function (type, value) {
 	return query;
 };
 
+var set_filter_query = function (type, value) {
+	let query = { "match_phrase": {} };
+	query.match_phrase[type] = { "query": value };
+	return query;
+};
+
 var set_log_level_query = function (LOG_LEVEL_CONFIG, type, value) {
 	var query = {
 		"query_string": {
@@ -77,6 +83,7 @@ module.exports = (formats) => {
 		"requestLoad": request_payload,
 		"setStartDate": set_startdate,
 		"setQuery": set_query,
+		"setFilterQuery": set_filter_query,
 		"setLogLevelQuery": set_log_level_query,
 		"toTimestamp": to_timestamp,
 		"responseModel": response_model

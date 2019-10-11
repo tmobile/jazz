@@ -121,7 +121,7 @@ function getApiLogsData(payload) {
     "index": {}
   };
   action.index._index = indexName;
-  action.index._type = data.environment;
+  action.index._type = "apilogs";
   action.index._id = data.request_id;
 
   if (data.request_id && data.servicename) {
@@ -212,7 +212,7 @@ function getLambdaLogsData(payload) {
           "index": {}
         };
         action.index._index = indexName;
-        action.index._type = data.environment;
+        action.index._type = "applicationlogs";
         action.index._id = logEvent.id;
 
         bulkRequestBody += [
@@ -253,7 +253,8 @@ function transform(payload) {
   });
 }
 
-function buildRequest(endpoint, body) {
+function buildRequest(config, body) {
+  let endpoint = config.ES_ENDPOINT;
   let endpointParts = endpoint.match(/^([^\.]+)\.?([^\.]*)\.?([^\.]*)\.amazonaws\.com$/);
   let region = endpointParts[2];
   let service = endpointParts[3];
@@ -268,6 +269,7 @@ function buildRequest(endpoint, body) {
     host: endpoint,
     method: 'POST',
     path: '/_bulk',
+    port: config.ES_PORT,
     body: body,
     headers: {
       'Content-Type': 'application/json',

@@ -237,6 +237,7 @@ def loadServiceConfigurationData() {
 
     if ((service_name.trim() == "jazz_logs") || (service_name.trim() == "jazz_cloud-logs-streamer") || (service_name.trim() == "jazz_es-kinesis-log-streamer")) {
       updateConfigValue("{inst_elastic_search_hostname}", config_loader.JAZZ.ES_HOSTNAME)
+      updateConfigValue("{inst_elastic_search_port}", config_loader.JAZZ.ES_PORT)
       updateConfigValue("{inst_kibana_search_hostname}", config_loader.JAZZ.KIBANA_HOSTNAME)
 
       if (service_name.trim() == "jazz_logs") {

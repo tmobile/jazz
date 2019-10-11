@@ -21,48 +21,48 @@
   ],
   "ASSET_INDEX_MAP": [{
     "asset_type": "lambda",
-    "es_index": ["applicationlogs"]
+    "es_index": "applicationlogs"
   }, {
     "asset_type": "apigateway",
-    "es_index": ["apilogs"]
+    "es_index": "apilogs"
   }],
-  "VALID_LOGTYPES": ["warn", "error", "info", "verbose", "debug", "fatal", "trace", "off", "all"],
+  "VALID_LOGTYPES": ["WARN", "ERROR", "INFO", "VERBOSE", "DEBUG", "FATAL", "TRACE", "OFF", "ALL"],
   "ENV_PREFIX": "{env-prefix}",
   "LOG_LEVELS": [{
       "Level": 0,
-      "Type": "off"
+      "Type": "OFF"
     },
     {
       "Level": 1,
-      "Type": "fatal"
+      "Type": "FATAL"
     },
     {
       "Level": 2,
-      "Type": "error"
+      "Type": "ERROR"
     },
     {
       "Level": 3,
-      "Type": "warn"
+      "Type": "WARN"
     },
     {
       "Level": 4,
-      "Type": "info"
+      "Type": "INFO"
     },
     {
       "Level": 5,
-      "Type": "debug"
+      "Type": "DEBUG"
     },
     {
       "Level": 6,
-      "Type": "trace"
+      "Type": "TRACE"
     },
     {
       "Level": 7,
-      "Type": "verbose"
+      "Type": "VERBOSE"
     },
     {
       "Level": 8,
-      "Type": "all"
+      "Type": "ALL"
     }
   ]
 }
