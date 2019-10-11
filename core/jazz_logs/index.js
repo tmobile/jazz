@@ -191,6 +191,7 @@ module.exports.handler = (event, context, cb) => {
       "ignore_unavailable": true
     };
 
+
     var params = {
       "size": size,
       "from": page,
@@ -215,8 +216,7 @@ module.exports.handler = (event, context, cb) => {
           "must_not": [filterQuerys, {
             "match": {
               "application_logs_id": {
-                "query": "_incomplete_req",
-                "type": "phrase"
+                "query": "_incomplete_req"
               }
             }
           }]

@@ -2,8 +2,16 @@
   "KIBANA_URL": "{inst_kibana_search_hostname}",
   "DEFAULT_SIZE": 1000,
   "DEFAULT_TIME_IN_DAYS": 7,
-  "VALID_ENVIRONMENTS": ["prod", "stg", "dev"],
-  "VALID_CATEGORIES": ["api", "function", "sls-app"],
+  "VALID_ENVIRONMENTS": [
+    "prod",
+    "stg",
+    "dev"
+  ],
+  "VALID_CATEGORIES": [
+    "api",
+    "function",
+    "sls-app"
+  ],
   "VALID_ASSET_TYPES": [
     "lambda",
     "apigateway",
@@ -19,50 +27,64 @@
     "kinesis_stream",
     "apigee_proxy"
   ],
-  "ASSET_INDEX_MAP":[{
-    "asset_type": "lambda",
-    "es_index": ["applicationlogs"]
-  }, {
-    "asset_type": "apigateway",
-    "es_index": ["apilogs"]
-  }],
-  "VALID_LOGTYPES": ["warn", "error", "info", "verbose", "debug", "fatal", "trace", "off", "all"],
+  "ASSET_INDEX_MAP": [
+    {
+      "asset_type": "lambda",
+      "es_index": "applicationlogs"
+    },
+    {
+      "asset_type": "apigateway",
+      "es_index": "apilogs"
+    }
+  ],
+  "VALID_LOGTYPES": [
+    "WARN",
+    "ERROR",
+    "INFO",
+    "VERBOSE",
+    "DEBUG",
+    "FATAL",
+    "TRACE",
+    "OFF",
+    "ALL"
+  ],
   "ENV_PREFIX": "{env-prefix}",
-  "LOG_LEVELS": [{
+  "LOG_LEVELS": [
+    {
       "Level": 0,
-      "Type": "off"
+      "Type": "OFF"
     },
     {
       "Level": 1,
-      "Type": "fatal"
+      "Type": "FATAL"
     },
     {
       "Level": 2,
-      "Type": "error"
+      "Type": "ERROR"
     },
     {
       "Level": 3,
-      "Type": "warn"
+      "Type": "WARN"
     },
     {
       "Level": 4,
-      "Type": "info"
+      "Type": "INFO"
     },
     {
       "Level": 5,
-      "Type": "debug"
+      "Type": "DEBUG"
     },
     {
       "Level": 6,
-      "Type": "trace"
+      "Type": "TRACE"
     },
     {
       "Level": 7,
-      "Type": "verbose"
+      "Type": "VERBOSE"
     },
     {
       "Level": 8,
-      "Type": "all"
+      "Type": "ALL"
     }
   ]
 }

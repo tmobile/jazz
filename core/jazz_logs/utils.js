@@ -59,7 +59,7 @@ var set_filter_query = function (type, value) {
 var set_log_level_query = function (LOG_LEVEL_CONFIG, type, value) {
 	var query = {
 		"query_string": {
-			"query": type + ":" + value
+			"query": type + ":(" + value
 		}
 	};
 	var requestedLogType = LOG_LEVEL_CONFIG.filter(configObject => configObject.Type === value);
@@ -69,6 +69,7 @@ var set_log_level_query = function (LOG_LEVEL_CONFIG, type, value) {
 				query.query_string.query = query.query_string.query + " OR " + configObject.Type;
 			}
 		});
+		query.query_string.query = query.query_string.query + ")"
 	}
 	return query;
 };
