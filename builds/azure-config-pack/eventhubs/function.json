@@ -1,0 +1,14 @@
+{
+  "disabled": false,
+  "bindings": [
+    {
+      "name": "myEvent",
+      "type": "eventHubTrigger",
+      "direction": "in",
+      "eventHubName": "{resource_name}",
+      "connection": "CONNECTION_STRING",
+      "cardinality": "many",
+      "consumerGroup": "$Default"
+    }
+  ]
+}

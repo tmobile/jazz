@@ -173,4 +173,14 @@ export class FilterModalComponent implements OnInit {
     };
     this.form.columns[columnIndex].fields.push(field);
   }
+
+  removeField(column, label) {
+    let columnIndex = _.findIndex(this.form.columns, {label: column});
+    if (columnIndex >= 0) {
+      let fieldIndex = _.findIndex(this.form.columns[columnIndex].fields, {label: label});
+      if(fieldIndex >= 0) {
+        this.form.columns[columnIndex].fields.splice(fieldIndex, 1);
+      }
+    }
+  }
 }

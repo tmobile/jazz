@@ -34,8 +34,8 @@
                         </div>
 
                         <div class="eachFilter" *ngIf='advanced_filter_input.sls_resource.show'>
-                            <div><div class='hori-line'></div>ASSET IDENTIFIER</div>
-                            <radio-group  #resourceTypes [idName]="'identifier'" [radioContent]="lambdaResourceNameArr" title="Select Resource" [selected]="resourceSelected" (onRadioSelected)="getResourceType($event)"></radio-group>
+                            <div><div class='hori-line'></div>ASSET NAME</div>
+                            <radio-group  #assetName [idName]="'identifier'" [radioContent]="lambdaResourceNameArr" title="Select Resource" [selected]="resourceSelected" (onRadioSelected)="getResourceType($event)"></radio-group>
                         </div>
                     </div>
                     <div class="filter-inner-wrap">

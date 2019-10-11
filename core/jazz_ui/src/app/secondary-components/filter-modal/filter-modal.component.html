@@ -14,12 +14,12 @@
             <div class="jz-formfield-label">
               {{field.label}}
             </div>
-            <div *ngIf="field.label === 'ASSET TYPE' || field.label === 'ASSET IDENTIFIER'">
+            <div *ngIf="field.label === 'ASSET TYPE' || field.label === 'ASSET NAME'">
               <radio-group [idName]="field.label" [radioContent]="field.options" [selected]="field.selected"
                 (onRadioSelected)="changeFilter($event, field)"></radio-group>
             </div>
 
-            <div *ngIf="field.label !== 'ASSET TYPE'  && field.label !== 'ASSET IDENTIFIER'">
+            <div *ngIf="field.label !== 'ASSET TYPE'  && field.label !== 'ASSET NAME'">
               <dropdown [dropdwnContent]="field.options" [selected]="field.selected"
                 (onSelected)="changeFilter($event, field)"></dropdown>
             </div>
