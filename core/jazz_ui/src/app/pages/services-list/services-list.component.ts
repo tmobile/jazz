@@ -166,7 +166,6 @@ private intervalSubscription: Subscription;
     serviceList.forEach(function _processService(service) {
       let serviceRow = {
         name: service.service,
-        type: service.type,
         domain: service.domain,
         platform: service.deployment_accounts[0].provider,
         health: 2,
@@ -176,6 +175,10 @@ private intervalSubscription: Subscription;
         id: service.id,
         data: service
       };
+      if(service.type == 'sls-app'){
+        service.type = 'custom'
+      }
+      serviceRow['type'] = service.type
       _serviceList.push(serviceRow);
     });
 
@@ -538,6 +541,9 @@ onFilterCancel(event) {
 
     queryParamKey = 'type=';
     var queryParamValue = this.selectedListData[0].replace(/ /g,"-");
+    if(queryParamValue == 'custom'){
+      queryParamValue = 'sls-app'
+    }
     if(queryParamValue == "all"){
       queryParamValue = "";
     }

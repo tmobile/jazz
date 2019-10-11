@@ -108,7 +108,6 @@ export class ServiceDetailComponent implements OnInit {
       let returnObject = {
         id: service.id,
         name: service.service,
-        serviceType: service.type,
         runtime: service.runtime,
         status: service.status.replace('_', ' '),
         description: service.description || '',
@@ -126,6 +125,10 @@ export class ServiceDetailComponent implements OnInit {
         region: service.deployment_accounts[0].region,
         provider: service.deployment_accounts[0].provider
       }
+      if(service.type === 'sls-app'){
+        service.type = 'custom'
+      }
+      returnObject['serviceType'] = service.type
       if (service.metadata) {
         returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;
         returnObject["eventScheduleRate"] = service.metadata.eventScheduleRate;

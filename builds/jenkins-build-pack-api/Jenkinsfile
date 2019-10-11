@@ -27,7 +27,7 @@ import groovy.transform.Field
 @Field def azureDeployer
 
 @Field def azureRG
-@Field def AzureApim
+@Field def azureApim
 @Field def apigateway
 
 @Field def auth_token = ''
@@ -278,28 +278,28 @@ node() {
               }
             }
             if (environment_logical_id == "prod") {
-              AzureRG = azureRegionInfo.RESOURCE_GROUPS["PROD"]
-              AzureApim =  azureRegionInfo.APIM["PROD"]
+              azureRG = azureRegionInfo.RESOURCE_GROUPS["PROD"]
+              azureApim =  azureRegionInfo.APIM["PROD"]
               logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
             }
             else if(environment_logical_id.split('-')[1] == "stg"){
-              AzureRG = azureRegionInfo.RESOURCE_GROUPS["STG"]
-              AzureApim =  azureRegionInfo.APIM["STG"]
+              azureRG = azureRegionInfo.RESOURCE_GROUPS["STG"]
+              azureApim =  azureRegionInfo.APIM["STG"]
               logicalId = environment_logical_id.split('-')[0] //13 + 10
             }
             else if(environment_logical_id.split('-')[1] == "dev"){
-              AzureRG = azureRegionInfo.RESOURCE_GROUPS["DEV"]
-              AzureApim =  azureRegionInfo.APIM["DEV"]
+              azureRG = azureRegionInfo.RESOURCE_GROUPS["DEV"]
+              azureApim =  azureRegionInfo.APIM["DEV"]
               logicalId = environment_logical_id.split('-')[0] //13 + 10
             }
-            endpointUrl="https://${AzureApim}.azure-api.net/${stackName}/sessions"
-            swaggerDocUrl = "https://${AzureApim}.portal.azure-api.net/docs/services/${stackName}/export?DocumentFormat%3DSwagger"
-            apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.ApiManagement/service/$AzureApim"
+            endpointUrl="https://${azureApim}.azure-api.net/${stackName}/sessions"
+            swaggerDocUrl = "https://${azureApim}.portal.azure-api.net/docs/services/${stackName}/export?DocumentFormat%3DSwagger"
+            apigateway = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$azureRG/providers/Microsoft.ApiManagement/service/$azureApim"
             def sgName = "${configLoader.INSTANCE_PREFIX}${logicalId}"
             def storageName = sgName.replaceAll("[^a-zA-Z0-9]", "")
-            def store_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Storage/storageAccounts/$storageName"
-            def function_app = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Web/sites/$stackName"
-            def hosting_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$AzureRG/providers/Microsoft.Web/serverFarms/$stackName/webHostingPlan"
+            def store_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$azureRG/providers/Microsoft.Storage/storageAccounts/$storageName"
+            def function_app = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$azureRG/providers/Microsoft.Web/sites/$stackName"
+            def hosting_acct = "/subscriptions/$AZURE_SUBSCRIPTION_ID/resourceGroups/$azureRG/providers/Microsoft.Web/serverFarms/$stackName/webHostingPlan"
             createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name, storageName)
 
             events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("azure", swaggerDocUrl, "swagger_url", config), environment_logical_id)
@@ -1355,7 +1355,7 @@ def createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name
     className : "ApiApp",
     command   : "create",
     data      : [
-      resourceGroupName : AzureRG,
+      resourceGroupName : azureRG,
       storageName       : storageName,
       appName           : stackName,
       tags: [
@@ -1367,7 +1367,7 @@ def createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name
         service     : stackName
       ],
       runtime           : functionRuntime,
-      serviceName       : AzureApim,
+      serviceName       : azureApim,
       apiId             : stackName,
       tenantId          : AZURE_TENANT_ID,
       subscriptionId    : AZURE_SUBSCRIPTION_ID,

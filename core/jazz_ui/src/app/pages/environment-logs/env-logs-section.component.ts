@@ -488,7 +488,7 @@ export class EnvLogsSectionComponent implements OnInit {
 			response => {
 				if(response.data !== ""){
 					this.logs = response.data.logs  || response.data.data.logs;
-					if(this.logs != undefined)
+					if(this.logs !== undefined)
 					if (this.logs && this.logs.length != 0) {
 						var pageCount = response.data.count;
 						if (pageCount) {
