@@ -69,7 +69,6 @@ module.exports = (inputs, callback) => {
 		if (inputs.DEPLOYMENT_DESCRIPTOR) { jsonBody.deployment_descriptor = inputs.DEPLOYMENT_DESCRIPTOR }
 		if (inputs.DEPLOYMENT_ACCOUNTS) { jsonBody.deployment_accounts = inputs.DEPLOYMENT_ACCOUNTS }		
 		if (inputs.DEPLOYMENT_TARGETS) { jsonBody.deployment_targets = inputs.DEPLOYMENT_TARGETS }
-
 		return jsonBody;
 	}
 };

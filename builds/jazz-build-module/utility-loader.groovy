@@ -188,4 +188,17 @@ def getAccountBucketName(service_config) {
 	return s3Object;
 }
 
+/*
+* Get the required azure account
+*/
+def getAzureAccountInfo(service_config){
+	def dataObj = {};
+	for (item in configLoader.AZURE.ACCOUNTS) {
+		if(item.ACCOUNTID == service_config.accountId){
+			dataObj = item
+		}
+	}
+	return dataObj;
+}
+
 return this

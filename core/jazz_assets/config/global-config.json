@@ -1,79 +1,101 @@
 {
-  "ASSETS_FIELDS": [
-    "service",
-    "domain",
-    "environment",
-    "asset_type",
-    "provider",
-    "provider_id",
-    "created_by",
-    "status",
-    "tags"
-  ],
-  "ASSETS_CREATION_REQUIRED_FIELDS": [
-    "service",
-    "domain",
-    "environment",
-    "asset_type",
-    "provider",
-    "provider_id"
-  ],
-  "ASSETS_EDITABLE_FIELDS": [
-    "tags",
-    "status"
-  ],
-  "ASSET_TYPES": [
-    "lambda",
-    "apigateway",
-    "cloudfront",
-    "s3",
-    "dynamodb",
-    "cloudwatch_event",
-    "swagger_url",
-    "endpoint_url",
-    "dynamodb_stream",
-    "iam_role",
-    "sqs",
-    "kinesis_stream",
-    "apigee_proxy",
-    "http"
-  ],
-  "ASSET_STATUS": [
-    "active",
-    "archived"
-  ],
-  "CASE_SENSITIVE_FIELDS": [
-    "environment",
-    "status",
-    "asset_type"
-  ],
-  "FIELD_DATA_TYPES": {
-    "service": "String",
-    "domain": "String",
-    "environment": "String",
-    "asset_type": "String",
-    "provider": "String",
-    "provider_id": "String",
-    "created_by": "String",
-    "status": "String",
-    "tags": "Array"
-  },
-  "ASSET_SEARCH_OPTIONAL_FILTER_PARAMS": [
-    "environment",
-    "asset_type",
-    "provider",
-    "provider_id",
-    "limit",
-    "offset"
-  ],
-  "ASSET_SEARCH_REQUIRED_FILTER_PARAMS": [
-    "service",
-    "domain"
-  ],
-  "ASSETS_DOMAIN_SERVICE_INDEX": "AssetsDomainServiceIndex",
-  "PAGINATION_DEFAULTS": {
-    "offset": 0,
-    "limit": 10,
-    "max_limit": 100
-  }
+	"ASSETS_FIELDS": [
+		"service",
+		"domain",
+		"environment",
+		"asset_type",
+		"provider",
+		"provider_id",
+		"created_by",
+		"status",
+		"tags"
+	],
+	"ASSETS_CREATION_REQUIRED_FIELDS": [
+		"service",
+		"domain",
+		"environment",
+		"asset_type",
+		"provider",
+		"provider_id"
+	],
+	"ASSETS_EDITABLE_FIELDS": [
+		"tags",
+		"status"
+	],
+	"ASSET_TYPES": [
+		"lambda",
+		"apigateway",
+		"cloudfront",
+		"s3",
+		"dynamodb",
+		"cloudwatch_event",
+		"swagger_url",
+		"endpoint_url",
+		"dynamodb_stream",
+		"iam_role",
+		"sqs",
+		"kinesis_stream",
+		"apigee_proxy",
+		"cdn_endpoint_url",
+		"cdn_endpoint",
+		"origin_endpoint_url",
+		"cdn_profile",
+		"storage_account",
+		"servicebus_namespace",
+		"eventhubs_namespace",
+		"event_hubs",
+		"service_bus",
+		"functionapp",
+		"storage_container",
+		"cosmosdb_account",
+		"cosmosdb_database",
+		"cosmosdb_collection",
+		"storage_blob_container",
+		"servicebus_queue",
+		"eventhubs_eventhub",
+		"app_service_plan"
+	],
+	"ASSET_STATUS": [
+		"active",
+		"archived"
+	],
+	"CASE_SENSITIVE_FIELDS": [
+		"environment",
+		"status",
+		"asset_type"
+	],
+	"FIELD_DATA_TYPES": {
+		"service": "String",
+		"domain": "String",
+		"environment": "String",
+		"asset_type": "String",
+		"provider": "String",
+		"provider_id": "String",
+		"created_by": "String",
+		"status": "String",
+		"tags": "Array"
+	},
+	"ASSET_SEARCH_OPTIONAL_FILTER_PARAMS": [
+		"environment",
+		"asset_type",
+		"provider",
+		"provider_id",
+		"limit",
+		"offset"
+	],
+	"ASSET_SEARCH_REQUIRED_FILTER_PARAMS": [
+		"service",
+		"domain"
+	],
+	"ASSETS_DOMAIN_SERVICE_INDEX": "AssetsDomainServiceIndex",
+	"PAGINATION_DEFAULTS": {
+		"offset": 0,
+		"limit": 10,
+		"max_limit": 100
+	},
+	"PROVIDER_LIST": [
+		"aws",
+		"azure",
+		"gcp"
+	]
 }

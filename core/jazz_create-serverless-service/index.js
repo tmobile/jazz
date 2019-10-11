@@ -61,7 +61,7 @@ var handler = (event, context, cb) => {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("'Service Name' can have up to 20 characters")));
     } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
-    }
+    } 
     // validate service types
     const allowedSvcTypes = Object.keys(config.DEPLOYMENT_TARGETS);
     if (allowedSvcTypes.indexOf(service_creation_data.service_type) !== -1) {
@@ -69,6 +69,7 @@ var handler = (event, context, cb) => {
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError(`Invalid service type provided - ${service_creation_data.service_type}`)));
     }
+
     // validate deployment targets
     if (service_creation_data.deployment_targets && typeof service_creation_data.deployment_targets === "object") {
       const allowedSubServiceType = config.DEPLOYMENT_TARGETS[service_creation_data.service_type];
@@ -79,26 +80,60 @@ var handler = (event, context, cb) => {
     } else {
       return cb(JSON.stringify(errorHandler.throwInputValidationError(`Deployment targets is missing or is not in a valid format`)));
     }
+
+     //validate list of providers
+    if(Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts){
+      if(!validateProviders(config, service_creation_data.deployment_accounts)){
+        logger.error('Invalid provider in the input')
+        return cb(JSON.stringify(errorHandler.throwInputValidationError('Invalid provider in the input')))
+      }
+    }
+
     // Validate and set deployment accounts
     let primaryAccountCount = 0;
 
     if (Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts) {
+      let providerValues = validateMultipleProviders(service_creation_data.deployment_accounts);
+      if(!providerValues){
+        logger.error('Deployment accounts has multiple providers which is not supported now!');
+        return cb(JSON.stringify(errorHandler.throwInputValidationError('Deployment accounts has multiple providers which is not supported now!')));
+      }
       for (let eachDeploymentAccount of service_creation_data.deployment_accounts) {
-        if ((typeof eachDeploymentAccount.primary == "boolean") && eachDeploymentAccount.primary) {
-          primaryAccountCount++
-          let deploymentAccount = {
-            'accountId': eachDeploymentAccount.accountId || config.PRIMARY_DEPLOYMENT_ACCOUNT.accountId,
-            'region': eachDeploymentAccount.region || config.PRIMARY_DEPLOYMENT_ACCOUNT.region,
-            'provider': eachDeploymentAccount.provider || config.PRIMARY_DEPLOYMENT_ACCOUNT.provider,
-            'primary': eachDeploymentAccount.primary
-          }
-          deploymentAccounts.push(deploymentAccount);
-        } else {
-          if (eachDeploymentAccount.accountId && eachDeploymentAccount.region && eachDeploymentAccount.provider) {
-            deploymentAccounts.push(eachDeploymentAccount);
+        if(eachDeploymentAccount.provider == 'aws'){
+          if ((typeof eachDeploymentAccount.primary == "boolean") && eachDeploymentAccount.primary) {
+            primaryAccountCount++
+            let deploymentAccount = {
+              'accountId': eachDeploymentAccount.accountId || config.PRIMARY_DEPLOYMENT_ACCOUNT.AWS.accountId,
+              'region': eachDeploymentAccount.region || config.PRIMARY_DEPLOYMENT_ACCOUNT.AWS.region,
+              'provider': eachDeploymentAccount.provider || config.PRIMARY_DEPLOYMENT_ACCOUNT.AWS.provider,
+              'primary': eachDeploymentAccount.primary
+            }
+            deploymentAccounts.push(deploymentAccount);
           } else {
-            logger.error('accountId, region and provider are required for a non-primary deployment account');
-            return cb(JSON.stringify(errorHandler.throwInputValidationError('accountId, region and provider are required for a non-primary deployment account')));
+            if (eachDeploymentAccount.accountId && eachDeploymentAccount.region && eachDeploymentAccount.provider) {
+              deploymentAccounts.push(eachDeploymentAccount);
+            } else {
+              logger.error('accountId, region and provider are required for a non-primary deployment account');
+              return cb(JSON.stringify(errorHandler.throwInputValidationError('accountId, region and provider are required for a non-primary deployment account')));
+            }
+          }
+        } else if (eachDeploymentAccount.provider == 'azure'){
+          if((typeof eachDeploymentAccount.primary == "boolean") && eachDeploymentAccount.primary){
+            primaryAccountCount++
+            let deploymentAccount = {
+              'accountId': eachDeploymentAccount.accountId || config.PRIMARY_DEPLOYMENT_ACCOUNT.AZURE.accountId,
+              'region': eachDeploymentAccount.region || config.PRIMARY_DEPLOYMENT_ACCOUNT.AZURE.region,
+              'provider': eachDeploymentAccount.provider || config.PRIMARY_DEPLOYMENT_ACCOUNT.AZURE.provider,
+              'primary': eachDeploymentAccount.primary
+            }
+            deploymentAccounts.push(deploymentAccount);
+          } else {
+            if (eachDeploymentAccount.accountId && eachDeploymentAccount.region && eachDeploymentAccount.provider) {
+              deploymentAccounts.push(eachDeploymentAccount);
+            } else {
+              logger.error('accountId, region and provider are required for a non-primary deployment account');
+              return cb(JSON.stringify(errorHandler.throwInputValidationError('accountId, region and provider are required for a non-primary deployment account')));
+            }
           }
         }
       }
@@ -207,6 +242,29 @@ var startServiceOnboarding = (service_creation_data, config, service_id) => {
       reject(e);
     }
   });
+}
+
+/**
+ * Function to check and validate if the list of providers for deployment_accounts are all same or different. If same return true else false
+ */
+function validateMultipleProviders(deployment_accounts){
+  let providerValues = []
+  for (let eachDeploymentAccount of deployment_accounts){
+    providerValues.push(eachDeploymentAccount.provider)
+  }
+  return providerValues.every( (val, i, arr) => val === arr[0] )
+}
+
+/**
+ * Function to check and validate the list of providers
+ */
+function validateProviders(config, deployment_accounts){
+  for (let eachDeploymentAccount of deployment_accounts){
+    if(config.PROVIDER_LIST.indexOf(eachDeploymentAccount.provider) == -1){
+        return false
+    }
+  }
+  return true
 }
 
 var getToken = (configData) => {
@@ -433,7 +491,11 @@ var validateEventName = (eventType, sourceName, config) => {
     's3': sourceName,
     'sqs': sourceName.split(':').pop(),
     'dynamodb': sourceName.split('/').pop(),
-    'kinesis': sourceName.split('/').pop()
+    'kinesis': sourceName.split('/').pop(),
+    'cosmosdb': sourceName.split('/').pop(),
+    'eventhub': sourceName.split('/').pop(),
+    'storageaccount': sourceName.split('/').pop(),
+    'servicebusqueue': sourceName.split('/').pop()
   };
 
   eventSourceName = eventSourceObject[sourceType];

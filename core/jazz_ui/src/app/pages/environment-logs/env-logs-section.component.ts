@@ -486,26 +486,31 @@ export class EnvLogsSectionComponent implements OnInit {
 		}
 		this.subscription = this.http.post('/jazz/logs', this.payload, this.service.id).subscribe(
 			response => {
-				this.logs = response.data.logs  || response.data.data.logs;
-				if(this.logs != undefined)
-				if (this.logs && this.logs.length != 0) {
-					var pageCount = response.data.count;
-					if (pageCount) {
-						this.totalPagesTable = Math.ceil(pageCount / this.limitValue);
-						if(this.totalPagesTable === 1){
-						   this.paginationSelected = false;
+				if(response.data !== ""){
+					this.logs = response.data.logs  || response.data.data.logs;
+					if(this.logs !== undefined)
+					if (this.logs && this.logs.length != 0) {
+						var pageCount = response.data.count;
+						if (pageCount) {
+							this.totalPagesTable = Math.ceil(pageCount / this.limitValue);
+							if(this.totalPagesTable === 1){
+								this.paginationSelected = false;
+							}
 						}
-					}
-					else {
-						this.totalPagesTable = 0;
-					}
-					this.backupLogs = this.logs;
-					this.sort = new Sort(this.logs);
-					this.loadingState = 'default';
-					this.trim_Message();
+						else {
+							this.totalPagesTable = 0;
+						}
+						this.backupLogs = this.logs;
+						this.sort = new Sort(this.logs);
+						this.loadingState = 'default';
+						this.trim_Message();
 
+					} else {
+						this.loadingState = 'empty';
+					}
 				} else {
-					this.loadingState = 'empty';
+					this.loadingState = 'error';
+					this.errMessage = "Doesn't look like there is any data available here.";
 				}
 
 			},
