@@ -546,12 +546,6 @@ export class EnvLogsSectionComponent implements OnInit {
 			this.assetsNameArray.push(response);
 			let assets=_(response.data.assets).map('asset_type').uniq().value();
 
-			// TODO: Consider hoisting to member or configuration
-			const filterWhitelist = [
-				'lambda',
-			];
-
-			assets = assets.filter(item => filterWhitelist.includes(item));
 			 let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 			 validAssetList.splice(0, 0, 'all');
 			this.responseArray = this.assetsNameArray[0].data.assets.filter(asset=>(validAssetList.indexOf(asset.asset_type)>-1));

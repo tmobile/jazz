@@ -3,11 +3,9 @@ $gutter: .5rem;
 .jz-chart {
   position: relative;
   border-radius: 3px;
-  background-color: #f9f9f9;
-  border: solid 1px #9b9b9b;
-  padding: 2.5rem $gutter;
-  height: calc(100% - 13rem);
-  margin-bottom: 0.8rem;
+  padding: $gutter;
+  height: calc(100% - (120rem / 12));
+  margin: 0.5em;
 }
 .jz-chart-header {
   display: flex;
@@ -22,8 +20,8 @@ $gutter: .5rem;
   position: absolute;
   left: $gutter;
   right: $gutter;
-  top: 2.5rem;
-  bottom: 2.5rem;
+  top: .5rem;
+  bottom: 1.5rem;
 }
 
 .jz-chart-footer {
