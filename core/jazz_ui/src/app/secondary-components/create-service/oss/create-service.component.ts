@@ -223,9 +223,9 @@ export class CreateServiceComponent implements OnInit {
   }
 
   azureEventsPrefix() {
-    this.documentDBStreamString = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.cosmosdb/"
-    this.eventStreamString = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.eventHub/";
-    this.serviceBusStreamString = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.serviceBus/";
+    this.documentDBStreamString = "subscriptions/" + env_oss.azure.azure_account_number + "/providers/Microsoft.cosmosdb/"
+    this.eventStreamString = "subscriptions/" + env_oss.azure.azure_account_number + "/providers/Microsoft.eventHub/";
+    this.serviceBusStreamString = "subscriptions/" + env_oss.azure.azure_account_number + "/providers/Microsoft.serviceBus/";
   }
 
   chkDynamodb() {
@@ -369,7 +369,7 @@ export class CreateServiceComponent implements OnInit {
   // function for changing service type
   changeServiceType(serviceType){
     this.typeOfService = serviceType;
-    if(serviceType === 'sls-app' || serviceType == 'api'){
+    if(serviceType === 'sls-app' || serviceType === 'api'){
       this.changePlatformType('aws');
       this.azureEnabled = false;
     } else {
@@ -438,11 +438,11 @@ export class CreateServiceComponent implements OnInit {
 
 
   updateEventLabels(platformType){
-  	if(platformType == "aws"){
+  	if(platformType === "aws"){
     this.eventLabels = this.amazonEventLabels;
     this.eventExpression.type = 'awsEventsNone';
   	}
-  	else if(platformType == "azure"){
+  	else if(platformType === "azure"){
       this.azureEventLabels = this.azureEventLabels;
     this.azureEventExpression.type = 'azureEventsNone';
   	}
@@ -731,16 +731,16 @@ export class CreateServiceComponent implements OnInit {
         var event = {};
         event["type"] = this.azureEventExpression.type;
         if(this.azureEventExpression.type === "cosmosdb") {
-          event["source"] =  "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.cosmosdb/"+ this.model.domainName + "/" + this.azureEventExpression.cosmosdb;
+          event["source"] =  "subscriptions/" + env_oss.azure.azure_account_number + "/providers/Microsoft.cosmosdb/"+ this.model.domainName + "/" + this.azureEventExpression.cosmosdb;
           event["action"] = "PutItem";
         } else if(this.azureEventExpression.type === "eventhub") {
-          event["source"] = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.eventHub/" + this.model.domainName + "/" + this.azureEventExpression.eventhub;
+          event["source"] = "subscriptions/" + env_oss.azure.azure_account_number + "/providers/Microsoft.eventHub/" + this.model.domainName + "/" + this.azureEventExpression.eventhub;
           event["action"] = "PutRecord";
         } else if(this.azureEventExpression.type === "storageaccount") {
           event["source"] = this.azureEventExpression.storageaccount;
           event["action"] = "storageBus";
         } else if (this.azureEventExpression.type === "servicebusqueue") {
-          event["source"] = "subscriptions/fd312e60-798b-4933-a4c9-66fa2697a464/providers/Microsoft.serviceBus/"+ this.model.domainName + "/" + this.azureEventExpression.servicebusqueue;
+          event["source"] = "subscriptions/" + env_oss.azure.azure_account_number + "/providers/Microsoft.serviceBus/"+ this.model.domainName + "/" + this.azureEventExpression.servicebusqueue;
         }
         payload["events"] = [];
         payload["events"].push(event);
@@ -776,7 +776,7 @@ export class CreateServiceComponent implements OnInit {
 
     /* Including deployment_accounts in the payload */
     if(this.typeOfPlatform === 'aws'){
-      let deployment_accounts = [
+      const deployment_accounts = [
         {
           "accountId": this.accountSelected,
           "region": this.regionSelected,
@@ -787,7 +787,7 @@ export class CreateServiceComponent implements OnInit {
       payload['deployment_accounts'] = deployment_accounts
     }
     else if(this.typeOfPlatform === 'azure') {
-      let deployment_accounts = [
+      const deployment_accounts = [
         {
           "accountId": env_oss.azure.azure_account_number,
           "region": env_oss.azure.azure_region,

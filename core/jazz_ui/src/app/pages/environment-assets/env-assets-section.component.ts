@@ -534,10 +534,10 @@ ngOnInit()
       return 'URL';
     }
     else if(provider === 'aws'){
-      return 'ARN'
+      return 'ARN';
     }
     else if(provider === 'azure') {
-      return 'Resource'
+      return 'Resource';
     }
 
     switch(type) {
