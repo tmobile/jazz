@@ -200,7 +200,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
               for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
                 self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
               }
-              if(self.service.serviceType == "sls-app"){
+              if(self.service.serviceType == "custom"){
                 self.assetIdentifierFilter = {
                   column: 'Filter By:',
                   label: 'ASSET NAME',
@@ -513,7 +513,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       case 'function':
         this.selectedAsset = this.queryDataRaw.assets[0];
         break;
-      case 'sls-app':
+      case 'custom':
         if(this.queryDataRaw){
           for(let asset of this.queryDataRaw.assets){
             if(asset.asset_name.FunctionName.includes(this.slsLambdaselected)){
