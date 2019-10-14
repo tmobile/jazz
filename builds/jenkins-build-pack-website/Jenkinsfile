@@ -201,9 +201,13 @@ node()  {
 				events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
 				try {
 					def packageJson = readFile("app/package.json")
-					def angularVersionData = new groovy.json.JsonSlurperClassic().parseText(packageJson).dependencies.'@angular/core'
-					def version = angularVersionData.substring(1, angularVersionData.indexOf('.'))
-					buildWebsite(service_config['framework'], version)
+					if(service_config['framework'] == 'angular'){
+						def angularVersionData = new groovy.json.JsonSlurperClassic().parseText(packageJson).dependencies.'@angular/core'
+						def version = angularVersionData.substring(1, angularVersionData.indexOf('.'))
+						buildWebsite(service_config['framework'], version)
+					} else {
+						buildWebsite(service_config['framework'], null)
+					}
 				} catch(ex) {
 					events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
         			events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
