@@ -460,7 +460,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       changedFilter.label === 'PATH' || changedFilter.label === 'ASSET NAME')) {
       this.setAsset();
     } else {
-      this.filters.removeField('Filter By:', 'ASSET NAME');
       return this.queryMetricsData();
     }
 
