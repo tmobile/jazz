@@ -42,7 +42,7 @@ import groovy.json.JsonSlurperClassic
 
 node {
   try {
-	echo "Starting delete service job with params : $params"
+	echo "Starting delete service job with params: $params"
 
 	jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
@@ -78,7 +78,7 @@ node {
 	auth_token = getAuthToken()
 
 	stage("Initialization") {
-    if (params.domain && params.domain != "") {
+    	if (params.domain && params.domain != "") {
 			repo_name = params.domain + "_" + params.service_name
 		}
 		sh 'rm -rf ' + repo_name
@@ -94,7 +94,7 @@ node {
 		if (configObj.service_id) {
 			service_config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
 		} else {
-			error "Service Id is not available."
+			error "Service id is not available."
 		}
 
 		if (!service_config) {
@@ -103,20 +103,20 @@ node {
 		// Get the Account Details from the ConfigLoader
 		accountInfo = utilModule.getAccountInfo(service_config)
 
-    if(!service_config.region) {
+		if(!service_config.region) {
 			service_config.region = configLoader.AWS.DEFAULTS.REGION
-    }
+		}
 
-    if(!service_config.accountId) {
-      service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
-    }
+		if(!service_config.accountId) {
+		service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
+		}
 
-    if(!service_config.provider) {
-      service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
-    }
+		if(!service_config.provider) {
+		service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
+		}
 
 		service_config.credentialId = accountInfo.CREDENTIAL_ID;
-    lambdaEvents.setServiceConfig(service_config)
+		lambdaEvents.setServiceConfig(service_config)
 		environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 		def environmentList = environmentMetadataLoader.getEnvironmentLogicalIds()
 		echo "Environment List: $environmentList"
@@ -143,14 +143,12 @@ node {
 
 
 		dir(repo_name){
-			echo "loadServerlessConfig......."
-
 			if (fileExists('build.api')) {
 				flowType = "API"
 				loadServerlessConfig()
 				updateSwaggerConfig()
-			} else if (fileExists('build.lambda')) {
-				flowType = "LAMBDA"
+			} else if (fileExists('build.function')) {
+				flowType = "FUNCTION"
 				loadServerlessConfig()
 			} else if (fileExists('build.website')) {
 				flowType = "WEBSITE"
@@ -166,7 +164,6 @@ node {
 			}
 		}
 	}
-
 
 	dir(repo_name){
 		switch (flowType) {
@@ -206,25 +203,23 @@ node {
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()
 							}
-              archiveAssetDetails(_envId)
+							archiveAssetDetails(_envId)
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
-							echo "Environment Deletion failed for envId: $_envId . Error Details:" + ex
+							echo "Environment Deletion failed for envId: $_envId. Error Details:" + ex
 							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
-							error "Environment Deletion failed for envId: $_envId . Error Details:" + ex
+							error "Environment Deletion failed for envId: $_envId. Error Details:" + ex
 						}
 					}
 				}
 				break
 
-			case "LAMBDA":
+			case "FUNCTION":
 				stage('Undeploy Service') {
 					updateServiceNameConfig()
-
-          for (_envId in environmentIds) {
+					for (_envId in environmentIds) {
 						current_environment_id = _envId
-
-            try {
+						try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
 								events.setBranch(branch)
@@ -238,18 +233,16 @@ node {
 								checkBucket(current_environment_id);
 							}
 							echo 'undeploying function for environment: ' + _envId
-
-              cleanupEventSourceMapping(_envId)
-              unDeployService(_envId)
-
+							cleanupEventSourceMapping(_envId)
+							unDeployService(_envId)
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()
 							}
-              archiveAssetDetails(_envId)
+							archiveAssetDetails(_envId)
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
 							events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
-							error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
+							error "Environment cleanup for " + _envId + " failed! error: " + ex.getMessage()
 						}
 					}
 				}
@@ -259,7 +252,7 @@ node {
 				stage('Undeploy Service') {
 					for (_envId in environmentIds) {
 						current_environment_id = _envId
-            def has_serverless_yml = 	loadServerlessYml(service_config, _envId)
+						def has_serverless_yml = 	loadServerlessYml(service_config, _envId)
 						try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
@@ -272,8 +265,12 @@ node {
 							echo 'undeploying function for environment: ' + _envId
 
 							cleanupEventSourceMapping(_envId)
-              if (has_serverless_yml) unDeployService(_envId)
-              else unDeployCloudformationStack(_envId)
+							if (has_serverless_yml) {
+								unDeployService(_envId)
+							}
+							else {
+								unDeployCloudformationStack(_envId)
+							}
 
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()
@@ -287,8 +284,8 @@ node {
 					}
 				}
 				break
-
-		  case "WEBSITE":
+				
+			case "WEBSITE":
 				stage('Undeploy Website') {
 					for (_envId in environmentIds) {
 						current_environment_id = _envId
@@ -308,7 +305,7 @@ node {
 								cleanupCloudFrontDistribution(_envId)
 							}
 							unDeployWebsite(_envId)
-              archiveAssetDetails(_envId)
+							archiveAssetDetails(_envId)
 							events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
 						} catch (ex) {
 							echo "error occured when deleting environment: " + ex

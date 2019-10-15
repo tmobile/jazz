@@ -428,7 +428,7 @@ def createAssetForHttpEvents (deployOutput) {
   def afterStackOutputs = false
 
   for(def line: deployLines) {
-    if(line.contains('functions:') ) break;
+    if(afterStackOutputs && line.contains('functions:')) break;
     if(afterStackOutputs && !line.contains('None')) resourceArns.add(line)
     if(line.contains('endpoints')) afterStackOutputs = true
   }

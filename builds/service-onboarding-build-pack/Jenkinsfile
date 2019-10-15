@@ -3,14 +3,13 @@ import groovy.json.JsonOutput
 import java.text.SimpleDateFormat
 import groovy.transform.Field
 
-/**Process** of service-onboarding-build-pack
+/**Tasks** during service creation
 -identify service type
 -identify runtime
 -checkout template
--make change to service-name in deployment-env.yml
+-add service_id to deployment-env.yml
 -create repo
--add remote to git
--git push template to git
+-push template to git
 */
 
 // To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
@@ -65,7 +64,7 @@ node  {
 		accountDetails = utilModule.getAccountInfo(service_config);
 		def coreDomain = "jazz";
 		def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
-  	g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
+		g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
 
 		auth_token = getAuthToken()
 
@@ -148,7 +147,6 @@ node  {
 		events.sendCompletedEvent('VALIDATE_INPUT', 'input validation completed', context_map)
 	}
 
-
 	stage('Get Service Template'){
 		try {
 			try {
@@ -167,30 +165,14 @@ node  {
 				checkout([$class: 'GitSCM', branches: [[name: '*/master']], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [[credentialsId: repo_credential_id, url: scmModule.getTemplateUrl(service_template)]]])
 				def config = LoadConfiguration()
 				def roleARN
-				def securityGroup
-				def subnetValue
-
+				
 				if (service_config['domain'] && service_config['domain'] == "jazz") {
 					roleARN = accountDetailsPrimary.IAM.PLATFORMSERVICES_ROLEID
-					for (item in accountDetailsPrimary.REGIONS) {
-						if(item.PRIMARY){
-							securityGroup = item.SECURITY_GROUP_IDS
-							subnetValue = item.SUBNET_IDS
-						}
-					}
 				} else {
 					roleARN = accountDetails.IAM.USERSERVICES_ROLEID
-					for (item in accountDetails.REGIONS) {
-						if(item.REGION == service_config.region){
-							securityGroup = item.SECURITY_GROUP_IDS
-							subnetValue = item.SUBNET_IDS
-						}
-					}
 				}
 
 				def serviceMetadataJson = [
-					"securityGroupIds": securityGroup,
-					"subnetIds": subnetValue,
 					"iamRoleARN": roleARN
 				]
 				for (item in config) {
@@ -345,11 +327,12 @@ node  {
 			}
 		}
 	}
+
 	} catch (err) {
-   throw err
-  } finally {
-   deleteDir()
-  }
+		throw err
+	} finally {
+		deleteDir()
+	}
 }
 
 /**
