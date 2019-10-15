@@ -38,6 +38,7 @@ export class ServiceOverviewComponent implements OnInit {
   @Input() service: any = {};
   @Input() isLoadingService: boolean = false;
   @Input() isAdminAccess:boolean = false;
+  @Input() provider: any;
   private subscription: any;
 
   multiENV: boolean = true;
@@ -1163,7 +1164,7 @@ export class ServiceOverviewComponent implements OnInit {
       }
       if(this.service.accountID){
         let accountValue = this.service.accountID
-        env_oss.accountMap.map((item)=>{
+        env_oss.aws.accountMap.map((item)=>{
           if(item.account === accountValue){
             this.accountName = item.accountName
           }

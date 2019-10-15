@@ -28,13 +28,13 @@ def loadServiceMetadata(service_id){
 		credentialsId: configLoader.AWS_CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
 
 		def table_name = "${configLoader.INSTANCE_PREFIX}_services_prod"
-		def service_Object = sh (
+		def serviceObj = sh (
 				script: "aws --region ${configLoader.AWS.DEFAULTS.REGION} dynamodb get-item --table-name $table_name --key '{\"SERVICE_ID\": {\"S\":\"$service_id\"}}' --output json" ,
 				returnStdout: true
 			).trim()
 
-		if(service_Object){
-			def service_data = parseJson(service_Object)
+		if(serviceObj){
+			def service_data = parseJson(serviceObj)
 			def data = service_data.Item.SERVICE_METADATA.M
 			def deployment_targets = service_data.Item.SERVICE_DEPLOYMENT_TARGETS.M
 			def metadata = [:]
@@ -56,16 +56,25 @@ def loadServiceMetadata(service_id){
 			metadata['type'] = service_data.Item.SERVICE_TYPE.S
 			metadata['runtime'] = service_data.Item.SERVICE_RUNTIME.S
 			if(service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS){
-				metadata['accountId'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.accountId.S
-        metadata['region'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.region.S
+			  metadata['accountId'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.accountId.S
+			  metadata['region'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.region.S
+			  metadata['provider'] = service_data.Item.SERVICE_DEPLOYMENT_ACCOUNTS.L[0].M.provider.S
 			} else {
-			  metadata['accountId'] = configLoader.AWS.DEFAULTS.ACCOUNTID
-        metadata['region'] = configLoader.AWS.DEFAULTS.REGION
+			  if(configLoader.AZURE && configLoader.AZURE.IS_ENABLED instanceof Boolean && configLoader.AZURE.IS_ENABLED){
+					metadata['accountId'] = configLoader.AZURE.DEFAULTS.ACCOUNTID
+					metadata['region'] = configLoader.AZURE.DEFAULTS.REGION
+					metadata['provider'] = configLoader.AZURE.DEFAULTS.PROVIDER
+			  } else {
+					metadata['accountId'] = configLoader.AWS.DEFAULTS.ACCOUNTID
+					metadata['region'] = configLoader.AWS.DEFAULTS.REGION
+					metadata['provider'] = configLoader.AWS.DEFAULTS.PROVIDER 
+			  }
 			}
 			metadata['catalog_metadata'] = catalog_metadata
 			metadata['deployment_targets'] = deployment_targets_metadata
-			if(service_data.Item.SERVICE_SLACK_CHANNEL)
+			if(service_data.Item.SERVICE_SLACK_CHANNEL){
 				metadata['slack_channel'] = service_data.Item.SERVICE_SLACK_CHANNEL.S
+			}
 			if (service_data.Item.SERVICE_DEPLOYMENT_DESCRIPTOR) { /* Lets load the deployment_descriptor if it exists */
 				metadata['deployment_descriptor'] = service_data.Item.SERVICE_DEPLOYMENT_DESCRIPTOR.S
 			}
