@@ -252,8 +252,8 @@ node  {
 		stage('Create tvault safe and role'){
 			try {
 				def payload = JsonOutput.toJson([
-					name: "safe1",
-					owner: configLoader.email,
+					name: service_config['service'],
+					owner: service_config['created_by'],
 					description: "test safe"
 					
 				])
@@ -267,9 +267,9 @@ node  {
 
 				if (responseJSON.data) {
 					echo "Successfully created safe: ${responseJSON.data}"
-					createTvaultRole(responseJSON.safeName);
+					createTvaultRole(service_config['service']);
 				} else {
-					echo "Exception occured while creating safe: $responseJSON"
+					echo "Exception occured while creating safe: ${responseJSON}"
 				}
 			} catch (e) {
 				echo "Error while creating safe: ${e}"
@@ -570,7 +570,7 @@ def readDir() {
 def createTvaultRole(safeName) {
 	try {
 			def payload = JsonOutput.toJson([
-				rolename: "testRole"
+				rolename: safeName
 			])
 			def createRole = sh(script: "curl -X POST \
 					${g_base_url}/t-vault/safes/${safeName}/role \
@@ -581,7 +581,6 @@ def createTvaultRole(safeName) {
 
 			if (responseJSON.data) {
 				echo "Successfully created Role: ${responseJSON.data}"
-				createTvaultRole(responseJSON.safeName);
 			} else {
 				echo "Exception occured while creating Role: $responseJSON"
 			}
