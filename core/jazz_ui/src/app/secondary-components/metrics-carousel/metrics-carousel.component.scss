@@ -145,3 +145,25 @@
   left: calc(100% + 5px);
   transform: translateY(-50%);
 }
+
+.tooltip {
+  visibility: hidden;
+  background: #000;
+  color: #fff;
+  padding: 0.3em;
+  border-radius: 0.5em;
+  position: absolute;
+  font-size: 0.8em;
+  opacity: 0.8;
+  z-index: 3;
+}
+
+.metrics-card-content:hover .tooltip,
+.metrics-name:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.metrics-card-content .tooltip {
+  font-size: 0.5em;
+}
