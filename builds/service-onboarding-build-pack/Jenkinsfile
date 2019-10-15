@@ -247,6 +247,36 @@ node  {
 			error ex.getMessage()
 		}
 	}
+ 	/* create safe for service if t-vault is enabled */
+	// if(configLoader.JAZZ.T_VAULT.IS_ENABLED){
+		stage('Create tvault safe and role'){
+			try {
+				def payload = JsonOutput.toJson([
+					name: "safe1",
+					owner: configLoader.email,
+					description: "test safe"
+					
+				])
+				def createSafe = sh(script: "curl -X POST \
+						${g_base_url}/jazz/t-vault/safes \
+						-k -v -H \"Authorization: $auth_token\" \
+						-H \"Content-Type: application/json\" \
+						-d \'${payload}\'", returnStdout: true).trim()
+				echo "create Safe: $createSafe"
+				def responseJSON = jsonParse(createSafe)
+
+				if (responseJSON.data) {
+					echo "Successfully created safe: ${responseJSON.data}"
+					createTvaultRole(responseJSON.safeName);
+				} else {
+					echo "Exception occured while creating safe: $responseJSON"
+				}
+			} catch (e) {
+				echo "Error while creating safe: ${e}"
+			}
+		}
+	// }
+
 
 	stage('Uploading templates to code repository')
 	{
@@ -536,3 +566,26 @@ def readDir() {
   return targetPaths
 }
 
+/* create T-Vault Role */
+def createTvaultRole(safeName) {
+	try {
+			def payload = JsonOutput.toJson([
+				rolename: "testRole"
+			])
+			def createRole = sh(script: "curl -X POST \
+					${g_base_url}/t-vault/safes/${safeName}/role \
+					-k -v -H \"Authorization: $auth_token\" \
+					-H \"Content-Type: application/json\" \
+					-d \'${payload}\'", returnStdout: true).trim()
+			def responseJSON = jsonParse(createRole)
+
+			if (responseJSON.data) {
+				echo "Successfully created Role: ${responseJSON.data}"
+				createTvaultRole(responseJSON.safeName);
+			} else {
+				echo "Exception occured while creating Role: $responseJSON"
+			}
+		} catch (e) {
+			echo "Error while creating Role: ${e}"
+		}
+}
