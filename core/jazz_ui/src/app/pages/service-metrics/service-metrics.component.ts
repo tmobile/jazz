@@ -10,6 +10,7 @@ import { environment } from '../../../environments/environment.oss'
 import { environment as env_oss } from './../../../environments/environment.oss';
 import * as _ from 'lodash';
 import { Subscription } from 'rxjs';
+import { RenameFieldService } from '../../core/services/rename-field.service';
 declare let Promise;
 
 @Component({
@@ -44,19 +45,23 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       values: [
         {
           range: moment().subtract(1, 'day').toISOString(),
-          format: 'h:mm a'
+          format: 'hA',
+          unit: 'day'
         },
         {
           range: moment().subtract(1, 'week').toISOString(),
-          format: 'MMM Do'
+          format: 'MMM Do',
+          unit: 'week'
         },
         {
           range: moment().subtract(1, 'month').toISOString(),
-          format: 'M/D'
+          format: 'M/D',
+          unit: 'month'
         },
         {
           range: moment().subtract(1, 'year').toISOString(),
-          format: 'MMMM'
+          format: 'MMM YYYY',
+          unit: 'year'
         }],
       selected: 'Day'
     },
@@ -83,6 +88,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public form;
   public selectedAsset;
   public selectedMetric;
+  public selectedMetricDisplayName;
+  public ylegend;
+  public aggregation;
   public queryDataRaw;
   public sectionStatus = "empty";
   public errorData = {};
@@ -111,7 +119,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     private utils: UtilsService,
     private cdr: ChangeDetectorRef,
     private messageservice: MessageService,
-    private activatedRoute: ActivatedRoute) {
+    private activatedRoute: ActivatedRoute,
+    private renameFieldService: RenameFieldService) {
     this.http = this.request;
     this.toastmessage = messageservice;
   }
@@ -485,7 +494,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       changedFilter.label === 'PATH' || changedFilter.label === 'ASSET NAME')) {
       this.setAsset();
     } else {
-      this.filters.removeField('Filter By:', 'ASSET NAME');
       return this.queryMetricsData();
     }
 
@@ -574,7 +582,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
   setAssetsFilter() {
-    this.filters.reset();
     if (this.serviceType === 'api') {
       if(this.assetSelected === 'apigateway' || this.assetSelected === 'apigee_proxy') {
       let methods = _(this.queryDataRaw.assets)
@@ -584,25 +591,33 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         .map('asset_name.Resource')
         .uniq().value();
       this.filters.removeField('Filter By:', 'ASSET NAME');
-      this.filters.addField('Filter By:', 'METHOD', methods, null);
-      this.filters.addField('Filter By:', 'PATH', paths);
+      const filterIndex = _.findIndex(this.filters.form.columns, {'label': "Filter By:"});
+       if ( filterIndex > -1) {
+          if(_.findIndex(this.filters.form.columns[filterIndex].fields, {'label': 'METHOD'}) === -1) {
+            this.filters.addField('Filter By:', 'METHOD', methods, null);
+          }
+          if(_.findIndex(this.filters.form.columns[filterIndex].fields, {'label': 'PATH'}) === -1) {
+            this.filters.addField('Filter By:', 'PATH', paths);
+          }
+        }
+      } else if (this.assetSelected === 'lambda') {
+        let functionName = _(this.queryDataRaw.assets)
+        .map('asset_name.FunctionName')
+        .uniq().value();
+        const filterIndex = _.findIndex(this.filters.form.columns, {'label': "Filter By:"});
+        if ( filterIndex > -1) {
+          if(_.findIndex(this.filters.form.columns[filterIndex].fields, {'label': 'ASSET NAME'}) === -1) {
+            this.filters.addField('Filter By:', 'ASSET NAME', functionName, null);
+          }
+        }
       }
     }
   }
 
   setAsset() {
-    switch (this.serviceType) {
-      case 'api':
-      case 'function':
-      case 'website':
-      case 'sls-app':
-      default:
-        if (this.queryDataRaw) {
-          this.selectedAsset = this.queryDataRaw.assets[0];
-        }
-        break;
+    if(this.queryDataRaw){
+      this.selectedAsset = this.queryDataRaw.assets[0];
     }
-
     if (this.selectedAsset) {
       this.sortAssetData(this.selectedAsset);
       this.setMetric();
@@ -625,7 +640,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     } else {
       this.selectedMetric = this.selectedAsset.metrics[0]
     }
-
+    this.selectedMetricDisplayName = this.renameFieldService.getDisplayNameOfKey(this.selectedMetric.metric_name.toLowerCase()) || this.selectedMetric.metric_name; 
     this.graphData = this.selectedMetric && this.formatGraphData(this.selectedMetric.datapoints);
   }
 
@@ -642,14 +657,12 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           x: moment(dataPoint.Timestamp).valueOf(),
           y: parseInt(dataPoint[valueProperty])
         };
-
-        if (!obj['y']) {
-          obj['y'] = parseInt(dataPoint[valueProperty.toLowerCase()])
-        }
         return obj;
       });
 
     let timeRange = this.filters.getFieldValueOfLabel('TIME RANGE');
+    this.aggregation = this.filters.getFieldValueOfLabel('AGGREGATION') == 'sum' ? 'Sum': 'Avg.';
+    this.ylegend = this.selectedMetricDisplayName  + ' (' + this.aggregation + ')';
     let options = {
       tooltipXFormat: 'MMM DD YYYY, h:mm a',
       fromDateISO: timeRange.range,
@@ -657,6 +670,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       toDateISO: moment().toISOString(),
       toDateValue: moment().valueOf(),
       xAxisFormat: timeRange.format,
+      xAxisUnit: timeRange.unit,
       stepSize: this.filters.getFieldValueOfLabel('PERIOD') * 1000,
       yMin: values.length ?
         .9 * (values.map((point) => {

@@ -618,13 +618,14 @@ search-box {
 
 .jz-btn-icon{
   margin-right: -2rem;
-  height: 32px;
+  font-size: 18px;
   padding: 6px;
-}
-.jz-toggled {
-  background-color: #ddd;
 }
 
 .metrics-section{
   height: calc(100vh - 12rem);
+}
+
+metrics-carousel {
+  position: relative;
 }

@@ -1,8 +1,17 @@
 <div style="height: 100%; width:100%; position:relative" *ngIf="_datasets">
   <canvas baseChart
+          id="ctx"
           *ngIf="isRendered"
           [chartType]="type"
           [datasets]="_datasets"
-          [options]="_options"></canvas>
+          [options]="_options"
+          (chartClick)="chartClicked($event)"></canvas>
+  <div class='jz-height-full jz-flex-centered' *ngIf='datasets[0].length === 0'>
+      <div class="jz-text-center">
+          <div class="jz-section-icon">
+            <span class="icon-icon-nodata"></span>
+          </div>
+          <div class='center-text'><b>Oh no!</b><br>No data found</div>
+        </div>
+  </div>
 </div>
-
