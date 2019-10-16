@@ -110,6 +110,40 @@ def loadServiceConfigurationData() {
           updateConfigValue("{apigee_password}", PASS)
         }
       }
+
+      if (config_loader.AZURE && config_loader.AZURE.IS_ENABLED instanceof Boolean && config_loader.AZURE.IS_ENABLED) {
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'PASS', usernameVariable: 'USER']]){
+          sh """
+             sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/dev-config.json
+             sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/stg-config.json
+             sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/prod-config.json
+          """
+        }
+
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'PASS', usernameVariable: 'USER']]){
+          sh """
+             sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/dev-config.json
+             sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/stg-config.json
+             sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/prod-config.json
+          """
+        }
+
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'PASS', usernameVariable: 'USER']]){
+          sh """
+             sed -i -- 's/{azure_password}/${PASS}/g' ./config/dev-config.json
+             sed -i -- 's/{azure_password}/${PASS}/g' ./config/stg-config.json
+             sed -i -- 's/{azure_password}/${PASS}/g' ./config/prod-config.json
+          """
+        }
+
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'PASS', usernameVariable: 'USER']]){
+          sh """
+             sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/dev-config.json
+             sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/stg-config.json
+             sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/prod-config.json
+          """
+        }
+      }
     }
 
     if (service_name.trim() == "jazz_codeq") {
@@ -347,6 +381,15 @@ def loadServiceConfigurationData() {
       sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/prod-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/test-config.json"
 
+      updateConfigValue("{aws-primary-region}", region)
+      updateConfigValue("{aws-providerId}", config_loader.AWS.DEFAULTS.PROVIDER)
+      updateConfigValue("{aws-primary-accountId}", config_loader.AWS.DEFAULTS.ACCOUNTID)
+
+      if(config_loader.AZURE && config_loader.AZURE.IS_ENABLED instanceof Boolean && config_loader.AZURE.IS_ENABLED){
+        updateConfigValue("{azure-primary-region}", config_loader.AZURE.DEFAULTS.REGION)
+        updateConfigValue("{azure-providerId}", config_loader.AZURE.DEFAULTS.PROVIDER)
+        updateConfigValue("{azure-primary-accountId}", config_loader.AZURE.DEFAULTS.ACCOUNTID)
+      }
       sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/dev-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/stg-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/prod-config.json"

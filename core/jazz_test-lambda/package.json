@@ -18,6 +18,7 @@
     "aws-sdk-mock": "^1.7.0",
     "aws-lambda-mock-context": "^3.1.1",
     "istanbul": "^0.4.5",
-    "sinon": "^5.0.7"
+    "sinon": "^5.0.7",
+    "nock": "^9.0.2"
   }
 }

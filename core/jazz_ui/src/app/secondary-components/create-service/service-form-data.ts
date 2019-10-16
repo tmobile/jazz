@@ -47,3 +47,41 @@ export class EventExpression {
     public SQSstreamARN: string,
   ) {  }
 }
+
+export class AzureEventExpression {
+  constructor (
+    public type:string,
+    public cosmosdb: string,
+    public eventhub: string,
+    public storageaccount: string,
+    public servicebusqueue: string
+  ){}
+}
+
+export class EventLabels {
+  constructor(
+  	public functionLabel: string,
+    public databaseLabel: string,
+    public databaseNameLabel: string,
+    public streamLabel: string,
+    public streamNameLabel: string,
+    public storageLabel: string,
+    public storageNameLabel: string,
+    public queueLabel: string,
+    public queueNameLabel: string,
+
+  ) {  }
+}
+export class AzureEventLabels {
+  constructor (
+    public azurefunctionLabel: string,
+    public azuredatabaseLabel: string,
+    public azuredatabaseNameLabel: string,
+    public azurestreamLabel: string,
+    public azurestreamNameLabel: string,
+    public azurestorageLabel: string,
+    public azurestorageNameLabel: string,
+    public azurequeueLabel: string,
+    public azurequeueNameLabel: string
+  ){}
+}

@@ -15,12 +15,12 @@
 // =========================================================================
 
 /**
-    Helper functions for Metrics
-    @module: utils.js
-    @description: Defines functions like format the output as per metrics catalog.
-    @author:
-    @version: 1.0
-**/
+ Helper functions for Metrics
+ @module: utils.js
+ @description: Defines functions like format the output as per metrics catalog.
+ @author:
+ @version: 1.0
+ **/
 const parser = require('aws-arn-parser');
 const metricConfig = require("./metrics.json");
 const global_config = require("../config/global-config.json");
@@ -153,7 +153,7 @@ function getAssetsObj(assetsArray, userStatistics) {
   }
   assetsArray.forEach((asset) => {
 
-    
+
     var assetType = asset.asset_type;
     if (!namespaces[asset.provider]) {
       newAssetArr.push({
@@ -184,20 +184,24 @@ function getAssetsObj(assetsArray, userStatistics) {
         "provider": asset.provider,
         "type": assetType,
         "asset_name": dimensionObj,
-        "statistics": userStatistics
+        "statistics": userStatistics,
+        "provider": asset.provider,
+        "metrics": metricNamespace.metrics
       };
       assetObj = updateNewAssetObj(newAssetObj, asset);
       newAssetArr.push(assetObj);
     } else if (assetType) {
       // type not supported
       newAssetArr.push({
-        "message": `Metric not supported for asset type: ${assetType}`,
+        "message": `Metric not supported for asset type ${assetType}`,
+        "provider": asset.provider,
         "isError": true
       });
     } else {
       // type not found
       newAssetArr.push({
-        "message": `Asset type not found: ${assetType}`,
+        "message": `Asset type not found `,
+        "provider": asset.provider,
         "isError": true
       });
     }
@@ -211,6 +215,9 @@ function updateNewAssetObj(newAssetObj, asset) {
   switch (asset.provider) {
     case "aws":
       newAssetObj = updateAWSAsset(newAssetObj, asset);
+      break;
+    case "azure":
+      newAssetObj = updateAZAsset(newAssetObj, asset);
       break;
     case "gcp":
       newAssetObj = updateApigeeAsset(newAssetObj, asset);
@@ -264,6 +271,28 @@ function updateAWSAsset(newAssetObj, asset) {
       newAssetObj = {
         "message": "Metric not supported for asset type: " + assetType,
         "isError": true
+      }
+  }
+  return newAssetObj;
+}
+
+function updateAZAsset(newAssetObj, asset) {
+  var arnString = asset.provider_id, assetType = asset.asset_type, assetEnvironment = asset.environment;
+  var arnParsedObj = parser(arnString);
+  var relativeId = arnParsedObj.relativeId;
+
+  switch (assetType) {
+    case "storage_account":
+      asset.metrics = newAssetObj.metrics;
+      newAssetObj = asset;
+      break;
+    case "apigateway":
+      asset.metrics = newAssetObj.metrics;
+      newAssetObj = asset;
+      break;
+    default:
+      newAssetObj = {
+        "isError": "Metric not supported for asset type " + assetType
       }
   }
   return newAssetObj;

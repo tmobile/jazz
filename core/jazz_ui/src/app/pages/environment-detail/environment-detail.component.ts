@@ -31,6 +31,7 @@ export class EnvironmentDetailComponent implements OnInit {
   serviceId: any;
   envStatus: string;
   environment_obj: any;
+  platform:any;
   isLoadingService: boolean = true;
   status_inactive: boolean = false;
   swagger_error: boolean = false;
@@ -130,7 +131,8 @@ export class EnvironmentDetailComponent implements OnInit {
         status: service.status,
         domain: service.domain,
         repository: service.repository,
-        deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type]
+        deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type],
+        provider: service.deployment_accounts[0].provider 
       }
     }
   };
@@ -169,7 +171,8 @@ export class EnvironmentDetailComponent implements OnInit {
       response => {
         this.service.accounts = env_internal.urls.accounts;
         this.service.regions = env_internal.urls.regions;
-        this.service = response.data.data;
+        this.service = response.data;
+        this.platform = response.data.deployment_accounts[0].provider;
         if (environment.envName == 'oss') this.service = response.data;
         this.isFunction = this.service.type === "function";
         if (this.service.policies && this.service.policies.length) {
