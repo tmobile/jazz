@@ -22,6 +22,18 @@
 
                 <span class="page-sub-title">{{service.name}}</span><br>
             </div>
+            <div class="image-btn-div">
+                <div class="image-container">
+                    <img
+                      *ngIf="platform === 'azure'"
+                      id="azure-watermark"
+                      src="../../../assets/images/azure-watermark.png"
+                      alt="azureimage">
+                    <img
+                      *ngIf="platform === 'aws'"
+                      id="aws-watermark"
+                      src="../../../assets/images/aws-watermark.png">
+                </div>
             <btn-jazz-secondary *ngIf="service.serviceType=='api'" [disablebtn]='disablingApiButton' class="testApiBtn" text="TEST API" (click)="testService('api')"></btn-jazz-secondary>
             <btn-jazz-secondary *ngIf="service.serviceType=='function'" [disablebtn]='disablingFunctionButton || !isAdminAccess' class="testApiBtn" text="TEST FUNCTION" (click)="testService('function')"></btn-jazz-secondary>
             <btn-jazz-secondary *ngIf="service.serviceType=='website'"  [disablebtn]='disablingApiButton' class="testApiBtn" text="GO TO WEBSITE" (click)="testService('website')"></btn-jazz-secondary>
@@ -30,6 +42,7 @@
             <div class="status-container status-inactive-def hide" >
                 <span class="status-hdr" [class.inactive]="status_val > 2">Status</span>
                 <div class="status-state-oval" [class.inactive-bg]="status_val > 2"></div>
+            </div>
             </div>
             <!--<btn-jazz-secondary *ngIf="selectedTab == 13" class="testApiBtn" text="SONAR PROJECT"></btn-jazz-secondary>-->
         </div>
@@ -56,7 +69,7 @@
             <section class="page-content flex-col flex-grow" *ngIf="selectedTab == 'deployments'">
                 <env-deployments-section #selectedTabComponent #envdeployments [service]="service" [isDeployAccess]="isDeployAccess"></env-deployments-section>
             </section>
-            
+
             <section class="page-content flex-col flex-grow" *ngIf="selectedTab == 'code quality'">
                 <env-codequality-section #selectedTabComponent [service]="service"></env-codequality-section>
             </section>
@@ -69,12 +82,12 @@
                 <env-logs-section #selectedTabComponent [service]="service"></env-logs-section>
             </section>
 
-            
+
             <section class="page-content flex-col flex-grow" *ngIf="selectedTab == 'metrics'">
                 <service-metrics #selectedTabComponent [service]="service"></service-metrics>
             </section>
 
-            
+
         </div>
     </div>
     <section *ngIf='isError403'>

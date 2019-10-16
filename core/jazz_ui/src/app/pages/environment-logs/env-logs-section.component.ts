@@ -591,15 +591,17 @@ export class EnvLogsSectionComponent implements OnInit {
 						if(this.totalPagesTable === 1){
 							 this.paginationSelected = false;
 						}
-					}
-					else {
-						this.totalPagesTable = 0;
-					}
-					this.backupLogs = this.logs;
-					this.sort = new Sort(this.logs);
-					this.loadingState = 'default';
-					this.trim_Message();
+						else {
+							this.totalPagesTable = 0;
+						}
+						this.backupLogs = this.logs;
+						this.sort = new Sort(this.logs);
+						this.loadingState = 'default';
+						this.trim_Message();
 
+					} else {
+						this.loadingState = 'empty';
+					}
 				} else {
 					this.loadingState = 'empty';
 						}
