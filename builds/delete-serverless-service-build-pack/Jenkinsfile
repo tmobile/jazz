@@ -355,7 +355,7 @@ node {
 				break
 		}
 	}
-
+	}
 	if (is_service_deletion) {
 		stage('Cleanup SCM') {
 			events.sendStartedEvent('REMOVE_POLICIES_AND_REPO_PERMISSIONS', "Remove policies and repo write permission of service_id: " + service_config['service_id'] + " started", null, "prod")
