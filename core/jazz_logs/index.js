@@ -197,8 +197,7 @@ module.exports.handler = (event, context, cb) => {
       "from": page,
       "sort": [{
         "timestamp": {
-          "order": "desc",
-          "unmapped_type": "boolean"
+          "order": "desc"
         }
       }],
       "query": {
