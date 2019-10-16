@@ -1075,7 +1075,7 @@ describe('handler', () => {
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
-      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-lambda/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
+      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-function/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
         return obj.callback(null, jenkins_job_responseObject, jenkins_job_responseObject.body);
       } else if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/environments") {
         return obj.callback(null, testPayloads.createBranchSuccess, testPayloads.createBranchSuccess.body);
@@ -1116,7 +1116,7 @@ describe('handler', () => {
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
-      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-lambda/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
+      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-function/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
         return obj.callback(null, jenkins_job_responseObject, jenkins_job_responseObject.body);
       } else if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/environments") {
         return obj.callback(null, testPayloads.createBranchSuccess, testPayloads.createBranchSuccess.body);
@@ -1156,7 +1156,7 @@ describe('handler', () => {
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
-      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-lambda/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
+      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-function/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
         return obj.callback(null, jenkins_job_responseObject, jenkins_job_responseObject.body);
       }
     });
@@ -1193,7 +1193,7 @@ describe('handler', () => {
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
-      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-lambda/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
+      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-function/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
         return obj.callback(null, jenkins_job_responseObject, jenkins_job_responseObject.body);
       } else if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/environments") {
         return obj.callback(null, testPayloads.createBranchSuccess, testPayloads.createBranchSuccess.body);
@@ -1233,7 +1233,7 @@ describe('handler', () => {
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
-      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-lambda/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
+      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-function/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
         return obj.callback(null, jenkins_job_responseObject, jenkins_job_responseObject.body);
       } else if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/environments") {
         return obj.callback(null, testPayloads.createBranchSuccess, testPayloads.createBranchSuccess.body);
@@ -1273,7 +1273,7 @@ describe('handler', () => {
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
-      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-lambda/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
+      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-function/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
         return obj.callback(null, jenkins_job_responseObject, jenkins_job_responseObject.body);
       } else if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/environments") {
         return obj.callback(null, testPayloads.createBranchSuccess, testPayloads.createBranchSuccess.body);
@@ -1314,7 +1314,7 @@ describe('handler', () => {
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
-      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-lambda/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
+      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-function/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
         return obj.callback(null, jenkins_job_responseObject, jenkins_job_responseObject.body);
       } else if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/environments") {
         return obj.callback(null, testPayloads.processEventInitialCommitSuccess, testPayloads.processEventInitialCommitSuccess.body);
@@ -1345,7 +1345,7 @@ describe('handler', () => {
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
-      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-lambda/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
+      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-function/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
         return obj.callback(null, jenkins_job_responseObject, jenkins_job_responseObject.body);
       } else if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/environments") {
         return obj.callback(null, testPayloads.createBranchSuccess, testPayloads.createBranchSuccess.body);
@@ -1385,7 +1385,7 @@ describe('handler', () => {
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
-      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-lambda/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
+      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-function/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
         return obj.callback(null, jenkins_job_responseObject, jenkins_job_responseObject.body);
       } else if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/environments") {
         return obj.callback(null, testPayloads.createBranchError, testPayloads.createBranchError.body);
@@ -1424,7 +1424,7 @@ describe('handler', () => {
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
-      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-lambda/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
+      } else if (obj.url == "{conf-jenkins-host}/job/build-pack-function/buildWithParameters?token={job_token}&service_name=test&domain=testing&scm_branch=master") {
         return obj.callback(null, jenkins_job_responseObject, jenkins_job_responseObject.body);
       } else if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/environments") {
         return obj.callback(null, testPayloads.processEventInitialCommitError, testPayloads.processEventInitialCommitError.body);
