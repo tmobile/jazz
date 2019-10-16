@@ -193,7 +193,7 @@ function getAssetsObj(assetsArray, userStatistics) {
     } else if (assetType) {
       // type not supported
       newAssetArr.push({
-        "message": `Metric not supported for asset type ${assetType}`,
+        "message": `Metric not supported for asset type: ${assetType}`,
         "provider": asset.provider,
         "isError": true
       });
@@ -225,7 +225,7 @@ function updateNewAssetObj(newAssetObj, asset) {
     default:
       newAssetObj = {
         "isError": true,
-        "message": "Metric not supported for asset type " + assetType
+        "message": "Metric not supported for asset type: " + assetType
       }
   }
   return newAssetObj;
@@ -292,7 +292,7 @@ function updateAZAsset(newAssetObj, asset) {
       break;
     default:
       newAssetObj = {
-        "isError": "Metric not supported for asset type " + assetType
+        "isError": "Metric not supported for asset type: " + assetType
       }
   }
   return newAssetObj;
