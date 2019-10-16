@@ -28,20 +28,23 @@
           <div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
         </div>
       </div>
-      <div *ngSwitchCase="'resolved'" class="jz-height-full">
-        <div class="jz-chart">
-          <div class="jz-chart-content">
-            <chartjs-linegraph *ngIf="graphData" [datasets]="graphData.datasets"
-                               [options]="graphData.options"></chartjs-linegraph>
-          </div>
-        </div>
+      <div *ngSwitchCase="'resolved'" class="jz-height-full flex flex-col">
         <metrics-carousel [metrics]="selectedAsset?.metrics"
                           [selected]="selectedMetric"
                           (selectedChange)="setMetric($event)"
                           [options]="{listProperty: 'datapoints',
                           valueProperty: selectedAsset.statistics,
                            nameProperty: 'metric_name',
-                           footerProperty: 'Unit'}"></metrics-carousel>
+                           footerProperty: 'Unit', 
+                           aggregation: aggregation}">
+          </metrics-carousel>
+          <div class="jz-chart">
+            <div class="jz-chart-content">
+              <chartjs-linegraph *ngIf="graphData" [datasets]="graphData.datasets"
+                                  [options]="graphData.options" [ylegend]="ylegend" [xlegend]="'Time'" [ytooltipsuffix]="aggregation">
+              </chartjs-linegraph>
+            </div>
+          </div>
       </div>
     </div>
   </div>
