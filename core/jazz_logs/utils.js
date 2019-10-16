@@ -66,7 +66,7 @@ var set_log_level_query = function (LOG_LEVEL_CONFIG, type, value) {
 	if (requestedLogType[0]) {
 		LOG_LEVEL_CONFIG.map(function (configObject) {
 			if (configObject.Level <= parseInt(requestedLogType[0].Level)) {
-				query.query_string.query = query.query_string.query + " OR " + configObject.Type;
+				query.query_string.query = query.query_string.query + " OR " + configObject.Type.toUpperCase();
 			}
 		});
 		query.query_string.query = query.query_string.query + ")"
