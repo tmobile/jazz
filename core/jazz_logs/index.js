@@ -59,7 +59,7 @@ module.exports.handler = (event, context, cb) => {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("missing required input parameter category.")));
       }
 
-      if (!event.body.type || !_.includes(config.VALID_LOGTYPES, event.body.type)) {
+      if (!event.body.type || !_.includes(config.VALID_LOGTYPES, event.body.type.toLowerCase())) {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + config.VALID_LOGTYPES.join(", "))));
       }
 
@@ -109,8 +109,8 @@ module.exports.handler = (event, context, cb) => {
 
         log_type_config = config.LOG_LEVELS.map(logLevel => logLevel.Type);
 
-        if (_.includes(log_type_config, logType)) {
-          querys.push(utils.setLogLevelQuery(config.LOG_LEVELS, "log_level", logType));
+        if (_.includes(log_type_config, logType.toLowerCase())) {
+          querys.push(utils.setLogLevelQuery(config.LOG_LEVELS, "log_level", logType.toLowerCase()));
         } else {
           logger.info("Only following values are allowed for logger type - " + log_type_config.join(", "));
           return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + log_type_config.join(", "))));
@@ -137,7 +137,7 @@ module.exports.handler = (event, context, cb) => {
       req.body = setRequestBody(servCategory, querys, filterQuerys, startTime, endTime, size, page);
 
       request(req, function (err, res, body) {
-        logger.info("RESPONSE FROM ES : " + JSON.stringify(res));
+        logger.info("Response from ES : " + JSON.stringify(res));
         if (err) {
           logger.error("Error occured : " + JSON.stringify(err));
           return cb(JSON.stringify(errorHandler.throwInternalServerError("Internal Error")));

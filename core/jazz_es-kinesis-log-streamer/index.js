@@ -14,8 +14,8 @@
 // limitations under the License.
 // =========================================================================
 
-var http = require('http');
 var zlib = require('zlib');
+var request = require('request');
 
 const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
@@ -97,17 +97,16 @@ function handler(event, context, cb) {
   }
 };
 
-function post(config, body, callback) {
+function post(config, body, callback) {  
   let requestParams = utils.buildRequest(config, body);
-  let request = http.request(requestParams, function (response) {
 
-    let responseBody = '';
-    response.on('data', function (chunk) {
-      responseBody += chunk;
-    });
-    logger.info("response from post..:" + JSON.stringify(responseBody));
-    response.on('end', function () {
-      let failedItems, success, info = JSON.parse(responseBody);
+  request(requestParams, (err, response, body) => {
+    logger.debug("response from ES :" + JSON.stringify(response));
+    if (err) {
+      logger.error("error: " + JSON.stringify(err));
+      return callback(err);
+    } else {
+      let failedItems, success, info = JSON.parse(body);
       if (response.statusCode >= 200 && response.statusCode < 299) {
         failedItems = info.items.filter(item => item.index.status >= 300);
         success = {
@@ -119,15 +118,11 @@ function post(config, body, callback) {
 
       let error = response.statusCode !== 200 || info.errors === true ? {
         "statusCode": response.statusCode,
-        "responseBody": responseBody
+        "responseBody": body
       } : null;
       return callback(error, success, response.statusCode, failedItems);
-    });
-  }).on('error', function (e) {
-    logger.error("e: " + JSON.stringify(e));
-    return callback(e);
+    }
   });
-  request.end(requestParams.body);
 }
 
 const exportable = {

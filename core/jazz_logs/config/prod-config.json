@@ -38,53 +38,53 @@
     }
   ],
   "VALID_LOGTYPES": [
-    "WARN",
-    "ERROR",
-    "INFO",
-    "VERBOSE",
-    "DEBUG",
-    "FATAL",
-    "TRACE",
-    "OFF",
-    "ALL"
+    "warn",
+    "error",
+    "info",
+    "verbose",
+    "debug",
+    "fatal",
+    "trace",
+    "off",
+    "all"
   ],
   "ENV_PREFIX": "{env-prefix}",
   "LOG_LEVELS": [
     {
       "Level": 0,
-      "Type": "OFF"
+      "Type": "off"
     },
     {
       "Level": 1,
-      "Type": "FATAL"
+      "Type": "fatal"
     },
     {
       "Level": 2,
-      "Type": "ERROR"
+      "Type": "error"
     },
     {
       "Level": 3,
-      "Type": "WARN"
+      "Type": "warn"
     },
     {
       "Level": 4,
-      "Type": "INFO"
+      "Type": "info"
     },
     {
       "Level": 5,
-      "Type": "DEBUG"
+      "Type": "debug"
     },
     {
       "Level": 6,
-      "Type": "TRACE"
+      "Type": "trace"
     },
     {
       "Level": 7,
-      "Type": "VERBOSE"
+      "Type": "verbose"
     },
     {
       "Level": 8,
-      "Type": "ALL"
+      "Type": "all"
     }
   ]
 }
