@@ -164,10 +164,10 @@ node() {
     stage('Pre-Build Validation') {
       events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation started', context_map, environment_logical_id)
       try {
-        send_status_email(config, 'STARTED', "")
+        send_status_email('STARTED', '')
         validateDeploymentConfigurations(config)
       } catch (ex) {
-        send_status_email(config, 'FAILED', "")
+        send_status_email('FAILED', '')
         events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map, environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
         def stackTraceElements = ex.stackTrace
@@ -183,7 +183,7 @@ node() {
       try {
         installServerlessPlugins()
       } catch (ex) {
-        send_status_email(config, 'FAILED', "")
+        send_status_email('FAILED', '')
         events.sendFailureEvent('INSTALL_PLUGINS', ex.getMessage(), context_map, environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
         error ex.getMessage()
@@ -374,18 +374,9 @@ node() {
               }
             }
           }
-
-          if (domain != "jazz") {
-            // Add log subscription filters - added support for plugin
-            // this call and method can be removed!
-            // createSubscriptionFilters(config, accountDetails, env_key, credsId);
-          }
-
-          def svc_response = echoServiceInfo(environment_logical_id, envBucketKey)
-          send_status_email(config, 'COMPLETED', svc_response)
-
+          send_status_email('COMPLETED', '')
         } catch (ex) {
-          send_status_email(config, 'FAILED', '')
+          send_status_email('FAILED', '')
           events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
           events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
           events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
@@ -816,7 +807,7 @@ def updatePolicy(env, destARN){
 			 def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
 			 sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${config['region']} --profile ${primaryCredsId}"
 		} catch(ex){
-			send_status_email(config, 'FAILED', '')
+			send_status_email('FAILED', '')
 			events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
 			events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
 			events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
@@ -873,55 +864,38 @@ def setCredentials() {
  * Supported build status values = STARTED, FAILED & COMPLETED
  * @return
  */
-def send_status_email(config, build_status, email_content) {
-  if (config['domain'] != "jazz") {
-    echo "Sending build notification to ${config['created_by']}"
-    def body_subject = ''
-    def body_text = ''
-    def cc_email = ''
-    def body_html = ''
-    if (build_status == 'STARTED') {
-      echo "email status started"
-      body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + config['service']
-    } else if (build_status == 'FAILED') {
-      echo "email status failed"
-      def build_url = env.BUILD_URL + 'console'
-      body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + config['service']
-      body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
-    } else if (build_status == 'COMPLETED') {
-      body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + config['service']
-    } else {
-      echo "Unsupported build status, nothing to email.."
-      return
-    }
-    if (email_content != '') {
-      body_text = body_text + '\n\n' + email_content
-    }
-    def fromStr = 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>'
-    body = JsonOutput.toJson([
-      from: fromStr,
-      to: config['created_by'],
-      subject: body_subject,
-      text: body_text,
-      cc: cc_email,
-      html: body_html
-    ])
+def send_status_email (build_status, email_content) {
+  echo "Sending build notification to ${config['created_by']}"
+	// TODO: Use this to make the notification look better?
+	def body_html = ''
+	def body_subject = "[Jazz Build Notification] Deployment ${build_status} for your service: ${config['service']}"
+	def body_text =  'View the complete build log here: ' + env.BUILD_URL + 'console'
+  	if (email_content != '') {
+    	body_text = email_content + '\n\n' + body_text
+	}
+	body = JsonOutput.toJson([
+		from: 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>',
+		to: config['created_by'],
+		subject: body_subject,
+		text: body_text,
+		bcc: configLoader.JAZZ.STACK_ADMIN,
+		html: body_html
+	])
 
-    try {
-      def sendMail = sh(script: "curl -X POST \
-					${g_base_url}/jazz/email \
-					-k -v -H \"Authorization: $auth_token\" \
-					-H \"Content-Type: application/json\" \
-					-d \'${body}\'", returnStdout: true).trim()
-      def responseJSON = parseJson(sendMail)
-      if (responseJSON.data) {
-        echo "successfully sent e-mail to ${config['created_by']}"
-      } else {
-        echo "exception occured while sending e-mail: $responseJSON"
-      }
-    } catch (e) {
-      echo "Failed while sending build status notification"
-    }
+	try {
+		def sendMail = sh(script: "curl -X POST \
+						${g_base_url}/jazz/email \
+						-k -v -H \"Authorization: $auth_token\" \
+						-H \"Content-Type: application/json\" \
+						-d \'${body}\'", returnStdout: true).trim()
+    	def responseJSON = parseJson(sendMail)
+		if (responseJSON.data) {
+			echo "successfully sent e-mail to ${config['created_by']}"
+		} else {
+			echo "exception occured while sending e-mail: $responseJSON"
+		}
+	} catch (e) {
+    echo "Failed while sending build status notification  " + e.toString()
   }
 }
 
