@@ -25,7 +25,9 @@ def get_cloudfront_ID() {
     echo "cf_list_dists is: $cf_list_dists"
     def config_parser = new groovy.json.JsonSlurper()
     def cf_dists = config_parser.parseText(cf_list_dists)
-    return cf_dists[0].Id
+    if (cf_dists[0]) {
+      return cf_dists[0].Id
+    }
   }catch(ex) {
     error "Failed while get_cloudfront_ID " + ex.toString()
     return null;
