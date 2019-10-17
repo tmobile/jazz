@@ -217,6 +217,7 @@ function handler(event, context, cb) {
         .then((vaultToken) => { return exportable.createUserInVault(event.body, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully created user in vault");
+          if (event.body.password) delete event.body.password;
           return cb(null, responseObj(result, event.body));
         })
         .catch(err => {
