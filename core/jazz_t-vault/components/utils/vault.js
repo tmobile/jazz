@@ -130,7 +130,7 @@ function deleteSafe(safename, configData, vaultToken, onComplete) {
     } else {
       logger.error("Error in deleting safe details: " + JSON.stringify(error));
       return onComplete({
-        "error": `Error in deleting safe details with safe name ${safename}: ${response.body.errors}`
+        "error": `Error in deleting safe with safe name ${safename}: ${response.body.errors}`
       });
     }
   });
