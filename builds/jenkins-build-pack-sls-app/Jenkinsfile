@@ -428,7 +428,7 @@ def createAssetForHttpEvents (deployOutput) {
   def afterStackOutputs = false
 
   for(def line: deployLines) {
-    if(line.contains('functions:') ) break;
+    if(afterStackOutputs && line.contains('functions:')) break;
     if(afterStackOutputs && !line.contains('None')) resourceArns.add(line)
     if(line.contains('endpoints')) afterStackOutputs = true
   }
@@ -897,7 +897,7 @@ def send_status_email(config, build_status, email_content) {
     if (email_content != '') {
       body_text = body_text + '\n\n' + email_content
     }
-    def fromStr = 'Jazz Admin <' + configLoader.JAZZ.ADMIN + '>'
+    def fromStr = 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>'
     body = JsonOutput.toJson([
       from: fromStr,
       to: config['created_by'],

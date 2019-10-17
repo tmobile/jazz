@@ -38,6 +38,7 @@ export class ServiceOverviewComponent implements OnInit {
   @Input() service: any = {};
   @Input() isLoadingService: boolean = false;
   @Input() isAdminAccess:boolean = false;
+  @Input() provider: any;
   private subscription: any;
 
   multiENV: boolean = true;
@@ -162,7 +163,7 @@ export class ServiceOverviewComponent implements OnInit {
   constructor(
     private router: Router,
     private request: RequestService,
-    private messageservice: MessageService,
+    public messageservice: MessageService,
     private cronParserService: CronParserService,
     private cache: DataCacheService,
     private toasterService: ToasterService,
@@ -522,7 +523,7 @@ export class ServiceOverviewComponent implements OnInit {
         this.cronObj.month = "*";
         this.cronObj.dayOfWeek = "?";
         this.cronObj.year = "*";
-      }     
+      }
     }
     this.rateExpression.duration = this.initialDuration;
     this.rateExpression.interval = this.initialRateInterval;
@@ -578,7 +579,7 @@ export class ServiceOverviewComponent implements OnInit {
         else {
           localEvenSchedule = localEvenSchedule.split(' ');
         }
-        
+
         if(this.rateExpression.type === 'cron'){
           this.cronObj.minutes = localEvenSchedule[0];
             this.cronObj.hours = localEvenSchedule[1];
@@ -593,7 +594,7 @@ export class ServiceOverviewComponent implements OnInit {
         }
       }
     }
-  
+
 
   onEventScheduleChange(val) {
     this.rateExpression.type = val;
@@ -1191,7 +1192,7 @@ export class ServiceOverviewComponent implements OnInit {
       }
       if(this.service.accountID){
         let accountValue = this.service.accountID
-        env_oss.accountMap.map((item)=>{
+        env_oss.aws.accountMap.map((item)=>{
           if(item.account === accountValue){
             this.accountName = item.accountName
           }

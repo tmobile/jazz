@@ -1,0 +1,16 @@
+{
+  "name": "function-nodejs-template",
+  "version": "0.0.1",
+  "description": "Nodejs Azure Function Template project",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "mocha"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "chai": "^3.5.0",
+    "mocha": "^v3.0.0"
+  }
+}

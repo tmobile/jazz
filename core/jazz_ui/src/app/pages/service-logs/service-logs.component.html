@@ -3,17 +3,17 @@
     <i>This data is for representational purpose only and is not accurate</i>
     <div>Meanwhile you can access logs <a (click)="navigateTo($event)">here</a></div>
 </div>
-<div class="row page-section section-top"> 
-    
+<div class="row page-section section-top">
+
     <div class='filter-row'>
         <!-- <div>
-            <template adv-filters></template>
+            <ng-template adv-filters></ng-template>
         </div> -->
         <!-- <advanced-filters #adv_filters (onFilterSelect)='onFilterSelect($event)' [logs]='fromlogs' [service]='service' [advanced_filter_input]='advanced_filter_input'></advanced-filters> -->
         <filter-tags #filtertags (OnCancel)='cancelFilter($event)'></filter-tags>
-    
+
     </div>
-    
+
     <div class="filter-wrp">
 
         <filters class="filters" [filtersList]="filtersList" [multiple]="false" [selectedList]="selected" (onSelected)="onFilterSelected($event)" [logs]='true'></filters>
@@ -21,19 +21,19 @@
 
         <div class='drp-wrp'>
             <div class='pointer refresh icon-icon-refresh' title="Refresh" (click)='callLogsFunc()' height="19"></div>
- 
+
             <span title='Collapse all' *ngIf='expandText == "Collapse all"' class="icon-Collapse-All expandbtn" (click)='collapseall()'></span>
-            <span title='Expand all' *ngIf='expandText == "Expand all"' class="icon-Expand-All expandbtn" (click)='expandall()'></span>    
+            <span title='Expand all' *ngIf='expandText == "Expand all"' class="icon-Expand-All expandbtn" (click)='expandall()'></span>
             <div  class='template-wrp'>
-                <template adv-filters></template>
+                <ng-template adv-filters></ng-template>
             </div>
-            <div id='hidethis' [class.hide]='filter_loaded' *ngIf='!filter_loaded' class='template-wrp'>     
-                <span class="icon-icon-filter-unselected icon-icon-filter-unselected-font "  title="Filter" ></span>                    
+            <div id='hidethis' [class.hide]='filter_loaded' *ngIf='!filter_loaded' class='template-wrp'>
+                <span class="icon-icon-filter-unselected icon-icon-filter-unselected-font "  title="Filter" ></span>
             </div>
         </div>
     </div>
     <div class="relative logs-tabl">
-        
+
         <table-template class="table-container log-table-container relative" [message]="errMessage" [state]="loadingState" (refreshData)="refreshData($event)" [type]="'accordian'" [header]="tableHeader" (onFilter)="onFilter($event)" (onSort)="onSort($event)" [showPaginationtable]="paginationSelected"  (paginatePage)="paginatePage($event)" [totalPageNum]="totalPagesTable">
             <div class="table-row-wrp" *ngFor="let row of logs; let i = index" [class.expanded]="row.expanded">
                 <div class="table-row" (click)="onRowClicked(row, i)">

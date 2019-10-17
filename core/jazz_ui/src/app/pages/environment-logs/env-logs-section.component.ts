@@ -545,12 +545,10 @@ export class EnvLogsSectionComponent implements OnInit {
 		if(response&&response.data&&response.data.assets){
 			this.assetsNameArray.push(response);
 			let assets=_(response.data.assets).map('asset_type').uniq().value();
-
-			// TODO: Consider hoisting to member or configuration
-			const filterWhitelist = [
+			const filterWhitelist = [	
 				'lambda',
+				'apigateway'	
 			];
-
 			assets = assets.filter(item => filterWhitelist.includes(item));
 			 let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 			 validAssetList.splice(0, 0, 'all');
@@ -593,15 +591,17 @@ export class EnvLogsSectionComponent implements OnInit {
 						if(this.totalPagesTable === 1){
 							 this.paginationSelected = false;
 						}
-					}
-					else {
-						this.totalPagesTable = 0;
-					}
-					this.backupLogs = this.logs;
-					this.sort = new Sort(this.logs);
-					this.loadingState = 'default';
-					this.trim_Message();
+						else {
+							this.totalPagesTable = 0;
+						}
+						this.backupLogs = this.logs;
+						this.sort = new Sort(this.logs);
+						this.loadingState = 'default';
+						this.trim_Message();
 
+					} else {
+						this.loadingState = 'empty';
+					}
 				} else {
 					this.loadingState = 'empty';
 						}

@@ -170,6 +170,15 @@ node ()  {
 
         sh "sed -i s!{swagger_editor}!${config_loader.JAZZ.SWAGGER.EDITOR_URL}!g ./src/environments/environment.oss.ts"
 
+        /* If Azure extension is present, then UI will support azure related components*/
+        if(config_loader.AZURE && config_loader.AZURE.IS_ENABLED instanceof Boolean && config_loader.AZURE.IS_ENABLED){
+          sh "sed -i 's/{azure_enabled}/${config_loader.AZURE.IS_ENABLED}/g' ./src/environments/environment.oss.ts"
+          sh "sed -i 's/{azure_account_number}/${config_loader.AZURE.DEFAULTS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
+          sh "sed -i 's/{azure_region}/${config_loader.AZURE.DEFAULTS.REGION}/g' ./src/environments/environment.oss.ts"
+        } else {
+          sh "sed -i 's/{azure_enabled}/false/g' ./src/environments/environment.oss.ts"
+        }
+
         /* Getting the accounts and regions */
         def accountMap = [:];
         def eachAccountMap = [];
@@ -193,11 +202,13 @@ node ()  {
         def uiAccountMap = JsonOutput.toJson(eachAccountMap)
         sh "sed -i 's/{accountMap}/${uiAccountMap}/g' ./src/environments/environment.oss.ts"
 
-        /* Getting the deployment targets */
-        sh "sed -i 's/{api_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.API_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{default_region}/${config_loader.AWS.DEFAULTS.REGION}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{default_account}/${config_loader.AWS.DEFAULTS.ACCOUNTID}/g' ./src/environments/environment.oss.ts"
 
-        sh "sed -i 's/{function_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.FUNCTION_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
-        sh "sed -i 's/{website_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.WEBSITE_DEPLOYMENT_TARGETS}/g' ./src/environments/environment.oss.ts"
+        /* Getting the deployment targets */
+        sh "sed -i 's/{api_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.DEPLOYMENT_TARGETS.API}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{function_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.DEPLOYMENT_TARGETS.FUNCTION}/g' ./src/environments/environment.oss.ts"
+        sh "sed -i 's/{website_deployment_targets}/${config_loader.UI_CONFIG.CREATE_SERVICE.DEPLOYMENT_TARGETS.WEBSITE}/g' ./src/environments/environment.oss.ts"
 
         def uiConfig = JsonOutput.toJson(config_loader.UI_CONFIG)
         def importUICommand = "sed -i 's/{INSTALLER_VARS}/$uiConfig/g' ./src/environments/environment.oss.ts"
@@ -225,7 +236,7 @@ node ()  {
       rm -rf node_modules
       npm install
       ng set --global warnings.versionMismatch=false
-      ng build --env=oss --${environment} --aot=false
+      ng build --env=oss --${environment} --aot
       cd ..
       """
     }
