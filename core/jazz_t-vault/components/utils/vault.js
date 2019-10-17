@@ -128,7 +128,7 @@ function deleteSafe(safename, configData, vaultToken, onComplete) {
       const message = { "message": `Safe ${safename} deleted successfully.` };
       return onComplete(null, message);
     } else {
-      logger.error("Error in deleting safe details: " + JSON.stringify(error));
+      logger.error("Error in deleting safe: " + JSON.stringify(error));
       return onComplete({
         "error": `Error in deleting safe with safe name ${safename}: ${response.body.errors}`
       });
