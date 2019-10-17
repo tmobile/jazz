@@ -266,7 +266,7 @@ function buildRequest(config, body) {
   let kSigning = hmac(kService, 'aws4_request');
 
   let reqPayload = {
-    url: `${endpoint}:${config.ES_PORT}/_bulk`,
+    url: `${endpoint}/_bulk`,
     method: 'POST',
     body: body,
     headers: {
