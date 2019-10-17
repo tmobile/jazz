@@ -124,7 +124,7 @@ function deleteSafe(safename, configData, vaultToken, onComplete) {
   request(payload, function (error, response, body) {
     logger.debug("deleteSafe response: " + JSON.stringify(response));
     if (response.statusCode && response.statusCode === 200) {
-      logger.debug("Successfully deleted safe details: " + JSON.stringify(body));
+      logger.debug("Successfully deleted safe. Response: " + JSON.stringify(body));
       const message = { "message": `Safe ${safename} deleted successfully.` };
       return onComplete(null, message);
     } else {
