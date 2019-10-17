@@ -1,0 +1,12 @@
+{
+  "disabled": false,
+  "bindings": [
+    {
+      "name": "myEvent",
+      "type": "blobTrigger",
+      "direction": "in",
+      "path": "{resource_name}/{name}",
+      "connection": ""
+    }
+  ]
+}

@@ -121,7 +121,7 @@ function getApiLogsData(payload) {
     "index": {}
   };
   action.index._index = indexName;
-  action.index._type = data.environment;
+  action.index._type = "apilogs";
   action.index._id = data.request_id;
 
   if (data.request_id && data.servicename) {
@@ -212,7 +212,7 @@ function getLambdaLogsData(payload) {
           "index": {}
         };
         action.index._index = indexName;
-        action.index._type = data.environment;
+        action.index._type = "applicationlogs";
         action.index._id = logEvent.id;
 
         bulkRequestBody += [
@@ -253,7 +253,8 @@ function transform(payload) {
   });
 }
 
-function buildRequest(endpoint, body) {
+function buildRequest(config, body) {
+  let endpoint = config.ES_ENDPOINT;
   let endpointParts = endpoint.match(/^([^\.]+)\.?([^\.]*)\.?([^\.]*)\.amazonaws\.com$/);
   let region = endpointParts[2];
   let service = endpointParts[3];
@@ -264,10 +265,9 @@ function buildRequest(endpoint, body) {
   let kService = hmac(kRegion, service);
   let kSigning = hmac(kService, 'aws4_request');
 
-  let request = {
-    host: endpoint,
+  let reqPayload = {
+    url: `${endpoint}:${config.ES_PORT}/_bulk`,
     method: 'POST',
-    path: '/_bulk',
     body: body,
     headers: {
       'Content-Type': 'application/json',
@@ -278,16 +278,16 @@ function buildRequest(endpoint, body) {
     }
   };
 
-  let canonicalHeaders = Object.keys(request.headers)
+  let canonicalHeaders = Object.keys(reqPayload.headers)
     .sort(function (a, b) {
       return a.toLowerCase() < b.toLowerCase() ? -1 : 1;
     })
     .map(function (k) {
-      return k.toLowerCase() + ':' + request.headers[k];
+      return k.toLowerCase() + ':' + reqPayload.headers[k];
     })
     .join('\n');
 
-  let signedHeaders = Object.keys(request.headers)
+  let signedHeaders = Object.keys(reqPayload.headers)
     .map(function (k) {
       return k.toLowerCase();
     })
@@ -295,11 +295,11 @@ function buildRequest(endpoint, body) {
     .join(';');
 
   let canonicalString = [
-    request.method,
-    request.path, '',
+    reqPayload.method,
+    reqPayload.path, '',
     canonicalHeaders, '',
     signedHeaders,
-    hash(request.body, 'hex'),
+    hash(reqPayload.body, 'hex'),
   ].join('\n');
 
   let credentialString = [date, region, service, 'aws4_request'].join('/');
@@ -311,14 +311,13 @@ function buildRequest(endpoint, body) {
     hash(canonicalString, 'hex')
   ].join('\n');
 
-  request.headers.Authorization = [
+  reqPayload.headers.Authorization = [
     'AWS4-HMAC-SHA256 Credential=' + process.env.AWS_ACCESS_KEY_ID + '/' + credentialString,
     'SignedHeaders=' + signedHeaders,
     'Signature=' + hmac(kSigning, stringToSign, 'hex')
   ].join(', ');
 
-  logger.debug("request from build request" + JSON.stringify(request));
-  return request;
+  return reqPayload;
 }
 
 

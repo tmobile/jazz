@@ -135,7 +135,8 @@
     "python2.7",
     "python3.6",
     "java8",
-    "go1.x"
+    "go1.x",
+    "c#"
   ],
   "TYPE_FIELD_KEY": "type",
   "SERVICE_INTER_DEPENDENT_FIELDS_MAP": [
@@ -167,5 +168,9 @@
         }
       ]
     }
+  ],
+  "PROVIDER_LIST": [
+    "aws",
+    "azure"
   ]
 }

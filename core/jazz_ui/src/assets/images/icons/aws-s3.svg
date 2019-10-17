@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="40px" height="48px" viewBox="0 0 40 48" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 55.2 (78181) - https://sketchapp.com -->
+    <title>aws-s3</title>
+    <desc>Created with Sketch.</desc>
+    <g id="Create-Service" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="jazz_2019-0530_create-service-website-framework-1" transform="translate(-1096.000000, -2299.000000)" fill-rule="nonzero">
+            <g id="Content" transform="translate(794.000000, 141.000000)">
+                <g id="Sec-deets-Copy" transform="translate(0.000000, 1893.000000)">
+                    <g id="Type-of-service-Copy-4" transform="translate(0.000000, 215.000000)">
+                        <g id="runtime-copy" transform="translate(0.000000, 34.000000)">
+                            <g id="S3" transform="translate(282.000000, 0.000000)">
+                                <g id="aws-s3" transform="translate(20.000000, 16.000000)">
+                                    <polyline id="Path" fill="#8C3123" points="2.98207056 8 0 9.53491279 0 36.4740163 2.98207056 38 3 37.9778261 3 8.02113221 2.98207056 8"></polyline>
+                                    <polyline id="Path" fill="#E05243" points="20 34.0899458 3 38 3 8 20 11.8247812 20 34.0899458"></polyline>
+                                    <polyline id="Path" fill="#8C3123" points="12 28.1600041 19.905942 29 19.9555884 28.9044434 20 18.0845633 19.905942 18 12 18.8278752 12 28.1600041"></polyline>
+                                    <polyline id="Path" fill="#8C3123" points="20 34.1265894 36.9732844 38 37 37.959979 36.9995258 8.02677987 36.972652 8 20 11.8676083 20 34.1265894"></polyline>
+                                    <polyline id="Path" fill="#E05243" points="28 28.1600041 20 29 20 18 28 18.8278752 28 28.1600041"></polyline>
+                                    <polyline id="Path" fill="#5E1F18" points="29 13.7684575 21.4989589 15 14 13.7684575 21.4895087 12 29 13.7684575"></polyline>
+                                    <polyline id="Path" fill="#F2B0A9" points="29 33.5876917 21.4989589 32 14 33.5876917 21.489829 36 29 33.5876917"></polyline>
+                                    <polyline id="Path" fill="#8C3123" points="12 14 19.9357586 12.1903136 20 12.1720387 20 0.0488893352 19.9357586 0 12 3.65701599 12 14"></polyline>
+                                    <polyline id="Path" fill="#E05243" points="28 14 20 12.1903136 20 0 28 3.65701599 28 14"></polyline>
+                                    <polyline id="Path" fill="#8C3123" points="19.8839872 48 12 44.3438665 12 34 19.8839872 35.8092433 20 35.931557 19.9685132 47.7889581 19.8839872 48"></polyline>
+                                    <path d="M20,48 L27.3164901,44.3392794 L27.3164901,33.9824354 L20,35.7939486 L20,48 M36.7761945,8 L40,9.61318829 L40,37.9260974 L36.7761945,39.5386601 L36.7761945,8" id="Shape" fill="#E05243"></path>
+                                </g>
+                            </g>
+                        </g>
+                    </g>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

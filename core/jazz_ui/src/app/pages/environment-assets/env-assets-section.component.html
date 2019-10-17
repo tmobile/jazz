@@ -7,7 +7,7 @@
         <div class="loading-row" [class.show]="isLoading">
             <div class="loading-circle"></div>
         </div>
-        
+
             <div class='feedback-text-wrap' [class.invisible]="isLoading || feedbackRes">
                 <p>Found a problem with the site? Please use the form below to describe the issue and we will fix it soon.</p>
                 <textarea rows="5" cols="50" type="text" name='userFeedback' id="userFeedback" placeholder="Report your issue here" [(ngModel)]="model.userFeedback"  #userFeedback='ngModel'></textarea>
@@ -73,8 +73,8 @@
                 </div>
               </div>
               <div class='table-wrapper height-100 flex-grow'>
-                  <table-template *ngIf="envResponseTrue && assetListbyType" class="table-container"  
-                      [header]="tableHeader" [showPaginationtable]="false" 
+                  <table-template *ngIf="envResponseTrue && assetListbyType" class="table-container"
+                      [header]="tableHeader" [showPaginationtable]="false"
                        (paginatePage)="paginatePage($event)" [totalPageNum]="totalPageNum" (onSort)="sortTablebyKey($event)"
                        [isSort]="false">
                           <div class="table-row relative" [class.hide]="envResponseEmpty" *ngFor="let row of assetListbyType[currentType['key']] | orderBy : { property: sortkey, direction: direction}; let i = index;"  >
