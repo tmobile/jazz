@@ -30,7 +30,6 @@
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
-    text-transform: capitalize;
     &:hover {
       background-color: #ed008c;
       color: #fff;
@@ -64,5 +63,4 @@
   width: 100%;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-transform: capitalize;
 }
