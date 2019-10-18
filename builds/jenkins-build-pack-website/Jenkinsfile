@@ -40,22 +40,18 @@ node()  {
   try {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
-
-	echo "Build Pack website params: " + params
+	
+	echo "Build triggered via branch: " + params.scm_branch + " with params: " + params
 
 	def branch = params.scm_branch
 	def domain = params.domain
 	def service = params.service_name
-	def repo_name = params.service_name
+	def repo_name = domain + "_" + params.service_name
 	def requestId = params.request_id
 	def gitCommitOwner
 	def gitCommitHash
 	def accountDetails
 	def accountDetailsPrimary
-
-	if (domain && domain != "") {
-		repo_name = params.domain + "_" + params.service_name
-	}
 
 	def current_environment
 	stage('Checkout code base') {

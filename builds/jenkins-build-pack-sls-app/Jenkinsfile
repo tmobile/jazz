@@ -41,20 +41,16 @@ node() {
   def jazzBuildModuleURL = getBuildModuleUrl()
   loadBuildModules(jazzBuildModuleURL)
 
-  echo "Build triggered via branch: " + params.scm_branch + " with params " + params
+	echo "Build triggered via branch: " + params.scm_branch + " with params: " + params
   def _event = ""
 
   def branch = params.scm_branch
-  def repo_name = params.service_name
+  def domain = params.domain
+  def repo_name = domain + "_" + params.service_name
+
   def gitCommitOwner
   def gitCommitHash
   def context_map
-
-  if (domain && domain != "") {
-    repo_name = params.domain + "_" + params.service_name
-  }
-
-  def domain = params.domain
 
   accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
@@ -69,7 +65,7 @@ node() {
     sh 'pwd'
 
     def repocloneUrl
-    if (domain && domain == "jazz") {
+    if (domain == "jazz") {
       repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
     } else {
       auth_token = setCredentials()

@@ -46,29 +46,25 @@ node() {
 
   g_base_url_for_swagger = "http://${configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/"
 
-  echo "Build triggered via branch: " + params.scm_branch
+	echo "Build triggered via branch: " + params.scm_branch + " with params: " + params
 
-  def branch = params.scm_branch
-  def repo_name = params.service_name
   def requestId = params.request_id
+  def branch = params.scm_branch
+  def domain = params.domain
+  def repo_name = domain + "_" + params.service_name
+  
   def gitCommitOwner
   def gitCommitHash
   def context_map
   def accountDetails
   def accountDetailsPrimary
 
-  if (domain && domain != "") {
-    repo_name = params.domain + "_" + params.service_name
-  }
-
-  def domain = params.domain
-
   stage('Checkout code base') {
     sh 'rm -rf ' + repo_name
     sh 'mkdir ' + repo_name
 
     def repocloneUrl
-    if (domain && domain == "jazz") {
+    if (domain == "jazz") {
       repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
     } else {
       repocloneUrl = scmModule.getRepoCloneUrl(repo_name)
@@ -88,7 +84,7 @@ node() {
     if (configObj.service_id) {
       config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
     } else {
-      error "Service Id is not available."
+      error "Service id is not available."
     }
   }
   if(config['provider'] == 'aws'){
@@ -166,7 +162,7 @@ node() {
       loadServerlessConfig(config)
     }
 
-    if (domain && domain == "jazz") {
+    if (domain == "jazz") {
       stage('Update Service Template'){
         echo "Inside Update service template"
         try {
@@ -310,7 +306,7 @@ node() {
 
           }
 
-        } else {
+        } else if (servicePlatform == 'aws'){
           withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
             def randomString = utilModule.generateRequestId();
             credsId = "jazz-${randomString}";
@@ -432,7 +428,7 @@ node() {
               def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
               send_status_email('COMPLETED', svc_status)
 
-              if (domain && domain == "jazz") {
+              if (domain == "jazz") {
                 serviceConfigdata.setLogStreamPermission(config)
               }
             }
