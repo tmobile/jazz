@@ -144,6 +144,7 @@ function getLambdaLogsData(payload) {
   data.provider = "aws";
   data.request_id = getInfo(payload.logEvents, config.PATTERNS.lambda_request_id);
   if (data.request_id) {
+    data.asset_identifier = payload.logGroup.split(config.PATTERNS.asset_identifier_key)[1];
     let lastSubstring = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment, 2);
     if (lastSubstring === "prod" || lastSubstring === "stg" || lastSubstring === "dev") {
       if (lastSubstring === "dev") {
@@ -154,8 +155,7 @@ function getLambdaLogsData(payload) {
         data.environment = lastSubstring;
         domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service, 1);
       }
-    } else {
-      data.asset_identifier = lastSubstring
+    } else {      
       let environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_in_slsapp, 2);
       if (environment === "dev") {
         let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev_in_slsapp, 2);

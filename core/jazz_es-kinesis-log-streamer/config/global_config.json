@@ -18,6 +18,7 @@
     "lambda_domain_service_in_slsapp": "^/aws/lambda/{stack_prefix}-(.+)-(.+)-(.+)$",
     "lambda_ref_id": "x-amzn-RequestId=([^,]+)",
     "method_req_headers": "Method request headers: (.+)",
+    "asset_identifier_key": "/aws/lambda/",
     "origin": ", origin=([^,]+)",
     "host": ", Host=([^,]+)",
     "user_agent": ", User-Agent=([^,]+)",
