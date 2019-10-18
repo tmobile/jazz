@@ -198,22 +198,27 @@ node  {
 				sh "echo 'service_id: $service_id' >> ./deployment-env.yml"
 
 				// Replacing template specific keys in the code
-				if (service_config['type'] == "sls-app" && service_config['runtime'].startsWith("go")) {
-					echo "Updating go template in the serveless app"
-					def dirPath = pwd()
-					dirs = readDir()
-					def size = dirs.size()
-					if (size > 0) {
-						for (item in dirs) {
-							def functionpath = "./${item}"
-							sh "sed -i -- 's/sls-api-template-go/${repo_name}/g' ${functionpath}/main.go"
+				if (service_config['type'] == "sls-app") {
+					// write user provided deployment descriptor to file which will be checked in
+					// using writeFile instead of writeYaml as the deployment descriptor is already valid YAML
+					writeFile(file:"./serverless.yml",text:deployment_descriptor)
+					if (service_config['runtime'].startsWith("go")) {
+						echo "Updating go template in the serveless app"
+						def dirPath = pwd()
+						dirs = readDir()
+						def size = dirs.size()
+						if (size > 0) {
+							for (item in dirs) {
+								def functionpath = "./${item}"
+								sh "sed -i -- 's/sls-app-template-go/${repo_name}/g' ${functionpath}/main.go"
+							}
+						} else {
+							echo "No functions found.. Skipping code updates to the template!"
 						}
-					} else {
-						echo "No functions found.. Skipping code updates to the template!"
 					}
 				}
 			}
-		}
+		}								
 		catch (ex) {
 			events.sendFailureEvent('MODIFY_TEMPLATE', 'Failed to update template: ' + ex.getMessage(), context_map)
 			sendStatusEmailNotification("FAILED")
