@@ -584,7 +584,6 @@ def buildSlsApp(String runtime, String repo_name) {
       python3 -m venv virtualenv
       . virtualenv/bin/activate
       pip3 install pytest
-      pytest --pyargs functions/*
       """
     } else {
       // create virtual environment and install pytest
@@ -593,7 +592,6 @@ def buildSlsApp(String runtime, String repo_name) {
       virtualenv venv
       . venv/bin/activate
       pip install pytest
-      pytest --pyargs functions/*
       """
     }
 	} else if (runtime.indexOf("go") > -1 ) {
