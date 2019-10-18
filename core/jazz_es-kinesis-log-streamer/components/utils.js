@@ -255,7 +255,7 @@ function transform(payload) {
 
 function buildRequest(config, body) {
   let endpoint = config.ES_ENDPOINT;
-  let endpointParts = endpoint.match(/^([^\.]+)\.?([^\.]*)\.?([^\.]*)\.amazonaws\.com$/);
+  let endpointParts = endpoint.match(/^([^\.]+)\.?([^\.]*)\.?([^\.]*)\.amazonaws\.com/);
   let region = endpointParts[2];
   let service = endpointParts[3];
   let datetime = (new Date()).toISOString().replace(/[:\-]|\.\d{3}/g, '');
@@ -271,7 +271,6 @@ function buildRequest(config, body) {
     body: body,
     headers: {
       'Content-Type': 'application/json',
-      'Host': endpoint,
       'Content-Length': Buffer.byteLength(body),
       'X-Amz-Security-Token': process.env.AWS_SESSION_TOKEN,
       'X-Amz-Date': datetime
