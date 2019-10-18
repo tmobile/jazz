@@ -78,7 +78,6 @@ module.exports = (formats) => {
 		"requestLoad": request_payload,
 		"setStartDate": set_startdate,
 		"setQuery": set_query,
-		"setFilterQuery": set_filter_query,
 		"setLogLevelQuery": set_log_level_query,
 		"toTimestamp": to_timestamp,
 		"responseModel": response_model
