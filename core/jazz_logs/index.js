@@ -99,10 +99,9 @@ module.exports.handler = (event, context, cb) => {
       querys.push(utils.setQuery("environment", env));
 
       //Query to filter Control messages
-      let filterQuerys = [];
-      filterQuerys.push(utils.setFilterQuery("message", "START*"));
-      filterQuerys.push(utils.setFilterQuery("message", "END*"));
-      filterQuerys.push(utils.setFilterQuery("message", "REPORT*"));
+      querys.push(utils.setQuery("!message", "START*"));
+      querys.push(utils.setQuery("!message", "END*"));
+      querys.push(utils.setQuery("!message", "REPORT*"));
 
       if (logType) {
         var log_type_config = [];
@@ -134,7 +133,7 @@ module.exports.handler = (event, context, cb) => {
 
       var req = utils.requestLoad;
       req.url = config.KIBANA_URL + "/elasticsearch/_msearch";
-      req.body = setRequestBody(servCategory, querys, filterQuerys, startTime, endTime, size, page);
+      req.body = setRequestBody(servCategory, querys, startTime, endTime, size, page);
 
       request(req, function (err, res, body) {
         logger.debug("Response from ES : " + JSON.stringify(res));
@@ -185,7 +184,7 @@ module.exports.handler = (event, context, cb) => {
     return cb(JSON.stringify(errorHandler.throwInternalServerError("Exception occured while processing the request : " + JSON.stringify(e))));
   }
 
-  function setRequestBody(category, querys, filterQuerys, startTime, endTime, size, page) {
+  function setRequestBody(category, querys, startTime, endTime, size, page) {
     var index = {
       "index": category,
       "ignore_unavailable": true
@@ -197,7 +196,8 @@ module.exports.handler = (event, context, cb) => {
       "from": page,
       "sort": [{
         "timestamp": {
-          "order": "desc"
+          "order": "desc",
+          "unmapped_type": "date"
         }
       }],
       "query": {
@@ -212,7 +212,7 @@ module.exports.handler = (event, context, cb) => {
                 }
               }
             }],
-          "must_not": [filterQuerys, {
+          "must_not": [{
             "match": {
               "application_logs_id": {
                 "query": "_incomplete_req"

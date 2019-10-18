@@ -50,22 +50,16 @@ var set_query = function (type, value) {
 	return query;
 };
 
-var set_filter_query = function (type, value) {
-	let query = { "match_phrase": {} };
-	query.match_phrase[type] = { "query": value };
-	return query;
-};
-
 var set_log_level_query = function (LOG_LEVEL_CONFIG, type, value) {
 	var query = {
 		"query_string": {
-			"query": type + ":(" + value
+			"query": type + ":(" + value.toUpperCase()
 		}
 	};
 	var requestedLogType = LOG_LEVEL_CONFIG.filter(configObject => configObject.Type === value);
 	if (requestedLogType[0]) {
 		LOG_LEVEL_CONFIG.map(function (configObject) {
-			if (configObject.Level <= parseInt(requestedLogType[0].Level)) {
+			if (configObject.Level < parseInt(requestedLogType[0].Level)) {
 				query.query_string.query = query.query_string.query + " OR " + configObject.Type.toUpperCase();
 			}
 		});
@@ -84,7 +78,6 @@ module.exports = (formats) => {
 		"requestLoad": request_payload,
 		"setStartDate": set_startdate,
 		"setQuery": set_query,
-		"setFilterQuery": set_filter_query,
 		"setLogLevelQuery": set_log_level_query,
 		"toTimestamp": to_timestamp,
 		"responseModel": response_model
