@@ -114,6 +114,7 @@ function sendEmail(config, userInput) {
 			from: userInput.from,
 			to: userInput.to,
 			cc: userInput.cc,
+			bcc: userInput.bcc,
 			subject: userInput.subject,
 			text: userInput.text,
 			html: userInput.html

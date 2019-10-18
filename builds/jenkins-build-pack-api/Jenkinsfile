@@ -46,29 +46,25 @@ node() {
 
   g_base_url_for_swagger = "http://${configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/"
 
-  echo "Build triggered via branch: " + params.scm_branch
+	echo "Build triggered via branch: " + params.scm_branch + " with params: " + params
 
-  def branch = params.scm_branch
-  def repo_name = params.service_name
   def requestId = params.request_id
+  def branch = params.scm_branch
+  def domain = params.domain
+  def repo_name = domain + "_" + params.service_name
+  
   def gitCommitOwner
   def gitCommitHash
   def context_map
   def accountDetails
   def accountDetailsPrimary
 
-  if (domain && domain != "") {
-    repo_name = params.domain + "_" + params.service_name
-  }
-
-  def domain = params.domain
-
   stage('Checkout code base') {
     sh 'rm -rf ' + repo_name
     sh 'mkdir ' + repo_name
 
     def repocloneUrl
-    if (domain && domain == "jazz") {
+    if (domain == "jazz") {
       repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
     } else {
       repocloneUrl = scmModule.getRepoCloneUrl(repo_name)
@@ -88,7 +84,7 @@ node() {
     if (configObj.service_id) {
       config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
     } else {
-      error "Service Id is not available."
+      error "Service id is not available."
     }
   }
   if(config['provider'] == 'aws'){
@@ -166,7 +162,7 @@ node() {
       loadServerlessConfig(config)
     }
 
-    if (domain && domain == "jazz") {
+    if (domain == "jazz") {
       stage('Update Service Template'){
         echo "Inside Update service template"
         try {
@@ -193,7 +189,7 @@ node() {
     stage('Pre-Build Validation') {
       try {
         events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation started', context_map, environment_logical_id)
-        send_status_email(config, 'STARTED', "")
+        send_status_email('STARTED', '')
         if (servicePlatform != 'azure') {
           validateDeploymentConfigurations(config)
           validateSwaggerSpec()
@@ -310,7 +306,7 @@ node() {
 
           }
 
-        } else {
+        } else if (servicePlatform == 'aws'){
           withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
             def randomString = utilModule.generateRequestId();
             credsId = "jazz-${randomString}";
@@ -430,9 +426,9 @@ node() {
               swaggerDocUrl = "${g_base_url_for_swagger}${domain}/${service}/${environment_logical_id}/swagger.json"
 
               def svc_status = "Your service endpoint for ${current_environment} environment: ${endpointUrl} \n\nView and test your API here: ${configLoader.JAZZ.SWAGGER.EDITOR_URL}${swaggerDocUrl}"
-              send_status_email(config, 'COMPLETED', svc_status)
+              send_status_email('COMPLETED', svc_status)
 
-              if (domain && domain == "jazz") {
+              if (domain == "jazz") {
                 serviceConfigdata.setLogStreamPermission(config)
               }
             }
@@ -499,10 +495,9 @@ def updateSwagger(){
                 sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
 
                 sh "aws s3 cp swagger/ s3://${configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --profile ${primaryCredsId} --region ${config.region} --recursive "
-				        echo "completed deployment........."
 
                 } catch(ex){
-                send_status_email(config, 'FAILED', '')
+                send_status_email('FAILED', '')
                 events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
                 events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
                 events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
@@ -1105,7 +1100,7 @@ def updatePolicy(env, destARN){
               sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
 
             } catch(ex){
-              send_status_email(config, 'FAILED', '')
+              send_status_email('FAILED', '')
               events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
               events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
               events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
@@ -1155,59 +1150,42 @@ def setCredentials() {
 }
 
 /**
-* Send email to the recipient with the build status and any additional text content
-* Supported build status values = STARTED, FAILED & COMPLETED
-* @return
-*/
-def send_status_email(config, build_status, email_content) {
-  if (domain != "jazz") {
-    echo "Sending build notification to ${config['created_by']}"
-    def body_subject = ''
-    def body_text = ''
-    def cc_email = ''
-    def body_html = ''
-    if (build_status == 'STARTED') {
-      echo "email status started"
-      body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + config['service']
-    } else if (build_status == 'FAILED') {
-      echo "email status failed"
-      def build_url = env.BUILD_URL + 'console'
-      body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + config['service']
-      body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
-    } else if (build_status == 'COMPLETED') {
-      body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + config['service']
-    } else {
-      echo "Unsupported build status, nothing to email.."
-      return
-    }
-    if (email_content != '') {
-      body_text = body_text + '\n\n' + email_content
-    }
-    def fromStr = 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>'
-    body = JsonOutput.toJson([
-      from : fromStr,
-      to : config['created_by'],
-      subject : body_subject,
-      text : body_text,
-      cc : cc_email,
-      html : body_html
-    ])
+ * Send email to the recipient with the build status and any additional text content
+ * Supported build status values = STARTED, FAILED & COMPLETED
+ * @return
+ */
+def send_status_email (build_status, email_content) {
+  echo "Sending build notification to ${config['created_by']}"
+	// TODO: Use this to make the notification look better?
+	def body_html = ''
+	def body_subject = "[Jazz Build Notification] Deployment ${build_status} for your service: ${config['service']}"
+	def body_text =  'View the complete build log here: ' + env.BUILD_URL + 'console'
+  	if (email_content != '') {
+    	body_text = email_content + '\n\n' + body_text
+	}
+	body = JsonOutput.toJson([
+		from: 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>',
+		to: config['created_by'],
+		subject: body_subject,
+		text: body_text,
+		bcc: configLoader.JAZZ.STACK_ADMIN,
+		html: body_html
+	])
 
-    try {
-      def sendMail = sh(script: "curl -X POST \
-					${g_base_url}/jazz/email \
-					-k -v -H \"Authorization: $auth_token\" \
-					-H \"Content-Type: application/json\" \
-					-d \'${body}\'", returnStdout: true).trim()
-      def responseJSON = parseJson(sendMail)
-      if (responseJSON.data) {
-        echo "successfully sent e-mail to ${config['created_by']}"
-      } else {
-        echo "exception occured while sending e-mail: $responseJSON"
-      }
-    } catch (e) {
-      echo "Failed while sending build status notification"
-    }
+	try {
+		def sendMail = sh(script: "curl -X POST \
+						${g_base_url}/jazz/email \
+						-k -v -H \"Authorization: $auth_token\" \
+						-H \"Content-Type: application/json\" \
+						-d \'${body}\'", returnStdout: true).trim()
+    def responseJSON = parseJson(sendMail)
+		if (responseJSON.data) {
+			echo "successfully sent e-mail to ${config['created_by']}"
+		} else {
+			echo "exception occured while sending e-mail: $responseJSON"
+		}
+	} catch (e) {
+    echo "Failed while sending build status notification  " + e.toString()
   }
 }
 

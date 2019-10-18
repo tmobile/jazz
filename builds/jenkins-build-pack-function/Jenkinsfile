@@ -40,24 +40,20 @@ node() {
   def jazzBuildModuleURL = getBuildModuleUrl()
   loadBuildModules(jazzBuildModuleURL)
 
-  echo "Build triggered via branch: " + params.scm_branch + " with params " + params
+	echo "Build triggered via branch: " + params.scm_branch + " with params: " + params
   def _event = ""
 
-  def branch = params.scm_branch
-  def repo_name = params.service_name
   def requestId = params.request_id
+  def branch = params.scm_branch
+  def domain = params.domain
+  def repo_name = domain + "_" + params.service_name
+  
   def gitCommitOwner
   def gitCommitHash
   def context_map
   def accountDetails
   def accountDetailsPrimary
-
-  if (domain && domain != "") {
-    repo_name = params.domain + "_" + params.service_name
-  }
-
-  def domain = params.domain
-
+  
   stage('Checkout code base') {
 
     sh 'rm -rf ' + repo_name
@@ -65,7 +61,7 @@ node() {
     sh 'pwd'
 
     def repocloneUrl
-    if (domain && domain == "jazz") {
+    if (domain == "jazz") {
       repocloneUrl = scmModule.getCoreRepoCloneUrl(repo_name)
     } else {
       repocloneUrl = scmModule.getRepoCloneUrl(repo_name)
@@ -113,7 +109,7 @@ node() {
   def coreDomain = "jazz";
   def jazz_prod_api_id = awsAPIGatewayModule.getApigatewayInfoCore('PROD', coreDomain, accountDetailsPrimary);
   g_base_url = "https://${jazz_prod_api_id}.execute-api.${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/prod"
-  if(domain && domain != "jazz"){
+  if(domain != "jazz"){
     auth_token = setCredentials()
   }
 
@@ -192,7 +188,7 @@ node() {
 
       loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
     }
-    if (domain && domain == "jazz") {
+    if (domain == "jazz") {
       stage('Update Service Template') {
         echo "Inside Update service template"
         try {
@@ -205,10 +201,10 @@ node() {
     stage('Pre-Build Validation') {
       events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation started', context_map, environment_logical_id)
       try {
-        send_status_email(config, 'STARTED', "")
+        send_status_email('STARTED', '')
         validateDeploymentConfigurations(config)
       } catch (ex) {
-        send_status_email(config, 'FAILED', "")
+        send_status_email('FAILED', '')
         events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map, environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
         error ex.getMessage()
@@ -234,7 +230,7 @@ node() {
     stage('Build') {
       events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
       try {
-        buildLambda(runtime, repo_name)
+        buildFunction(runtime, repo_name)
       } catch (ex) {
         events.sendFailureEvent('BUILD', ex.getMessage(), context_map, environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
@@ -260,7 +256,7 @@ node() {
       
       def logicalId
       def credsId = null
-      if (servicePlatform && servicePlatform == 'azure') {
+      if (servicePlatform == 'azure') {
         timestamps {
           if (environment_logical_id == "prod") {
             logicalId = config['service_id'].substring(0, 7) + environment_logical_id
@@ -294,113 +290,113 @@ node() {
         }
         return
       }
-      withCredentials([
-        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
-      ]) {
+      else if (servicePlatform == 'aws') {
+        withCredentials([
+          [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+          try {
+            // initialize aws credentials
+            def randomString = utilModule.generateRequestId();
+            credsId = "jazz-${randomString}";
+            sh "aws configure set profile.${credsId}.region ${service_config.region}"
+            sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+            sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-        try {
-          // initialize aws credentials
-          def randomString = utilModule.generateRequestId();
-          credsId = "jazz-${randomString}";
-          sh "aws configure set profile.${credsId}.region ${service_config.region}"
-          sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-          sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+            loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
 
-          loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
+            // Generate serverless yml file with domain added in function name
+            echo "Generate deployment env with domain"
 
-          // Generate serverless yml file with domain added in function name
-          echo "Generate deployment env with domain"
-
-          if (isScheduleEnabled) {
-            def eventsArns = getEventsArn(config, environment_logical_id, credsId)
-            for (def i = 0; i < eventsArns.size(); i++) {
-              def arn = eventsArns[i]
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], arn, "cloudwatch_event", config), environment_logical_id);
+            if (isScheduleEnabled) {
+              def eventsArns = getEventsArn(config, environment_logical_id, credsId)
+              for (def i = 0; i < eventsArns.size(); i++) {
+                def arn = eventsArns[i]
+                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], arn, "cloudwatch_event", config), environment_logical_id);
+              }
             }
-          }
 
-          writeServerlessFile(config, environment_logical_id, accountDetails)
+            writeServerlessFile(config, environment_logical_id, accountDetails)
 
-          def envBucketKey = "${env_key}${configLoader.JAZZ.PLATFORM.AWS.S3.BUCKET_NAME_SUFFIX}"
-          echoServerlessFile()
-          def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId, env_key, accountDetails)
+            def envBucketKey = "${env_key}${configLoader.JAZZ.PLATFORM.AWS.S3.BUCKET_NAME_SUFFIX}"
+            echoServerlessFile()
+            def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId, env_key, accountDetails)
 
-          if (deployOutput != 'success') {
-            if (config['event_source_s3']) {
-              handleS3BucketError(deployOutput, config['event_source_s3'], environment_logical_id, envBucketKey, isEventSchdld, credsId, accountDetails, config)
-            } else if (config['event_source_sqs']) {
-              handleSqsError(deployOutput, config, environment_logical_id, envBucketKey, credsId, accountDetails)
-            } else if (config['event_source_kinesis']) {
-              handleKinesisStreamError(deployOutput, config['event_source_kinesis'], environment_logical_id, envBucketKey, credsId, accountDetails, config)
-            } else if (config['event_source_dynamodb']) {
-              handleDynamoDbStreamError(deployOutput, config, environment_logical_id, envBucketKey, credsId, accountDetails)
+            if (deployOutput != 'success') {
+              if (config['event_source_s3']) {
+                handleS3BucketError(deployOutput, config['event_source_s3'], environment_logical_id, envBucketKey, isEventSchdld, credsId, accountDetails, config)
+              } else if (config['event_source_sqs']) {
+                handleSqsError(deployOutput, config, environment_logical_id, envBucketKey, credsId, accountDetails)
+              } else if (config['event_source_kinesis']) {
+                handleKinesisStreamError(deployOutput, config['event_source_kinesis'], environment_logical_id, envBucketKey, credsId, accountDetails, config)
+              } else if (config['event_source_dynamodb']) {
+                handleDynamoDbStreamError(deployOutput, config, environment_logical_id, envBucketKey, credsId, accountDetails)
+              } else {
+                handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId, accountDetails, config)
+              }
             } else {
-              handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId, accountDetails, config)
+              if (config['event_source_s3']) {
+                def bucket_arn = "arn:aws:s3:::${config['event_source_s3']}"
+                def s3_bucket_arn = lambdaEvents.getEventResourceNamePerEnvironment(bucket_arn, environment_logical_id, "-")
+                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], s3_bucket_arn, "s3", config), environment_logical_id);
+              } else if (config['event_source_sqs']) {
+                def event_source_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_sqs'], environment_logical_id, "_")
+                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], event_source_sqs_arn, "sqs", config), environment_logical_id);
+              } else if (config['event_source_kinesis']) {
+                def event_source_kinesis_stream_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_kinesis'], environment_logical_id, "_")
+                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], event_source_kinesis_stream_arn, "kinesis_stream", config), environment_logical_id);
+              } else if (config['event_source_dynamodb']) {
+                def dynamodbTableName = lambdaEvents.splitAndGetResourceName(config['event_source_dynamodb'], environment_logical_id)
+                def stream_details = lambdaEvents.getDynamoDbStreamDetails(dynamodbTableName)
+                def event_source_dynamodb_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_dynamodb'], environment_logical_id, "_")
+                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], event_source_dynamodb_arn, "dynamodb", config), environment_logical_id);
+                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], stream_details.StreamArn, "dynamodb_stream", config), environment_logical_id);
+              }
             }
-          } else {
-            if (config['event_source_s3']) {
-              def bucket_arn = "arn:aws:s3:::${config['event_source_s3']}"
-              def s3_bucket_arn = lambdaEvents.getEventResourceNamePerEnvironment(bucket_arn, environment_logical_id, "-")
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], s3_bucket_arn, "s3", config), environment_logical_id);
-            } else if (config['event_source_sqs']) {
-              def event_source_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_sqs'], environment_logical_id, "_")
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], event_source_sqs_arn, "sqs", config), environment_logical_id);
-            } else if (config['event_source_kinesis']) {
-              def event_source_kinesis_stream_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_kinesis'], environment_logical_id, "_")
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], event_source_kinesis_stream_arn, "kinesis_stream", config), environment_logical_id);
-            } else if (config['event_source_dynamodb']) {
-              def dynamodbTableName = lambdaEvents.splitAndGetResourceName(config['event_source_dynamodb'], environment_logical_id)
-              def stream_details = lambdaEvents.getDynamoDbStreamDetails(dynamodbTableName)
-              def event_source_dynamodb_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_dynamodb'], environment_logical_id, "_")
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], event_source_dynamodb_arn, "dynamodb", config), environment_logical_id);
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], stream_details.StreamArn, "dynamodb_stream", config), environment_logical_id);
+
+            def function_arn = getLambdaARN(stackName, credsId);
+            lambdaARN = function_arn.split(":(?!.*:.*)")[0]
+            events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], lambdaARN, "lambda", config), environment_logical_id);
+
+            echo "lambdaARN: ${lambdaARN}"
+
+            if (isLambdaUpdateRequired) {
+              def event_source_s3 = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_s3'], environment_logical_id, "-")
+              lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, event_source_s3, config['event_action_s3'], credsId)
             }
+
+            if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3']) {
+              def role_name = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+              def role_arn = lambdaEvents.getRoleArn(role_name, credsId)
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], role_arn, "iam_role", config), environment_logical_id);
+            }
+
+            if (domain != "jazz") {
+              createSubscriptionFilters(config, env_key, credsId, accountDetails);
+            }
+
+            if(!accountDetails.PRIMARY){
+              def primaryAccountData = utilModule.getAccountInfoPrimary();
+              def primaryAccountValue = primaryAccountData.ACCOUNTID;
+              def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+
+              addPermission(lambdaFnNameValue, primaryAccountValue, credsId, config);
+            }
+
+            if (domain == "jazz") {
+              serviceConfigdata.setLogStreamPermission(config)
+              serviceConfigdata.setKinesisStream(config)
+            }
+
+          } catch (ex) {
+            handleFail(ex, context_map, environment_logical_id, config, gitCommitHash)
+          } finally {
+            // reset Credentials
+            resetCredentials(credsId)
           }
-
-          def function_arn = getLambdaARN(stackName, credsId);
-          lambdaARN = function_arn.split(":(?!.*:.*)")[0]
-          events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], lambdaARN, "lambda", config), environment_logical_id);
-
-          echo "lambdaARN: ${lambdaARN}"
-
-          if (isLambdaUpdateRequired) {
-            def event_source_s3 = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_s3'], environment_logical_id, "-")
-            lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, event_source_s3, config['event_action_s3'], credsId)
-          }
-
-          if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3']) {
-            def role_name = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-            def role_arn = lambdaEvents.getRoleArn(role_name, credsId)
-            events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], role_arn, "iam_role", config), environment_logical_id);
-          }
-
-          if (domain != "jazz") {
-            createSubscriptionFilters(config, env_key, credsId, accountDetails);
-          }
-
-          if(!accountDetails.PRIMARY){
-            def primaryAccountData = utilModule.getAccountInfoPrimary();
-            def primaryAccountValue = primaryAccountData.ACCOUNTID;
-            def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-
-            addPermission(lambdaFnNameValue, primaryAccountValue, credsId, config);
-          }
-
-          if (domain && domain == "jazz") {
-            serviceConfigdata.setLogStreamPermission(config)
-            serviceConfigdata.setKinesisStream(config)
-          }
-
-        } catch (ex) {
-          handleFail(ex, context_map, environment_logical_id, config, gitCommitHash)
-        } finally {
-          // reset Credentials
-          resetCredentials(credsId)
-        }
-        environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
-        def svc_response = echoServiceInfo(environment_logical_id)
-        sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response)
-      } //end of withCredentials
+          environmentDeploymentMetadata.setEnvironmentEndpoint(lambdaARN)
+          def svc_response = echoServiceInfo(environment_logical_id)
+          sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response)
+        } //end of withCredentials
+      }
     } //end of deployment to an environment
   }
   } catch (err) {
@@ -416,7 +412,7 @@ private void sendFinalCompleteEvent(env_key, servicePlatform, environment_logica
   echo "==============================================================================================="
   echo svc_response
   echo "==============================================================================================="
-  send_status_email(config, 'COMPLETED', svc_response)
+  send_status_email('COMPLETED', svc_response)
   events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null), environment_logical_id)
   events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion Event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
   // TODO: Replace DEPLOY_TO_AWS => DEPLOY_TO_CLOUD??
@@ -425,7 +421,7 @@ private void sendFinalCompleteEvent(env_key, servicePlatform, environment_logica
 
 def handleFail(ex, context_map, environment_logical_id, config, gitCommitHash) {
   echo "error: $ex"
-  send_status_email(config, 'FAILED', '')
+  send_status_email('FAILED', '')
   events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
   events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
   // TODO: Replace DEPLOY_TO_AWS => DEPLOY_TO_CLOUD??
@@ -649,7 +645,7 @@ def LoadConfiguration() {
 
 /**	Build project based on runtime
  */
-def buildLambda(String runtime, String repo_name) {
+def buildFunction(String runtime, String repo_name) {
   echo "installing dependencies for $runtime"
   if (runtime.indexOf("nodejs") > -1) {
 		sh "npm install --save"
@@ -822,23 +818,19 @@ def echoServiceInfo(String env) {
     echo "Deployment info:"
     sh "serverless --stage $env info -v > deploy-info.txt"
 
-    def arn = "unknown"
-    def svc_response = "unknown"
+    def svc_response = ''
     def result = readFile('deploy-info.txt').trim()
     def resultList = result.tokenize("\n")
 
     for (item in resultList) {
       if (item.startsWith("HandlerLambdaFunctionQualifiedArn")) {
-        arn = item.trim().substring(35)
+        def arn = item.trim().substring(35)
         version = arn.tokenize(':').last()
         arn = arn.substring(0, arn.length() - version.length() - 1)
-
-        svc_response = "Your service endpoint: " + arn
+        svc_response = "Function ARN: " + arn
       }
     }
-
     return svc_response
-
   } catch (Exception ex) {
     echo "Error while getting service info: " + ex.getMessage()
   }
@@ -923,7 +915,7 @@ def updatePolicy(env, destARN){
               sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
 
             } catch(ex){
-              send_status_email(config, 'FAILED', '')
+              send_status_email('FAILED', '')
               events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
               events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
               events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
@@ -1059,55 +1051,38 @@ def setCredentials() {
  * Supported build status values = STARTED, FAILED & COMPLETED
  * @return
  */
-def send_status_email(config, build_status, email_content) {
-  if (domain != "jazz") {
-    echo "Sending build notification to ${config['created_by']}"
-    def body_subject = ''
-    def body_text = ''
-    def cc_email = ''
-    def body_html = ''
-    if (build_status == 'STARTED') {
-      echo "email status started"
-      body_subject = 'Jazz Build Notification: Deployment STARTED for service: ' + config['service']
-    } else if (build_status == 'FAILED') {
-      echo "email status failed"
-      def build_url = env.BUILD_URL + 'console'
-      body_subject = 'Jazz Build Notification: Deployment FAILED for service: ' + config['service']
-      body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
-    } else if (build_status == 'COMPLETED') {
-      body_subject = 'Jazz Build Notification: Deployment COMPLETED successfully for service: ' + config['service']
-    } else {
-      echo "Unsupported build status, nothing to email.."
-      return
-    }
-    if (email_content != '') {
-      body_text = body_text + '\n\n' + email_content
-    }
-    def fromStr = 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>'
-    body = JsonOutput.toJson([
-      from: fromStr,
-      to: config['created_by'],
-      subject: body_subject,
-      text: body_text,
-      cc: cc_email,
-      html: body_html
-    ])
+def send_status_email (build_status, email_content) {
+  echo "Sending build notification to ${config['created_by']}"
+	// TODO: Use this to make the notification look better?
+	def body_html = ''
+	def body_subject = "[Jazz Build Notification] Deployment ${build_status} for your service: ${config['service']}"
+	def body_text =  'View the complete build log here: ' + env.BUILD_URL + 'console'
+  	if (email_content != '') {
+    	body_text = email_content + '\n\n' + body_text
+	}
+	body = JsonOutput.toJson([
+		from: 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>',
+		to: config['created_by'],
+		subject: body_subject,
+		text: body_text,
+		bcc: configLoader.JAZZ.STACK_ADMIN,
+		html: body_html
+	])
 
-    try {
-      def sendMail = sh(script: "curl -X POST \
-					${g_base_url}/jazz/email \
-					-k -v -H \"Authorization: $auth_token\" \
-					-H \"Content-Type: application/json\" \
-					-d \'${body}\'", returnStdout: true).trim()
-      def responseJSON = parseJson(sendMail)
-      if (responseJSON.data) {
-        echo "successfully sent e-mail to ${config['created_by']}"
-      } else {
-        echo "exception occured while sending e-mail: $responseJSON"
-      }
-    } catch (e) {
-      echo "Failed while sending build status notification"
-    }
+	try {
+		def sendMail = sh(script: "curl -X POST \
+						${g_base_url}/jazz/email \
+						-k -v -H \"Authorization: $auth_token\" \
+						-H \"Content-Type: application/json\" \
+						-d \'${body}\'", returnStdout: true).trim()
+    	def responseJSON = parseJson(sendMail)
+		if (responseJSON.data) {
+			echo "successfully sent e-mail to ${config['created_by']}"
+		} else {
+			echo "exception occured while sending e-mail: $responseJSON"
+		}
+	} catch (e) {
+    echo "Failed while sending build status notification: " + e.toString()
   }
 }
 

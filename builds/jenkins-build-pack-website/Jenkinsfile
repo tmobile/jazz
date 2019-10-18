@@ -40,22 +40,18 @@ node()  {
   try {
 	def jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
-
-	echo "Build Pack website params: " + params
+	
+	echo "Build triggered via branch: " + params.scm_branch + " with params: " + params
 
 	def branch = params.scm_branch
 	def domain = params.domain
 	def service = params.service_name
-	def repo_name = params.service_name
+	def repo_name = domain + "_" + params.service_name
 	def requestId = params.request_id
 	def gitCommitOwner
 	def gitCommitHash
 	def accountDetails
 	def accountDetailsPrimary
-
-	if (domain && domain != "") {
-		repo_name = params.domain + "_" + params.service_name
-	}
 
 	def current_environment
 	stage('Checkout code base') {
@@ -938,51 +934,36 @@ def setCredentials() {
  * @return
  */
 def send_status_email (build_status, email_content) {
-  echo "Sending build notification to ${service_config['created_by']}"
-	def body_subject = ''
-	def body_text = ''
-	def cc_email = ''
+  	echo "Sending build notification to ${service_config['created_by']}"
+	// TODO: Use this to make the notification look better?
 	def body_html = ''
-  if (build_status == 'STARTED') {
-    echo "email status started"
-    body_subject = "Jazz Build Notification: Deployment STARTED for service: ${service_config['service']}"
-  } else if (build_status == 'FAILED') {
-    echo "email status failed"
-    def build_url = env.BUILD_URL + 'console'
-    body_subject = "Jazz Build Notification: Deployment FAILED for service: ${service_config['service']}"
-    body_text = body_text + '\n\nFor more details, please click this link: ' + build_url
-  } else if (build_status == 'COMPLETED') {
-    body_subject = "Jazz Build Notification: Deployment COMPLETED successfully for service: ${service_config['service']}"
-  } else {
-    echo "Unsupported build status, nothing to email.."
-    return
-  }
-  if (email_content != '') {
-    body_text = body_text + '\n\n' + email_content
+	def body_subject = "[Jazz Build Notification] Deployment ${build_status} for your service: ${service_config['service']}"
+	def body_text =  'View the complete build log here: ' + env.BUILD_URL + 'console'
+  	if (email_content != '') {
+    	body_text = email_content + '\n\n' + body_text
 	}
-	def fromStr = 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>'
 	body = JsonOutput.toJson([
-		from : fromStr,
-		to : service_config['created_by'],
-		subject : body_subject,
-		text : body_text,
-		cc : cc_email,
-		html : body_html
+		from: 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>',
+		to: service_config['created_by'],
+		subject: body_subject,
+		text: body_text,
+		bcc: configLoader.JAZZ.STACK_ADMIN,
+		html: body_html
 	])
 
-  try {
+	try {
 		def sendMail = sh(script: "curl -X POST \
 						${g_base_url}/jazz/email \
 						-k -v -H \"Authorization: $auth_token\" \
 						-H \"Content-Type: application/json\" \
 						-d \'${body}\'", returnStdout: true).trim()
-    def responseJSON = parseJson(sendMail)
-    if (responseJSON.data) {
-      echo "successfully sent e-mail to ${service_config['created_by']}"
-    } else {
-      echo "exception occured while sending e-mail: $responseJSON"
-    }
-  } catch (e) {
+    	def responseJSON = parseJson(sendMail)
+		if (responseJSON.data) {
+			echo "successfully sent e-mail to ${service_config['created_by']}"
+		} else {
+			echo "exception occured while sending e-mail: $responseJSON"
+		}
+	} catch (e) {
     echo "Failed while sending build status notification  " + e.toString()
   }
 }
