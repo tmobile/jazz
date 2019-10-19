@@ -278,8 +278,8 @@ function getAssetsDetails(config, eventBody, authToken, serviceId) {
           }
 
           var userStatistics = eventBody.statistics.toLowerCase();
-          if (eventBody.asset_type) {
-            let requiredAsset = apiAssetsArray.filter(asset => (asset.asset_type === eventBody.asset_type));
+          if (eventBody.assetType) {
+            let requiredAsset = apiAssetsArray.filter(asset => (asset.asset_type === eventBody.assetType));
             if (requiredAsset.length){
               let assetsArray = utils.getAssetsObj(requiredAsset, userStatistics);
               resolve(assetsArray);

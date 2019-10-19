@@ -200,7 +200,7 @@ function getAssetsObj(assetsArray, userStatistics) {
     } else {
       // type not found
       newAssetArr.push({
-        "message": `Asset type not found `,
+        "message": `Asset type not found: ${assetType}`,
         "provider": asset.provider,
         "isError": true
       });

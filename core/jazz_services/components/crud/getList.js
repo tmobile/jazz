@@ -123,11 +123,11 @@ module.exports = (query, servicesList, onComplete) => {
               items_formatted = utils.filterUtil(items_formatted, query.filter);
             }
 
-            count = items_formatted.length;
             if (query.limit && query.offset) {
               items_formatted = utils.paginateUtil(items_formatted, parseInt(query.limit), parseInt(query.offset));
             }
 
+            count = items_formatted.length;
             finalList = appendPolicies(items_formatted, servicesList);
 
           }
