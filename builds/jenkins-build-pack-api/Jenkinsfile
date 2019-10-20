@@ -153,12 +153,12 @@ node() {
     def internalAccess = config['require_internal_access']
 
     def roleId
-    if(config['provider'] == 'aws'){
+    if (servicePlatform == 'aws'){
       roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
     }
 
     sonarModule.initialize(configLoader, config, branch)
-    if (servicePlatform != 'azure') {
+    if (servicePlatform == 'aws') {
       loadServerlessConfig(config)
     }
 
@@ -190,7 +190,7 @@ node() {
       try {
         events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation started', context_map, environment_logical_id)
         send_status_email('STARTED', '')
-        if (servicePlatform != 'azure') {
+        if (servicePlatform == 'aws') {
           validateDeploymentConfigurations(config)
           validateSwaggerSpec()
         }
@@ -202,7 +202,7 @@ node() {
       events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
     }
 
-    if (config['domain'] && config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
+    if (config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
       stage('Code Quality Check'){
         events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
         try {
