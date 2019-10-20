@@ -131,8 +131,8 @@
     "inactive"
   ],
   "SERVICE_RUNTIMES": [
+    "nodejs10.x",
     "nodejs8.10",
-    "python2.7",
     "python3.6",
     "java8",
     "go1.x",
