@@ -105,7 +105,7 @@ node  {
 				service_template = "${serviceType}-template-go"
 			} else if (serviceRunTime.startsWith("c#")) {
 				if(provider == "azure"){
-					service_template = "azure-${serviceType}-template-nodejs"
+					service_template = "azure-${serviceType}-template-csharp"
 				} else {
 					// placeholder for aws
 				}
