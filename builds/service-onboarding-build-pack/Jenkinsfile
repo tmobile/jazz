@@ -134,18 +134,17 @@ node  {
 			}  else if (serviceRunTime.startsWith("go")) {
 				service_template = "${serviceType}-template-go"
 			}
-		}
-		} else {			
-			events.sendCompletedEvent('VALIDATE_INPUT', 'Input validation successful', context_map)
-			send_status_email("FAILED")	
-			events.sendFailureEvent('VALIDATE_INPUT', "Invalid service type: ${serviceType}", context_map)	
+		} else {
+			events.sendFailureEvent('VALIDATE_INPUT', "Invalid service type: ${serviceType}", context_map)
+			sendStatusEmailNotification("FAILED")
 			error "Invalid service type ${serviceType}"
-    } else {
-        events.sendFailureEvent('VALIDATE_INPUT', "Invalid runtime: ${service_config['runtime']}", context_map)
-        sendStatusEmailNotification("FAILED")
-        error "Invalid runtime: ${service_config['runtime']}"
-    }
-		events.sendCompletedEvent('VALIDATE_INPUT', 'Input validation successful', context_map)
+		}
+	} else {
+		events.sendFailureEvent('VALIDATE_INPUT', "Invalid runtime: ${service_config['runtime']}", context_map)
+		sendStatusEmailNotification("FAILED")
+		error "Invalid runtime: ${service_config['runtime']}"
+	}
+	events.sendCompletedEvent('VALIDATE_INPUT', 'Input validation successful', context_map)
 	}
 
 	stage('Get Service Template'){
@@ -167,7 +166,7 @@ node  {
                 def serviceMetadataJson = [:]
                 if(service_config['provider'] == 'aws'){
 					def roleARN
-                    if (service_config['domain'] && service_config['domain'] == "jazz") {
+                    if (service_config['domain'] == "jazz") {
                         // allocate platform roles for platform APIs
 						roleARN = platformPrimaryAWSAccountInfo.IAM.PLATFORMSERVICES_ROLEID
 					} else {
