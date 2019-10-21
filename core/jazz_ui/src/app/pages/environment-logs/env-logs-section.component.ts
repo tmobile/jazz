@@ -172,15 +172,7 @@ export class EnvLogsSectionComponent implements OnInit {
 	assetNameFilterWhiteList = [
 		'all',
 		'lambda',
-		'cloudfront',
-		's3',
-		'dynamodb',
-		'sqs',
-		'kinesis',
-		'iam_role',
-		'iam role',
-		'apigateway',
-		'apigee_proxy'
+		'apigateway'
 	];
 
 	getFilter(filterServ){
@@ -562,7 +554,7 @@ export class EnvLogsSectionComponent implements OnInit {
 				 self.assetSelected = validAssetList[0].replace(/_/g, " ");
 			 }
 			 if (this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1) {
-				self.setAssetName(self.assetsNameArray[0].data.assets, self.assetSelected);
+				self.setAssetName(self.responseArray, self.assetSelected);
 			}
 			self.getFilter(self.advancedFilters);
 			self.instance_yes.showAsset = true;
@@ -745,13 +737,14 @@ export class EnvLogsSectionComponent implements OnInit {
 				break;
 			}
 			case "resource" : {
-			this.resourceSelected = event.value;
-			this.payload.asset_identifier = this.resourceSelected;
-			if(this.resourceSelected.toLowerCase() === 'all'){
-				delete this.payload['asset_identifier'];
-			}
-			this.resetPayload();
-			break;
+				this.FilterTags.notifyLogs('filter-Asset-Name', event.value);
+				this.resourceSelected = event.value;
+				this.payload.asset_identifier = this.resourceSelected;
+				if(this.resourceSelected.toLowerCase() === 'all'){
+					delete this.payload['asset_identifier'];
+				}
+				this.resetPayload();
+				break;
 			}
 		}
 	}
