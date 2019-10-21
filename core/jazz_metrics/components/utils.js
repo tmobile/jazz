@@ -190,17 +190,10 @@ function getAssetsObj(assetsArray, userStatistics) {
       };
       assetObj = updateNewAssetObj(newAssetObj, asset);
       newAssetArr.push(assetObj);
-    } else if (assetType) {
+    } else {
       // type not supported
       newAssetArr.push({
         "message": `Metric not supported for asset type: ${assetType}`,
-        "provider": asset.provider,
-        "isError": true
-      });
-    } else {
-      // type not found
-      newAssetArr.push({
-        "message": `Asset type not found `,
         "provider": asset.provider,
         "isError": true
       });
