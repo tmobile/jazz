@@ -41,8 +41,26 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       column: 'View By:',
       label: 'TIME RANGE',
       type: 'select',
-      options: ['Day', 'Week', 'Month', 'Year'],
+      options: [
+        'Last 15 Minutes',
+        'Last 1 Hour',
+        'Last 24 Hours',
+        'Last 7 Days',
+        'Last 30 Days',
+        'Last 3 Months',
+        'Last 12 Months'
+      ],
       values: [
+        {
+          range: moment().subtract(15, 'minute').toISOString(),
+          format: 'hA',
+          unit: 'minute'
+        },
+        {
+          range: moment().subtract(1, 'hour').toISOString(),
+          format: 'hA',
+          unit: 'hour'
+        },
         {
           range: moment().subtract(1, 'day').toISOString(),
           format: 'hA',
@@ -59,21 +77,31 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           unit: 'month'
         },
         {
+          range: moment().subtract(3, 'month').toISOString(),
+          format: 'M/D',
+          unit: 'month'
+        },
+        {
           range: moment().subtract(1, 'year').toISOString(),
           format: 'MMM YYYY',
           unit: 'year'
         }],
-      selected: 'Day'
+      selected: 'Last 24 Hours'
     },
     {
       column: 'View By:',
       label: 'PERIOD',
       type: 'select',
-      options: ['1 Minute', '1 Hour', '1 Day'],
-      values: [moment(0).add(1, 'minute').valueOf() / 1000,
-      moment(0).add(1, 'hour').valueOf() / 1000,
-      moment(0).add(1, 'day').valueOf() / 1000],
-      selected: '1 Minute'
+      options: ['1 Minute', '30 Minutes', '1 Hour', '3 Hours', '15 Hours', '4 Days'],
+      values: [
+        moment(0).add(1, 'minutes').valueOf() / 1000,
+        moment(0).add(30, 'minutes').valueOf() / 1000,
+        moment(0).add(1, 'hour').valueOf() / 1000,
+        moment(0).add(3, 'hour').valueOf() / 1000,
+        moment(0).add(15, 'hour').valueOf() / 1000,
+        moment(0).add(4, 'days').valueOf() / 1000,
+      ],
+      selected: '1 Hour'
     },
     {
       column: 'View By:',
@@ -140,6 +168,9 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
           this.errMessage = this.toastmessage.errorMessage(err, "metricsResponse");
         });
     } else {
+
+      // TODO: Condition prevents hydration of environments filter in some cases
+
       return this.getAssetType()
         .then(() => {
           return (this.applyFilter());
@@ -161,10 +192,11 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   setPeriodFilters() {
     if (this.service.deployment_targets === 'gcp_apigee') {
       const periodFilterIndex = this.formFields.findIndex(formField => formField.label === 'PERIOD');
-      this.formFields[periodFilterIndex].options = ['1 Minutes', '1 Hour', '1 Day'];
-      this.formFields[periodFilterIndex].values = [moment(0).add(1, 'minute').valueOf() / 1000,
-      moment(0).add(1, 'hour').valueOf() / 1000,
-      moment(0).add(1, 'day').valueOf() / 1000,
+      this.formFields[periodFilterIndex].options =  ['1 Minutes', '3 Hours', '1 Day'];
+      this.formFields[periodFilterIndex].values = [
+        moment(0).add(1, 'minute').valueOf() / 1000,
+        moment(0).add(3, 'hour').valueOf() / 1000,
+        moment(0).add(1, 'day').valueOf() / 1000,
       ];
       this.formFields[periodFilterIndex].selected = '1 Minutes';
     }
@@ -174,12 +206,13 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     }
     if (this.platform == 'azure'){
       const azPeriodFilterIndex = this.formFields.findIndex(formField => formField.label === 'PERIOD');
-      this.formFields[azPeriodFilterIndex].options =  ['1 Minutes', '1 Hour', '1 Day'];
-      this.formFields[azPeriodFilterIndex].values = [moment(0).add(1, 'minute').valueOf() / 1000,
-        moment(0).add(1, 'hour').valueOf() / 1000,
-        moment(0).add(1, 'day').valueOf() / 1000
+      this.formFields[azPeriodFilterIndex].options =  ['1 Minutes', '3 Hours', '1 Day'];
+      this.formFields[azPeriodFilterIndex].values = [
+        moment(0).add(1, 'minute').valueOf() / 1000,
+        moment(0).add(3, 'hour').valueOf() / 1000,
+        moment(0).add(1, 'day').valueOf() / 1000,
       ];
-      this.formFields[azPeriodFilterIndex].selected =  '1 Hour';
+      this.formFields[azPeriodFilterIndex].selected =  '3 Hours';
 
       const azPAggFilterIndex = this.formFields.findIndex(formField => formField.label === 'AGGREGATION');
       this.formFields[azPAggFilterIndex].options =  ['Total'];
@@ -382,81 +415,138 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         let index = this.findIndexOfObjectWithKey(this.formFields, 'label', 'PERIOD');
         if (this.service.deployment_targets === 'gcp_apigee') {
           switch (changedFilter.selected) {
-            case 'Day': {
-              this.formFields[index].options = ['1 Minutes', '1 Hour', '1 Day'];
-              this.formFields[index].values = [
-                moment(0).add(1, 'minute').valueOf() / 1000,
-                moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(1, 'day').valueOf() / 1000,];
-              this.filters.changeFilter('1 Minutes', this.formFields[index]);
+            case 'Last 15 Minutes':{
+              this.formFields[index].options =  ['1 Minute', '3 Hours', '1 Day'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'minute').valueOf() / 1000,
+                  moment(0).add(1, 'hour').valueOf() / 1000,
+                  moment(0).add(1, 'day').valueOf() / 1000,];
+              this.filters.changeFilter('1 Minute',this.formFields[index]);
               break;
             }
-            case 'Week': {
-              this.formFields[index].options = ['1 Hour', '1 Day', '7 Days'];
-              this.formFields[index].values = [
-                moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,];
-              this.filters.changeFilter('1 Hour', this.formFields[index]);
+            case 'Last 1 Hour':{
+              this.formFields[index].options =  ['1 Minute', '3 Hours', '1 Day'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'minute').valueOf() / 1000,
+                  moment(0).add(1, 'hour').valueOf() / 1000,
+                  moment(0).add(1, 'day').valueOf() / 1000,];
+              this.filters.changeFilter('1 Minute',this.formFields[index]);
               break;
             }
-            case 'Month': {
-              this.formFields[index].options = ['1 Day', '7 Days', '30 Days'];
-              this.formFields[index].values = [
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,
-                moment(0).add(30, 'day').valueOf() / 1000];
-              this.filters.changeFilter('1 Day', this.formFields[index]);
+            case 'Last 24 Hours':{
+              this.formFields[index].options =  ['1 Minutes', '3 Hours', '1 Day'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'minute').valueOf() / 1000,
+                  moment(0).add(1, 'hour').valueOf() / 1000,
+                  moment(0).add(1, 'day').valueOf() / 1000,];
+              this.filters.changeFilter('1 Minutes',this.formFields[index]);
               break;
             }
-            case 'Year': {
-              this.formFields[index].options = ['1 Day', '7 Days', '30 Days'];
-              this.formFields[index].values = [
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,
-                moment(0).add(30, 'day').valueOf() / 1000];
-              this.filters.changeFilter('1 Day', this.formFields[index]);
+            case 'Last 7 Days':{
+              this.formFields[index].options =  ['3 Hours', '1 Day', '7 Days'];
+              this.formFields[index].values =  [
+                  moment(0).add(3, 'hours').valueOf() / 1000,
+                  moment(0).add(1, 'day').valueOf() / 1000,
+                  moment(0).add(7, 'day').valueOf() / 1000,];
+              this.filters.changeFilter('3 Hours',this.formFields[index]);
+              break;
+            }
+            case 'Last 30 Days':{
+              this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'day').valueOf() / 1000,
+                  moment(0).add(7, 'day').valueOf() / 1000,
+                  moment(0).add(30, 'day').valueOf() / 1000];
+              this.filters.changeFilter('1 Day',this.formFields[index]);
+              break;
+            }
+            case 'Last 3 Months':{
+              this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'day').valueOf() / 1000,
+                  moment(0).add(7, 'day').valueOf() / 1000,
+                  moment(0).add(30, 'day').valueOf() / 1000];
+              this.filters.changeFilter('7 Days',this.formFields[index]);
+              break;
+            }
+            case 'Last 12 Months':{
+              this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'day').valueOf() / 1000,
+                  moment(0).add(7, 'day').valueOf() / 1000,
+                  moment(0).add(30, 'day').valueOf() / 1000];
+              this.filters.changeFilter('7 Days',this.formFields[index]);
               break;
             }
           }
         }
         else {
           switch (changedFilter.selected) {
-            case 'Day': {
-              this.formFields[index].options = ['1 Minutes', '1 Hour', '1 Day'];
-              this.formFields[index].values = [
-                moment(0).add(1, 'minute').valueOf() / 1000,
-                moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(1, 'day').valueOf() / 1000,];
-              this.filters.changeFilter('1 Minutes', this.formFields[index]);
+            case 'Last 15 Minutes':{
+              this.formFields[index].options =  ['1 Minute', '3 Hours', '1 Day'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'minute').valueOf() / 1000,
+                  moment(0).add(1, 'hour').valueOf() / 1000,
+                  moment(0).add(1, 'day').valueOf() / 1000,];
+              this.filters.changeFilter('1 Minute',this.formFields[index]);
               break;
             }
-            case 'Week': {
-              this.formFields[index].options = ['1 Hour', '1 Day', '7 Days'];
-              this.formFields[index].values = [
-                moment(0).add(1, 'hour').valueOf() / 1000,
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,];
-              this.filters.changeFilter('1 Hour', this.formFields[index]);
+            case 'Last 1 Hour':{
+              this.formFields[index].options =  ['1 Minute', '3 Hours', '1 Day'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'minute').valueOf() / 1000,
+                  moment(0).add(1, 'hour').valueOf() / 1000,
+                  moment(0).add(1, 'day').valueOf() / 1000,];
+              this.filters.changeFilter('1 Minute',this.formFields[index]);
               break;
             }
-            case 'Month': {
-              this.formFields[index].options = ['1 Day', '7 Days', '30 Days'];
-              this.formFields[index].values = [
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,
-                moment(0).add(30, 'day').valueOf() / 1000];
-              this.filters.changeFilter('1 Day', this.formFields[index]);
+            case 'Last 24 Hours':{
+              this.formFields[index].options =  ['1 Minutes', '3 Hours', '6 Hour', '1 Day'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'minute').valueOf() / 1000,
+                  moment(0).add(1, 'hour').valueOf() / 1000,
+                  moment(0).add(6, 'hour').valueOf() / 1000,
+                  moment(0).add(1, 'day').valueOf() / 1000,];
+              this.filters.changeFilter('1 Minutes',this.formFields[index]);
+              break;
+            }
+            case 'Last 7 Days':{
+              this.formFields[index].options =  ['3 Hours', '1 Day',  '6 Hour', '7 Days'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'hour').valueOf() / 1000,
+                  moment(0).add(6, 'hour').valueOf() / 1000,
+                  moment(0).add(1, 'day').valueOf() / 1000,
+                  moment(0).add(7, 'day').valueOf() / 1000,];
+              this.filters.changeFilter('3 Hours',this.formFields[index]);
+              break;
+            }
+            case 'Last 30 Days':{
+              this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'day').valueOf() / 1000,
+                  moment(0).add(7, 'day').valueOf() / 1000,
+                  moment(0).add(30, 'day').valueOf() / 1000];
+              this.filters.changeFilter('1 Day',this.formFields[index]);
               break;
 
             }
-            case 'Year': {
-              this.formFields[index].options = ['1 Day', '7 Days', '30 Days'];
-              this.formFields[index].values = [
-                moment(0).add(1, 'day').valueOf() / 1000,
-                moment(0).add(7, 'day').valueOf() / 1000,
-                moment(0).add(30, 'day').valueOf() / 1000];
-              this.filters.changeFilter('1 Day', this.formFields[index]);
+            case 'Last 3 Months':{
+              this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'day').valueOf() / 1000,
+                  moment(0).add(7, 'day').valueOf() / 1000,
+                  moment(0).add(30, 'day').valueOf() / 1000];
+              this.filters.changeFilter('7 Days',this.formFields[index]);
+              break;
+
+            }
+            case 'Last 12 Months':{
+              this.formFields[index].options =  ['1 Day', '7 Days', '30 Days'];
+              this.formFields[index].values =  [
+                  moment(0).add(1, 'day').valueOf() / 1000,
+                  moment(0).add(7, 'day').valueOf() / 1000,
+                  moment(0).add(30, 'day').valueOf() / 1000];
+              this.filters.changeFilter('7 Days',this.formFields[index]);
               break;
             }
           }
@@ -593,11 +683,11 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       this.filters.removeField('Filter By:', 'ASSET NAME');
       const filterIndex = _.findIndex(this.filters.form.columns, {'label': "Filter By:"});
        if ( filterIndex > -1) {
-          if(_.findIndex(this.filters.form.columns[filterIndex].fields, {'label': 'METHOD'}) === -1) {
-            this.filters.addField('Filter By:', 'METHOD', methods, null);
-          }
           if(_.findIndex(this.filters.form.columns[filterIndex].fields, {'label': 'PATH'}) === -1) {
             this.filters.addField('Filter By:', 'PATH', paths);
+          }
+          if(_.findIndex(this.filters.form.columns[filterIndex].fields, {'label': 'METHOD'}) === -1) {
+            this.filters.addField('Filter By:', 'METHOD', methods, null);
           }
         }
       } else if (this.assetSelected === 'lambda') {
@@ -640,7 +730,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     } else {
       this.selectedMetric = this.selectedAsset.metrics[0]
     }
-    this.selectedMetricDisplayName = this.renameFieldService.getDisplayNameOfKey(this.selectedMetric.metric_name.toLowerCase()) || this.selectedMetric.metric_name; 
+    this.selectedMetricDisplayName = this.renameFieldService.getDisplayNameOfKey(this.selectedMetric.metric_name.toLowerCase()) || this.selectedMetric.metric_name;
     this.graphData = this.selectedMetric && this.formatGraphData(this.selectedMetric.datapoints);
   }
 
