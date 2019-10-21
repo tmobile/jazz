@@ -661,7 +661,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       });
 
     let timeRange = this.filters.getFieldValueOfLabel('TIME RANGE');
-    this.aggregation = this.filters.getFieldValueOfLabel('AGGREGATION') == 'sum' ? 'Sum': 'Avg.';
+    this.aggregation = this.filters.getFieldValueOfLabel('AGGREGATION') === 'Sum' ? 'Sum': 'Avg.';
     this.ylegend = this.selectedMetricDisplayName  + ' (' + this.aggregation + ')';
     let options = {
       tooltipXFormat: 'MMM DD YYYY, h:mm a',
