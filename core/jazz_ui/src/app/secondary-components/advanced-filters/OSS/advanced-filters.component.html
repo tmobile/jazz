@@ -53,16 +53,8 @@
                         <div class="eachFilter slider-wrap" *ngIf='advanced_filter_input.time_range.show'>
                             <div><div class='hori-line'></div>TIME RANGE</div>
                             <dropdown class="dropdown-3" title="Select range" [dropdwnContent]="rangeList" [selected]="selectedTimeRange" (onSelected)="onRangeListSelected($event)"></dropdown>
-                            <div class='eachFilter'>
-                            <div><div class='hori-line'></div>PERIOD</div>
-                               <dropdown class="dropdown-3" title="Select period" [dropdwnContent]="timePeriodList" [selected]="selectedTimePeriod" (onSelected)="onTimePeriodSelected($event)"></dropdown>
-                            </div>
                         </div>
 
-                        <div class="eachFilter" *ngIf='advanced_filter_input.period.show'>
-                            <div><div class='hori-line'></div>PERIOD</div>
-                            <dropdown class="dropdown-3" title="Select period" [dropdwnContent]="periodList" [selected]="periodSelected" (onSelected)="onPeriodSelected($event)"></dropdown>
-                        </div>
                         <div class="eachFilter" *ngIf='advanced_filter_input.statistics.show'>
                             <div><div class='hori-line'></div>STATISTICS</div>
                             <dropdown class="dropdown-2" title="Select statistics" [dropdwnContent]="statisticList" [selected]="statisticSelected" (onSelected)="onStatisticSelected($event)"></dropdown>

@@ -51,6 +51,7 @@ import { SafeUrlPipe } from "../core/pipes/safe-url.pipe";
 import { ReportIssueComponent } from '../primary-components/report-issue/report-issue.component';
 import { ChartjsLinegraphComponent } from "../secondary-components/chartjs-linegraph/chartjs-linegraph.component";
 import { FilterModalComponent } from "../secondary-components/filter-modal/filter-modal.component";
+import { FilterMetricsComponent } from '../secondary-components/filter-metrics/filter-metrics.component';
 import { ServiceMetricsComponent } from "../pages/service-metrics/service-metrics.component";
 import { MetricsCarouselComponent } from "../secondary-components/metrics-carousel/metrics-carousel.component";
 import { RouterModule } from "@angular/router";
@@ -110,6 +111,7 @@ import { CopyElementComponent } from '../secondary-components/copy-element/copy-
     MetricsCarouselComponent,
     ChartjsLinegraphComponent,
     FilterModalComponent,
+    FilterMetricsComponent,
     ServiceMetricsComponent,
     RadioCheckboxComponent,
     RadioGroupComponent,
@@ -162,6 +164,7 @@ import { CopyElementComponent } from '../secondary-components/copy-element/copy-
     MetricsCarouselComponent,
     ChartjsLinegraphComponent,
     FilterModalComponent,
+    FilterMetricsComponent,
     ServiceMetricsComponent,
     Error403Component,
     RadioCheckboxComponent,
