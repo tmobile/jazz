@@ -1187,7 +1187,7 @@ def loadServerlessYml(config, env){
 	//Get deployment descriptor from environments
   env_deployment_descriptor = environmentMetadataLoader.getEnvDeploymentDescriptor()
   try {
-    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader, env_deployment_descriptor) // Generating the deployment descriptor
+    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader, env_deployment_descriptor, accountInfo) // Generating the deployment descriptor
 	  echo "prepareServerlessYml = ${deploymentDescriptor}"
 	  writeYaml(file: './serverless.yml', data: deploymentDescriptor)
     return true

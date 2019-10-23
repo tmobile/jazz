@@ -152,7 +152,7 @@ node() {
     sh "[[ -e serverless.yml ]] && cp serverless.yml application.yml || true"
 
     // if neither exist serverless.yml or application.yml - create it from environment config 
-    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, environment_logical_id, configLoader, env_deployment_descriptor) // Generating the deployment descriptor
+    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, environment_logical_id, configLoader, env_deployment_descriptor, accountDetails) // Generating the deployment descriptor
     echo "prepareServerlessYml => ${deploymentDescriptor}"
     sh "rm -rf ./serverless.yml"
     writeYaml(file: './serverless.yml', data: deploymentDescriptor)
@@ -166,10 +166,6 @@ node() {
         send_status_email('FAILED', '')
         events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map, environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-        def stackTraceElements = ex.stackTrace
-        stackTraceElements.each { element ->
-          echo "stack: ${element.toString()}"
-        }
         error ex.getMessage()
       }
       events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
