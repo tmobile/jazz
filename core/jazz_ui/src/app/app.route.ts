@@ -35,6 +35,10 @@ export const routes: Routes = [
     loadChildren: 'app/service-module/service.module#ServiceModule'
   },
   {
+    path: 'docs/api',
+    loadChildren: 'app/docs/docs.module#DocsModule'
+  },
+  {
     path: 'user-journey',
     component: UserJourneyComponent
   },

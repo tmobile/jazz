@@ -1,9 +1,26 @@
 <div class="dropdown" dropdown [dropdownToggle]="false" (onOpen)="onDropdownOpen()" (onClose)="onDropdownClose()">
     <button type="button" [class.drop-btn]='IsEnvList' class="btn dropdown-btn dropdown-toggle" dropdown-open>
-        <span class="padding-right">{{selected}}</span>
+        <div class="selected-item padding-right" title="{{selected}}">{{selected}}</div>
         <span class="caret"></span>
     </button>
     <ul class="dropdown-menu" [class.drop-menu]='IsEnvList' aria-labelledby="dLabel">
-        <li *ngFor="let option of dropdwnContent" (click)="onDropdownClick(option)" value="{{option}}"><a>{{option}}</a></li>
+        <li *ngFor="let option of dropdwnContent" (click)="onDropdownClick(option)" value="{{option}}">
+            <div *ngIf="rtl" class="absolute tooltip">
+                <div>
+                    {{option}}
+                </div>
+            </div>
+            <a
+              *ngIf="!rtl"
+              [ngClass]="{'selected': selected === option, 'rtl': rtl}"
+              title="{{option}}">
+              {{option}}
+            </a>
+            <a
+              *ngIf="rtl"
+              [ngClass]="{'selected': selected === option, 'rtl': rtl}">
+              {{option}}
+            </a>
+          </li>
     </ul>
 </div>

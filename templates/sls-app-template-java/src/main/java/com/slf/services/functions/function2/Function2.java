@@ -5,7 +5,9 @@ import java.util.Map;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.slf.exceptions.BadRequestException;
+import com.slf.exceptions.InternalServerErrorException;
 import com.slf.model.Response;
+
 import org.apache.log4j.Logger;
 
 /**
@@ -32,12 +34,18 @@ public class Function2 extends BaseRequestHandler {
 			throw new BadRequestException("Invalid or empty input payload");
 		}
 
-    logger.info("Sample log for function2");
+		try {
+			configObject.loadConfig();
+		} catch (Exception ex) {
+			throw new InternalServerErrorException("Could not load env properties file: " + ex.getMessage());
+		}
+
+    	logger.info("Sample log for function2");
         /* Sample output data */
 		HashMap<String, String> data = new HashMap<String, String>();
 		String val = (String) body.get("key");
 		data.put("name", val);
-    data.put("config_key", configObject.getConfig("config_key"));
+    	data.put("config_key", configObject.getConfig("config_key"));
 
 		return new Response(data, this.body);
 	 }

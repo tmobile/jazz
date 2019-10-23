@@ -455,6 +455,7 @@ actions:
 
 plugins:
   - serverless-webpack
+  - serverless-offline
   - serverless-appsync-plugin
   - serverless-step-functions
   - serverless-plugin-warmup
@@ -462,11 +463,13 @@ plugins:
   - serverless-plugin-canary-deployments
   - serverless-mocha-plugin
   - serverless-kms-secrets
+  - serverless-plugin-log-subscription
+  - '@silvermine/serverless-plugin-cloudfront-lambda-edge'
 
 arnTemplate:
   - AWS::Lambda::Function: "arn:aws:lambda:{region}:{account-id}:function:{resourceName}"
   - AWS::S3::Bucket: "arn:aws:s3:::{resourceName}"
-  - AWS::IAM::Role: "arn:aws:iam::{account-id}:{resourceName}"
+  - AWS::IAM::Role: "arn:aws:iam::{account-id}:role/{resourceName}"
   - AWS::DynamoDB::Table: "arn:aws:dynamodb:{region}:{account-id}:table/{resourceName}"
   - AWS::Kinesis::Stream: "arn:aws:kinesis:{region}:{account-id}:stream/{resourceName}"
   - AWS::SQS::Queue: "arn:aws:sqs:{region}:{account-id}:{resourceName}"

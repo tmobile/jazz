@@ -9,9 +9,17 @@
         <div *ngIf='!isError403' class="page-title-wrap hide-for-mobile">
             <div class="title-platform">
             <h1 class="page-hdr bold-title">{{service.name}}</h1>
-            <span class="page-sub-title"><span class="service-platform">{{provider}}</span><span class="service-type">{{service.serviceType}}</span><span *ngIf="service.runtime"> - {{service.runtime}}</span></span>
+            <span class="page-sub-title">
+                <span *ngIf="service.serviceType !== 'sls-app'" class="service-type">
+                    {{service.serviceType}}
+                </span>
+                <span *ngIf="service.serviceType === 'sls-app'" class="service-type">
+                    CUSTOM
+                </span>
+                <span *ngIf="service.runtime"> - {{service.runtime}}</span>
+            </span>
             </div>
-            <div class="image-btn-div">
+            <div class="image-btn-div flex-end">
             <div class="image-container">
                 <img
                   *ngIf="provider ==='azure'"
@@ -29,7 +37,7 @@
         <div *ngIf='!isError403' class='tab-component'>
             <div class="refresh-button" (click)="refreshTab()">
             </div>
-            <tabs [beforeEnv]= "!isENVavailable" [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [isAdminAccess]= "isAdminAccess" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
+            <tabs [beforeEnv]= "!isEnvAvailable" [type]="'service'" [tabData]="tabData" [selectedTab]="selectedTab" [isAdminAccess]= "isAdminAccess" [tabChanged]="tabChanged" (onSelected)="onSelectedDr($event)"></tabs>
 
         </div>
 

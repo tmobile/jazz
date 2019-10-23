@@ -76,6 +76,10 @@ html.jazz {
     -moz-osx-font-smoothing: grayscale;
 }
 
+.redoc-wrap {
+  margin-top: 54px;
+}
+
 
 /*
 .icon-icon-error .path1:before {

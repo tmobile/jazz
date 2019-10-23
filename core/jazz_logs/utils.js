@@ -53,16 +53,17 @@ var set_query = function (type, value) {
 var set_log_level_query = function (LOG_LEVEL_CONFIG, type, value) {
 	var query = {
 		"query_string": {
-			"query": type + ":" + value
+			"query": type + ":(" + value.toUpperCase()
 		}
 	};
 	var requestedLogType = LOG_LEVEL_CONFIG.filter(configObject => configObject.Type === value);
 	if (requestedLogType[0]) {
 		LOG_LEVEL_CONFIG.map(function (configObject) {
-			if (configObject.Level <= parseInt(requestedLogType[0].Level)) {
-				query.query_string.query = query.query_string.query + " OR " + configObject.Type;
+			if (configObject.Level < parseInt(requestedLogType[0].Level)) {
+				query.query_string.query = query.query_string.query + " OR " + configObject.Type.toUpperCase();
 			}
 		});
+		query.query_string.query = query.query_string.query + ")"
 	}
 	return query;
 };

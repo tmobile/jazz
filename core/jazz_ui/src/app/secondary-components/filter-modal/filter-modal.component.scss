@@ -10,6 +10,9 @@
     border-right: 1px solid #eee;
   }
 }
+.slsapp-style{
+  min-width: 300px !important;
+}
 
 .slider-wrap{
   padding-bottom: 1.5rem;
@@ -50,5 +53,15 @@
 
     }
   }
+}
+
+.jz-modals {
+  background-color: #fff;
+  border-radius: 0.8em;
+  box-shadow: 0 20px 15px rgba(102, 102, 102, 0.26);
+  display: flex;
+  -webkit-box-orient: vertical;
+  -webkit-box-direction: normal;
+  flex-direction: column;
 }
 

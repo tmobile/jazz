@@ -4,9 +4,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { ToasterService} from 'angular2-toaster';
 import { DataService } from "../data-service/data.service";
 import { DataCacheService , AuthenticationService } from '../../core/services/index';
-import { environment } from './../../../environments/environment';
 import { environment as env_internal } from './../../../environments/environment.internal';
-
+import { environment as env_oss} from './../../../environments/environment.oss';
 @Component({
   selector: 'env-overview-section',
   templateUrl: './env-overview-section.component.html',
@@ -14,7 +13,7 @@ import { environment as env_internal } from './../../../environments/environment
   styleUrls: ['./env-overview-section.component.scss']
 })
 export class EnvOverviewSectionComponent implements OnInit {
-  
+
   @Output() onload:EventEmitter<any> = new EventEmitter<any>();
   @Output() envLoad:EventEmitter<any> = new EventEmitter<any>();
   @Output() open_sidebar:EventEmitter<any> = new EventEmitter<any>();
@@ -23,31 +22,37 @@ export class EnvOverviewSectionComponent implements OnInit {
 	regList=env_internal.urls.regions;
 	accSelected:string = this.accList[0];
   regSelected:string=this.regList[0];
- 
+
 
   @Output() frndload:EventEmitter<any> = new EventEmitter<any>();
-  
-  
+
+
   private http:any;
   private sub:any;
+  provider: any = '';
+  serviceName: any = '';
+  runtime: any = '';
   private env:any;
   branchname: any;
   friendlyChanged:boolean = false;
-  textChanged:boolean = true;
   tempFriendlyName:string;
   yaml:string = "";
-  textarea:boolean= true;
   tempTextArea:string;
   friendlyName : string;
   yamlName:string;
   lastCommitted: any;
-  isCancel:boolean=false;
   editBtn:boolean = true;
+  showAppDetail:boolean = false;
   saveBtn:boolean = false;
-  saveButton:boolean=false;
-  editButton:boolean=true;
-  showCancel:boolean = false;
+  slsapp:boolean = false;
   showCncl:boolean=false;
+  editButton:boolean=true;
+  saveButton:boolean=false;
+  isCancel:boolean=false;
+  version: string = ">=1.0.0 <2.0.0";
+  isValid:boolean=false;
+  startNew: boolean = true;
+  showCancel:boolean = false;
   environmnt:any;
   isDiv:boolean=true;
   isvalid:boolean=false;
@@ -73,15 +78,17 @@ export class EnvOverviewSectionComponent implements OnInit {
 	errorChecked:boolean=true;
 	errorInclude:any="";
   json:any={};
-  slsapp:boolean = false;
   desc_temp:any;
-  toastmessage:any;
+  is_function:boolean;
+  isfunction: boolean = true;
+  linenumber:number;
+  private toastmessage: any = '';
+  public lineNumberCount: any = new Array(7);
   copyLink:string="Copy Link";
   disableSave:boolean = true;
- 
+
   errMessage: string = "Something went wrong while fetching your data";
   message:string="lalalala"
-  public lineNumberCount: any = new Array(7);
   private subscription:any;
 
   @Input() service: any = {};
@@ -89,7 +96,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   temp_description:string;
   put_payload:any = {};
   services = {
-    description:'NA', 
+    description:'NA',
     lastcommit:'NA',
     branchname:'NA',
     endpoint:'NA',
@@ -123,9 +130,6 @@ export class EnvOverviewSectionComponent implements OnInit {
   }
   //  prd?domain=jazz-testing&service=test-create
 
-  disableEditBtn(){
-
-  }
 popup(state){
   if(state == 'enter'){
     var ele = document.getElementById('popup-endp');
@@ -135,7 +139,7 @@ popup(state){
     var ele = document.getElementById('popup-endp');
     ele.classList.remove('endp-visible');
   }
-  
+
 }
   onEditClick(){
     this.tempFriendlyName=this.friendlyName;
@@ -144,62 +148,9 @@ popup(state){
     this.editBtn=false;
   }
 
-  onEditAppClick(){
-    this.yaml = this.yamlName;
-    this.showCncl = true;
-    this.isDiv = true;
-    this.saveButton = true;
-    this.editButton = false;
-    this.isCancel = false;
-    this.textChanged = true;
-    this.disableSave = true;
-    this.textarea = false;
-  }
-  descriptor(){
-    this.showCncl = false;
-    this.editButton = true;
-    this.textarea = true;
-    this.saveBtn = false;
-    this.saveButton = false;
-    var errMsgBody;
-    if(this.textChanged === true){
-      this.put_payload.deployment_descriptor= this.yaml;
-      this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload)
-            .subscribe(
-                (Response)=>{
-                  let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
-                  this.toast_pop('success',"",successMessage);
-
-                  this.callServiceEnv();
-                  this.yaml='';
-                },
-                (error)=>{
-                  try{
-                    errMsgBody=JSON.parse(error._body);
-                  }
-                  catch(e){
-                  }
-                  let errorMessage='';
-                  if(errMsgBody!=undefined)
-                    errorMessage = errMsgBody.message;
-                  // let errorMessage = this.toastmessage.errorMessage(Error,"updateEnv");
-                  this.toast_pop('error', 'Oops!', errorMessage)
-                  this.callServiceEnv();
-
-                }
-              );
-              this.isLoading = true;
-              this.envResponseTrue = false;
-              this.textChanged = false;
-              this.isCancel = false;
-              this.disableSave = true;            
-    }
-    
-  }
   lineNumbers() {
     let lines;
-    if(this.yaml)
-    {
+    if (this.yaml) {
       lines = this.yaml.split(/\r*\n/);
       let line_numbers = lines.length;
       if(line_numbers < 7){
@@ -208,35 +159,23 @@ popup(state){
       this.lineNumberCount = new Array(line_numbers);
     }
   }
-  checkYaml(){
-    let yaml = this.yaml.trim();
-    if(yaml) {
-      this.isCancel = true;
-      const yamlLint = require('yaml-lint');
-      yamlLint.lint(yaml).then(() => {
-        this.isvalid = true;
-        this.disableSave = false;
-      }).catch((error) => {
-        this.isvalid = false;
-      });
-    }
-    else{
-      this.disableSave = true;
-      this.isCancel = false;
-    }
-  }
+
   onSaveClick(){
     this.showCancel=false;
     this.saveBtn=false;
     this.editBtn=true;
+    let self=this;
+
     var errMsgBody;
     if(this.friendlyChanged){
       this.put_payload.friendly_name= this.tempFriendlyName;
       this.http.put('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name,this.put_payload, this.service.id)
             .subscribe(
                 (Response)=>{
-                  let successMessage = this.toastmessage.successMessage(Response,"updateEnv");
-                  this.toast_pop('success',"",successMessage);
+                  let successMessage = self.toastmessage.successMessage(Response,"updateEnv");
+                  self.toast_pop('success',"",successMessage);
+                  self.callServiceEnv(false);
+                  self.tempFriendlyName='';
 
                   this.callServiceEnv();
                   this.tempFriendlyName='';
@@ -250,30 +189,21 @@ popup(state){
                   let errorMessage='';
                   if(errMsgBody!=undefined)
                     errorMessage = errMsgBody.message;
-                  this.errMessage = this.toastmessage.errorMessage(error, "updateEnv");
-                  this.toast_pop('error', 'Oops!', errorMessage)
-                  this.callServiceEnv();
+
+                  self.errMessage = self.toastmessage.errorMessage(Error, 'updateEnv');
+                  self.toast_pop('error', 'Oops!', errorMessage);
+                  self.callServiceEnv();
 
                 }
               );
               this.isLoading=true;
               this.envResponseTrue=false;
               this.friendlyChanged=false;
-              
+
     }
-    
+
   }
-  onCancel(){
-    this.showCncl = false;
-    this.saveButton = false;
-    this.editButton = true;
-    this.textarea = true;
-    this.yaml = this.yamlName;
-    this.isCancel = false;
-    this.disableSave = true;
-    this.lineNumbers();
-    this.isvalid = false;
-}
+
   onCancelClick(){
     this.showCncl=false;
     this.saveBtn=false;
@@ -291,12 +221,12 @@ popup(state){
   }
 
   formatLastCommit(){
-    
+
     var commit = this.lastCommitted.substring(0,19);
     var lastCommit = new Date(commit);
-    var now = new Date(); 
+    var now = new Date();
     var todays = new Date(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate(),  now.getUTCHours(), now.getUTCMinutes(), now.getUTCSeconds());
-            
+
             this.dayscommit = true;
             this.commitDiff = Math.floor(Math.abs((todays.getTime() - lastCommit.getTime())/(1000*60*60*24)));
             if( this.commitDiff == 0 ){
@@ -323,9 +253,8 @@ popup(state){
     this.open_sidebar.emit(true);
 
 }
-   callServiceEnv() {
-    
-    
+
+  callServiceEnv(shouldUpdateYaml = true) {
     if ( this.subscription ) {
       this.subscription.unsubscribe();
     }
@@ -333,13 +262,12 @@ popup(state){
     this.subscription = this.http.get('/jazz/environments/'+ this.env +'?domain=' + this.service.domain + '&service=' + this.service.name, null, this.service.id).subscribe(
       // this.http.get('/jazz/environments/prd?domain=jazz-testing&service=test-create').subscribe(
         (response) => {
-
           if(response.data == (undefined || '')){
-           
-            this.envResponseEmpty = true; 
+
+            this.envResponseEmpty = true;
             this.isLoading = false;
           }
-          else {            
+          else {
             this.onload.emit(response.data.environment[0].endpoint);
             this.envLoad.emit(response.data);
             this.environmnt=response.data.environment[0];
@@ -350,18 +278,21 @@ popup(state){
 
             this.envstatus = deployment_status[this.status_val].replace("_"," ");
 
+            if (shouldUpdateYaml) {
+              this.yamlName = response.data.environment[0].deployment_descriptor;
+              this.yaml = this.yamlName;
+            }
+
             var envResponse = response.data.environment[0];
             this.friendlyName = envResponse.friendly_name;
-            this.yamlName= envResponse.deployment_descriptor;
-            this.yaml = this.yamlName;
             this.branchname = envResponse.physical_id;
             this.lastCommitted = envResponse.last_updated;
             this.frndload.emit(this.friendlyName);
-            this.formatLastCommit(); 
-            this.lineNumbers();              
+            this.formatLastCommit();
+            this.lineNumbers();
+            this.isLoading = false;
             this.envResponseTrue = true;
             this.envResponseEmpty = false;
-            this.isLoading = false;
           }
         },
         (error) => {
@@ -384,13 +315,13 @@ popup(state){
           this.errMessage = this.toastmessage.errorMessage(error, "environment");
       })
     };
-  
+
     getTime() {
       var now = new Date();
       this.errorTime = ((now.getMonth() + 1) + '/' + (now.getDate()) + '/' + now.getFullYear() + " " + now.getHours() + ':'
       + ((now.getMinutes() < 10) ? ("0" + now.getMinutes()) : (now.getMinutes())) + ':' + ((now.getSeconds() < 10) ? ("0" + now.getSeconds()) : (now.getSeconds())));
       }
-  
+
     feedbackRes:boolean=false;
     openModal:boolean=false;
       feedbackMsg:string='';
@@ -402,12 +333,10 @@ popup(state){
           userFeedback : ''
     };
     buttonText:string='SUBMIT';
-    // isLoading:boolean=false;
     sjson:any={};
 		djson:any={};
-		// isLoading:boolean=false;
 		reportIssue(){
-			
+
 					this.json = {
 						"user_reported_issue" : this.model.userFeedback,
 						"API": this.errorAPI,
@@ -417,14 +346,14 @@ popup(state){
 						"TIME OF ERROR":this.errorTime,
 						"LOGGED IN USER":this.errorUser
 				}
-				
+
 					this.openModal=true;
 					this.errorChecked=true;
 					this.isLoading=false;
 					this.errorInclude = JSON.stringify(this.djson);
 					this.sjson = JSON.stringify(this.json);
 				}
-			
+
 				openFeedbackForm(){
 					this.isFeedback=true;
 					this.model.userFeedback='';
@@ -440,9 +369,9 @@ popup(state){
 				}
 				errorIncluded(){
 				}
-			 
+
 				submitFeedback(action){
-			
+
 					this.errorChecked = (<HTMLInputElement>document.getElementById("checkbox-slack")).checked;
 					if( this.errorChecked == true ){
 						this.json = {
@@ -458,14 +387,14 @@ popup(state){
 						this.json = this.model.userFeedback ;
 					}
 					this.sjson = JSON.stringify(this.json);
-			
+
 					this.isLoading = true;
-			
+
 					if(action == 'DONE'){
 						this.openModal=false;
 						return;
 					}
-			
+
 					var payload={
 						"title" : "Jazz: Issue reported by "+ this.authenticationservice.getUserId(),
 						"project_id":env_internal.urls.internal_acronym,
@@ -484,7 +413,7 @@ popup(state){
 							this.feedbackResSuccess= true;
 							if(respData != undefined && respData != null && respData != ""){
 								this.feedbackMsg = "Thanks for reporting the issue. We’ll use your input to improve Jazz experience for everyone!";
-							} 
+							}
 						},
 						error => {
 							this.buttonText='DONE';
@@ -498,13 +427,13 @@ popup(state){
 
 
    myFunction() {
-    setTimeout( this.resetCopyValue(), 3000);
+    setTimeout( ()=> {this.resetCopyValue()}, 3000);
  }
- 
+
  resetCopyValue(){
     this.copylinkmsg = "COPY LINK TO CLIPBOARD";
  }
- 
+
  copyClipboard(copyapilinkid){
   var element = null; // Should be <textarea> or <input>
   element = document.getElementById(copyapilinkid);
@@ -521,14 +450,13 @@ isOSS:boolean=false;
 form_endplist(){
   // this.endpList=env_internal.urls.endplist;
 }
-  ngOnInit() {  
+  ngOnInit() {
     this.form_endplist();
-    if(environment.envName=='oss')this.isOSS=true;
-    if(this.service.domain != undefined)  
+    if(env_oss.envName=='oss')this.isOSS=true;
+    if(this.service.domain != undefined)
       this.callServiceEnv();
       this.data.currentMessage.subscribe(message => this.message = message)
   }
-
 
   ngOnChanges(x:any) {
     this.route.params.subscribe(
@@ -540,19 +468,19 @@ form_endplist(){
       this.callServiceEnv();
       let ser=this.service.serviceType;
       if(ser == 'sls-app'){
-        this.slsapp = true; 
+        this.slsapp = true;
       }
 }
 notify(services){
   this.service=services;
- 
+
   if(this.service.domain != undefined)
       {
-        
+
         this.callServiceEnv();
       }
 }
-refreshCostData(event){ 
+refreshCostData(event){
   this.callServiceEnv();
 }
 
@@ -582,11 +510,11 @@ focusindex:number;
           this.showAccountList = true;
         }
       }
-    
+
       focusInputAccount(event) {
         document.getElementById('AccountInput').focus();
       }
-    
+
       focusInputRegion(event) {
         document.getElementById('regionInput').focus();
       }
@@ -632,7 +560,7 @@ selectRegion(region){
     }
 }
 copy_link(id)
-    {  
+    {
         var element = null; // Should be <textarea> or <input>
         element = document.getElementById(id);
         element.select();
@@ -642,7 +570,7 @@ copy_link(id)
             setTimeout(() => {
               this.copyLink = "Copy Link";
             }, 3000);
-            
+
         }
         finally {
             document.getSelection().removeAllRanges;
@@ -687,7 +615,7 @@ keypressAccount(hash){
     var pinkElement = document.getElementsByClassName("pinkfocus")[0].children;
 
     var approverObj = pinkElement[0].attributes[2].value;
-    
+
     this.selectAccount(approverObj);
 
     this.focusindex = -1;
@@ -709,33 +637,33 @@ keypressRegion(hash){
         }
         if (this.focusindex > 2) {
           this.scrollList = { 'position': 'relative', 'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem' };
-    
+
         }
       }
       else if (hash.key == 'ArrowUp') {
         if (this.focusindex > -1) {
           this.focusindex--;
-    
+
           if (this.focusindex > 1) {
             this.scrollList = { 'position': 'relative', 'top': '-' + ((this.focusindex - 2) * 2.9) + 'rem' };
           }
         }
         if (this.focusindex == -1) {
           this.focusindex = -1;
-    
-    
+
+
         }
       }
       else if (hash.key == 'Enter' && this.focusindex > -1) {
         event.preventDefault();
         var pinkElement = document.getElementsByClassName("pinkfocus2")[0].children;
-    
+
         var approverObj = pinkElement[0].attributes[2].value;
-        
+
         this.selectRegion(approverObj);
-    
+
         this.focusindex = -1;
-    
+
       } else {
         this.focusindex = -1;
       }
