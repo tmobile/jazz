@@ -968,7 +968,7 @@
             </section>
             <p class="requiredInfo"><span>*</span>Indicates required fields</p>
             <section class="submit-form">
-                <button type="submit" [disabled]="!serviceForm.valid || (disableForm())" class="btn btn-primary">SUBMIT</button>
+                <button type="submit" [disabled]="!serviceForm.valid || (disableForm()) || disableFunction" class="btn btn-primary">SUBMIT</button>
             </section>
         </form>
     </div>
