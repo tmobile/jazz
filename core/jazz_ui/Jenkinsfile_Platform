@@ -41,9 +41,7 @@ def getCloudFrontDetails() {
     echo "cf_list_dists is: $cf_list_dists"
     def config_parser = new groovy.json.JsonSlurper()
     def cf_dists = config_parser.parseText(cf_list_dists)
-    if (cf_dists[0]) {
-      return cf_dists[0].Id
-    }
+    return cf_dists
   }catch(ex) {
     echo "No distribution defined for ${environment}" + ex
     return null;
