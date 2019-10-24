@@ -28,8 +28,8 @@ public class EnvironmentConfig {
 	static final Logger logger = Logger.getLogger(EnvironmentConfig.class);
 
 	private static Properties props = new Properties();
-	private static String stage = null;
-	private static String functionName = null;
+	private String stage = null;
+	private String functionName = null;
 
 	public EnvironmentConfig(Context context) throws Exception {
 		functionName = context.getFunctionName();		

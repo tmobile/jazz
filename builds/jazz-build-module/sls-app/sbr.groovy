@@ -1155,7 +1155,7 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor, acc
             "cloudProvider": "aws",
             "kinesisStreamArn": destLogStreamArn,
             "platformRoleArn": configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == aConfig.accountId}.IAM.PLATFORMSERVICES_ROLEID, // pick the role for selected account
-            "serverlessFrameworkVersion": ">=1.0.0 <2.0.0"]
+            "serverlessFrameworkVersion": ">=1.0.0 <2.0.0"]  
 
     if (doc && doc instanceof Map && doc['service']) doc.remove('service')
     if (doc && doc instanceof Map && doc['frameworkVersion']) doc.remove('frameworkVersion')
