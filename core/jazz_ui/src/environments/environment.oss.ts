@@ -32,8 +32,8 @@ export const environment = {
       "queue_name": 80,
       "bucket_name": 63
     },
-    serviceName: 20,
-    domainName: 20
+    serviceName: 11,
+    domainName: 10
   },
   servicePatterns: {
     "serviceName": "^[A-Za-z0-9\-]+$",
