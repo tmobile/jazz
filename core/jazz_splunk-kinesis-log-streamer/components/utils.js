@@ -66,21 +66,21 @@ var getCommonData = function (payload) {
       let domainAndservice, serviceInfo;
       data.asset_identifier = payload.logGroup.split(global_config.PATTERNS.asset_identifier_key)[1];
       data.environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment, 2);
-			if (data.environment === "dev") {
-				let dev_environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 2);
-				serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 1);
-				data.environment = dev_environment;
-			} else {
-				serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_domain_service, 1);
-			}
+      if (data.environment === "dev") {
+        let dev_environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 2);
+        serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 1);
+        data.environment = dev_environment;
+      } else {
+        serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_domain_service, 1);
+      }
 
-			domainAndservice = serviceInfo;
-			if(serviceInfo.indexOf(global_config.PATTERNS.sls_app_function) !== -1 ) { // if yes then sls-app function
-				let serviceInfoArr = serviceInfo.split(global_config.PATTERNS.sls_app_function);
-				domainAndservice = serviceInfoArr[0];
-			} 
+      domainAndservice = serviceInfo;
+      if (serviceInfo.indexOf(global_config.PATTERNS.sls_app_function) !== -1) { // if yes then sls-app function
+        let serviceInfoArr = serviceInfo.split(global_config.PATTERNS.sls_app_function);
+        domainAndservice = serviceInfoArr[0];
+      }
 
-			logger.debug("domainAndservice: " + domainAndservice)
+      logger.debug("domainAndservice: " + domainAndservice)
 
       let namespace = domainAndservice.substring(0, domainAndservice.indexOf("_"));
       if (namespace) {
