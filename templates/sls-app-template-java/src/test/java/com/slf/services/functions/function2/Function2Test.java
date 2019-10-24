@@ -14,7 +14,7 @@ public class Function2Test {
 
 	private Function2 f2 = new Function2();
 
-	public  Context context = new ContextStub("jazztest_sls-app-python-function2-stg");
+	public  Context context = new ContextStub("jazztest_sls-app-python-FN_function2-stg");
 
 	@Test
 	public void shouldExecuteRequest() {

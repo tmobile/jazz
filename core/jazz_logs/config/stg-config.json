@@ -10,7 +10,7 @@
   "VALID_CATEGORIES": [
     "api",
     "function",
-    "sls-app"
+    "custom"
   ],
   "VALID_ASSET_TYPES": [
     "lambda",

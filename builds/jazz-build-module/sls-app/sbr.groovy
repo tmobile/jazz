@@ -1194,16 +1194,10 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor, acc
     
   echo "logSubscriptionMap: $logSubscriptionMap"
 
-    if (resultingDoc?.custom)
-    {
-        // overwriting if exists
-        resultingDoc.custom.logSubscription = logSubscriptionMap.logSubscription
-    }
-    else
-    {
-        // setting it
-        resultingDoc.custom = logSubscriptionMap
-    }
+    // overwriting if exists
+    // if (resultingDoc?.custom) resultingDoc.custom.logSubscription = logSubscriptionMap.logSubscription
+    // else resultingDoc.custom = logSubscriptionMap // setting it
+    
 
     // check provider IAM Role Statements for Resource = "*"  - TODO implement in SBR
     if (resultingDoc.provider?.iamRoleStatements)
