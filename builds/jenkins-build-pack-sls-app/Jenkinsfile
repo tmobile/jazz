@@ -188,7 +188,7 @@ node() {
 
     }
 
-    if (config['domain'] && config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
+    if (config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
       stage('Code Quality Check') {
         events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
         try {
@@ -630,7 +630,7 @@ def validateDeploymentConfigurations(def prop) {
 		if (_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 		} else {
-			def validRuntimes = ["nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x"]
+			def validRuntimes = ["nodejs8.10", "nodejs10.x", "python3.6", "java8", "go1.x"]
 			def flag = false
 
 			for (int i = 0; i < validRuntimes.size(); i++) {

@@ -90,7 +90,7 @@ node  {
             } else {
                 service_template = 'static-website-template'
             }
-        } else if (serviceType == "api"){
+        } else if (serviceType in ['api','function','sls-app']){
 			if (serviceRunTime.startsWith("nodejs")) {
 				if(provider == "aws"){
 					service_template = "${serviceType}-template-nodejs"
@@ -104,33 +104,11 @@ node  {
 			} else if (serviceRunTime.startsWith("go")) {
 				service_template = "${serviceType}-template-go"
 			} else if (serviceRunTime.startsWith("c#")) {
-				service_template = "azure-${serviceType}-template-csharp"
-			}
-		} else if (serviceType == "function"){
-			if (serviceRunTime.startsWith("nodejs")) {
-				if(provider == "aws"){
-					service_template = "lambda-template-nodejs"
+				if(provider == "azure"){
+					service_template = "azure-${serviceType}-template-csharp"
 				} else {
-					service_template = "azure-${serviceType}-template-nodejs"
+					// placeholder for aws
 				}
-			} else if (serviceRunTime.startsWith("python")) {
-				service_template = "lambda-template-python"
-			} else if (serviceRunTime.startsWith("java")) {
-				service_template = "lambda-template-java"
-			} else if (serviceRunTime.startsWith("go")) {
-				service_template = "lambda-template-go"
-			} else if (serviceRunTime.startsWith("c#")) {
-				service_template = "azure-${serviceType}-template-csharp"
-			}
-		} else if (serviceType == "sls-app"){
-			if (serviceRunTime.startsWith("nodejs")) {
-				service_template = "${serviceType}-template-nodejs"
-			} else if (serviceRunTime.startsWith("python")) {
-				service_template = "${serviceType}-template-python"
-			} else if (serviceRunTime.startsWith("java")) {
-				service_template = "${serviceType}-template-java"
-			}  else if (serviceRunTime.startsWith("go")) {
-				service_template = "${serviceType}-template-go"
 			}
 		}
     } else {
@@ -150,7 +128,7 @@ node  {
 				//do nothing
 			}
 
-			echo "service_template : $service_template"
+			echo "service_template: $service_template"
 			events.sendStartedEvent("CLONE_TEMPLATE", 'cloning template starts', context_map)
 			sh 'mkdir ' + service_template
 

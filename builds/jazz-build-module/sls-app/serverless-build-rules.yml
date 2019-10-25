@@ -70,13 +70,13 @@ provider:
     sbr-constraint:
       sbr-enum:
         - nodejs8.10
+        - nodejs10.x
         - java8
-        - python2.7
         - python3.6
         - go1.x
     sbr-value:
       sbr-formula: ${config.providerRuntime}
-      sbr-example: nodejs8.10
+      sbr-example: nodejs10.x
     sbr-mandatory: true
 
 
@@ -578,13 +578,13 @@ function:
       sbr-constraint:
         sbr-enum:
           - nodejs8.10
+          - nodejs10.x
           - java8
-          - python2.7
           - python3.6
           - go1.x
       sbr-value:
         sbr-formula: ${config.providerRuntime}
-        sbr-example: nodejs8.10
+        sbr-example: nodejs10.x
 
     timeout: # in seconds 1 sec to 15 mins
       sbr-type: int
