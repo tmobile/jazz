@@ -1188,15 +1188,15 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor, acc
     }
   }
 
-    // inject log subscription ALWAYS - TODO implement in SBR
+  // inject log subscription ALWAYS - TODO implement in SBR
   def logSubscriptionMap = [logSubscription:[enabled:true, destinationArn:context.kinesisStreamArn]]
   if(isPrimaryAccount) logSubscriptionMap.logSubscription['roleArn'] = context.platformRoleArn
     
   echo "logSubscriptionMap: $logSubscriptionMap"
 
-    // overwriting if exists
-    // if (resultingDoc?.custom) resultingDoc.custom.logSubscription = logSubscriptionMap.logSubscription
-    // else resultingDoc.custom = logSubscriptionMap // setting it
+  // overwriting if exists
+  if (resultingDoc?.custom) resultingDoc.custom.logSubscription = logSubscriptionMap.logSubscription
+  else resultingDoc.custom = logSubscriptionMap // setting it
     
 
     // check provider IAM Role Statements for Resource = "*"  - TODO implement in SBR

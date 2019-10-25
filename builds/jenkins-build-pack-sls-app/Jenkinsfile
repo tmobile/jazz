@@ -366,7 +366,7 @@ node() {
               }
             }
           }
-          createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
+          //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
           send_status_email('COMPLETED', '')
         } catch (ex) {
           send_status_email('FAILED', '')
