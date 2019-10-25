@@ -537,9 +537,9 @@ export class EnvLogsSectionComponent implements OnInit {
 		if(response&&response.data&&response.data.assets){
 			this.assetsNameArray.push(response);
 			let assets=_(response.data.assets).map('asset_type').uniq().value();
-			const filterWhitelist = [	
+			const filterWhitelist = [
 				'lambda',
-				'apigateway'	
+				'apigateway'
 			];
 			assets = assets.filter(item => filterWhitelist.includes(item));
 			 let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
@@ -773,7 +773,7 @@ export class EnvLogsSectionComponent implements OnInit {
 			"service": this.service.name,//"logs", //
 			"domain": this.service.domain,//"jazz", //
 			"environment": this.env, //"dev"
-			"category": this.service.serviceType,//"api",//
+			"category": this.service.serviceType === "custom" ? "sls-app" : this.service.serviceType,//"api",//
 			"size": this.limitValue,
 			"offset": this.offsetValue,
 			"type": this.filterloglevel || "ERROR",
