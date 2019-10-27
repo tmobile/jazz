@@ -42,7 +42,7 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
     Map<String, Object> transformedYmlTreelet = transformer.transform(origAppYmlFile);
     Map<String, SBR_Rule> path2MandatoryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value instanceof SBR_Rule && item.value.isMandatory) acc.put(item.key, item.value); return acc}
 
-    Map<String, Object> mandatoryYmlTreelet = retrofitMandatoryFields(path2MandatoryRuleMap, config, context, transformer.path2OrigRuleMap)
+    Map<String, Object> mandatoryYmlTreelet = retrofitMandatoryFields(path2MandatoryRuleMap, config, context, transformer)
 
     Map<String, Object> ymlOutput = merge(mandatoryYmlTreelet, transformedYmlTreelet) // Order of arguments is important here because in case of collision we want the user values to overwrite the default values
 
@@ -792,6 +792,7 @@ class SBR_Formula_Value implements SBR_Value {
     return result;
   }
 
+
   public String toString() {
     return "formula: $formula" ;
   }
@@ -1026,7 +1027,8 @@ def enclose(Map envelopeMap, String key) {
 def retrofitMandatoryFields(String              aPath,
                             SBR_Rule            rule,
                                                 config,
-                            Map<String, String> context) {
+                            Map<String, String> context,
+                            Transformer transformer) {
 
   Map<String, Object> ymlTree = [:]
   String[] segmentedPath = aPath.split("/")
@@ -1040,6 +1042,10 @@ def retrofitMandatoryFields(String              aPath,
   def userDefaultValue = ""
   if(rule.type.isMap()) userDefaultValue = [:]
   if(rule.type.isList()) userDefaultValue = []
+  def origRule = transformer.ruleMatcher(aPath)
+  if (origRule) {
+    rule.asteriskValues = origRule.asteriskValues
+  }
   lastHandler[lastName] = rule.applyRule(userDefaultValue, aPath, config, context)
 
   return ymlTree
@@ -1055,8 +1061,9 @@ def makeList(list) {
 
 def getLeafPath (String templatedPath, Map<String, List> path2OrigRuleMap) {
   def pathKeyArr = makeList(templatedPath.split('/'))
-  def pathTempKeyList = path2OrigRuleMap.findAll { entry -> entry.key.split('/').size() == pathKeyArr.size() }
-                                         .max { res, item ->  res.value.size() <=> item.value.size() }
+  def maxList = path2OrigRuleMap.findAll { entry -> entry.key.split('/').size() == pathKeyArr.size() }
+  def maxSize = maxList.max { it -> it.value.size() }
+  def pathTempKeyList = path2OrigRuleMap.find {it -> it.value.size() == maxSize}                                       
 
   return pathTempKeyList ? pathTempKeyList.value: []
 }
@@ -1095,15 +1102,16 @@ def findTargetPath (String templatedPath, Map<String, List> path2OrigRuleMap) {
 def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
                                                   config,
                             Map<String, String>   context,
-                            Map<String, List> path2OrigRuleMap) {
+                            Transformer transformer) {
 
+  Map<String, List> path2OrigRuleMap = transformer.path2OrigRuleMap
   def accumulator = aPath2RuleMap.inject([:]){acc, item ->
   def targetedPaths = new ArrayList()
   if((item.key).toString().contains("*")) targetedPaths = findTargetPath (item.key, path2OrigRuleMap)
   else targetedPaths.add(item.key)
 
   targetedPaths.each { entry ->
-    def ymlTreelet = retrofitMandatoryFields(entry, item.value, config, context)
+    def ymlTreelet = retrofitMandatoryFields(entry, item.value, config, context, transformer)
     def accCopy = [:]; if(acc != null) accCopy << acc;
     acc  = merge(accCopy, ymlTreelet);
   }
@@ -1115,13 +1123,15 @@ def retrofitMandatoryFields(Map<String, SBR_Rule> aPath2RuleMap,
 * Prepare serverless.yml from
 * config
 **/
-def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
+def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor, accountDetails) {
 	def deploymentDescriptor = null
+  def isPrimaryAccount = configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == aConfig.accountId}.PRIMARY ? true : false
   if( envDeploymenDescriptor != null){
     deploymentDescriptor = envDeploymenDescriptor
   } else {
     deploymentDescriptor = aConfig['deployment_descriptor']
   }
+
   try {
     def appContent = readFile('application.yml').trim() // copy of the user serverless.yml
     if(!appContent.isEmpty()) {
@@ -1133,14 +1143,19 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
   }
 
     def doc = deploymentDescriptor  ? readYaml(text: deploymentDescriptor ) : [:] // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harful as Map not String is expected below
+    def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
+
+    def destLogStreamArn = configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == aConfig.accountId}.PRIMARY ? logStreamer : 
+                            accountDetails.REGIONS.find{it.REGION == aConfig.region}.LOGS.PROD
+ 
 
     context =["environment_logical_id": env,
             "INSTANCE_PREFIX": configLoader.INSTANCE_PREFIX,
             "REGION": aConfig.region,
             "cloudProvider": "aws",
-            "kinesisStreamArn": configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD,
+            "kinesisStreamArn": destLogStreamArn,
             "platformRoleArn": configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == aConfig.accountId}.IAM.PLATFORMSERVICES_ROLEID, // pick the role for selected account
-            "serverlessFrameworkVersion": ">=1.0.0 <2.0.0"]
+            "serverlessFrameworkVersion": ">=1.0.0 <2.0.0"]  
 
     if (doc && doc instanceof Map && doc['service']) doc.remove('service')
     if (doc && doc instanceof Map && doc['frameworkVersion']) doc.remove('frameworkVersion')
@@ -1173,18 +1188,16 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor) {
     }
   }
 
-    // inject log subscription ALWAYS - TODO implement in SBR
-    def logSubscriptionMap = [logSubscription:[enabled:true, destinationArn:context.kinesisStreamArn, roleArn:context.platformRoleArn]]
-    if (resultingDoc?.custom)
-    {
-        // overwriting if exists
-        resultingDoc.custom.logSubscription = logSubscriptionMap.logSubscription
-    }
-    else
-    {
-        // setting it
-        resultingDoc.custom = logSubscriptionMap
-    }
+  // inject log subscription ALWAYS - TODO implement in SBR
+  def logSubscriptionMap = [logSubscription:[enabled:true, destinationArn:context.kinesisStreamArn]]
+  if(isPrimaryAccount) logSubscriptionMap.logSubscription['roleArn'] = context.platformRoleArn
+    
+  echo "logSubscriptionMap: $logSubscriptionMap"
+
+  // overwriting if exists
+  if (resultingDoc?.custom) resultingDoc.custom.logSubscription = logSubscriptionMap.logSubscription
+  else resultingDoc.custom = logSubscriptionMap // setting it
+    
 
     // check provider IAM Role Statements for Resource = "*"  - TODO implement in SBR
     if (resultingDoc.provider?.iamRoleStatements)

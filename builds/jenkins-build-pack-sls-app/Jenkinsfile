@@ -152,7 +152,7 @@ node() {
     sh "[[ -e serverless.yml ]] && cp serverless.yml application.yml || true"
 
     // if neither exist serverless.yml or application.yml - create it from environment config 
-    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, environment_logical_id, configLoader, env_deployment_descriptor) // Generating the deployment descriptor
+    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, environment_logical_id, configLoader, env_deployment_descriptor, accountDetails) // Generating the deployment descriptor
     echo "prepareServerlessYml => ${deploymentDescriptor}"
     sh "rm -rf ./serverless.yml"
     writeYaml(file: './serverless.yml', data: deploymentDescriptor)
@@ -166,10 +166,6 @@ node() {
         send_status_email('FAILED', '')
         events.sendFailureEvent('VALIDATE_PRE_BUILD_CONF', ex.getMessage(), context_map, environment_logical_id)
         events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-        def stackTraceElements = ex.stackTrace
-        stackTraceElements.each { element ->
-          echo "stack: ${element.toString()}"
-        }
         error ex.getMessage()
       }
       events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
@@ -282,7 +278,7 @@ node() {
           sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
           sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
           // Please refer to https://docs.aws.amazon.com/cli/latest/reference/cloudformation/validate-template.html
-          sh "aws cloudformation validate-template --template-body file://.serverless/cloudformation-template-update-stack.json --profile ${credsId} > output.log"
+          sh "aws cloudformation validate-template --template-body file://.serverless/cloudformation-template-update-stack.json --profile ${credsId} --region ${config.region} > output.log"
           def outputLog = readFile('output.log').trim()
           echo "template validation log $outputLog"
 
@@ -370,6 +366,7 @@ node() {
               }
             }
           }
+          //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
           send_status_email('COMPLETED', '')
         } catch (ex) {
           send_status_email('FAILED', '')
@@ -460,7 +457,7 @@ def constructArn(resourceName, resourceType) {
 
 def getStackResources(env, credsId){
   def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${env}"
-  def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${cfStackName} --profile ${credsId}", returnStdout: true)
+  def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${cfStackName} --region ${config.region} --profile ${credsId}", returnStdout: true)
   echo "Describe Stacks are ${stackResources}"
   def parsedResources = parseJson(stackResources)
   return parsedResources
@@ -728,19 +725,19 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
   def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:]
   def functionsElem = doc['functions']
   // changing variable names appropriately
-  def serviceDomain = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+  def serviceDomain = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}"
   functionsElem.each{functionName, funcConfig ->
-    def lambdaName = funcConfig['name'] ? funcConfig['name'] : functionName
-    def logGroupName = "/aws/lambda/${serviceDomain}-${lambdaName}"
+    def lambdaName = funcConfig['name'] ? funcConfig['name'] : "${serviceDomain}-FN_${functionName}-${environment_logical_id}"
+    def logGroupName = "/aws/lambda/${lambdaName}"
     def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
     try {
-      sh "aws logs create-log-group --log-group-name ${logGroupName} --profile ${credsId}"
+      sh "aws logs create-log-group --log-group-name ${logGroupName} --region ${config.region} --profile ${credsId}"
     } catch (Exception ex) { } // ignore if already existing
 
     try {
       filter_json = sh(
-        script: "aws logs describe-subscription-filters --output json --log-group-name \"${logGroupName}\" --profile ${credsId}",
+        script: "aws logs describe-subscription-filters --output json --log-group-name \"${logGroupName}\" --profile ${credsId} --region ${config.region}",
         returnStdout: true
       ).trim()
       echo "${filter_json}"
@@ -748,26 +745,21 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
       filtername = resultJson.subscriptionFilters[0].filterName
       echo "removing existing filter... $filtername"
       if (filtername != "" && !filtername.equals(logGroupName)) {
-        sh "aws logs delete-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${filtername}\"  --profile ${credsId}"
+        sh "aws logs delete-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${filtername}\"  --profile ${credsId} --region ${config.region}"
       }
     } catch (Exception ex) { } // ignore error if not created yet
     try {
-      for (item in configLoader.AWS.ACCOUNTS) {
-      if(item.ACCOUNTID == config.accountId){
-        if(!item.PRIMARY){
-          def destARN
-          for (data in accountDetails.REGIONS) {
-            if(data.REGION == config.region){
-              destARN = data.LOGS.PROD
-            }
-          }
-          updatePolicy(env_key, destARN);
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${destARN}\"  --profile ${credsId}"
+      def destLogStreamArn = configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == config.accountId}.PRIMARY ? logStreamer : 
+                            accountDetails.REGIONS.find{it.REGION == config.region}.LOGS.PROD
+      def isPrimaryAccount = configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == config.accountId}.PRIMARY ? true : false
+
+       if(!isPrimaryAccount){
+          updatePolicy(env_key, destLogStreamArn);
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${destLogStreamArn}\"  --profile ${credsId} --region ${config.region}"
         } else {
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
+          sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${destLogStreamArn}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId} --region ${config.region}"
         }
-      }
-    }
+
     } catch (Exception ex) {
       echo "error occured: " + ex.getMessage()
     }

@@ -552,8 +552,9 @@ function:
     name:
       sbr-type: aws-artifact-name
       sbr-render: config-wins
+      sbr-mandatory: true
       sbr-value:
-        sbr-formula: ${context.INSTANCE_PREFIX}-${config.domain}-${config.service}-${asterisk0}-${context.environment_logical_id}
+        sbr-formula: ${context.INSTANCE_PREFIX}-${config.domain}-${config.service}-FN_${asterisk0}-${context.environment_logical_id}
 
     description:
       sbr-type: aws-description
