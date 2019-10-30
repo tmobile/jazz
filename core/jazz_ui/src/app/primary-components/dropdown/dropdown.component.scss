@@ -1,5 +1,7 @@
 .dropdown-btn {
+  color: #6d6d6d;
   background-color: #fff;
+  width: 100%;
   min-width: 100%;
   text-align: left;
   position: relative;
@@ -7,11 +9,12 @@
   -moz-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
   box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
   border-radius: 3px;
-  font-size: 12px;
+  padding-top: 0.7em;
+  font-size: 13px;
   border-top: 1px solid #eee;
   .caret {
     position: absolute;
-    top: 13px;
+    top: 16px;
     right: 12px;
     border-top: 6px solid #ed008c;
     border-right: 6px solid transparent;
@@ -20,15 +23,19 @@
 }
 
 .dropdown-menu {
+  width: 100%;
   min-width: 100%;
   font-size: 12px;
+  padding-bottom: 1em;
   a {
     cursor: pointer;
     line-height: 30px;
-    &:hover {
-      background-color: #ed008c;
-      color: #fff;
-    }
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+  a.rtl {
+    direction: rtl;
   }
   li {
     height: 30px;
@@ -48,9 +55,50 @@
   min-width: 142px;
 }
 
-// .dropdown {
-//     min-width: 200px;
-// }
 /deep/.padding-right {
   padding-right: 1.5rem !important;
+}
+
+.selected-item {
+  display: inline-block;
+  overflow: hidden;
+  width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dropdown-menu a.selected {
+  color: #ed008c;
+  font-weight: bold;
+}
+
+.dropdown-menu li:hover .tooltip {
+  visibility: visible;
+  animation: tooltip-fade-in 1s forwards;
+  animation-delay: 2s;
+}
+
+.tooltip {
+  pointer-events: none;
+  visibility: hidden;
+  opacity: 0;
+  background: #ffffff;
+  color: #333;
+  padding: 1em;
+  border-radius: 0.5em;
+  left: .7em;
+  margin-top: .5em;
+  z-index: 3;
+  box-shadow:0px 1px 2px 0px rgba(0, 0, 0, 0.3);
+  padding: .25em 1em;
+  text-transform: capitalize;
+}
+
+@keyframes tooltip-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.dropdown {
+  max-width: 500px;
 }

@@ -12,91 +12,34 @@ import { environment as env_internal } from './../../../environments/environment
 import { environment as env_oss} from './../../../environments/environment.oss';
 import * as moment from 'moment';
 import * as _ from 'lodash';
+import { UtilsService } from '../../core/services/utils.service';
+import { RenameFieldService } from '../../core/services/rename-field.service';
 declare let Promise;
 
 
 @Component({
   selector: 'env-assets-section',
 	templateUrl: './env-assets-section.component.html',
-	providers: [RequestService, MessageService],
+	providers: [RequestService, MessageService, RenameFieldService],
   styleUrls: ['./env-assets-section.component.scss']
 })
-export class EnvAssetsSectionComponent implements OnInit {
+export class EnvAssetsSectionComponent {
 
 	state: string = 'default';
   showPaginationtable: boolean = false;
   currentlyActive: number = 1;
-	totalPageNum: number = 12;
-	offset:number = 0;
 	offsetval:number = 0;
 	public assetList:any = [];
 	private env:any;
 	private http:any;
 	private subscription:any;
 	public serviceType;
-	public assetWithDefaultValue:any=[];
-  public environmentFilter;
-	@ViewChild('filtertags') FilterTags: FilterTagsComponent;
-  @ViewChild('filters') filters;
-	@ViewChild(AdvFilters) advFilters: AdvFilters;
 	public assetType:any;
 	componentFactoryResolver:ComponentFactoryResolver;
-	filterSelected: boolean = false;
-	fromassets:boolean = true;
-  public assetFilter: any;
-	advanced_filter_input:any = {
-		time_range:{
-			show:false,
-		},
-		slider:{
-			show:false,
-		},
-		period:{
-			show:false,
-		},
-		statistics:{
-			show:false,
-		},
-		path:{
-			show:false,
-		},
-		environment:{
-			show:false,
-		},
-		method:{
-			show:false,
-		},
-		account:{
-			show:true,
-		},
-		region:{
-			show:true,
-		},
-		asset:{
-			show:true,
-		}
-	}
-
-	assetsList: any = [];
-	public formFields: any = [];
-
-	accList=env_internal.urls.accounts;
-	regList=env_internal.urls.regions;
-	accSelected:string = this.accList[0];
-	regSelected:string=this.regList[0];
 	type: any = [];
-  public asset_type:any=[]
 	length: any;
-	// image: any = [];
-	slNumber: any = [];
 	serviceName: any = [];
 	domain: any = [];
-	arn: any = [];
-	Provider: any = [];
-	status: any = [];
-	time: any = [];
-	url : any = [];
-	endpoint : any = [];
 	envResponseEmpty:boolean = false;
   envResponseTrue:boolean = false;
   envResponseError:boolean = false;
@@ -119,12 +62,43 @@ export class EnvAssetsSectionComponent implements OnInit {
 	lastCommitted: any;
 	islink:boolean = false;
 	count: any = [];
-	public assetSelected:any;
 	relativeUrl:string = '/jazz/assets';
 	payload:any = {}
 	errMessage: string = "Something went wrong while fetching your data"
 
 	@Input() service: any = {};
+	assetListbyType;
+  currentType;
+  public cardsScroller;
+  public cardsOversized;
+  public cardSize = 135 + 12;
+  public cardOffset = 0;
+  selectedCard = 0;
+  sortkey = 'last_updated';
+  direction = -1;
+  @ViewChild('carouselCards') carouselCards;
+  @ViewChild('cardsScroller') set _cardsScroller(input) {
+    this.cardsScroller = input;
+    if (this.cardsScroller) {
+      setTimeout(() => {
+        this.cardsOversized = this.cardsScroller.nativeElement.scrollWidth >
+          this.carouselCards.nativeElement.getBoundingClientRect().width;
+      });
+    }
+  };
+
+  tableHeader = [
+		{
+			label: 'Provider ID',
+			key: 'provider_id',
+			sort: true
+		},
+		{
+			label: 'Last Updated',
+			key: 'last_updated',
+			sort: true
+		}
+	];
 
   constructor(
 		private request:RequestService,
@@ -132,17 +106,15 @@ export class EnvAssetsSectionComponent implements OnInit {
 		private route: ActivatedRoute,
 		private router: Router,
 		private cache: DataCacheService,
-		private authenticationservice: AuthenticationService ,
+		private authenticationservice: AuthenticationService,
+		private utilsService: UtilsService,
+		private renameFieldService: RenameFieldService,
 		@Inject(ComponentFactoryResolver) componentFactoryResolver,private advancedFilters: AdvancedFilterService ,
 
   ) {
 		this.http = request;
 		this.toastmessage = messageservice;
 		this.componentFactoryResolver = componentFactoryResolver;
-		var comp = this;
-		setTimeout(function(){
-			comp.getFilter(advancedFilters);
-		},5000);
    }
 
   refresh() {
@@ -152,88 +124,18 @@ export class EnvAssetsSectionComponent implements OnInit {
 		this.callServiceEnvAssets();
 	}
 
-ngOnInit()
-{
-	this.serviceType = this.service.type || this.service.serviceType;
-  this.getAssetType();
-}
-	 getFilter(filterServ){
-
+	offsetLeft() {
+		if (this.cardsScroller.nativeElement.getBoundingClientRect().right > this.carouselCards.nativeElement.getBoundingClientRect().right) {
+		this.cardOffset -= 1;
+		}
 	}
 
-   onaccSelected(event){
-    this.FilterTags.notify('filter-Account',event);
-    this.accSelected=event;
-
-   }
-	onregSelected(event){
-    this.FilterTags.notify('filter-Region',event);
-    this.regSelected=event;
-	 }
-
-	applyFilter(value){
-		this.isLoading = true;
-		this.assetSelected=value.selected.replace(/ /g,"_");
-		this.getAssetType(value);
-	 }
-	getAssetType(data?){
-		let self=this;
-    return self.http.get('/jazz/assets',{
-      domain: self.service.domain,
-			service:self.service.name,
-			environment:self.env
-    },self.service.id).toPromise().then((response:any)=>{
-      if(response&&response.data&&response.data.assets){
-				let assets=_(response.data.assets).map('asset_type').uniq().value();
-				self.assetWithDefaultValue=assets;
-				self.assetWithDefaultValue.splice(0,0,'all');
-        for(var i=0;i<self.assetWithDefaultValue.length;i++){
-        self.assetList[i]=self.assetWithDefaultValue[i].replace(/_/g, " ");
-        }
-        self.assetFilter={
-            column: 'Filter By:',
-            label: 'ASSET TYPE',
-            options: self.assetList,
-            values: assets,
-            selected:assets[0].replace(/_/g," ")
-				};
-				if(!data){
-					self.assetSelected=assets[0];
-				}
-       let assetField = self.filters.getFieldValueOfLabel('ASSET TYPE');
-        if (!assetField) {
-					self.formFields.splice(0, 0, self.assetFilter);
-					self.filters.setFields(self.formFields);
-				}
-			self.callServiceEnvAssets();
-    }
-    })
-    .catch((error) => {
-      return Promise.reject(error);
-    })
-  }
-   onFilterSelect(event){
-	 switch(event.key){
-	  case 'account':{
-		this.FilterTags.notify('filter-Account',event.value);
-		this.accSelected=event.value;
-		break;
-	  }
-	  case 'region':{
-		this.FilterTags.notify('filter-Region',event.value);
-		this.regSelected=event.value;
-		break;
-
-	  }
-
-
+	offsetRight() {
+		if (this.cardOffset < 0) {
+		this.cardOffset += 1;
+		}
 	}
 
-}
-
-   cancelFilter(event){
-
-	}
 	callServiceEnvAssets() {
 		this.isLoading = true;
     if ( this.subscription ) {
@@ -242,71 +144,26 @@ ngOnInit()
 		this.payload['service'] = this.service.name;
 		this.payload['domain'] = this.service.domain;
 		this.payload['environment'] = this.env;
-		this.payload['limit'] = this.limitValue;
 		this.payload['offset'] = this.offsetval;
-		if (this.assetSelected !== 'all') {
-			this.payload['asset_type'] = this.assetSelected;
-		}	else {
-			delete this.payload['asset_type'];
-		}
-
     this.subscription = this.http.get(this.relativeUrl, this.payload, this.service.id).subscribe(
       (response) => {
-
-        if((response.data == undefined) || (response.data.count == 0)){
+		var res = response.data.assets;
+        if((res == undefined) || (res.length == 0)){
           this.envResponseEmpty = true;
           this.isLoading = false;
         }
         else
         {
-          var pageCount = response.data.count;
-
-        if(pageCount){
-					this.totalPageNum = Math.ceil(pageCount/this.limitValue);
-					if(this.totalPageNum === 1){
-						this.showPaginationtable = false;
-					}
-					else {
-						this.showPaginationtable = true;
-					}
-        }
-        else{
-          this.totalPageNum = 0;
-        }
         this.envResponseEmpty = false;
         this.isLoading = false;
 
         this.envResponseTrue = true;
         this.length = response.data.assets.length;
-				this.assetsList = response.data.assets;
         for(var i=0; i < this.length ; i++){
-          this.type[i] = response.data.assets[i].asset_type;
-          this.slNumber[i] = this.offsetval + (i+1);
-          if( response.data.assets[i].provider == undefined ){
-            this.Provider[i] = "-"
-          }else{
-          this.Provider[i] = response.data.assets[i].provider;
-          }
-          if( response.data.assets[i].status == undefined ){
-            this.status[i] = "-"
-          }else{
-          this.status[i] = response.data.assets[i].status;
-          }
-          if( response.data.assets[i].endpoint_url == undefined ){
-            this.endpoint[i] = "-"
-          }else{
-          this.endpoint[i] = response.data.assets[i].endpoint_url;;
-          }
-          if( response.data.assets[i].swagger_url == undefined ){
-            this.url[i] = "-"
-          }else{
-          this.url[i] = response.data.assets[i].swagger_url;
-          }
-          if( response.data.assets[i].provider_id == undefined ){
-            this.arn[i] = "-"
-          }else{
-          this.arn[i] = response.data.assets[i].provider_id;
-          }
+			this.type[i] = {
+				'key': res[i].asset_type,
+				'assetTypeDisplayName': this.renameFieldService.getDisplayNameOfKey(res[i].asset_type) || res[i].asset_type
+		   }
 
           this.lastCommitted = response.data.assets[i].timestamp;
           var commit = this.lastCommitted.substring(0,19);
@@ -320,21 +177,24 @@ ngOnInit()
             this.count[i] = 4;
             this.commitDiff[i] = Math.floor(this.commitDiff[i]/30)
           }else
-          if( this.commitDiff[i] == 0 ){
-            this.count[i] = 2;
-            this.commitDiff[i] = Math.floor(Math.abs((todays.getHours() - lastCommit.getHours())));
-            if( this.commitDiff[i] == 0 ){
-            this.count[i] = 1;
-            this.commitDiff[i] = Math.floor(Math.abs((todays.getMinutes() - lastCommit.getMinutes())));
-            if( this.commitDiff[i] == 0 ){
-              this.count[i] = 0;
-              this.commitDiff[i] = "Just now";
-            }
-            }
-          }
-
-          }
-
+				if( this.commitDiff[i] == 0 ){
+					this.count[i] = 2;
+					this.commitDiff[i] = Math.floor(Math.abs((todays.getHours() - lastCommit.getHours())));
+					if( this.commitDiff[i] == 0 ){
+					this.count[i] = 1;
+					this.commitDiff[i] = Math.floor(Math.abs((todays.getMinutes() - lastCommit.getMinutes())));
+					if( this.commitDiff[i] == 0 ){
+					this.count[i] = 0;
+					this.commitDiff[i] = "Just now";
+					}
+					}
+				}
+			res[i]['last_updated'] = this.commitDiff[i];
+			res[i]['last_update_count'] = this.count[i];
+          	}
+		  	this.type = _.uniqBy(this.type, 'key');
+			this.assetListbyType = this.utilsService.groupByKey(res, 'asset_type');
+			this.currentType = this.type[0];
 
         }
       },
@@ -467,85 +327,28 @@ ngOnInit()
 		 window.open(url , '_blank');
 	 }
 
-
-	limitValue : number = 10;
-	prevActivePage: number = 0;
-
-
-	paginatePage(currentlyActivePage){
-    if(this.prevActivePage != currentlyActivePage){
-      this.prevActivePage = currentlyActivePage;
-      this.assetsList = [];
-
-
-			this.offsetval = (this.limitValue * (currentlyActivePage-1));
-
-			this.callServiceEnvAssets();
-
-    }
-    else{
-    }
+	ngOnChanges(x:any) {
+		this.route.params.subscribe(
+		params => {
+				this.env = params.env;
+				if(this.env == "prd"){
+					this.env = "prod";
+				}
+		});
+		this.callServiceEnvAssets();
 	}
 
+	refreshCostData(event){
+	this.callServiceEnvAssets();
+	}
+	public goToAbout(hash){
+		this.router.navigateByUrl('landing');
+		this.cache.set('scroll_flag',true);
+		this.cache.set('scroll_id',hash);
+	}
 
-	paginatePageInTable(clickedPage){
-		switch(clickedPage){
-		 case 'prev':
-		   if(this.currentlyActive > 1)
-			 this.currentlyActive = this.currentlyActive - 1;
-		   break;
-		 case 'next':
-		   if(this.currentlyActive < this.totalPageNum)
-			 this.currentlyActive = this.currentlyActive + 1;
-		   break;
-		 case '1':
-		   this.currentlyActive = 1;
-		   break;
-		 default:
-		   if(clickedPage > 1){
-			 this.currentlyActive = clickedPage;
-		   }
-		}
-		// paginatePage()
-		this.paginatePage(this.currentlyActive);
-  }
-
-	ngOnChanges(x:any) {
-    this.route.params.subscribe(
-      params => {
-			this.env = params.env;
-			if(this.env == "prd"){
-				this.env = "prod";
-			}
-    });
-}
-
-  refreshCostData(event){
-    this.callServiceEnvAssets();
-  }
-  public goToAbout(hash){
-    this.router.navigateByUrl('landing');
-    this.cache.set('scroll_flag',true);
-    this.cache.set('scroll_id',hash);
-  }
-
-  public assetTypeToLabel(type, provider) {
-	  if(type === 'swagger_url' || type === 'endpoint_url'){
-      return 'URL';
-    }
-    else if(provider === 'aws'){
-      return 'ARN';
-    }
-    else if(provider === 'azure') {
-      return 'Resource';
-    }
-
-    switch(type) {
-      case 'swagger_url':
-      case 'endpoint_url':
-        return 'URL';
-      default:
-        return 'Provider ID';
-    }
+	sortTablebyKey(event) {
+		this.sortkey = event.key;
+		this.direction = event.reverse ? 1 : -1;
 	}
 }

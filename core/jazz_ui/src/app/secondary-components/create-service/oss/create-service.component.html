@@ -150,7 +150,7 @@
                 <div class="space-between content">
                     <div class="pad-left0 input-field-container allWidth" id="runtime-type">
                         <div class="runtime-row1 run-type-width space-between" [class.azure-width]="typeOfPlatform == 'azure'">
-                            <section class="pad-left0 service-box-section">                  
+                            <section class="pad-left0 service-box-section">
                                 <div tabindex="0" class="service-box"  [ngClass]="{'service-box-selected': runtime == runtimeKeys[0]}"(keyup.enter)="onSelectionChange(runtimeKeys[0])"  (click)="onSelectionChange(runtimeKeys[0])">
                                     <div class="">
                                         <img *ngIf="runtime == runtimeKeys[0]" [class.selected-image]="runtime == runtimeKeys[0]" src="./../../../../assets/images/icons/nodejs.svg"/>
@@ -162,7 +162,7 @@
                                 </div>
                             </section>
 
-                            <section class="pad-left0 service-box-section" *ngIf="typeOfPlatform == 'azure'">                  
+                            <section class="pad-left0 service-box-section" *ngIf="typeOfPlatform == 'azure'">
                                 <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': runtime == runtimeKeys[1]}" (keyup.enter)="onSelectionChange(runtimeKeys[1])" (click)="onSelectionChange(runtimeKeys[1])">
                                     <div class="icon-icon-go">
                                             <img  *ngIf="runtime == runtimeKeys[1]" [class.selected-image]="runtime == runtimeKeys[1]" src="./../../../assets/images/icons/C.svg"/>
@@ -172,7 +172,7 @@
                                 <div class="icon-name" [ngClass]="{'service-box-selected': runtime == runtimeKeys[1]}">
                                     <p class="name-style">{{runtimeKeys[1]}}</p>
                                 </div>
-                            </section> 
+                            </section>
 
                             <section class="pad-left0 service-box-section" *ngIf="typeOfPlatform == 'aws'">
                                 <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': runtime == runtimeKeys[1]}"(keyup.enter)="onSelectionChange(runtimeKeys[1])"  (click)="onSelectionChange(runtimeKeys[1])">
@@ -198,20 +198,20 @@
                             </section>
                         </div>
                         <div class="runtime-row2 run-type-width space-between">
-                            <section class="pad-left0 service-box-section" *ngIf="typeOfPlatform == 'aws'">                  
+                            <section class="pad-left0 service-box-section" *ngIf="typeOfPlatform == 'aws'">
                                 <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[3]}"(keyup.enter)="onSelectionChange(runtimeKeys[3])"  (click)="onSelectionChange(runtimeKeys[3])">
                                     <div class="icon-icon-go">
                                         <img *ngIf="runtime == runtimeKeys[3]" [class.selected-image]="runtime == runtimeKeys[3]" src="./../../../assets/images/icons/Java.svg"/>
                                         <img *ngIf="runtime != runtimeKeys[3]" [class.selected-image]="runtime == runtimeKeys[3]" src="./../../../../assets/images/icons/greyscale-icons/icon-java.svg"/>
                                     </div>
-                                </div> 
+                                </div>
                                 <div class="icon-name" [ngClass]="{'service-box-selected': runtime == runtimeKeys[3]}">
                                     <p class="name-style">{{runtimeKeys[3]}}</p>
-                                </div> 
+                                </div>
                             </section>
-                            
-                            
-                            <section class="pad-left0 service-box-section" *ngIf="typeOfPlatform == 'aws'">                  
+
+
+                            <section class="pad-left0 service-box-section" *ngIf="typeOfPlatform == 'aws'">
                                     <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': runtime == runtimeKeys[4]}"(keyup.enter)="onSelectionChange(runtimeKeys[4])"  (click)="onSelectionChange(runtimeKeys[4])">
                                         <div class="icon-icon-go">
                                             <img *ngIf="runtime == runtimeKeys[4]" [class.selected-image]="runtime == runtimeKeys[4]" src="./../../../assets/images/icons/Go.svg"/>
@@ -222,8 +222,8 @@
                                         <p class="name-style">{{runtimeKeys[4]}}</p>
                                     </div>
                             </section>
-                            
-                            <section class="pad-left0 service-box-section disable-event" *ngIf="typeOfPlatform == 'aws'">                  
+
+                            <section class="pad-left0 service-box-section disable-event" *ngIf="typeOfPlatform == 'aws'">
                                 <div tabindex="0" class="service-box disabled-box" [ngClass]="{'service-box-selected': runtime == runtimeKeys[5]}" (keyup.enter)="onSelectionChange(runtimeKeys[5])" (click)="onSelectionChange(runtimeKeys[5])">
                                     <div class="icon-icon-go">
                                             <img  *ngIf="runtime == runtimeKeys[5]" [class.selected-image]="runtime == runtimeKeys[5]" src="./../../../assets/images/icons/C.svg"/>
@@ -233,8 +233,8 @@
                                 <div class="icon-name" [ngClass]="{'service-box-selected': runtime == runtimeKeys[5]}">
                                     <p class="name-style">C#</p>
                                 </div>
-                            </section> 
-    
+                            </section>
+
                         </div>
                     </div>
                 </div>
@@ -248,35 +248,35 @@
                 <div class="space-between content">
                     <div class="pad-left0 input-field-container allWidth" id="website-type">
                         <div class="runtime-row1 run-type-width space-between">
-                            <section class="pad-left0 service-box-section">                  
+                            <section class="pad-left0 service-box-section">
                                 <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': webtime == webKeys[0]}"(keyup.enter)="onWebSelectionChange(webKeys[0])"  (click)="onWebSelectionChange(webKeys[0])">
                                     <div>
                                         <img [class.unselected-image]="webtime != webKeys[0]" src="./../../../assets/images/html-bade.png"/>
                                     </div>
-                                </div> 
+                                </div>
                                 <div class="icon-name" [ngClass]="{'service-box-selected': webtime == webKeys[0]}">
                                     <p class="name-style">{{webKeys[0]}}</p>
-                                </div> 
+                                </div>
                             </section>
-                            <section class="pad-left0 service-box-section">                  
+                            <section class="pad-left0 service-box-section">
                                 <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': webtime == webKeys[1]}"(keyup.enter)="onWebSelectionChange(webKeys[1])"  (click)="onWebSelectionChange(webKeys[1])">
                                     <div>
                                         <img [class.unselected-image]="webtime != webKeys[1]" src="./../../../assets/images/angular.png"/>
                                     </div>
-                                </div> 
+                                </div>
                                 <div class="icon-name" [ngClass]="{'service-box-selected': webtime == webKeys[1]}">
                                     <p class="name-style">{{webKeys[1]}}</p>
-                                </div> 
+                                </div>
                             </section>
-                            <section class="pad-left0 service-box-section">                  
+                            <section class="pad-left0 service-box-section">
                                 <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': webtime == webKeys[2]}"(keyup.enter)="onWebSelectionChange(webKeys[2])"  (click)="onWebSelectionChange(webKeys[2])">
                                     <div>
                                         <img [class.unselected-image]="webtime != webKeys[2]" src="./../../../assets/images/react.png"/>
                                     </div>
-                                </div> 
+                                </div>
                                 <div class="icon-name" [ngClass]="{'service-box-selected': webtime == webKeys[2]}">
                                     <p class="name-style">{{webKeys[2]}}</p>
-                                </div> 
+                                </div>
                             </section>
                         </div>
 
@@ -395,65 +395,106 @@
             </section>
 
             <section id="deployment-descriptor" class="each-step-wrap service-description" *ngIf="typeOfService == 'sls-app'">
-                <div class="">
-                    <div class="">
-                        <p class="step-title">Deployment Descriptor</p>
-                        <p class="step-details">See <a a target="_blank" href="https://github.com/serverless/examples">https://github.com/serverless/examples</a> for examples of currently supported serverless templates.</p>
-                    </div>
-                    <div class="">
-                        <section class="pad-left0">
-                            
-                            <filters  class="filters" [filtersList]="deploymentDescriptorFilterData" [multiple]="false" [selectedList]="selectedList" (onSelected)="onFilterSelected($event)"></filters>
+              <div class="">
+                  <div class="">
+                      <p class="step-title">Application Definition</p>
+                      <p class="step-details">
+                          See
+                          <a target="_blank" href="https://github.com/serverless/examples">
+                              https://github.com/serverless/examples
+                          </a>
+                          for examples of currently supported application definitions (<strong>serverless.yml</strong> file content).
+                      </p>
 
-                            <div  class="input-field-container">
-                                <div class="input-wrapper">           
-                                    <div class="main-div" *ngIf="!isstartNew">
-                                    <div class="div-line">
-                                    <div class="line-num border opac">
-                                        <div  *ngFor="let value of lineNumberCount;let i = index">{{i + 1}}</div>                                                
-                                    </div>
-                                    <div class="myservice opac">
-                                        <p class="parameter">service:</p>
-                                        <div class="services-name">
-                                            <p class="service">name:</p>
-                                            <p class="magenta">{{model.serviceName}}</p>
-                                        </div>
-                                        <div class="services-name">
-                                            <p class="parameter">frameworkVersion:</p>
-                                            <p class="magenta">{{version}}</p> 
-                                        </div> 
-                                        <p class="parameter">provider:</p>
-                                            <div class="services-name">
-                                                <p class="service">name:</p>
-                                                <p class="magenta">{{typeOfPlatform}}</p>
-                                            </div>
-                                            <div class="services-name">
-                                                <p class="service">runtime:</p>
-                                                <p class="magenta">{{runtime}}</p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div class= "text-line">
-                                        <div class="textbox">
-                                            <div class="line-num radius">
-                                        <div *ngFor="let value of lineNumberCounting; let i = index">{{i + 9}}</div>
-                                    </div>
-                                    <textarea rows="2" cols="50" id="field" name="deploymentDescriptorText" type="text" class="text-area"  [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"(ngModelChange)="lineNumbers()"></textarea>
-                                </div>
-                                </div>
-                                </div>
-                                    <div *ngIf="isstartNew" class="startnew">
-                                    <textarea rows="2" cols="50"  name="deploymentDescriptorText" type="text" class="textForm deployment"  [(ngModel)]="deploymentDescriptorText" (change)="validateYAML()" (blur)="validateYAML()"></textarea>
-                                    <p class="descriptorError" *ngIf="isDescriptorEmpty">Please enter the valid Deployment Descriptor.</p>
-                                </div>
+                  </div>
+                  <div class="">
+                      <section class="pad-left0">
 
-                                </div>
-                            </div>
-                            <div class="form-error" *ngIf="!isyamlValid">Invalid Yaml Text</div>
-                        </section>
-                    </div>
-                </div>
-            </section>
+                          <filters
+                              class="filters"
+                              [filtersList]="deploymentDescriptorFilterData"
+                              [multiple]="false"
+                              [selectedList]="selectedList"
+                              (click)='validateYAML()'
+                              (onSelected)="onFilterSelected($event, false)">
+                          </filters>
+
+                          <div  class="input-field-container">
+                              <div class="input-wrapper">
+                                  <div class="main-div" *ngIf="!isstartNew">
+                                  <div class="div-line">
+                                  <div class="line-num border opac">
+                                   <div  *ngFor="let value of lineNumberCount;let i = index">{{i + 1}}</div>
+                                  </div>
+                                  <div class="myservice opac">
+                                      <p class="parameter">service:</p>
+                                      <div class="services-name">
+                                          <p class="service">name:</p>
+                                          <p class="magenta">{{model.serviceName}}</p>
+                                      </div>
+                                      <div class="services-name">
+                                          <p class="parameter">frameworkVersion:</p>
+                                          <p class="magenta">{{version}}</p>
+                                      </div>
+                                      <p class="parameter">provider:</p>
+                                          <div class="services-name">
+                                              <p class="service">name:</p>
+                                              <p class="magenta">{{typeOfPlatform}}</p>
+                                          </div>
+                                          <div class="services-name">
+                                              <p class="service">runtime:</p>
+                                              <p class="magenta">{{runtime}}</p>
+                                          </div>
+                                      </div>
+                                  </div>
+                                  <div class= "text-line">
+                                      <div class="textbox">
+                                          <div class="line-num radius">
+                                      <div *ngFor="let value of lineNumberCounting; let i = index">{{i + 9}}</div>
+                                  </div>
+                                  <textarea
+                                      rows="2"
+                                      cols="50"
+                                      id="field"
+                                      name="deploymentDescriptorText"
+                                      type="text"
+                                      class="text-area code"
+                                      (keyup)='validateYAML()'
+                                      [(ngModel)]="deploymentDescriptorText"
+                                      (ngModelChange)="lineNumbers()">
+                                  </textarea>
+                              </div>
+                              </div>
+                              </div>
+                                  <div *ngIf="isstartNew" class="startnew">
+                                  <textarea
+                                      rows="2"
+                                      cols="50"
+                                      name="deploymentDescriptorText"
+                                      type="text"
+                                      class="textForm deployment code"
+                                      [(ngModel)]="deploymentDescriptorText"
+                                      (keyup)='validateYAML()'>
+                                  </textarea>
+                              </div>
+
+                              </div>
+                          </div>
+                          <div class="valid">
+                              <p class="validation" *ngIf="isyamlValid && !isDescriptorEmpty">
+                                  YAML is valid.
+                              </p>
+                              <p class="invalidation" *ngIf="isDescriptorEmpty">
+                                  Application definition cannot be empty.
+                              </p>
+                              <p class="invalidation" *ngIf="!isyamlValid && !isDescriptorEmpty">
+                                  Oops! Incorrect YAML syntax.
+                              </p>
+                          </div>
+                      </section>
+                  </div>
+              </div>
+          </section>
 
             <section class="each-step-wrap slack-channel-integration">
                 <div class="row">

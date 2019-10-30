@@ -22,7 +22,8 @@ export class RateExpression {
     public type: string,
     public duration: string,
     public interval: string,
-    public cronStr: string
+    public cronStr: string,
+    public rateStr: string
   ) {  }
 }
 

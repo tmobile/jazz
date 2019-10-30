@@ -1264,7 +1264,7 @@ describe('jazz_metrics', function () {
         var resObj = utils.getAssetsObj([asset], userStatistics);
         expect(resObj[0]).to.have.all.deep.keys('isError', 'message', 'provider');
         expect(resObj[0]).to.include({
-          message: 'Metric not supported for asset type ' + asset.asset_type
+          message: 'Metric not supported for asset type: ' + asset.asset_type
         })
       });
     });

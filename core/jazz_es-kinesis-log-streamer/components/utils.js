@@ -68,7 +68,8 @@ function getApiLogsData(payload) {
   let bulkRequestBody = '',
     data = {},
     indexName = "apilogs";
-  data.asset_type = "apigateway"
+  data.asset_type = "apigateway";
+  data.provider = "aws";
   data.timestamp = new Date();
   data.platform_log_group = payload.logGroup;
   data.platform_log_stream = payload.logStream;
@@ -92,6 +93,7 @@ function getApiLogsData(payload) {
     data.domain = "";
     data.servicename = apiDomainAndService;
   }
+  data.asset_identifier = data.method + "/" + apiDomainAndService;
 
   data.path = getInfo(payload.logEvents, config.PATTERNS.path);
   data.application_logs_id = getInfo(payload.logEvents, config.PATTERNS.lambda_ref_id);
@@ -119,7 +121,7 @@ function getApiLogsData(payload) {
     "index": {}
   };
   action.index._index = indexName;
-  action.index._type = data.environment;
+  action.index._type = "apilogs";
   action.index._id = data.request_id;
 
   if (data.request_id && data.servicename) {
@@ -136,33 +138,30 @@ function getApiLogsData(payload) {
 
 function getLambdaLogsData(payload) {
   let bulkRequestBody = '',
-    data = {},
-    domainAndservice = '';
-  data.asset_type = "lambda"
+    data = {}
+  data.asset_type = "lambda";
+  data.provider = "aws";
+  let domainAndservice, serviceInfo;
   data.request_id = getInfo(payload.logEvents, config.PATTERNS.lambda_request_id);
   if (data.request_id) {
-    let lastSubstring = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment, 2);
-    if (lastSubstring === "prod" || lastSubstring === "stg" || lastSubstring === "dev") {
-      if (lastSubstring === "dev") {
-        let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 2);
-        domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 1);
-        data.environment = dev_environment;
-      } else {
-        data.environment = lastSubstring;
-        domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service, 1);
-      }
-    } else {
-      data.asset_identifier = lastSubstring
-      let environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_in_slsapp, 2);
-      if (environment === "dev") {
-        let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev_in_slsapp, 2);
-        domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev_in_slsapp, 1);
-        data.environment = dev_environment;
-      } else {
-        data.environment = environment;
-        domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service_in_slsapp, 1);
-      }
-    }
+    data.asset_identifier = payload.logGroup.split(config.PATTERNS.asset_identifier_key)[1];
+    let environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment, 2);
+		if (environment === "dev") {
+			let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 2);
+			serviceInfo = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 1);
+			data.environment = dev_environment;
+		} else {
+			data.environment = environment;
+			serviceInfo = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service, 1);
+		}
+
+		domainAndservice = serviceInfo;
+		if(serviceInfo.indexOf(config.PATTERNS.sls_app_function) !== -1 ) { // if yes then sls-app function
+			let serviceInfoArr = serviceInfo.split(config.PATTERNS.sls_app_function);
+			domainAndservice = serviceInfoArr[0];
+		} 
+
+		logger.debug("domainAndservice: " + domainAndservice)
     let domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));
     if (domain) {
       data.domain = domain;
@@ -209,7 +208,7 @@ function getLambdaLogsData(payload) {
           "index": {}
         };
         action.index._index = indexName;
-        action.index._type = data.environment;
+        action.index._type = "applicationlogs";
         action.index._id = logEvent.id;
 
         bulkRequestBody += [
@@ -250,8 +249,9 @@ function transform(payload) {
   });
 }
 
-function buildRequest(endpoint, body) {
-  let endpointParts = endpoint.match(/^([^\.]+)\.?([^\.]*)\.?([^\.]*)\.amazonaws\.com$/);
+function buildRequest(config, body) {
+  let endpoint = config.ES_ENDPOINT;
+  let endpointParts = endpoint.match(/^([^\.]+)\.?([^\.]*)\.?([^\.]*)\.amazonaws\.com/);
   let region = endpointParts[2];
   let service = endpointParts[3];
   let datetime = (new Date()).toISOString().replace(/[:\-]|\.\d{3}/g, '');
@@ -261,30 +261,28 @@ function buildRequest(endpoint, body) {
   let kService = hmac(kRegion, service);
   let kSigning = hmac(kService, 'aws4_request');
 
-  let request = {
-    host: endpoint,
+  let reqPayload = {
+    url: `${endpoint}/_bulk`,
     method: 'POST',
-    path: '/_bulk',
     body: body,
     headers: {
       'Content-Type': 'application/json',
-      'Host': endpoint,
       'Content-Length': Buffer.byteLength(body),
       'X-Amz-Security-Token': process.env.AWS_SESSION_TOKEN,
       'X-Amz-Date': datetime
     }
   };
 
-  let canonicalHeaders = Object.keys(request.headers)
+  let canonicalHeaders = Object.keys(reqPayload.headers)
     .sort(function (a, b) {
       return a.toLowerCase() < b.toLowerCase() ? -1 : 1;
     })
     .map(function (k) {
-      return k.toLowerCase() + ':' + request.headers[k];
+      return k.toLowerCase() + ':' + reqPayload.headers[k];
     })
     .join('\n');
 
-  let signedHeaders = Object.keys(request.headers)
+  let signedHeaders = Object.keys(reqPayload.headers)
     .map(function (k) {
       return k.toLowerCase();
     })
@@ -292,11 +290,11 @@ function buildRequest(endpoint, body) {
     .join(';');
 
   let canonicalString = [
-    request.method,
-    request.path, '',
+    reqPayload.method,
+    reqPayload.path, '',
     canonicalHeaders, '',
     signedHeaders,
-    hash(request.body, 'hex'),
+    hash(reqPayload.body, 'hex'),
   ].join('\n');
 
   let credentialString = [date, region, service, 'aws4_request'].join('/');
@@ -308,14 +306,13 @@ function buildRequest(endpoint, body) {
     hash(canonicalString, 'hex')
   ].join('\n');
 
-  request.headers.Authorization = [
+  reqPayload.headers.Authorization = [
     'AWS4-HMAC-SHA256 Credential=' + process.env.AWS_ACCESS_KEY_ID + '/' + credentialString,
     'SignedHeaders=' + signedHeaders,
     'Signature=' + hmac(kSigning, stringToSign, 'hex')
   ].join(', ');
 
-  logger.debug("request from build request" + JSON.stringify(request));
-  return request;
+  return reqPayload;
 }
 
 

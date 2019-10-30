@@ -1,17 +1,24 @@
 <div #metricCards class='metrics-carousel-container'>
-  <div class="jz-absolute-container">
+  <div class="relative">
     <div #metricCardsScroller class='metrics-carousel-scroller'
          [style.transform]="'translateX('+(metricCardSize * metricCardOffset)+ 'px)'">
-      <div class='metrics-card'
+      <div class='metrics-card relative'
            *ngFor="let metric of metrics; let i=index"
            [class.metrics-card-active]="index === i"
            (click)="selectCard(metric)">
-        <div class='metrics-name'>{{metricName(metric)}}</div>
+        <div class='metrics-name'>{{metricName(metric)}} 
+          <div class='absolute tooltip'>{{metricName(metric)}}</div>
+        </div>
+        <div *ngIf="options.aggregation">({{options.aggregation}})</div>
         <div class="metrics-card-content">
-          {{getRecentValue(metric) || '-'}}
+            {{getRecentValue(metric) || '-'}}
+            <div class='absolute tooltip' *ngIf='getRecentValue(metric)'>{{getRecentValue(metric)}}</div>
         </div>
         <div class="metrics-footer" *ngIf="getRecentValue(metric) && options.footerProperty">
           {{metric[options.listProperty][0][options.footerProperty]}}
+        </div>
+        <div class="metrics-footer" *ngIf="!getRecentValue(metric) || !options.footerProperty">
+          &nbsp;
         </div>
       </div>
     </div>

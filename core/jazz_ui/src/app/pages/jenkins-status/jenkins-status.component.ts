@@ -13,10 +13,10 @@ import { ToasterService } from 'angular2-toaster';
   styleUrls: ['./jenkins-status.component.scss']
 })
 export class JenkinsStatusComponent implements OnInit {
-  
+
 
   constructor(
-    private authService: AuthenticationService, 
+    private authService: AuthenticationService,
     private http: RequestService,
     private route: ActivatedRoute,
 		private router: Router,
@@ -31,7 +31,7 @@ export class JenkinsStatusComponent implements OnInit {
     noLink:boolean = true;
     goToLogin:boolean = false;
     rebuild_deployments:boolean = false;
-    
+
 
   public onLoginClicked (goToLogin) {
     this.goToLogin = goToLogin;
@@ -49,7 +49,7 @@ export class JenkinsStatusComponent implements OnInit {
       let currentUrl = this.router.url;
       this.goToLogin = true;
       this.closed = false;
-    
+
   	}else{
       this.router.navigateByUrl('services');
     }
@@ -63,11 +63,11 @@ export class JenkinsStatusComponent implements OnInit {
 
 
   rebuild(event){
-   
+
     var url_search = window.location.search;
     var urlParams = new URLSearchParams(url_search);
-    let action = urlParams.get("action"); 
-    let id = urlParams.get("id"); 
+    let action = urlParams.get("action");
+    let id = urlParams.get("id");
     this.http.post("/jazz/deployments/"+id+"/re-build",{},id).subscribe(
       (response) => {
         let successMessage = (response.data.message).replace("."," ");
@@ -82,7 +82,7 @@ export class JenkinsStatusComponent implements OnInit {
         this.status = 'loading';
         this.ngOnInit();
       }, 5000);
-       
+
   }
 
   toast_pop(error,oops,errorMessage)
@@ -94,24 +94,24 @@ export class JenkinsStatusComponent implements OnInit {
             tst.classList.remove('toaster-anim');
           }, 3000);
     }
- 
+
 
   ngOnInit() {
      var url_search = window.location.search;
      var urlParams = new URLSearchParams(url_search);
-    
-    let action = urlParams.get("action"); 
+
+    let action = urlParams.get("action");
     this.action = action;
-    
-    let deploymentId = urlParams.get("id"); 
-    
+
+    let deploymentId = urlParams.get("id");
+
     var url =  "/jazz/approve-deployment";
 
     var payload = { "action": action, "id": deploymentId};
   	this.makeRequest(url,payload);
   }
 
-  status: string = 'loading';
+  status: any = 'loading';
 
   makeRequest(url,payload) {
     this.status = 'loading';
@@ -120,12 +120,12 @@ export class JenkinsStatusComponent implements OnInit {
       (Response) => {
         var output = Response;
         //APPROVED, ABORTED,ALREADY_APPROVED, ALREADY_REJECTED,ALREADY_EXPIRED
-        
+
         if (output.data !== undefined && (output.data.status === 'EXPIRED' || output.data.status === 'ALREADY_EXPIRED')) {
           this.status = 'expired';
           this.message = output.data.message;
-          
-        } 
+
+        }
         else if(output.data !== undefined && (output.data.status === 'APPROVED' || output.data.status === 'ALREADY_APPROVED') && this.action === "proceed")
         {
           this.status = 'success';
