@@ -339,9 +339,9 @@ function createRoleInVault(roleDetails, configData, vaultToken) {
       rejectUnauthorized: false
     };
 
-    logger.info("createRoleInVault payload: " + JSON.stringify(payload));
+    logger.debug("createRoleInVault payload: " + JSON.stringify(payload));
     request(payload, function (error, response, body) {
-      logger.info("createRoleInVault response: " + JSON.stringify(response));
+      logger.debug("createRoleInVault response: " + JSON.stringify(response));
       if (response.statusCode && response.statusCode === 200) {
         logger.info("Successfully created role in t-vault: " + JSON.stringify(body));
         const message = { "message": `Role ${roleDetails.rolename} is successfully created in t-vault.` };
