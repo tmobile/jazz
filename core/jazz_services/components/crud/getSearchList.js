@@ -16,7 +16,7 @@
 
 /**
 	Get List of Service-Catalogs
-    @module: getList.js
+    @module: getSearchList.js
     @description: CRUD functions for service catalog
 	@author:
 	@version: 1.0
@@ -74,7 +74,7 @@ module.exports = (query, servicesList, onComplete) => {
           };
         });
       } else if (query[key]) {
-        filter = filter + `${key_name} = :${key_name}` + insertAnd;
+        filter = filter + `contains(${key_name} = :${key_name})` + insertAnd;
         attributeValues[(":" + key_name)] = {
           'S': query[key]
         };

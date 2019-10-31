@@ -125,7 +125,7 @@ module.exports.handler = (event, context, cb) => {
                     // fetch services list from dynamodb, filter if required
                     fetchServices: function (onComplete) {
                         var query = event.query;
-                        crud.getList(query, servicesList,onComplete);
+                        crud.getSearchList(query, servicesList,onComplete);
                     }
                 }, function (error, result) {
                     // Handle error

@@ -27,12 +27,13 @@ var _getList = require('./getList.js');
 var _create = require('./create.js');
 var _delete = require('./delete.js');
 var _update = require('./update.js');
-
+var _getSearchList = require('./getSearchList');
 
 module.exports = () => {
     return {
         get: _get,
         getList: _getList,
+        getSearchList: _getSearchList,
         create: _create,
         delete: _delete,
         update: _update
