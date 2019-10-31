@@ -1,0 +1,45 @@
+<div>
+  <div class="jz-row" [ngClass]="{'reverse': isReverse}">
+    <ng-template ngFor let-column [ngForOf]="form.columns" let-i="index">
+      <div
+        class="jz-column"
+        [ngClass]="{'asset': column.label === 'Filter By:'}">
+        <ng-template ngFor let-field [ngForOf]="column.fields">
+          <div
+            *ngIf="field.label !== 'PERIOD'"
+            class="jz-formgroup"
+            [ngClass]="{
+              'jz-metrics-filter-asset-name': field.label === 'ASSET NAME',
+              'reorder': column.fields && column.fields.length > 2
+            }">
+            <div class="jz-formfield">
+              <div class="jz-formfield-label">
+                {{field.label}}
+                <!--
+                  TODO:
+
+                  Address underlying smells that force unnecessary
+                  hacks like that below. The entire filter mechanism
+                  must be rewritten, adhering to reasonable separation
+                  of template semantics and supporting logic.
+                -->
+                <span class="jz-hidden">
+                  {{field.column === 'View By:' && i > 0 && reverseToolbar()}}
+                </span>
+              </div>
+              <dropdown
+                class="jz-metrics-dropdown"
+                [type]="field.label"
+                [rtl]="field.label === 'ASSET NAME'"
+                [defaultIndex]="field.label === 'TIME RANGE' ? 2 : 0"
+                [dropdwnContent]="field.options"
+                [selected]="field.selected"
+                (onSelected)="changeFilter($event, field)">
+              </dropdown>
+            </div>
+          </div>
+        </ng-template>
+      </div>
+    </ng-template>
+  </div>
+</div>

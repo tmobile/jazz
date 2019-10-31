@@ -465,22 +465,15 @@
         "asset_type": {
           "enum": [
             "lambda",
-            "apigateway",
-            "cloudfront",
-            "s3",
-            "dynamodb",
-            "cloudwatch_event",
-            "swagger_url",
-            "endpoint_url",
-            "dynamodb_stream",
-            "iam_role",
-            "sqs",
-            "kinesis_stream",
-            "apigee_proxy"
+            "apigateway"
           ],
           "type": "string",
-          "description": "Asset type for which the logs should be fetched."
+          "description": "Asset Type of the service"
         },
+        "asset_identifier": {
+          "type": "string",
+          "description": "Asset identifier of the service"
+        },        
         "start_time": {
           "type": "string",
           "format": "date-time",

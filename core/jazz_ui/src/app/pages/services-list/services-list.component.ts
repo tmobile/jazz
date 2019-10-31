@@ -35,9 +35,11 @@ export class ServicesListComponent implements OnInit {
   private toastMessage:any;
   private subscription:any;
   errBody: any;
+  errCode: number;
   parsedErrBody: any;
   errMessage: any;
   selectedList:string='all';
+  fromService: boolean;
   // @Output() onClose:EventEmitter<boolean> = new EventEmitter<boolean>();
 
   constructor(private sharedService: SharedService,
@@ -87,7 +89,16 @@ private intervalSubscription: Subscription;
       filter: {
         type: ''
       }
-    },{
+    },
+    {
+      label: 'Platform',
+      key: 'platform',
+      sort: true,
+      filter: {
+        type: 'input'
+      }
+    },
+    {
       label: 'Namespace',
       key: 'domain',
       sort: true,
@@ -128,8 +139,7 @@ private intervalSubscription: Subscription;
 
   //'Name','Type','Namespace','Last modified','health','status'
   statusData = ['Status (All)','Status (Active)','Status (Pending)','Status (Stopped)'];
-  
-  tabData = ['all','api','function','website','sls app'];
+  tabData = ['all','api','function','website','custom'];
 
   filterSelected: Boolean = false;
   paginationSelected: Boolean = true;
@@ -157,8 +167,9 @@ private intervalSubscription: Subscription;
     serviceList.forEach(function _processService(service) {
       let serviceRow = {
         name: service.service,
-        type: service.type,
+        type: service.type === 'sls-app' ? 'custom' : service.type,
         domain: service.domain,
+        platform: service.deployment_accounts[0].provider,
         health: 2,
         status: service.status.replace('_',' '),
         lastModified: service.timestamp.split("T")[0],
@@ -166,6 +177,10 @@ private intervalSubscription: Subscription;
         id: service.id,
         data: service
       };
+      if(service.type == 'sls-app'){
+        service.type = 'custom'
+      }
+      serviceRow['type'] = service.type
       _serviceList.push(serviceRow);
     });
 
@@ -527,9 +542,17 @@ onFilterCancel(event) {
     this.addQueryParam(queryParamKey, offsetValue, false );
 
     queryParamKey = 'type=';
+
+    // TODO: Address extant smells
     var queryParamValue = this.selectedListData[0].replace(/ /g,"-");
+    if(queryParamValue == 'custom'){
+      queryParamValue = 'sls-app'
+    }
     if(queryParamValue == "all"){
       queryParamValue = "";
+    }
+    if (queryParamValue === 'custom') {
+      queryParamValue = 'sls-app';
     }
     this.addQueryParam(queryParamKey, queryParamValue,  true);
   }

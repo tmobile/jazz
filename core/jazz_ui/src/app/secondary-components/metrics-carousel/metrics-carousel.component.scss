@@ -1,11 +1,10 @@
 .metrics-carousel-container {
-  padding: 15px 0;
+  padding-bottom: 1em;
   display: block;
   line-height: 1.5;
   overflow: hidden;
   white-space: nowrap;
   width: 100%;
-  height: 12rem;
   position: relative;
   z-index: 1;
 }
@@ -18,9 +17,9 @@
 }
 
 .metrics-card {
-  display: inline-flex;
+  display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: space-around;
   align-items: center;
   border-radius: 3px;
   background-color: #fdfdfd;
@@ -34,9 +33,32 @@
   vertical-align: top;
   cursor: pointer;
   margin-right: 1rem;
+  height: 10em;
+  transition: 0.3s ease;
   &:last-child {
     margin-right: 0;
   }
+}
+
+.metrics-card:hover .tooltip-status {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* TODO: Explore better tooltips */
+.metrics-card .tooltip-status {
+  padding: .3em .5em;
+  visibility: hidden;
+  border-radius: 0.4em;
+  opacity: 0;
+  bottom: -1.7em;
+  font-weight: 600;
+  color: white;
+  background: black;
+  font-size: .9em;
+  z-index: 99999;
+  position: relative;
+  text-transform: capitalize;
 }
 
 .metrics-card-active {
@@ -44,8 +66,9 @@
   position: relative;
   background-color: #f9f9f9;
   border: solid 1px #9b9b9b;
+  box-shadow: 0 2px 3px 0 rgba(0, 0, 0, 0.15);
   &:after, &:before {
-    bottom: 100%;
+    top: 100%;
     left: 50%;
     border: solid transparent;
     content: " ";
@@ -56,14 +79,14 @@
   }
   &:after {
     border-color: rgba(213, 213, 213, 0);
-    border-bottom-color: #fdfdfd;
+    border-top-color: #f9f9f9;
     border-width: 12px;
     margin-left: -12px;
-    bottom: calc(100% - 1px);
+    top: calc(100% - 1px);
   }
   &:before {
     border-color: rgba(194, 225, 245, 0);
-    border-bottom-color: #9b9b9b;
+    border-top-color: #555555ad;
     border-width: 12.75px;
     margin-left: -12.5px;
   }
@@ -73,11 +96,19 @@
   font-size: 14px;
   font-weight: bold;
   color: #555555;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
   text-transform: capitalize;
 }
 
 .metrics-card-content {
   font-size: 24px;
+  overflow: hidden;
+  max-width: 100%;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .metrics-footer {
@@ -94,8 +125,8 @@
 .metrics-arrows {
   position: absolute;
   left: 0;
-  bottom: 0;
-  height: calc(120rem / 12 - 15px);
+  top: 0;
+  height: calc(120rem / 12 - 10px);
   width: 100%;
 }
 
@@ -113,4 +144,26 @@
   top: 50%;
   left: calc(100% + 5px);
   transform: translateY(-50%);
+}
+
+.tooltip {
+  visibility: hidden;
+  background: #000;
+  color: #fff;
+  padding: 0.3em;
+  border-radius: 0.5em;
+  position: absolute;
+  font-size: 0.8em;
+  opacity: 0.8;
+  z-index: 3;
+}
+
+.metrics-card-content:hover .tooltip,
+.metrics-name:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+.metrics-card-content .tooltip {
+  font-size: 0.5em;
 }

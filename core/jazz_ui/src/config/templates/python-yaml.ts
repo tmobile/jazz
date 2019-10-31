@@ -1,8 +1,8 @@
 export const pythonTemplate = {
-    template:
+  template:
 `functions: 
-    function1: 
-      handler: functions/function1/index.handler
-    function2: 
-      handler: functions/function2/index.handler`   
+  function1: 
+    handler: functions/function1/index.handler
+  function2: 
+    handler: functions/function2/index.handler`   
 };

@@ -54,7 +54,9 @@ html.jazz {
 @font-face {
     font-family: 'icomoon';
     src: url(/assets/fonts/icomoon.eot);
-    src: url(/assets/fonts/icomoon.woff) format('woff'), url(/assets/fonts/icomoon.ttf) format('ttf'), url(/assets/fonts/icomoon.svg#icomoon) format('svg');
+    src: url(/assets/fonts/icomoon.woff) format('woff'),
+         url(/assets/fonts/icomoon.ttf) format('ttf'),
+         url(/assets/fonts/icomoon.svg#icomoon) format('svg');
     font-weight: normal;
     font-style: normal;
 }
@@ -72,6 +74,10 @@ html.jazz {
     /* Better Font Rendering =========== */
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+}
+
+.redoc-wrap {
+  margin-top: 54px;
 }
 
 
@@ -849,167 +855,134 @@ html.jazz {
 
 .icon-icon-AWS .path1:before {
     content: "\ea67";
-    color: rgb(17, 16, 14);
   }
   .icon-icon-AWS .path2:before {
     content: "\ea68";
     margin-left: -2.6650390625em;
-    color: rgb(245, 141, 17);
   }
   .icon-icon-AWS .path3:before {
     content: "\ea69";
     margin-left: -2.6650390625em;
-    color: rgb(245, 142, 20);
   }
   .icon-icon-AWS .path4:before {
     content: "\ea6a";
     margin-left: -2.6650390625em;
-    color: rgb(245, 142, 20);
   }
   .icon-icon-AWS .path5:before {
     content: "\ea6b";
     margin-left: -2.6650390625em;
-    color: rgb(18, 17, 15);
   }
   .icon-icon-AWS .path6:before {
     content: "\ea6c";
     margin-left: -2.6650390625em;
-    color: rgb(18, 17, 15);
   }
   .icon-icon-AWS .path7:before {
     content: "\ea6d";
     margin-left: -2.6650390625em;
-    color: rgb(18, 17, 15);
   }
   .icon-icon-AWS .path8:before {
     content: "\ea6e";
     margin-left: -2.6650390625em;
-    color: rgb(18, 17, 15);
   }
   .icon-icon-AWS .path9:before {
     content: "\ea6f";
     margin-left: -2.6650390625em;
-    color: rgb(19, 18, 16);
   }
   .icon-icon-AWS .path10:before {
     content: "\ea70";
     margin-left: -2.6650390625em;
-    color: rgb(245, 141, 18);
   }
   .icon-icon-AWS .path11:before {
     content: "\ea71";
     margin-left: -2.6650390625em;
-    color: rgb(245, 141, 18);
   }
   .icon-icon-AWS .path12:before {
     content: "\ea72";
     margin-left: -2.6650390625em;
-    color: rgb(245, 141, 18);
   }
   .icon-icon-AWS .path13:before {
     content: "\ea73";
     margin-left: -2.6650390625em;
-    color: rgb(245, 141, 18);
   }
   .icon-icon-AWS .path14:before {
     content: "\ea74";
     margin-left: -2.6650390625em;
-    color: rgb(245, 141, 18);
   }
   .icon-icon-AWS .path15:before {
     content: "\ea75";
     margin-left: -2.6650390625em;
-    color: rgb(245, 141, 17);
   }
   .icon-icon-AWS .path16:before {
     content: "\ea76";
     margin-left: -2.6650390625em;
-    color: rgb(245, 141, 17);
   }
   .icon-icon-AWS .path17:before {
     content: "\ea77";
     margin-left: -2.6650390625em;
-    color: rgb(245, 141, 17);
   }
   .icon-icon-AWS .path18:before {
     content: "\ea78";
     margin-left: -2.6650390625em;
-    color: rgb(245, 141, 17);
   }
   .icon-icon-AWS .path19:before {
     content: "\ea79";
     margin-left: -2.6650390625em;
-    color: rgb(20, 19, 17);
   }
   .icon-icon-AWS .path20:before {
     content: "\ea7a";
     margin-left: -2.6650390625em;
-    color: rgb(18, 17, 15);
   }
   .icon-icon-AWS .path21:before {
     content: "\ea7b";
     margin-left: -2.6650390625em;
-    color: rgb(21, 20, 18);
   }
   .icon-icon-AWS .path22:before {
     content: "\ea7c";
     margin-left: -2.6650390625em;
-    color: rgb(21, 20, 18);
   }
   .icon-icon-AWS .path23:before {
     content: "\ea7d";
     margin-left: -2.6650390625em;
-    color: rgb(21, 20, 18);
   }
   .icon-icon-AWS .path24:before {
     content: "\ea7e";
     margin-left: -2.6650390625em;
-    color: rgb(20, 19, 17);
   }
   .icon-icon-AWS .path25:before {
     content: "\ea7f";
     margin-left: -2.6650390625em;
-    color: rgb(21, 20, 18);
   }
   .icon-icon-AWS .path26:before {
     content: "\ea80";
     margin-left: -2.6650390625em;
-    color: rgb(20, 19, 17);
   }
   .icon-icon-AWS .path27:before {
     content: "\ea81";
     margin-left: -2.6650390625em;
-    color: rgb(20, 19, 17);
   }
   .icon-icon-AWS .path28:before {
     content: "\ea82";
     margin-left: -2.6650390625em;
-    color: rgb(245, 142, 20);
   }
   .icon-icon-AWS .path29:before {
     content: "\ea83";
     margin-left: -2.6650390625em;
-    color: rgb(245, 142, 20);
   }
   .icon-icon-AWS .path30:before {
     content: "\ea84";
     margin-left: -2.6650390625em;
-    color: rgb(245, 142, 20);
   }
   .icon-icon-AWS .path31:before {
     content: "\ea85";
     margin-left: -2.6650390625em;
-    color: rgb(18, 17, 15);
   }
   .icon-icon-AWS .path32:before {
     content: "\ea86";
     margin-left: -2.6650390625em;
-    color: rgb(25, 24, 22);
   }
   .icon-icon-AWS .path33:before {
     content: "\ea87";
     margin-left: -2.6650390625em;
-    color: rgb(20, 19, 17);
   }
   .icon-icon-googlecloud:before {
     content: "\ea88";
@@ -2553,4 +2526,9 @@ html.jazz {
     font-size: 10px;
     padding: 3px 6px;
     transform: translateY(-4px);
+}
+
+
+.icon-icon-azure-functions:before {
+  content: "\eaad";
 }

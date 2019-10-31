@@ -15,12 +15,12 @@
 // =========================================================================
 
 /**
-    Helper functions for Metrics
-    @module: utils.js
-    @description: Defines functions like format the output as per metrics catalog.
-    @author:
-    @version: 1.0
-**/
+ Helper functions for Metrics
+ @module: utils.js
+ @description: Defines functions like format the output as per metrics catalog.
+ @author:
+ @version: 1.0
+ **/
 const parser = require('aws-arn-parser');
 const metricConfig = require("./metrics.json");
 const global_config = require("../config/global-config.json");
@@ -79,6 +79,8 @@ function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset, provider) {
     output_obj["nameSpace"] = `Invalid`;
     return output_obj;
   }
+
+  // mapping source: https://docs.aws.amazon.com/AmazonCloudWatch/latest/monitoring/aws-services-cloudwatch-metrics.html
   var supportedNamespace = namespacesList[provider][nameSpace];
   let awsNameSpace;
   if (nameSpaceFrmAsset && supportedNamespace && provider === 'aws') {
@@ -101,7 +103,7 @@ function getNameSpaceAndMetricDimensons(nameSpaceFrmAsset, provider) {
     } else {
       output_obj["isError"] = true;
       output_obj["message"] = "AWS namespace not defined";
-      output_obj["nameSpace"] = "Invalid";
+      output_obj["nameSpace"] = "Invalid Namespace: " + awsAddedNameSpace;
     }
 
     output_obj["paramMetrics"] = paramMetrics;
@@ -130,13 +132,14 @@ function extractValueFromString(string, keyword) {
 
 function getApiName(string) {
   var value;
-  if (Object.keys(global_config.APINAME).indexOf(string) > -1) {
-    value = global_config.APINAME[string];
+  if( string == "stg"){
+    value = global_config.STACK_PREFIX + "-stg"
+  } else if( string == "prod"){
+    value = global_config.STACK_PREFIX + "-prod"
   } else {
-    value = "*"
+    value = global_config.STACK_PREFIX + "-dev"
   }
   return value;
-
 };
 
 function getAssetsObj(assetsArray, userStatistics) {
@@ -149,6 +152,7 @@ function getAssetsObj(assetsArray, userStatistics) {
     });
   }
   assetsArray.forEach((asset) => {
+
 
     var assetType = asset.asset_type;
     if (!namespaces[asset.provider]) {
@@ -180,20 +184,17 @@ function getAssetsObj(assetsArray, userStatistics) {
         "provider": asset.provider,
         "type": assetType,
         "asset_name": dimensionObj,
-        "statistics": userStatistics
+        "statistics": userStatistics,
+        "provider": asset.provider,
+        "metrics": metricNamespace.metrics
       };
       assetObj = updateNewAssetObj(newAssetObj, asset);
       newAssetArr.push(assetObj);
-    } else if (assetType) {
+    } else {
       // type not supported
       newAssetArr.push({
-        "message": `Metric not supported for asset type ${assetType}`,
-        "isError": true
-      });
-    } else {
-      // type not found
-      newAssetArr.push({
-        "message": `Asset type not found `,
+        "message": `Metric not supported for asset type: ${assetType}`,
+        "provider": asset.provider,
         "isError": true
       });
     }
@@ -208,13 +209,16 @@ function updateNewAssetObj(newAssetObj, asset) {
     case "aws":
       newAssetObj = updateAWSAsset(newAssetObj, asset);
       break;
+    case "azure":
+      newAssetObj = updateAZAsset(newAssetObj, asset);
+      break;
     case "gcp":
       newAssetObj = updateApigeeAsset(newAssetObj, asset);
       break;
     default:
       newAssetObj = {
         "isError": true,
-        "message": "Metric not supported for asset type " + assetType
+        "message": "Metric not supported for asset type: " + assetType
       }
   }
   return newAssetObj;
@@ -258,8 +262,30 @@ function updateAWSAsset(newAssetObj, asset) {
 
     default:
       newAssetObj = {
-        "message": "Metric not supported for asset type " + assetType,
+        "message": "Metric not supported for asset type: " + assetType,
         "isError": true
+      }
+  }
+  return newAssetObj;
+}
+
+function updateAZAsset(newAssetObj, asset) {
+  var arnString = asset.provider_id, assetType = asset.asset_type, assetEnvironment = asset.environment;
+  var arnParsedObj = parser(arnString);
+  var relativeId = arnParsedObj.relativeId;
+
+  switch (assetType) {
+    case "storage_account":
+      asset.metrics = newAssetObj.metrics;
+      newAssetObj = asset;
+      break;
+    case "apigateway":
+      asset.metrics = newAssetObj.metrics;
+      newAssetObj = asset;
+      break;
+    default:
+      newAssetObj = {
+        "isError": "Metric not supported for asset type: " + assetType
       }
   }
   return newAssetObj;
@@ -320,11 +346,12 @@ function updateApigatewayAsset(newAssetObj, relativeId, assetEnvironment) {
 
   var parts = relativeId.split("/");
 
-  var apiId = parts[0];
-  newAssetObj.asset_name.ApiName = getApiName(apiId);
+  //var apiId = parts[0];
 
   var stgValue = parts[1] === '*' ? assetEnvironment : parts[1];
   newAssetObj.asset_name.Stage = stgValue || "*";
+
+  newAssetObj.asset_name.ApiName = getApiName(stgValue);
 
   var methodValue = parts[2];
   newAssetObj.asset_name.Method = methodValue;

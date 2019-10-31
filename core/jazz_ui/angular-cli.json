@@ -20,7 +20,8 @@
         "styles": [
             "styles.css",
             "styles/smacss/main.scss",
-            "../node_modules/bootstrap/dist/css/bootstrap.min.css"
+            "../node_modules/bootstrap/dist/css/bootstrap.min.css",
+            "../node_modules/font-awesome/scss/font-awesome.scss"
         ],
         "scripts": [
             "../node_modules/jquery/dist/jquery.min.js",
@@ -30,7 +31,7 @@
         ],
         "environmentSource": "environments/environment.ts",
         "environments": {
-            "dev": "environments/environment.ts",
+            "dev": "environments/environment.dev.ts",
             "internal": "environments/environment.internal.ts",
             "oss": "environments/environment.oss.ts",
             "local": "environments/environment.local.ts"

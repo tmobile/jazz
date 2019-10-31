@@ -16,7 +16,20 @@
 .each-endp {
     display: inline-block;
 }
-
+.aws-icon {
+    font-size: 22px;
+}
+.azure-image {
+  height: 20px;
+  margin-top: -.2em;
+  width: 20px;
+}
+#aws-logo-single-block.tiny {
+  width: 1.5em;
+}
+.service-platform {
+    display: flex;
+}
 .copy-arn {
     height: 1.5rem;
     transform: rotate(-45deg);
@@ -338,9 +351,6 @@
     outline: none;
 }
 
-.det-value input[type="radio"] + label span.background{
-    top:5px;
-}
 
 .edit-service-overview {
     display: flex;

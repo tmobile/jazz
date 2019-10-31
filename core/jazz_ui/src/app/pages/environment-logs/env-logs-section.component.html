@@ -1,6 +1,6 @@
 <div class="row page-section section-top relative">
-    
-    
+
+
     <filter-tags #filtertags (OnCancel)='cancelFilter($event)'></filter-tags>
 
     <div class="filter-wrp">
@@ -10,20 +10,20 @@
             <span class="icon-icon-filter-unselected" [class.selected]="filterSelected" (click)="filterSelected = !filterSelected">
         </span>
         </div>
-        
+
         <div class='drp-wrp'>
             <span title='Collapse all' *ngIf='expandText == "Collapse all"' class="icon-Collapse-All expandbtn" (click)='collapseall()'></span>
             <span title='Expand all' *ngIf='expandText == "Expand all"' class="icon-Expand-All expandbtn" (click)='expandall()'></span>
-            
-               
+
+
 
 
                 <div class='template-wrp env-filters'>
-                    <template adv-filters></template>
+                    <ng-template adv-filters></ng-template>
 
                 </div>
-                <div id='hidethis' [class.hide]='filter_loaded' *ngIf='!filter_loaded' class='template-wrp'>     
-                    <span class="icon-icon-filter-unselected icon-icon-filter-unselected-font "  title="Filter" ></span>                    
+                <div id='hidethis' class='template-wrp'>
+                    <span class="icon-icon-filter-unselected icon-icon-filter-unselected-font "  title="Filter" ></span>
                 </div>
         </div>
 

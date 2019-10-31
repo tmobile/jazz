@@ -9,7 +9,7 @@ import {
   ViewChild
 } from '@angular/core';
 import {UtilsService} from "../../core/services/utils.service";
-
+import {RenameFieldService} from '../../core/services/rename-field.service';
 
 @Component({
   selector: 'metrics-carousel',
@@ -77,7 +77,8 @@ export class MetricsCarouselComponent implements OnInit {
   public metricCardOffset = 0;
 
 
-  constructor(public utils: UtilsService) {
+  constructor(public utils: UtilsService,
+    public renameFieldService: RenameFieldService) {
   }
 
   ngOnInit() {
@@ -95,13 +96,13 @@ export class MetricsCarouselComponent implements OnInit {
     if (_metric && typeof _metric === 'string') {
       return _metric;
     } else if (_metric && typeof _metric === 'number') {
-      return _metric.toFixed();
+      return Number(_metric.toFixed()).toLocaleString();
     }
 
   }
 
   metricName(metric) {
-    return this.utils.hyphenToSpace(metric[this.options.nameProperty])
+    return this.renameFieldService.getDisplayNameOfKey(metric[this.options.nameProperty].toLowerCase()) || metric[this.options.nameProperty];
   }
 
   offsetLeft() {

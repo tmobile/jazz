@@ -3,11 +3,16 @@
   <div>
     <!-- <img class='ft-logo' src='assets/landing/TMOBlack@2x.png.png' > -->
     <span *ngIf='!isOSS' class="ft-logo icon-tmobile-logo"></span>
-  
+
     <div class='ft-links'>
       <ul>
         <li><a tabindex="-1" (click)='goToAbout("features")' > FEATURES</a></li>
         <li><a tabindex="-1" (click)='goToAbout("about")' >CONTACTS</a></li>
+        <li>
+          <a target="_blank" routerLink="/docs/api" tabindex="-1">
+            API DOCS
+          </a>
+        </li>
       </ul>
     </div>
   </div>
@@ -19,7 +24,7 @@
       <li>Privacy policy</li>
     </ul>
     </div>
-  
 
-  
+
+
 </section>

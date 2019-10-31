@@ -78,11 +78,6 @@ $graph-title-height: 2.6rem;
     border-radius: 3px;
     height: 100%;
   }
-  /deep/ line-graph {
-    // height: calc(100% - #{$graph-title-height});
-    // padding-left: 1rem;
-    // padding-right: 1rem;
-  }
 }
 
 .page-section {
@@ -120,15 +115,8 @@ $graph-title-height: 2.6rem;
 
 .filter-wrp {
   display: flex;
-  align-items: center; // margin-bottom: 0.75rem;
-  @media (min-width: $screen-lg) {
-    .dropdown-1, .dropdown-2 {
-      // width: 200px;
-      // /deep/ .dropdown .dropdown-btn{
-      //     font-size: 14px;
-      // }
-    }
-  }
+  align-items: center;
+
   /deep/ .dropdown-btn .caret {
     right: 3px !important;
   }
@@ -160,10 +148,6 @@ $graph-title-height: 2.6rem;
     flex-grow: 1;
     max-width: inherit;
   }
-  .dropdown-2,
-  .dropdown-3 {
-    margin-left: 1rem;
-  }
   width: 100%;
   display: flex;
   margin-left: auto;
@@ -172,23 +156,12 @@ $graph-title-height: 2.6rem;
   }
   @media (min-width: 853px) {
     width: auto;
-    .dropdown-1 {
-      margin-left: 2rem;
-    }
     /deep/ .dropdown {
       min-width: 91px;
     }
   }
 }
 
-// .filter-icon {
-//     margin: 0 0 0 0rem;
-//     // margin-left: 25px;
-//     .icon-icon-filter-unselected{
-//         box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.15);
-//         border-radius: 3px;
-//     }
-// }
 search-box {
   display: inline-block;
   margin-left: auto;
@@ -313,15 +286,6 @@ search-box {
   font-weight: 500;
 }
 
-// .empty-row {
-//     position: absolute;
-//     text-align: center;
-//     padding: 0rem 1.25rem;
-//     /* top: 10%; */
-//     width: 100%;
-//     font-size: 18px;
-//     font-weight: 500;
-// }
 .with-refresh.show {
   left: 25% !important;
   width: 50% !important;
@@ -347,9 +311,9 @@ search-box {
   display: none;
   position: absolute;
   top: 0;
-  background-color: #ddd; // width: 250px;
+  background-color: white;
   right: 0;
-  padding: 1rem 1rem 0.5rem 1rem;
+  padding: 1rem;
   font-size: 1rem;
   color: #000;
   border-radius: 5px;
@@ -371,12 +335,12 @@ search-box {
     top: 0;
   }
   .eachFilter {
-    border-bottom: 1px solid #aaa;
-    padding-top: 1.5rem;
+    padding: 1em 0;
     font-weight: 500;
     div {
-      // line-height: 2.5rem;
       font-weight: bold;
+      margin-bottom: 0.5em;
+      vertical-align: middle;
     }
     &:last-child {
       border-bottom: none; // padding:0;
@@ -385,6 +349,10 @@ search-box {
   .dropdown-3 /deep/ .dropdown {
     margin-bottom: 0.5rem;
   }
+}
+
+.filter-modal-position /deep/ .jz-modal {
+  background-color: #ddd;
 }
 
 .filter-wrap.show {
@@ -396,7 +364,8 @@ search-box {
 }
 
 .first-child {
-  margin-right: 2rem;
+  width: 355px;
+  margin-right: 1rem;
 }
 
 .hori-line {
@@ -649,10 +618,33 @@ search-box {
 
 .jz-btn-icon{
   margin-right: -2rem;
-  height: 32px;
+  font-size: 18px;
   padding: 6px;
 }
 
 .metrics-section{
   height: calc(100vh - 12rem);
+}
+
+metrics-carousel {
+  position: relative;
+}
+
+#jz-metrics-filter {
+  position: relative;
+  top: -4px;
+}
+
+#jz-filter-actions {
+  display: none;
+}
+
+@media (max-width: $screen-sm) {
+  #jz-metrics-filter {
+    display: none;
+  }
+
+  #jz-filter-actions {
+    display: flex;
+  }
 }
