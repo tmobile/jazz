@@ -629,3 +629,22 @@ search-box {
 metrics-carousel {
   position: relative;
 }
+
+#jz-metrics-filter {
+  position: relative;
+  top: -4px;
+}
+
+#jz-filter-actions {
+  display: none;
+}
+
+@media (max-width: $screen-sm) {
+  #jz-metrics-filter {
+    display: none;
+  }
+
+  #jz-filter-actions {
+    display: flex;
+  }
+}

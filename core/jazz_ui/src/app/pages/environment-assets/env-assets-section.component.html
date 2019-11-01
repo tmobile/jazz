@@ -47,21 +47,57 @@
                       </div>
                       <div class='asset-img'>
                           <div class="asset-title-row" [ngSwitch]="assetType['key']">
-                                  <span *ngSwitchCase='"apigateway"' class="icon-icon-APIGateway">
-                                          <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span>
-                                  </span>
-                                  <span *ngSwitchCase='"lambda"' class="icon-icon-AWS-lambda">
-                                          <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span>
-                                  </span>
-                                  <span *ngSwitchCase='"s3"' class="icon-icon-S3">
-                                          <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span>
-                                  </span>
-                                  <span *ngSwitchCase='"ec2"' class="icon-icon-EC2">
-                                          <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span>
-                                  </span>
-                                  <span *ngSwitchDefault >
-                                      <img class='server-icon' src='./../../../assets/images/server.svg'>
-                                  </span>
+                                <span *ngSwitchCase='"apigateway"' class="icon-icon-APIGateway">
+                                    <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span>
+                                </span>
+                                <span *ngSwitchCase='"lambda"' class="icon-icon-AWS-lambda">
+                                    <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span><span class="path13"></span><span class="path14"></span><span class="path15"></span><span class="path16"></span><span class="path17"></span><span class="path18"></span><span class="path19"></span><span class="path20"></span><span class="path21"></span><span class="path22"></span><span class="path23"></span><span class="path24"></span><span class="path25"></span><span class="path26"></span><span class="path27"></span><span class="path28"></span><span class="path29"></span><span class="path30"></span><span class="path31"></span><span class="path32"></span><span class="path33"></span>
+                                </span>
+                                <span *ngSwitchCase='"s3"' class="icon-icon-S3">
+                                    <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span><span class="path9"></span><span class="path10"></span><span class="path11"></span><span class="path12"></span>
+                                </span>
+                                <span *ngSwitchCase='"ec2"' class="icon-icon-EC2">
+                                    <span class="path1"></span><span class="path2"></span><span class="path3"></span><span class="path4"></span><span class="path5"></span><span class="path6"></span><span class="path7"></span><span class="path8"></span>
+                                </span>
+                                <span *ngSwitchCase='"eventhubs_eventhub"'>
+                                    <img class='server-icon' src='./../../../assets/images/Event_Hubs.svg'>
+                                </span>
+                                <span *ngSwitchCase='"functionapp"'>
+                                    <img class='server-icon' src='./../../../assets/images/Function_Apps.svg'>
+                                </span>
+                                <span *ngSwitchCase='"storage_account"'>
+                                    <img class='server-icon' src='./../../../assets/images/Storage_Accounts.svg'>
+                                </span>
+                                <span *ngSwitchCase='"cosmosdb_database"'>
+                                    <img class='server-icon' src='./../../../assets/images/Azure_Cosmos_DB.svg'>
+                                </span>
+                                <span *ngSwitchCase='"cosmosdb_account"'>
+                                    <img class='server-icon' src='./../../../assets/images/Azure_Database.svg'>
+                                </span>
+                                <span *ngSwitchCase='"storage_blob_container"'>
+                                    <img class='server-icon' src='./../../../assets/images/Blob_Storage.svg'>
+                                </span>
+                                <span *ngSwitchCase='"cosmosdb_collection"'>
+                                    <img class='server-icon' src='./../../../assets/images/Virtual_Clusters.svg'>
+                                </span>
+                                <span *ngSwitchCase='"eventhubs_namespace"'>
+                                    <img class='server-icon' src='./../../../assets/images/Event_Grid_Domains.svg'>
+                                </span>
+                                <span *ngSwitchCase='"servicebus_queue"'>
+                                    <img class='server-icon' src='./../../../assets/images/Azure_Service_Bus.svg'>
+                                </span>
+                                <span *ngSwitchCase='"servicebus_namespace"'>
+                                    <img class='server-icon' src='./../../../assets/images/Azure_Service_Bus_Relays.svg'>
+                                </span>
+                                <span *ngSwitchCase='"cdn_profile"'>
+                                    <img class='server-icon' src='./../../../assets/images/CDN_Profiles.svg'>
+                                </span>
+                                <span *ngSwitchCase='"cdn_endpoint"'>
+                                    <img class='server-icon' src='./../../../assets/images/App_Services.svg'>
+                                </span>
+                                <span *ngSwitchDefault>
+                                    <img class='server-icon' src='./../../../assets/images/server.svg'>
+                                </span>
                               </div>
                       </div>
                       <div class='asset-count'>{{assetListbyType[assetType['key']].length}}</div>

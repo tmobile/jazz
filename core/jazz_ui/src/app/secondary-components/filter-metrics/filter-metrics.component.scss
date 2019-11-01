@@ -1,0 +1,58 @@
+@import '~styles/bootstrap/_variables';
+
+.jz-row {
+  flex-direction: row-reverse;
+}
+
+.jz-row.reverse {
+  flex-direction: row;
+}
+
+.jz-column {
+  display: flex;
+  flex: 1;
+  justify-content: space-between;
+  padding: 0;
+}
+
+.jz-column:not(.asset) {
+  justify-content: flex-end;
+}
+
+.jz-column:not(.asset) .jz-formgroup {
+  max-width: 153px;
+}
+
+.jz-column.asset {
+  flex: 2;
+  justify-content: flex-end;
+  max-width: 800px;
+}
+
+.jz-metrics-filter-asset-name.reorder {
+  max-width: 400px;
+  order: 1;
+}
+
+.jz-metrics-filter-asset-name {
+  flex: 2 !important;
+}
+
+.jz-formgroup {
+  flex: 1;
+  margin-right: 1em;
+  min-width: 57px;
+  padding: 0 0 1.6em 0;
+}
+
+.jz-formfield-label {
+  font-size: .9em;
+}
+
+.jz-formfield-label:before {
+  content: none;
+}
+
+.jz-column:not(.asset) .jz-formgroup.reorder:last-child {
+  margin-right: 0;
+}

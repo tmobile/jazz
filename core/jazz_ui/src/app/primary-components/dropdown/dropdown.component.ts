@@ -1,5 +1,5 @@
-/** 
-  * @type Component 
+/**
+  * @type Component
   * @desc Generic dropdowns element
   * @author
 */
@@ -18,6 +18,9 @@ export class DropdownComponent implements OnInit, OnChanges {
   @Input() IsEnvList:boolean=false;
 
   @Input() selected;
+  @Input() type;
+  @Input() rtl;
+  @Input() defaultIndex;
   @Input() public statusFilter: Function;
   @Output() onSelected:EventEmitter<boolean> = new EventEmitter<boolean>();
 
@@ -40,13 +43,16 @@ export class DropdownComponent implements OnInit, OnChanges {
   }
 
   ngOnChanges(changes: SimpleChanges) {
+    if (this.type === 'ASSET TYPE' || this.type === 'ENVIRONMENT')
+      return;
     const dropdwnContent = changes['dropdwnContent'];
     if(dropdwnContent) {
       // on content change, selecting first value by default
       const cur  = JSON.stringify(dropdwnContent.currentValue);
       const prev = JSON.stringify(dropdwnContent.previousValue);
       if (cur !== prev) {
-        this.selected = dropdwnContent.currentValue && dropdwnContent.currentValue[0];
+        this.selected = dropdwnContent.currentValue &&
+          dropdwnContent.currentValue[this.defaultIndex || 0];
       }
     }
   }

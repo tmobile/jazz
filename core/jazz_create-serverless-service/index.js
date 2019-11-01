@@ -92,7 +92,7 @@ var handler = (event, context, cb) => {
     // Validate and set deployment accounts
     let primaryAccountCount = 0;
 
-    if (Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts) {
+    if (service_creation_data.deployment_accounts && Array.isArray(service_creation_data.deployment_accounts)) {
       let providerValues = validateMultipleProviders(service_creation_data.deployment_accounts);
       if(!providerValues){
         logger.error('Deployment accounts has multiple providers which is not supported now!');

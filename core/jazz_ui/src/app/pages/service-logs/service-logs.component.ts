@@ -198,15 +198,7 @@ export class ServiceLogsComponent implements OnInit {
 	assetNameFilterWhiteList = [
 		'all',
 		'lambda',
-		'cloudfront',
-		's3',
-		'dynamodb',
-		'sqs',
-		'kinesis',
-		'iam_role',
-		'iam role',
-		'apigateway',
-		'apigee_proxy'
+		'apigateway'
 	];
 
 	getFilter(filterServ){
@@ -377,7 +369,11 @@ export class ServiceLogsComponent implements OnInit {
 			if (response && response.data && response.data.assets) {
 				this.assetsNameArray.push(response);
 				let assets = _(response.data.assets).map('asset_type').uniq().value();
-
+				const filterWhitelist = [
+					'lambda',
+					'apigateway'
+				];
+				assets = assets.filter(item => filterWhitelist.includes(item));
 				let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 				validAssetList.splice(0,0,'all');
 				this.responseArray = this.assetsNameArray[0].data.assets.filter(asset => (validAssetList.indexOf(asset.asset_type) > -1));
@@ -391,7 +387,7 @@ export class ServiceLogsComponent implements OnInit {
 				}
 				self.assetSelected = validAssetList[0].replace(/_/g, " ");
 				if (this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1) {
-					self.setAssetName(self.assetsNameArray[0].data.assets, self.assetSelected);
+					self.setAssetName(self.responseArray, self.assetSelected);
 				}
 				self.getFilter(self.advancedFilters);
 			}
@@ -477,14 +473,13 @@ export class ServiceLogsComponent implements OnInit {
 			}
 			case "resource" : {
 				this.FilterTags.notifyLogs('filter-Asset-Name', event.value);
-				if(this.service.serviceType == 'sls-app'){
-					this.resourceSelected = event.value;
-					this.payload.asset_identifier = this.resourceSelected;
-					if(this.resourceSelected.toLowerCase() === 'all'){
-						delete this.payload['asset_identifier'];
-					}
-					this.resetPayload();
+				this.resourceSelected = event.value;
+				this.payload.asset_identifier = this.resourceSelected;
+				if(this.resourceSelected.toLowerCase() === 'all'){
+					delete this.payload['asset_identifier'];
 				}
+				this.resetPayload();
+				break;
 			}
 		}
 	}
@@ -907,7 +902,7 @@ export class ServiceLogsComponent implements OnInit {
 			"service": this.service.name,//"logs", //
 			"domain": this.service.domain,//"jazz", //
 			"environment": this.environment, //"dev"
-			"category": this.service.serviceType,//"api",//
+			"category": this.service.serviceType === "custom" ? "sls-app" : this.service.serviceType,//"api",//
 			"size": this.limitValue,
 			"offset": this.offsetValue,
 			"type": this.filterloglevel || "ERROR",
