@@ -61,7 +61,7 @@ var handler = (event, context, cb) => {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("'Service Name' can have up to 20 characters")));
     } else if (service_creation_data.domain && service_creation_data.domain.length > 20) {
       return cb(JSON.stringify(errorHandler.throwInputValidationError("'Namespace' can have up to 20 characters")));
-    } 
+    }
     // validate service types
     const allowedSvcTypes = Object.keys(config.DEPLOYMENT_TARGETS);
     if (allowedSvcTypes.indexOf(service_creation_data.service_type) !== -1) {
@@ -92,7 +92,7 @@ var handler = (event, context, cb) => {
     // Validate and set deployment accounts
     let primaryAccountCount = 0;
 
-    if (Array.isArray(service_creation_data.deployment_accounts) && service_creation_data.deployment_accounts) {
+    if (service_creation_data.deployment_accounts && Array.isArray(service_creation_data.deployment_accounts)) {
       let providerValues = validateMultipleProviders(service_creation_data.deployment_accounts);
       if(!providerValues){
         logger.error('Deployment accounts has multiple providers which is not supported now!');
@@ -212,6 +212,10 @@ var startServiceOnboarding = (service_creation_data, config, service_id) => {
         admin_group: userlist,
         service_id: service_id
       };
+      if (service_creation_data.deployment_descriptor)
+      {
+        input.deployment_descriptor = service_creation_data.deployment_descriptor
+      }
       request({
         url: config.JOB_BUILD_URL,
         method: 'POST',
@@ -403,6 +407,28 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
           reject(cronExpValidator);
         }
       }
+      if (service_creation_data.rateInterval) {
+        var rateExpValidator = CronParser.validateRateExpression(service_creation_data.rateInterval);
+        if (rateExpValidator.result === 'valid') {
+          var rate_interval = service_creation_data.rateInterval;
+          var enable_eventschedule;
+          if (service_creation_data.enableEventSchedule === false) {
+            enable_eventschedule = service_creation_data.enableEventSchedule;
+          } else {
+            enable_eventschedule = true;
+          }
+          if (rate_interval && rate_interval.trim() !== "") {
+            serviceMetadataObj["eventScheduleRate"] = "rate(" + rate_interval + ")";
+          }
+          if (enable_eventschedule && enable_eventschedule !== "") {
+            serviceMetadataObj["eventScheduleEnable"] = enable_eventschedule;
+          }
+        } else {
+          logger.error('rateExpValidator : ', rateExpValidator);
+          reject(rateExpValidator);
+        }
+      }
+
 
       if (service_creation_data.events && service_creation_data.events.length) {
         //Process events into properties
@@ -428,8 +454,6 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
 
     if (service_creation_data.service_type === "sls-app") { // application with a deployment descriptor
       inputs.DEPLOYMENT_TARGETS = deploymentTargets; // This part was missing on Apr-5 and we received: 'deployment_targets missing' error
-      if (service_creation_data.is_function_template ) serviceMetadataObj.is_function_template = service_creation_data.is_function_template
-
       const deployDescrValidator = require('./components/validate-sls-yml');
       if (service_creation_data.deployment_descriptor) { // If deployment descriptor is present then validate
         try {

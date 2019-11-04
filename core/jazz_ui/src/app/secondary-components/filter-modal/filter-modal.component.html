@@ -1,4 +1,4 @@
-<div class="jz-modal" [class.jz-hidden]="!opened">
+<div class="jz-modals" [class.jz-hidden]="!opened">
   <div class="jz-modal-header">
   </div>
   <div class="jz-modal-content">
@@ -14,15 +14,11 @@
             <div class="jz-formfield-label">
               {{field.label}}
             </div>
-            <div *ngIf="field.label === 'ASSET TYPE' || field.label === 'ASSET NAME'">
-              <radio-group [idName]="field.label" [radioContent]="field.options" [selected]="field.selected"
-                (onRadioSelected)="changeFilter($event, field)"></radio-group>
-            </div>
-
-            <div *ngIf="field.label !== 'ASSET TYPE'  && field.label !== 'ASSET NAME'">
-              <dropdown [dropdwnContent]="field.options" [selected]="field.selected"
-                (onSelected)="changeFilter($event, field)"></dropdown>
-            </div>
+            <dropdown *ngIf="field.label !== 'PERIOD'"
+              [dropdwnContent]="field.options"
+              [selected]="field.selected"
+              (onSelected)="changeFilter($event, field)">
+            </dropdown>
           </div>
         </div>
       </div>

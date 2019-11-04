@@ -1,9 +1,9 @@
 {
   "swagger": "2.0",
   "info": {
-    "version": "2017-01-30T23:30:18Z",
+    "version": "1.0",
     "title": "{api_deployment_node_title}",
-    "description": "API specification for metrics service"
+    "description": "API to get service metrics"
   },
   "host": "{api_host_name}",
   "basePath": "/{domain}",
@@ -13,7 +13,7 @@
   "paths": {
     "/metrics": {
       "options": {
-        "description": "CORS Support",
+        "summary": "Method to support CORS",
         "consumes": [
           "application/json"
         ],
@@ -21,27 +21,8 @@
           "application/json"
         ],
         "tags": [
-          "CORS"
+          "Metrics"
         ],
-        "x-amazon-apigateway-integration": {
-          "type": "mock",
-          "requestTemplates": {
-            "application/json": "{\"statusCode\" : 200}"
-          },
-          "responses": {
-            "default": {
-              "statusCode": "200",
-              "responseTemplates": {
-                "application/json": "$input.json('$')"
-              },
-              "responseParameters": {
-                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                "method.response.header.Access-Control-Allow-Origin": "'*'"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
             "description": "Default response for CORS method",
@@ -86,41 +67,65 @@
             "schema": {
               "$ref": "#/definitions/500ErrorResponse"
             }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "$ref": "#/definitions/503ErrorResponse"
+            }
+          }
+        },
+        "x-amazon-apigateway-integration": {
+          "type": "mock",
+          "requestTemplates": {
+            "application/json": "{\"statusCode\" : 200}"
+          },
+          "responses": {
+            "default": {
+              "statusCode": "200",
+              "responseTemplates": {
+                "application/json": "$input.json('$')"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            }
           }
         }
       },
       "post": {
-        "description": "Post method swagger for Node template",
+        "summary": "Get service metrics",
         "parameters": [
           {
             "name": "param",
             "in": "body",
-            "description": "post body parameter.",
+            "description": "request payload for getting service metrics",
             "required": true,
             "schema": {
-              "$ref": "#/definitions/MertricsObj"
+              "$ref": "#/definitions/PostMetricsRequest"
             }
           },
           {
             "name": "Jazz-Service-ID",
             "in": "header",
             "required": true,
-            "type": "string"
+            "type": "string",
+            "description": "service id"
           }
         ],
         "consumes": [
-          "application/json",
-          "application/x-www-form-urlencoded"
+          "application/json"
         ],
         "produces": [
-          "application/json",
-          "application/x-www-form-urlencoded"
+          "application/json"
         ],
         "responses": {
           "200": {
             "description": "Successful Execution",
             "schema": {
-              "$ref": "#/definitions/200SuccessResponse"
+              "$ref": "#/definitions/PostMetricsResponse"
             },
             "headers": {
               "Access-Control-Allow-Headers": {
@@ -218,6 +223,23 @@
                 "type": "string"
               }
             }
+          },
+          "503": {
+            "description": "Service Unavailable",
+            "schema": {
+              "$ref": "#/definitions/503ErrorResponse"
+            },
+            "headers": {
+              "Access-Control-Allow-Headers": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Methods": {
+                "type": "string"
+              },
+              "Access-Control-Allow-Origin": {
+                "type": "string"
+              }
+            }
           }
         },
         "security": [
@@ -231,10 +253,20 @@
           "httpMethod": "POST",
           "credentials": "{conf-role}",
           "requestTemplates": {
-            "application/json": "\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $input.json(\"$\"),\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}",
-            "application/x-www-form-urlencoded": "\n#define( $body )\n  {\n  #foreach( $token in $input.path('$').split('&') )\n    #set( $keyVal = $token.split('=') )\n    #set( $keyValSize = $keyVal.size() )\n    #if( $keyValSize >= 1 )\n      #set( $key = $util.urlDecode($keyVal[0]) )\n      #if( $keyValSize >= 2 )\n        #set( $val = $util.urlDecode($keyVal[1]) )\n      #else\n        #set( $val = '' )\n      #end\n      \"$key\": \"$val\"#if($foreach.hasNext),#end\n    #end\n  #end\n  }\n#end\n\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $body,\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}"
-          },
+            "application/json": "\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $input.json(\"$\"),\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n  \"resourcePath\" : \"$context.resourcePath\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}",
+            "application/x-www-form-urlencoded": "\n#define( $body )\n  {\n  #foreach( $token in $input.path('$').split('&') )\n    #set( $keyVal = $token.split('=') )\n    #set( $keyValSize = $keyVal.size() )\n    #if( $keyValSize >= 1 )\n      #set( $key = $util.urlDecode($keyVal[0]) )\n      #if( $keyValSize >= 2 )\n        #set( $val = $util.urlDecode($keyVal[1]) )\n      #else\n        #set( $val = '' )\n      #end\n      \"$key\": \"$val\"#if($foreach.hasNext),#end\n    #end\n  #end\n  }\n#end\n\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $body,\n \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n  \"resourcePath\" : \"$context.resourcePath\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n  \n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}"          },
           "responses": {
+            ".*Process exited before completing request.*": {
+              "statusCode": "503",
+              "responseTemplates": {
+                "application/json": "{\n  \"errorType\":\"ServiceUnavailable\",\n  \"message\": \"Unknown internal error occurred\"\n}\n"
+              },
+              "responseParameters": {
+                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
+                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                "method.response.header.Access-Control-Allow-Origin": "'*'"
+              }
+            },            
             ".*\"InternalServerError\".*": {
               "statusCode": "500",
               "responseTemplates": {
@@ -321,20 +353,6 @@
     }
   },
   "definitions": {
-    "200SuccessResponse": {
-      "type": "object",
-      "properties": {
-        "data": {
-          "type": "string",
-          "description": "The response payload"
-        },
-        "input": {
-          "type": "string",
-          "description": "The response payload"
-        }
-      },
-      "title": "Success Response"
-    },
     "400ErrorResponse": {
       "type": "object",
       "properties": {
@@ -395,8 +413,21 @@
         }
       }
     },
-    "MertricsObj": {
+    "503ErrorResponse": {
       "type": "object",
+      "properties": {
+        "error_type": {
+          "type": "string",
+          "default": "Service Unavailable"
+        },
+        "message": {
+          "type": "string"
+        }
+      }
+    },
+    "PostMetricsRequest": {
+      "type": "object",
+      "description": "Request to get metrics for assetType",
       "required": [
         "service",
         "domain",
@@ -404,16 +435,17 @@
         "end_time",
         "start_time",
         "interval",
-        "statistics"
+        "statistics",
+        "assetType"
       ],
       "properties": {
         "domain": {
           "type": "string",
-          "description": "Domain for the service."
+          "description": "service domain"
         },
         "service": {
           "type": "string",
-          "description": "Name of the service."
+          "description": "service name"
         },
         "environment": {
           "type": "string",
@@ -424,14 +456,14 @@
             "prod"
           ]
         },
-        "end_time": {
-          "type": "string",
-          "description": "The time stamp that determines the last data point to return. The time stamp must be in ISO 8601 UTC format (for example, 2016-10-03T23:00:00Z).",
-          "format": "date-time"
-        },
         "start_time": {
           "type": "string",
           "description": "The time stamp that determines the first data point to return. The time stamp must be in ISO 8601 UTC format (for example, 2016-10-03T23:00:00Z).",
+          "format": "date-time"
+        },
+        "end_time": {
+          "type": "string",
+          "description": "The time stamp that determines the last data point to return. The time stamp must be in ISO 8601 UTC format (for example, 2016-10-03T23:00:00Z).",
           "format": "date-time"
         },
         "interval": {
@@ -449,7 +481,7 @@
             "Maximum"
           ]
         },
-        "asset_type": {
+        "assetType": {
           "type": "string",
           "description": "Asset type to fetch metrics",
           "enum": [
@@ -462,6 +494,127 @@
             "kinesis_stream",
             "apigee_proxy"
           ]
+        }
+      }
+    },
+    "PostMetricsResponse": {
+      "type": "object",
+      "properties": {
+        "data": {
+          "$ref": "#/definitions/Metrics"
+        },
+        "input": {
+          "$ref": "#/definitions/PostMetricsRequest"
+        }
+      },
+      "title": "Success Response"
+    },
+    "AssetMetrics": {
+      "type": "object",
+      "description": "Metric data points for a specific asset",
+      "properties": {
+        "type": {
+          "type": "string",
+          "description": "asset type"
+        },
+        "asset_name": {
+          "type": "object",
+          "description": "asset and its properties"
+        },
+        "statistics": {
+          "type": "string",
+          "description": "The statistic"
+        },
+        "metrics": {
+          "type": "array",
+          "description": "array of metrics for asset",
+          "items": {
+            "type": "object",
+            "description": "metric properties",
+            "properties": {
+              "metric_name": {
+                "type": "string",
+                "description": "name of metric"
+              },
+              "datapoints": {
+                "type": "array",
+                "description": "array of data points",
+                "items": {
+                  "type": "object",
+                  "description": "metric data point",
+                  "properties": {
+                    "Timestamp": {
+                      "type": "string",
+                      "description": "Timestamp of data point"
+                    },
+                    "Sum": {
+                      "type": "number",
+                      "description": "Value of data point"
+                    },
+                    "Unit": {
+                      "type": "string",
+                      "description": "Unit of data point"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "Metrics": {
+      "type": "object",
+      "description": "Metrics response",
+      "required": [
+        "domain",
+        "service",
+        "environment",
+        "start_time",
+        "end_time",
+        "interval",
+        "statistics",
+        "assets"
+      ],
+      "properties": {
+        "domain": {
+          "type": "string",
+          "description": "service domain"
+        },
+        "service": {
+          "type": "string",
+          "description": "service name"
+        },
+        "environment": {
+          "type": "string",
+          "description": "service environment"
+        },
+        "start_time": {
+          "type": "string",
+          "description": "The time stamp of first data point"
+        },
+        "end_time": {
+          "type": "string",
+          "description": "The time stamp of last data point"
+        },
+        "interval": {
+          "type": "string",
+          "description": "Time Interval between data points"
+        },
+        "statistics": {
+          "type": "string",
+          "description": "The statistic"
+        },
+        "assets": {
+          "type": "array",
+          "description": "array of assets & their metrics based on applied filters",
+          "items": {
+            "allOf": [
+              {
+                "$ref": "#/definitions/AssetMetrics"
+              }
+            ]
+          }
         }
       }
     }

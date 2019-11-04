@@ -6,9 +6,9 @@ import { EnvAssetsSectionComponent } from '../pages/environment-assets/env-asset
 import { EnvDeploymentsSectionComponent } from '../pages/environment-deployment/env-deployments-section.component';
 import { EnvCodequalitySectionComponent } from '../pages/environment-codequality/env-codequality-section.component';
 import { EnvOverviewSectionComponent } from '../pages/environment-overview/env-overview-section.component';
-import { PopoverModule } from 'ng2-popover';
+import { PopoverModule } from 'ngx-popover';
 import { FormsModule } from '@angular/forms';
-import { DropdownModule } from 'ng2-dropdown';
+import { DropdownModule } from 'ngx-dropdown';
 import { DatePickerModule } from '../primary-components/daterange-picker/ng2-datepicker';
 import { MomentModule } from 'angular2-moment';
 import { SharedModule } from '../shared-module/shared.module';
@@ -19,6 +19,7 @@ import {ChartsModule} from "ng2-charts";
 import {EnvTryServiceSidebarComponent} from '../secondary-components/env-try-service-sidebar/env-try-service-sidebar.component';
 import {SessionStorageService} from "../core/helpers/session-storage.service";
 import {RelaxedJsonService} from "../core/helpers/relaxed-json.service";
+import {JazzMobHeaderModule} from '../secondary-components/jazz-mob-header/jazz-mob-header.module';
 
 @NgModule({
   imports: [
@@ -30,7 +31,8 @@ import {RelaxedJsonService} from "../core/helpers/relaxed-json.service";
     MomentModule,
     PopoverModule,
     ChartsModule,
-    SharedModule
+    SharedModule,
+    JazzMobHeaderModule,
   ],
   declarations: [
     EnvironmentDetailComponent,

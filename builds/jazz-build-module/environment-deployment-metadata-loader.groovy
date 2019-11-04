@@ -255,7 +255,7 @@ def getEnvironmentBranchName(logical_id) {
 	}
 }
 
-def generateEnvironmentMap(status, environment_logical_id, metadata) {
+def generateEnvironmentMap(status, environment_logical_id, metadata, deployment_descriptor = null) {
 	def env_logical_id
 	if (environment_logical_id == null) {
 		env_logical_id = getEnvironmentLogicalId()
@@ -268,6 +268,9 @@ def generateEnvironmentMap(status, environment_logical_id, metadata) {
 		branch: g_service_branch,
 		logical_id: env_logical_id
 	]
+	if (deployment_descriptor != null) {
+		serviceCtxMap.deployment_descriptor = deployment_descriptor
+	}
 	if (g_environment_endpoint != null) {
 		serviceCtxMap.endpoint = g_environment_endpoint
 	}
@@ -298,6 +301,7 @@ def generateDeploymentMap(status, environment_logical_id, gitCommitHash) {
 		scm_branch: g_service_branch,
 		request_id: g_request_id
 	]
+		
 	return serviceCtxMap;
 }
 

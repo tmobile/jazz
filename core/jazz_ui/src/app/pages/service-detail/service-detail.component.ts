@@ -44,7 +44,7 @@ export class ServiceDetailComponent implements OnInit {
 
   @Output() deleteServiceStatus: EventEmitter<boolean> = new EventEmitter<boolean>();
   @ViewChild('selectedTabComponent') selectedTabComponent;
-  isENVavailable: boolean = true;
+  isEnvAvailable: boolean = false;
   disblebtn: boolean = true;
   ServiceName: string;
   platfrom: string;
@@ -207,13 +207,13 @@ export class ServiceDetailComponent implements OnInit {
     let serviceType = this.service.type || this.service.serviceType;
     switch (serviceType) {
       case 'api':
-        this.tabData = ['overview', 'access control', 'metrics', 'cost', 'logs'];
+        this.tabData = ['overview', 'access control', 'metrics', 'logs', 'cost'];
         break;
       case 'website':
         this.tabData = ['overview', 'access control', 'metrics', 'cost'];
         break;
       case 'function':
-        this.tabData = ['overview', 'access control', 'metrics', 'cost', 'logs'];
+        this.tabData = ['overview', 'access control', 'metrics', 'logs', 'cost'];
         break;
     }
   }
@@ -222,6 +222,7 @@ export class ServiceDetailComponent implements OnInit {
     this.isLoadingService = true;
     this.http.get('/jazz/services/' + id, null, id).subscribe(response => {
       let service = response.data;
+      this.isEnvAvailable = true;
       this.provider = response.data.deployment_accounts[0].provider
       this.cache.set(id, service);
       this.onDataFetched(service);

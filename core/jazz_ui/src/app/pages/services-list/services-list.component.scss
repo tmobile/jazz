@@ -9,12 +9,12 @@
   position: fixed;
 }
 /deep/.service-list-table
- .column:nth-child(3) 
+ .column:nth-child(3)
  .input-wrapper {
     margin-left: 0 !important;
 }
-/deep/ .service-list-table 
-.column:nth-child(3) 
+/deep/ .service-list-table
+.column:nth-child(3)
 .input-wrapper .textForm {
     margin-left: 0 !important;
 }
@@ -426,7 +426,47 @@ search- box {
   background-color: #faf9f9 !important;
 }
 
-// .status:first-letter {
-//     text-transform:capitalize;
-// }
+/* TODO: Rename */
+.parent-div {
+  align-items: center;
+  cursor: default;
+  display: flex;
+  margin: -4px 0 0 10px;
+  font-size: .9em;
+  padding: 10px 5px 10px 0;
 
+  span.information {
+      cursor: pointer;
+      margin-left: .4em;
+  }
+
+  &:hover .tooltip {
+      opacity: 1;
+      visibility: visible;
+  }
+}
+
+.tooltip {
+  visibility: hidden;
+  background: #ed008c;
+  color: #fff;
+  padding: 0.7em 1em;
+  border-radius: 0.5em;
+  position: absolute;
+  opacity: 0.8;
+  width: 22em;
+  left: 410px;
+  top: 229px;
+  line-height: 1.3em;
+
+  a {
+      color: white;
+      font-weight: 500;
+      text-decoration: underline;
+  }
+
+  &:hover {
+      opacity: 1;
+      visibility: visible;
+  }
+}

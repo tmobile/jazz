@@ -27,8 +27,8 @@ module.exports = function () {
         error: 4,
         warn: 3,
         info: 2,
-        verbose: 1,
-        debug: 0
+        debug: 1,
+        verbose: 0
     };
 
     var config = {

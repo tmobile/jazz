@@ -1,0 +1,21 @@
+a {
+    i {
+        color: #777777bd;
+        cursor: pointer;
+    }
+}
+.new-pop {
+    opacity: 0;
+    z-index: 3;
+    position: absolute;
+    background: #D5D7D9;
+    padding: 3px 7px;
+    border-radius: 3px;
+    top: 1em;
+    right: .5em;
+    min-width: 12em;
+    transition: 0.3s;
+  }
+.popup {
+    opacity: 1;
+}

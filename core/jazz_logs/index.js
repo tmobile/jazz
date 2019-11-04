@@ -93,7 +93,7 @@ module.exports.handler = (event, context, cb) => {
         querys.push(utils.setQuery("asset_type", event.body.asset_type));
       }
 
-      logger.info("Service name to fetch logs :" + service);
+      logger.info("Service name to fetch logs: " + service);
 
       querys.push(utils.setQuery("servicename", service));
       querys.push(utils.setQuery("environment", env));
@@ -111,7 +111,7 @@ module.exports.handler = (event, context, cb) => {
         if (_.includes(log_type_config, logType.toLowerCase())) {
           querys.push(utils.setLogLevelQuery(config.LOG_LEVELS, "log_level", logType.toLowerCase()));
         } else {
-          logger.info("Only following values are allowed for logger type - " + log_type_config.join(", "));
+          logger.error("Only following values are allowed for logger type - " + log_type_config.join(", "));
           return cb(JSON.stringify(errorHandler.throwInputValidationError("Only following values are allowed for logger type - " + log_type_config.join(", "))));
         }
       }
@@ -132,10 +132,11 @@ module.exports.handler = (event, context, cb) => {
       }
 
       var req = utils.requestLoad;
-      req.url = config.BASE_URL + "/_plugin/kibana/elasticsearch/_msearch";
-      req.body = setRequestBody(servCategory, env, querys, startTime, endTime, size, page);
+      req.url = config.KIBANA_URL + "/elasticsearch/_msearch";
+      req.body = setRequestBody(servCategory, querys, startTime, endTime, size, page);
 
       request(req, function (err, res, body) {
+        logger.debug("Response from ES : " + JSON.stringify(res));
         if (err) {
           logger.error("Error occured : " + JSON.stringify(err));
           return cb(JSON.stringify(errorHandler.throwInternalServerError("Internal Error")));
@@ -161,7 +162,7 @@ module.exports.handler = (event, context, cb) => {
             utils.responseModel.count = count;
             utils.responseModel.logs = logs;
 
-            logger.info('Output :' + JSON.stringify(utils.responseModel));
+            logger.debug('Output :' + JSON.stringify(utils.responseModel));
             return cb(null, responseObj(utils.responseModel, event.body));
 
           } else {
@@ -183,37 +184,38 @@ module.exports.handler = (event, context, cb) => {
     return cb(JSON.stringify(errorHandler.throwInternalServerError("Exception occured while processing the request : " + JSON.stringify(e))));
   }
 
-  function setRequestBody(category, type, querys, startTime, endTime, size, page) {
+  function setRequestBody(category, querys, startTime, endTime, size, page) {
     var index = {
       "index": category,
-      "type": type,
       "ignore_unavailable": true
     };
+
 
     var params = {
       "size": size,
       "from": page,
       "sort": [{
         "timestamp": {
-          "order": "desc"
+          "order": "desc",
+          "unmapped_type": "date"
         }
       }],
       "query": {
         "bool": {
-          "must": [querys, {
-            "range": {
-              "timestamp": {
-                "gte": utils.toTimestamp(startTime),
-                "lte": utils.toTimestamp(endTime),
-                "format": "epoch_millis"
+          "must": [querys,
+            {
+              "range": {
+                "timestamp": {
+                  "gte": utils.toTimestamp(startTime),
+                  "lte": utils.toTimestamp(endTime),
+                  "format": "epoch_millis"
+                }
               }
-            }
-          }],
+            }],
           "must_not": [{
             "match": {
               "application_logs_id": {
-                "query": "_incomplete_req",
-                "type": "phrase"
+                "query": "_incomplete_req"
               }
             }
           }]

@@ -89,6 +89,7 @@ export class CreateServiceComponent implements OnInit {
   isLoading: boolean = false;
   slackChannelLoader: boolean = false;
   serviceAvailable : boolean = false;
+  validrate: boolean = false;
   serviceNotAvailable : boolean = false;
   isDomainDefined : boolean = false;
   invalidttl : boolean = false;
@@ -96,7 +97,7 @@ export class CreateServiceComponent implements OnInit {
   serviceRequestFailure = false;
   serviceRequestSuccess = false;
   serviceLink:string;
-  Currentinterval : string = 'Minutes';
+  Currentinterval : string = 'minutes';
   rateExpressionIsValid : boolean = false;
   rateExpressionError : string = '';
   cronFieldValidity : any;
@@ -108,6 +109,7 @@ export class CreateServiceComponent implements OnInit {
   cdnConfigSelected:boolean = false;
   public lineNumberCount: any = new Array(8);
   isfunction: boolean = true;
+  is_function: boolean = false;
   linenumber:number;
   focusindex:any = -1;
   scrollList:any = '';
@@ -124,7 +126,7 @@ export class CreateServiceComponent implements OnInit {
 
   model = new ServiceFormData('','','', '','','');
   cronObj = new CronObject('0/5','*','*','*','?','*')
-  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
+  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '', '');
   eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
   azureEventExpression = new AzureEventExpression("azureEventsNone",undefined,undefined,undefined,undefined);
 
@@ -171,7 +173,7 @@ export class CreateServiceComponent implements OnInit {
     private cronParserService: CronParserService,
     private http: RequestService,
     private cache: DataCacheService,
-    private messageService: MessageService,
+    public messageService: MessageService,
     private serviceList: ServicesListComponent,
     private authenticationService: AuthenticationService,
     private elementRef:ElementRef
@@ -195,7 +197,7 @@ export class CreateServiceComponent implements OnInit {
   scrollTo(id) {
     const ele = document.getElementById(id);
     if(ele){
-      ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
+      ele.scrollIntoView({ behavior: 'smooth', block: 'start'});
     }
   }
   selectAccountsRegions(){
@@ -310,11 +312,13 @@ export class CreateServiceComponent implements OnInit {
       this.startNew = false;
       this.isfunction = true;
       this.isstartNew = false;
-      this.onSelectionChange(this.runtime);
+      this.is_function = true;
+      this.onSelectionChange(this.runtime, false);
     }
     else if(event == "Start New"){
       this.startNew = true;
       this.isstartNew = true;
+      this.is_function = false;
       this.isfunction = false;
       this.deploymentDescriptorText = "";
     }
@@ -364,7 +368,7 @@ export class CreateServiceComponent implements OnInit {
 
   selectedApprovers = [];
 
-  rateData = ['Minutes','Hours','Days'];
+  rateData = ['minutes','hours','days','minute','hour','day'];
 
   // function for changing service type
   changeServiceType(serviceType){
@@ -424,7 +428,7 @@ export class CreateServiceComponent implements OnInit {
     this.updateEventLabels(this.typeOfPlatform);
     this.updateAvailableRuntimes(this.typeOfPlatform);
     if(document.getElementById('deployment-type')){
-      this.scrollTo('deployment-type');
+      this.scrollTo('deployment-type-section');
     }
     else{
       if(this.typeOfService == 'website'){
@@ -456,7 +460,7 @@ export class CreateServiceComponent implements OnInit {
 
 
   // function called on runtime change(radio)
-  onSelectionChange(val){
+  onSelectionChange(val, shouldScroll = true){
     this.runtime = val;
     this.typeform = true;
     if(!this.startNew){
@@ -471,7 +475,7 @@ export class CreateServiceComponent implements OnInit {
       }
     }
 
-    this.scrollTo('additional');
+    shouldScroll && this.scrollTo('additional');
 
   }
 
@@ -503,6 +507,7 @@ export class CreateServiceComponent implements OnInit {
     } else {
       this.disableFunction = true;
     }
+    this.generateExpression(this.rateExpression);
   }
   onAWSEventChange(val){
     this.invalidEventName = false;
@@ -698,7 +703,7 @@ export class CreateServiceComponent implements OnInit {
           "function": "azure_function"
         }
       }
-      if(this.rateExpression.type != 'none'){
+      if(this.rateExpression.type !== 'none'){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
         if (this.rateExpression.cronStr == 'invalid') {
             return;
@@ -761,11 +766,12 @@ export class CreateServiceComponent implements OnInit {
       }
     }
     else if(this.typeOfService == 'sls-app'){
-      payload["service_type"] = "sls-app";        
+      payload["service_type"] = "sls-app";
       payload["deployment_descriptor"] = this.deploymentDescriptorText;
       payload["deployment_targets"]={"sls-app":"aws_sls-app"};
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
+      payload["is_function_template"] = this.is_function;
     }
     if(this.slackSelected){
         payload["slack_channel"] = this.model.slackName;
@@ -1093,7 +1099,7 @@ export class CreateServiceComponent implements OnInit {
       this.isDescriptorEmpty = false;
     }
   }
- 
+
 
 
   onScroll(event){
@@ -1172,6 +1178,7 @@ export class CreateServiceComponent implements OnInit {
     this.selectAccountsRegions();
     this.getData();
     this.loadMaxLength();
+    this.onFilterSelected('Function Template')
     this.azureEventsPrefix();
     if(env_oss.slack_support) this.SlackEnabled=true;
   };
@@ -1214,6 +1221,25 @@ export class CreateServiceComponent implements OnInit {
       }
     }
 
+    validRate(val,int){
+      if (val === 1) {
+        if (int.includes('s')) {
+          this.validrate = false;
+        }
+        else {
+          this.validrate = true;
+        }
+      }
+      else if(val > 1)
+      {
+        if(int.includes('s')){
+          this.validrate = true;
+        }
+        else{
+          this.validrate = false;
+        }
+      }
+    }
 
   generateExpression(rateExpression){
     if (this.rateExpression !== undefined) {
@@ -1225,20 +1251,14 @@ export class CreateServiceComponent implements OnInit {
       var duration, interval;
       duration = rateExpression['duration'];
       interval = rateExpression['interval'];
+      this.validRate(duration, interval);
+      this.rateExpression.rateStr = `${duration} ${interval}`
 
-      if (duration === undefined || duration === null || duration <= 0) {
+      if (duration === undefined || duration === null || duration <= 0 || this.validrate === false) {
         this.rateExpression.isValid = false;
-        this.rateExpression.error = 'Please enter a valid duration';
+        this.rateExpression.error = 'Please enter a valid rate expression';
       } else {
-        if (interval == 'Minutes') {
-          this.cronObj = new CronObject(('0/' + duration),'*','*','*','?','*');
-        } else if (interval == 'Hours') {
-          this.cronObj = new CronObject('0', ('0/' + duration),'*','*','?','*');
-        } else if (interval == 'Days') {
-          this.cronObj = new CronObject('0', '0', ('1/' + duration), '*', '?', '*');
-        }
         this.rateExpression.isValid = true;
-        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
       }
     } else if (rateExpression['type'] == 'cron') {
       var cronExpression;
@@ -1259,9 +1279,12 @@ export class CreateServiceComponent implements OnInit {
       return undefined;
     } else if (this.rateExpression.isValid === false) {
       return 'invalid';
-    } else if (this.rateExpression.isValid === true) {
+    } else if (this.rateExpression.isValid === true && this.rateExpression.type === 'cron') {
       return this.rateExpression.cronStr;
     }
+    else if (this.rateExpression.isValid === true  && this.rateExpression.type === 'rate') {
+      return this.rateExpression.rateStr;
+    }
   };
-  
+
 }

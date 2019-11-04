@@ -29,7 +29,7 @@
 .service-box-section {
   padding-bottom: 15px;
   display: inline-block;
-  
+
   .service-box:focus {
     outline: none !important;
     border-color: #ed008c;
@@ -380,7 +380,7 @@
     padding-right: 5px;
   }
   &.arrow_box:after {
-    left: 58%;
+    left: 46%;
     margin-left: -7px;
   }
 }
@@ -388,7 +388,7 @@
   width:50%;
 }
 .rate-field.arrow_box:after {
-  left: 33%;
+  left: 27%;
   margin-left: -12px;
 }
 
@@ -497,7 +497,7 @@
 
 .disable-event {
   pointer-events: none;
-  
+
   input[type="radio"]+label {
     opacity: 0.3;
   }
@@ -974,13 +974,13 @@ p.learn-more {
   .content{
     padding: 0 2.5rem;
   }
-  
+
 }
 
 .disable-color{
-  
+
   color:#ddd;
-  
+
   input[type="radio"]+label {
     opacity: 0.3;
     &:hover{
@@ -1056,7 +1056,6 @@ transform: rotate(0deg);
 }
 textarea[type="text"] {
   margin-bottom: 0px;
-  line-height: 21px;
 }
 .textbox {
   overflow-y: auto;
@@ -1229,6 +1228,28 @@ textarea[type="text"] {
   line-height: 1.42857143;
 }
 
+/* TODO: Correct formatting everywhere */
+.valid{
+  font-size: .8em;
+  margin-bottom: 5px;
+  text-align: center;
+  .validation {
+      color: #5cae01;
+      margin-bottom: 0;
+  }
+  .invalidation {
+      color: #d0021b;
+      margin-bottom: 0;
+  }
+}
+
+/* TODO: Move to variables / Improve naming */
+textarea.code,
+.myservice {
+    font-family: SFMono-Regular, Consolas, Liberation Mono, Menlo, Courier, monospace;
+    font-size: .9em;
+    margin-bottom: 0;
+}
 #tile-aws img {
   max-width: 6em;
 }
@@ -1280,4 +1301,7 @@ textarea[type="text"] {
 #platform-type{
   border-bottom: 0;
   padding-bottom: 0;
+}
+#deployment-descriptor {
+  padding: 2em 1em;
 }

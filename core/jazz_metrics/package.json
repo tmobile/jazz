@@ -20,8 +20,7 @@
     "moment-timezone": "*",
     "moment-duration-format": "*",
     "moment": "^2.22.2",
-    "request": "*",
-    "aws-sdk": "*"
+    "request": "*"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.1.1",

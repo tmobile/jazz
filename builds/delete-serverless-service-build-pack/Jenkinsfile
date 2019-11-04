@@ -43,7 +43,7 @@ import groovy.json.JsonSlurperClassic
 
 node {
   try {
-	echo "Starting delete service job with params : $params"
+	echo "Starting delete service job with params: $params"
 
 	jazzBuildModuleURL = getBuildModuleUrl()
 	loadBuildModules(jazzBuildModuleURL)
@@ -79,7 +79,7 @@ node {
 	auth_token = getAuthToken()
 
 	stage("Initialization") {
-    if (params.domain && params.domain != "") {
+    	if (params.domain && params.domain != "") {
 			repo_name = params.domain + "_" + params.service_name
 		}
 		sh 'rm -rf ' + repo_name
@@ -95,7 +95,7 @@ node {
 		if (configObj.service_id) {
 			service_config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
 		} else {
-			error "Service Id is not available."
+			error "Service id is not available."
 		}
 
 		if (!service_config) {
@@ -106,17 +106,17 @@ node {
 			accountInfo = utilModule.getAccountInfo(service_config)
 		}
 
-    if(!service_config.region) {
+		if(!service_config.region) {
 			service_config.region = configLoader.AWS.DEFAULTS.REGION
-    }
+		}
 
-    if(!service_config.accountId) {
-      service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
-    }
+		if(!service_config.accountId) {
+		service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
+		}
 
-    if(!service_config.provider) {
-      service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
-    }
+		if(!service_config.provider) {
+		service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
+		}
 
 		if(service_config['provider'] == 'aws'){
 			service_config.credentialId = accountInfo.CREDENTIAL_ID
@@ -150,8 +150,6 @@ node {
 
 
 		dir(repo_name){
-			echo "loadServerlessConfig......."
-
 			if (fileExists('build.api')) {
 				flowType = "API"
 				loadServerlessConfig()
@@ -326,7 +324,7 @@ node {
 				stage('Undeploy Service') {
 					for (_envId in environmentIds) {
 						current_environment_id = _envId
-						loadServerlessYml(service_config, _envId)
+						def has_serverless_yml = 	loadServerlessYml(service_config, _envId)
 						try {
 							def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 							if (branch && branch != 'NA') {
@@ -336,10 +334,17 @@ node {
 							}
 							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-							echo 'undeploying function for environment: ' + _envId
+							echo 'undeploying sls service for environment: ' + _envId
 
 							cleanupEventSourceMapping(_envId)
-							unDeployService(_envId)
+							if (has_serverless_yml) {
+								// for sls install plugins
+								installServerlessPlugins()								
+								unDeployService(_envId)
+							}
+							else {
+								unDeployCloudformationStack(_envId)
+							}
 
 							if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 								cleanupCodeQualityReports()
@@ -409,6 +414,7 @@ def archiveAssetDetails(env) {
   def assets = utilModule.getAssets(assets_api, auth_token, service_config, env)
   def assetList = parseJsonMap(assets)
   for (asset in assetList.data.assets) {
+	// TODO update Asset Status to 'archived'/'deleted'?
     events.sendCompletedEvent('UPDATE_ASSET', "Environment cleanup for ${env} completed", utilModule.generateAssetMap(asset.provider, asset.provider_id , asset.asset_type, service_config), env)
   }
 }
@@ -491,7 +497,8 @@ def unDeployService(stage) {
 			}
 			def envBucketKey = "${env_key}${configLoader.JAZZ.PLATFORM.AWS.S3.BUCKET_NAME_SUFFIX}"
 			def bucketObject = utilModule.getAccountBucketName(service_config);
-			sh "serverless remove --stage ${stage} --verbose  --bucket ${bucketObject[env_key]} --profile ${credsId}"
+
+      sh "serverless remove --stage ${stage} --verbose  --bucket ${bucketObject[env_key]} --profile ${credsId}"
 
 			echo "Service undeployed"
 		} catch (ex) {
@@ -500,6 +507,42 @@ def unDeployService(stage) {
 			resetCredentials(credsId)
 		}
 	}
+}
+
+def installServerlessPlugins(){
+  try {
+    def serverlessyml = readFile('./serverless.yml').trim()
+    def outstandingPlugins = whiteListModule.validatePlugins(serverlessyml)
+    if(outstandingPlugins.isEmpty()) {
+      def plugins = whiteListModule.getPluginsfromYaml(serverlessyml)
+      if( plugins ) {
+        for (plugin in plugins){
+          sh "npm install ${plugin}"
+        }
+      } else {
+        echo "No plugins listed..skipping"
+      }
+    } else {
+      error "The following plugins are not allowed: ${outstandingPlugins}"
+    }
+  } catch( ex ){
+    error "Plugin Installation Failed "+ ex.getMessage();
+  }
+}
+
+def unDeployCloudformationStack(env) {
+  echo "Manualy removing the stack by using aws cli."
+  withCredentials([
+		[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: service_config.credentialId]
+	]) {
+    def cfStackName = "${instance_prefix}-${service_config['domain']}-${service_config['service']}-${env}"
+    try {
+      def res = sh(script: "aws cloudformation delete-stack --stack-name ${cfStackName} --region ${service_config['region']} ", returnStdout: true)
+      echo "Delete stack resp: ${res}"
+    } catch (ex) {
+      echo "Error occured while deleting cloudformation stack ${cfStackName} : ${ex}"
+    }
+  }
 }
 
 /**
@@ -1143,9 +1186,15 @@ def loadServerlessYml(config, env){
 	environmentMetadataLoader.setEnvironmentLogicalId(env) //set Current Environment
 	//Get deployment descriptor from environments
   env_deployment_descriptor = environmentMetadataLoader.getEnvDeploymentDescriptor()
-	def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader, env_deployment_descriptor) // Generating the deployment descriptor
-	echo "prepareServerlessYml = ${deploymentDescriptor}"
-	writeYaml(file: './serverless.yml', data: deploymentDescriptor)
+  try {
+    def deploymentDescriptor = slsBuildRules.prepareServerlessYml(config, env, configLoader, env_deployment_descriptor, accountInfo) // Generating the deployment descriptor
+	  echo "prepareServerlessYml = ${deploymentDescriptor}"
+	  writeYaml(file: './serverless.yml', data: deploymentDescriptor)
+    return true
+  } catch (ex) {
+    echo "Failed to load the serverless.yml for ${env} environment."
+    return false
+  }
 }
 
 def loadServerlessConfig() {
@@ -1335,7 +1384,7 @@ def loadBuildModules(buildModuleUrl){
     azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtil)
     echo "Azure deploy module init successfully."
 
-		whiteListModule = load "whitelist-validator-module.groovy"
+		whiteListModule = load "sls-app/whitelist-validator-module.groovy"
     whiteListModule.initialize()
     echo "whitelist-validator-module module loaded successfully"
 

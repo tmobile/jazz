@@ -8,7 +8,7 @@ import * as moment from 'moment';
 import {UtilsService} from '../../core/services/utils.service';
 import {Observable} from "rxjs/Observable";
 import 'rxjs/add/operator/toPromise';
-
+import { RenameFieldService } from '../../core/services/rename-field.service';
 declare let Object;
 
 
@@ -34,6 +34,7 @@ export class EnvCodequalitySectionComponent implements OnInit {
   public weekValue = 604800000;
   public monthValue = 2592000000;
   public selectedMetricGraphData;
+  public selectedMetricDisplayName;
   public graphDataRaw;
 
   constructor(
@@ -41,7 +42,8 @@ export class EnvCodequalitySectionComponent implements OnInit {
     private messageservice: MessageService,
     private route: ActivatedRoute,
     private http: RequestService,
-    public utils: UtilsService) {
+    public utils: UtilsService,
+    public renameFieldService: RenameFieldService) {
   }
 
   ngOnInit() {
@@ -68,7 +70,8 @@ export class EnvCodequalitySectionComponent implements OnInit {
         filterData = {
           fromDateISO: moment().subtract(7, 'day').toISOString(),
           headerMessage: '( past 7 days )',
-          xAxisFormat: 'dd',
+          xAxisFormat: 'MMM D',
+          xAxisUnit: '7 days',
           stepSize: this.dayValue
         };
         break;
@@ -76,7 +79,8 @@ export class EnvCodequalitySectionComponent implements OnInit {
         filterData = {
           fromDateISO: moment().subtract(4, 'week').toISOString(),
           headerMessage: '( past 4 weeks )',
-          xAxisFormat: 'M/D',
+          xAxisFormat: 'MMM D',
+          xAxisUnit: 'week',
           stepSize: this.dayValue * 2
         };
         break;
@@ -84,7 +88,8 @@ export class EnvCodequalitySectionComponent implements OnInit {
         filterData = {
           fromDateISO: moment().subtract(6, 'month').toISOString(),
           headerMessage: '( past 6 months )',
-          xAxisFormat: 'MMM',
+          xAxisFormat: 'MMM D',
+          xAxisUnit: 'month',
           stepSize: 2592000000
         };
         break;
@@ -92,12 +97,15 @@ export class EnvCodequalitySectionComponent implements OnInit {
     filterData.toDateISO = moment().toISOString();
     filterData.toDateValue = moment(filterData.toDateISO).valueOf();
     filterData.fromDateValue = moment(filterData.fromDateISO).valueOf();
+    filterData.chartType = 'codeQuality';
+    filterData.tooltipXFormat = 'MMM DD YYYY, h:mm a';
     return filterData;
   }
 
   selectMetric(index) {
     this.metricsIndex = index;
     this.selectedMetric = this.graphDataRaw.metrics[index];
+    this.selectedMetricDisplayName = this.renameFieldService.getDisplayNameOfKey(this.selectedMetric.name.toLowerCase()) || this.selectedMetric.name;
     this.selectedMetricGraphData = this.formatGraphData(this.selectedMetric, this.filterData);
   }
 

@@ -94,7 +94,7 @@ export class ServiceOverviewComponent implements OnInit {
   serviceStatusStarted: boolean = true;
   serviceStatusStartedD: boolean = false;
   statusFailed: boolean = false;
-  rateData: any = ['Minutes', 'Hours', 'Days'];
+  rateData: any = ['minutes', 'hours', 'days', 'minute', 'hour', 'day'];
   statusInfo: string = 'Service Creation started';
   private intervalSubscription: Subscription;
   swaggerUrl: string = '';
@@ -104,6 +104,7 @@ export class ServiceOverviewComponent implements OnInit {
   service_request_id: any;
   creation_status: string;
   statusprogress: number = 20;
+  validrate: boolean = false;
   animatingDots: any;
   noStg: boolean = false;
   noProd: boolean = false;
@@ -141,10 +142,10 @@ export class ServiceOverviewComponent implements OnInit {
   isPUTLoading: boolean = false;
   PutPayload: any;
   isPayloadAvailable: boolean = false;
-  selected: string = "Minutes";
+  selected: string = "minutes";
   eventSchedule: string = 'fixedRate';
   cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
-  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
+  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '', '');
   eventExpression = new EventExpression("awsEventsNone", undefined, undefined, undefined, undefined);
   viewMode: boolean = true;
   cronFieldValidity: any;
@@ -152,12 +153,17 @@ export class ServiceOverviewComponent implements OnInit {
   editEvents: boolean = false;
   generalAdvanceDisable: boolean = true;
   eventDisable  : boolean = true;
-  accountName: any
+  accountName: any;
+  previousInt: any;
+  previousrate: any;
+  previousRateVal: any;
+  previouscron: any;
+  previoustype: any;
 
   constructor(
     private router: Router,
     private request: RequestService,
-    private messageservice: MessageService,
+    public messageservice: MessageService,
     private cronParserService: CronParserService,
     private cache: DataCacheService,
     private toasterService: ToasterService,
@@ -277,6 +283,26 @@ export class ServiceOverviewComponent implements OnInit {
     return false;
   };
 
+  validRate(val,int){
+    if (val === 1) {
+      if (int.includes('s')) {
+        this.validrate = false;
+      }
+      else {
+        this.validrate = true;
+      }
+    }
+    else if(val > 1)
+    {
+      if(int.includes('s')){
+        this.validrate = true;
+      }
+      else{
+        this.validrate = false;
+      }
+    }
+  }
+
   generateExpression(rateExpression) {
     if (this.rateExpression !== undefined) {
       this.rateExpression.error = undefined;
@@ -287,20 +313,16 @@ export class ServiceOverviewComponent implements OnInit {
       var duration, interval;
       duration = rateExpression['duration'];
       interval = rateExpression['interval'];
+      this.validRate(duration, interval);
+      this.rateExpression.rateStr = `${duration} ${interval}`
 
-      if (duration === undefined || duration === null || duration <= 0) {
+      if (duration === undefined || duration === null || duration <= 0 || this.validrate === false) {
         this.rateExpression.isValid = false;
-        this.rateExpression.error = 'Please enter a valid duration';
+        this.eventDisable = true;
+        this.rateExpression.error = 'Please enter a valid rate expression';
       } else {
-        if (interval == 'Minutes') {
-          this.cronObj = new CronObject(('0/' + duration), '*', '*', '*', '?', '*');
-        } else if (interval == 'Hours') {
-          this.cronObj = new CronObject('0', ('0/' + duration), '*', '*', '?', '*');
-        } else if (interval == 'Days') {
-          this.cronObj = new CronObject('0', '0', ('1/' + duration), '*', '?', '*');
-        }
+        this.eventDisable = false;
         this.rateExpression.isValid = true;
-        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
       }
     } else if (rateExpression['type'] == 'cron') {
       var cronExpression;
@@ -309,57 +331,37 @@ export class ServiceOverviewComponent implements OnInit {
       var _isCronObjValid = this.isCronObjValid(cronObj)
 
       if (_isCronObjValid === false) {
+        this.eventDisable = true;
         this.rateExpression.isValid = false;
         this.rateExpression.error = 'Please enter a valid cron expression';
       } else {
+        this.eventDisable = false;
         this.rateExpression.isValid = true;
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
-        if(this.rateExpression.interval === "Minutes" || this.rateExpression.interval === "Hours"){
-          let cronExp = JSON.parse(JSON.stringify(this.rateExpression.cronStr));
-          cronExp = cronExp.split(" ");
-          if((cronExp[0].includes("0/") && cronExp[1].includes("*")) || (cronExp[1].includes("0/") && cronExp[0].includes("0"))){
-            if(cronExp[0].includes("0/")){
-              let duration = cronExp[0].split("/");
-              duration = parseInt(duration[1]);
-              this.rateExpression.duration = duration;
-              this.rateExpression.interval = "Minutes";
-            } else {
-              let duration = cronExp[1].split("/");
-              duration = parseInt(duration[1]);
-              this.rateExpression.duration = duration;
-              this.rateExpression.interval = "Hours";
-            }
-          } else {
-            this.rateExpression.duration = "5";
-            this.rateExpression.interval = "Minutes";
-          }
-        } else {
-          this.rateExpression.duration = "5";
-          this.rateExpression.interval = "Minutes";
-        }
       }
-    }if (this.rateExpression.type != 'none') {
+    }
+    if (this.rateExpression.type === 'cron') {
       this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
       let tempExp = `cron(${this.rateExpression.cronStr})`;
       if( tempExp == this.service.eventScheduleRate){
         this.eventDisable = true;
       }
-      if((this.initialRateInterval === this.rateExpression.interval) && (parseInt(this.initialDuration) === parseInt(this.rateExpression.duration))){
+    }
+    else if(this.rateExpression.type === 'rate') {
+      let tempExp = `rate(${this.rateExpression.duration} ${this.rateExpression.interval})`;
+      if( tempExp == this.service.eventScheduleRate) {
         this.eventDisable = true;
-      } else {
-        this.eventDisable = false;
       }
     }
-
     if (this.rateExpression.isValid === undefined) {
       return undefined;
     } else if (this.rateExpression.isValid === false) {
       return 'invalid';
-    } else if (this.rateExpression.isValid === true) {
+    } else if (this.rateExpression.isValid === true  && this.rateExpression.type === 'cron') {
       return this.rateExpression.cronStr;
+    } else if (this.rateExpression.isValid === true && this.rateExpression.type === 'rate') {
+      return this.rateExpression.rateStr;
     }
-    
-
   }
 
   onEditClick() {
@@ -387,7 +389,7 @@ export class ServiceOverviewComponent implements OnInit {
     this.isPUTLoading = true;
     if(this.rateExpression.type === "none"){
       this.rateExpression.duration = "5";
-      this.rateExpression.interval = "Minutes";
+      this.rateExpression.interval = "minutes";
       this.cronObj.minutes = "0/5";
       this.cronObj.hours = "*";
       this.cronObj.dayOfMonth = "*";
@@ -440,9 +442,21 @@ export class ServiceOverviewComponent implements OnInit {
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
         if (this.rateExpression.cronStr == 'invalid') {
           return;
-        } else if (this.rateExpression.cronStr !== undefined) {
+        } else if (this.rateExpression.cronStr !== undefined && this.rateExpression.type === 'cron') {
+          this.rateExpression.duration = this.previousrate;
+          this.rateExpression.interval = this.previousInt;
           eventObj['eventScheduleRate'] = `cron(${this.rateExpression.cronStr})`;
           eventObj['eventScheduleEnable'] = true;
+        }
+        else if (this.rateExpression.duration !== undefined  && this.rateExpression.type === 'rate') {
+          eventObj['eventScheduleRate'] = `rate(${this.rateExpression.duration} ${this.rateExpression.interval})`;
+          eventObj['eventScheduleEnable'] = true;
+          this.cronObj.minutes = "0/5";
+          this.cronObj.hours = "*";
+          this.cronObj.dayOfMonth = "*";
+          this.cronObj.month = "*";
+          this.cronObj.dayOfWeek = "?";
+          this.cronObj.year = "*";
         }
       } else {
         eventObj['eventScheduleRate'] = null;
@@ -499,9 +513,18 @@ export class ServiceOverviewComponent implements OnInit {
         this.rateExpression.type = "none"
       } else if(this.service.eventScheduleRate !== null && this.service.eventScheduleRate.includes('cron')){
         this.rateExpression.type = "cron"
+        this.rateExpression.cronStr = this.service.eventScheduleRate;
+      } else if(this.service.eventScheduleRate !== null && this.service.eventScheduleRate.includes('rate')){
+        this.rateExpression.type = "rate";
+        this.rateExpression.rateStr = this.service.eventScheduleRate;
+        this.cronObj.minutes = "0/5";
+        this.cronObj.hours = "*";
+        this.cronObj.dayOfMonth = "*";
+        this.cronObj.month = "*";
+        this.cronObj.dayOfWeek = "?";
+        this.cronObj.year = "*";
       }
     }
-    this.rateExpression.cronStr = this.service.eventScheduleRate;
     this.rateExpression.duration = this.initialDuration;
     this.rateExpression.interval = this.initialRateInterval;
     this.eventDisable  = true;
@@ -517,7 +540,9 @@ export class ServiceOverviewComponent implements OnInit {
     this.showCancel = false;
     this.hide_email_error = true;
     this.hide_slack_error = true;
-    this.setEventScheduleRate();
+    if(this.rateExpression.type != 'none'){
+      this.setEventScheduleRate();
+    }
     this.isSlackAvailable = true;
     if (this.subscription !== undefined) {
       this.subscription.unsubscribe();
@@ -528,12 +553,16 @@ export class ServiceOverviewComponent implements OnInit {
 
   setEventScheduleRate() {
     let cronValue;
-    if(this.service.serviceType === "function" && this.service.eventScheduleEnable !== undefined){
-      if(this.rateExpression.cronStr !== "" && (this.service.eventScheduleRate !== this.rateExpression.cronStr)){
-        cronValue = this.rateExpression.cronStr;
-      } else {
-        cronValue = this.service.eventScheduleRate;
-      }
+    this.previousrate = this.rateExpression.duration;
+    this.previousInt = this.rateExpression.interval;
+    if (this.service.eventScheduleRate.includes('rate') && (this.service.eventScheduleRate !== this.rateExpression.rateStr)) {
+      cronValue = this.rateExpression.rateStr;
+    }
+    else if (this.service.eventScheduleRate.includes('cron') && (this.service.eventScheduleRate !== this.rateExpression.cronStr)) {
+      cronValue = this.rateExpression.cronStr;
+    } else {
+      cronValue = this.service.eventScheduleRate;
+    }
       if(cronValue !== null){
           let localEvenSchedule = cronValue;
         !!localEvenSchedule &&
@@ -542,48 +571,47 @@ export class ServiceOverviewComponent implements OnInit {
           localEvenSchedule = localEvenSchedule.split(' ');
           this.rateExpression.type = localEvenSchedule[0];
           localEvenSchedule.shift();
-        } else {
+        } else  if(cronValue.includes('rate')){
+          localEvenSchedule = localEvenSchedule.split(' ');
+          this.rateExpression.type = localEvenSchedule[0];
+          localEvenSchedule.shift();
+        }
+        else {
           localEvenSchedule = localEvenSchedule.split(' ');
         }
-        
-        if((localEvenSchedule[0].includes("0/") && localEvenSchedule[1].includes("*")) || (localEvenSchedule[1].includes("0/") && localEvenSchedule[0].includes("0"))){
-          if(localEvenSchedule[0].includes("0/")){
-            let duration = localEvenSchedule[0].split("/");
-            duration = parseInt(duration[1]);
-            this.rateExpression.duration = duration;
-            this.rateExpression.interval = "Minutes";
-          } else {
-            let duration = localEvenSchedule[1].split("/");
-            duration = parseInt(duration[1]);
-            this.rateExpression.duration = duration;
-            this.rateExpression.interval = "Hours";
-          }
-        } else {
-          this.rateExpression.duration = "5";
-          this.rateExpression.interval = "Minutes";
+
+        if(this.rateExpression.type === 'cron'){
+          this.cronObj.minutes = localEvenSchedule[0];
+            this.cronObj.hours = localEvenSchedule[1];
+            this.cronObj.dayOfMonth = localEvenSchedule[2];
+            this.cronObj.month = localEvenSchedule[3];
+            this.cronObj.dayOfWeek = localEvenSchedule[4];
+            this.cronObj.year = localEvenSchedule[5];
         }
-  
-        this.cronObj.minutes = localEvenSchedule[0];
-        this.cronObj.hours = localEvenSchedule[1];
-        this.cronObj.dayOfMonth = localEvenSchedule[2];
-        this.cronObj.month = localEvenSchedule[3];
-        this.cronObj.dayOfWeek = localEvenSchedule[4];
-        this.cronObj.year = localEvenSchedule[5];
+        if(this.rateExpression.type === 'rate') {
+          this.rateExpression.duration = localEvenSchedule[0];
+          this.rateExpression.interval = localEvenSchedule[1];
+        }
       }
     }
-  }
 
 
   onEventScheduleChange(val) {
     this.rateExpression.type = val;
     this.eventExpression.type = 'awsEventsNone';
-    if (val == 'cron' && this.service.eventScheduleRate) {
-      this.setEventScheduleRate();
-    } else if(this.service.eventScheduleRate === null){
-      this.eventDisable = false;
-    } else if(val == 'none'){
+    let tempExpCron = `cron(${this.rateExpression.cronStr})`;
+    let tempExpRate = this.rateExpression.rateStr;
+    if(this.service.eventScheduleRate === null){
       this.eventDisable = false;
     }
+    else if (this.previoustype === this.rateExpression.type &&
+      ((this.previouscron === tempExpCron) || (this.previousRateVal === tempExpRate))) {
+      this.eventDisable = true;
+    }
+    else {
+      this.eventDisable = false;
+    }
+    this.generateExpression(this.rateExpression)
   }
   onAWSEventChange(val) {
     this.eventExpression.type = val;
@@ -1244,6 +1272,9 @@ export class ServiceOverviewComponent implements OnInit {
       this.onCancelClick();
       this.editEvents = true;
       this.disp_show2 = false;
+      this.previoustype = this.rateExpression.type;
+      this.previouscron = this.rateExpression.cronStr;
+      this.previousRateVal = this.rateExpression.rateStr;
     }
   }
 

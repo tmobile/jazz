@@ -18,7 +18,7 @@ export class LandingComponent implements OnInit {
 
     buttonText: string = 'GET STARTED NOW';
     serverless_slack:string = env_internal.urls.serverless_slack;
-    
+
     goToLogin: boolean = false;
     safeTransformX: number=0;
     min: boolean=true;
@@ -31,14 +31,14 @@ export class LandingComponent implements OnInit {
     private IDLE_TIMEOUT = 60*10; //seconds
 
     public getStartedNow(){
-       
+
         if(this.authenticationservice.isLoggedIn()){
             this.router.navigateByUrl('/services');
         } else {
             this.goToLogin = true;
             this.onLoginClicked(true);
         }
-        
+
     }
     public onLoginClicked (goToLogin) {
         this.goToLogin = goToLogin;
@@ -53,10 +53,10 @@ export class LandingComponent implements OnInit {
     jazz_int_docs:string = env_internal.urls.docs;
     onNavigate(event){
         if(event.target.innerText === "Privacy"){
-            window.open(this.privacyPolicy);   
+            window.open(this.privacyPolicy);
         } else if(event.target.innerText === "Docs"){
-            window.open(this.jazz_int_docs);        
-            
+            window.open(this.jazz_int_docs);
+
         }
     }
     public shiftLeft(){
@@ -72,7 +72,7 @@ export class LandingComponent implements OnInit {
                     if(this.safeTransformX==(-(noOfChildren-4)*innerwidth)){
                         this.max=true;
                     }
-                } 
+                }
             } else if(document.body.clientWidth<840){
                 if(this.safeTransformX>(-(noOfChildren-1)*innerwidth)){
                     this.safeTransformX = this.safeTransformX - innerwidth;
@@ -111,7 +111,7 @@ export class LandingComponent implements OnInit {
         private toasterservice:ToasterService,
         private cache: DataCacheService
     ) {
-        
+
     };
     isOSS:boolean=false
     ngOnInit() {
@@ -124,28 +124,29 @@ export class LandingComponent implements OnInit {
          if(this.authenticationservice.isLoggedIn() && this.router.url == "/"){
             this.router.navigateByUrl('/services');
         }
-        
+
         var scroll_flag = this.cache.get('scroll_flag');
         var scroll_id = this.cache.get('scroll_id');
 
         var x = this.cache.get('json');
         this.json = JSON.stringify(x);
-       
+
         if(scroll_flag == true)
         {
-            var top = document.getElementById(scroll_id).offsetTop ;                
+            var top = document.getElementById(scroll_id).offsetTop ;
             scrollTo(top,600);
         }
         setTimeout(function(){
             try{
-                document.getElementById("head-text").className += " no-padding";
+              const ref = document.getElementById("head-text");
+              if (ref) ref.className += " no-padding";
             } catch(e){
                 console.log(e)
             }
-            
+
         },700)
 
-         this.run(4000, 4); 
+         this.run(4000, 4);
     };
     reportEmail:string;
 
@@ -155,7 +156,7 @@ export class LandingComponent implements OnInit {
 
     public run(interval, frames) {
         var int = 2;
-        
+
         function func() {
             var el = document.getElementsByClassName("parallax-2");
             if (el[0] !== undefined) {
@@ -164,12 +165,12 @@ export class LandingComponent implements OnInit {
                 if(int === frames) { int = 1; }
             }
         }
-        
+
         var swap = window.setInterval(func, interval);
     }
 }
 
-export function scrollTo(to, duration) {    
+export function scrollTo(to, duration) {
     var el = document.getElementsByTagName("main")[0];
     if (el.scrollTop == to) return;
     let direction = true;

@@ -11,7 +11,6 @@ import { AdvancedFiltersComponent } from './../../secondary-components/advanced-
 import { RequestService, MessageService, DataCacheService, AuthenticationService } from '../../core/services/index';
 import { AdvancedFilterService } from './../../advanced-filter.service';
 import { AdvFilters } from './../../adv-filter.directive';
-import { environment } from './../../../environments/environment';
 import { environment as env_oss} from './../../../environments/environment.oss';
 import { environment as env_internal } from './../../../environments/environment.internal';
 import { EnvAssetsSectionComponent } from '../environment-assets/env-assets-section.component';
@@ -78,6 +77,7 @@ export class EnvLogsSectionComponent implements OnInit {
 	errBody: any;
 	parsedErrBody: any;
 	errMessage: any;
+	responseArray: any = [];
 	private toastmessage: any;
 	private env: any;
 	refreshData: any;
@@ -87,6 +87,9 @@ export class EnvLogsSectionComponent implements OnInit {
 	sliderMax: number = 7;
 	rangeList: Array<string> = ['Day', 'Week', 'Month', 'Year'];
 	selectedTimeRange: string = this.rangeList[0];
+	selectedAssetName: any;
+	assetsNameArray:any = [];
+	allAssetsNameArray: any = [];
 
 
 
@@ -126,7 +129,7 @@ export class EnvLogsSectionComponent implements OnInit {
 		}
 	]
 
-	logs = [];	
+	logs = [];
 
 	filtersList = ['ERROR', 'WARN', 'INFO', 'DEBUG', 'VERBOSE'];
 	selected = ['ERROR'];
@@ -146,6 +149,7 @@ export class EnvLogsSectionComponent implements OnInit {
 	errorRequest: any = {};
 	errorResponse: any = {};
 	errorUser: any;
+	selectedEnv: any;
 	errorChecked: boolean = true;
 	errorInclude: any = "";
 	json: any = {};
@@ -159,22 +163,29 @@ export class EnvLogsSectionComponent implements OnInit {
 	regList=env_internal.urls.regions;
 	accSelected:string = this.accList[0];
 	regSelected:string=this.regList[0];
-  	public assetSelected:string;
+		public assetSelected:string;
 	public resourceSelected: any;
 	lambdaResourceNameArr;
+	lambdaResource;
 
 	instance_yes;
-	getFilter(filterServ){		
+	assetNameFilterWhiteList = [
+		'all',
+		'lambda',
+		'apigateway'
+	];
+
+	getFilter(filterServ){
 		this.service['islogs']=true;
 		this.service['isServicelogs']=true;
 		if(this.assetList){
 			this.service['assetList']=this.assetList;
 		}
 
-		if(this.service.serviceType == 'sls-app'){
-			this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
+			this.service['allAssetsNameArray'] = this.allAssetsNameArray;
 			this.advanced_filter_input.sls_resource.show = true;
-		}
+
+
 
 		let filtertypeObj = filterServ.addDynamicComponent({"service" : this.service, "advanced_filter_input" : this.advanced_filter_input});
 		let componentFactory = this.componentFactoryResolver.resolveComponentFactory(filtertypeObj.component);
@@ -188,29 +199,34 @@ export class EnvLogsSectionComponent implements OnInit {
 		(<AdvancedFiltersComponent>componentRef.instance).onFilterSelect.subscribe(event => {
 			comp.onFilterSelect(event);
 		});
-		this.instance_yes.onAssetSelect.subscribe(event => {		
+		this.instance_yes.onAssetSelect.subscribe(event => {
 			comp.onAssetSelect(event);
+			if(event !== 'all'){
+				this.service['lambdaResourceNameArr'] = this.lambdaResourceNameArr;
+				this.advanced_filter_input.sls_resource.show = true;
+				(<AdvancedFiltersComponent>componentRef.instance).data = {"service" : this.service, "advanced_filter_input" : this.advanced_filter_input};
+			}
 		});
-		this.instance_yes.onResourceSelect.subscribe(event => {
-			comp.onResourceSelect(event);
-		});
-
 	}
 
 	onAssetSelect(event){
 		this.FilterTags.notify('filter-Asset',event);
 		this.assetSelected=event;
-	} 	
+		if(event != 'all' && this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1){
+			this.setAssetName(this.responseArray,this.assetSelected);
+			this.onResourceSelect('all');
+		}
+	}
 	onResourceSelect(event){
 		this.FilterTags.notifyLogs('filter-Asset-Name', event);
 		this.resourceSelected = event;
 	}
 	 onaccSelected(event){
-	  this.accSelected=event;
-  
+		this.accSelected=event;
+
 	 }
-	  onregSelected(event){
-	  this.regSelected=event;
+		onregSelected(event){
+		this.regSelected=event;
 	 }
 	expandall() {
 		for (var i = 0; i < this.logs.length; i++) {
@@ -218,6 +234,78 @@ export class EnvLogsSectionComponent implements OnInit {
 			rowData['expanded'] = true;
 		}
 		this.expandText = 'Collapse all';
+	}
+
+	fetchAssetName(type, name) {
+		let assetName;
+		let tokens;
+		switch(type) {
+			case 'lambda':
+			case 'sqs':
+			case 'iam_role':
+				tokens = name.split(':');
+				assetName = tokens[tokens.length - 1];
+				break;
+			case 'dynamodb':
+			case 'cloudfront':
+			case 'kinesis':
+				tokens = name.split('/');
+				assetName = tokens[tokens.length - 1];
+				break;
+			case 's3':
+				tokens = name.split(':::');
+				assetName = tokens[tokens.length - 1].split('/')[0];
+				break;
+		case 'apigateway':
+		case 'apigee_proxy':
+				tokens = name.split(this.selectedEnv + '/');
+				assetName = tokens[tokens.length - 1];
+				break;
+		}
+		return assetName;
+		}
+
+	setAssetName(val, selected) {
+			let assetObj = [];
+			this.lambdaResourceNameArr = [];
+			val.map((item) => {
+				assetObj.push({ type:item.asset_type, name: item.provider_id, env: item.environment });
+			})
+			if (selected === 'all') {
+				assetObj.map((item) => {
+					if(item.env === this.selectedEnv) {
+					this.selectedAssetName = this.fetchAssetName(item.type, item.name);
+					if (this.selectedAssetName) {
+						this.allAssetsNameArray.push(this.selectedAssetName);
+					}
+				}})
+				this.allAssetsNameArray.map((item,index)=>{
+					if(item === 'all'){
+						this.allAssetsNameArray.splice(index,1)
+					}
+				})
+				this.allAssetsNameArray.sort();
+				this.allAssetsNameArray.splice(0,0,'all');
+
+			}
+			else {
+				assetObj.map((item) => {
+					if (item.type === selected && item.env === this.selectedEnv) {
+						this.selectedAssetName = this.fetchAssetName(item.type, item.name);
+						if (this.selectedAssetName) {
+							this.lambdaResourceNameArr.push(this.selectedAssetName);
+						}
+					}
+				})
+				this.lambdaResourceNameArr.map((item,index)=>{
+					if(item === 'all'){
+						this.lambdaResourceNameArr.splice(index,1)
+					}
+				})
+				this.lambdaResourceNameArr.sort();
+				this.lambdaResourceNameArr.splice(0,0,'all');
+
+			}
 	}
 
 	collapseall() {
@@ -326,19 +414,19 @@ export class EnvLogsSectionComponent implements OnInit {
 		this.payload.start_time = resetdate;
 		this.resetPayload();
 
-		
+
 
 	}
 	getRangefunc(e){
-    
+
 		this.FilterTags.notify('filter-TimeRangeSlider',e);
-		
+
 		this.sliderFrom=1;
 		this.sliderPercentFrom=1;
 		var resetdate = this.getStartDate(this.selectedTimeRange, this.sliderFrom);
 		this.callLogsFunc();
-		
-	  }
+
+		}
 
 	onRangeListSelected(range) {
 		this.sliderFrom = 1;
@@ -357,8 +445,8 @@ export class EnvLogsSectionComponent implements OnInit {
 			case 'Week':{   this.FilterTags.notify('filter-Period','1 Hour')
 				break;
 			}
-			case 'Month':{ 
-			   this.FilterTags.notify('filter-Period','6 Hours')
+			case 'Month':{
+				 this.FilterTags.notify('filter-Period','6 Hours')
 				break;
 			}
 			case 'Year':{   this.FilterTags.notify('filter-Period','7 Days')
@@ -437,28 +525,26 @@ export class EnvLogsSectionComponent implements OnInit {
 		},10);
 	}
 
-  refresh() {
-    this.callLogsFunc();
-  }
-  getAssetType(data?){
+	refresh() {
+		this.callLogsFunc();
+	}
+	getAssetType(data?){
 	let self=this;
-   return this.http.get('/jazz/assets',{
-	   domain: self.service.domain,
-				   service: self.service.name,              
-   }, self.service.id).toPromise().then((response:any)=>{
-	   if(response&&response.data&&response.data.assets){
-		    let assets=_(response.data.assets).map('asset_type').uniq().value();
+	return this.http.get('/jazz/assets',{
+		domain: self.service.domain,
+		service: self.service.name,
+	}, self.service.id).toPromise().then((response:any)=>{
+		if(response&&response.data&&response.data.assets){
+			this.assetsNameArray.push(response);
+			let assets=_(response.data.assets).map('asset_type').uniq().value();
+			const filterWhitelist = [
+				'lambda',
+				'apigateway'
+			];
+			assets = assets.filter(item => filterWhitelist.includes(item));
 			 let validAssetList = assets.filter(asset => (env_oss.assetTypeList.indexOf(asset) > -1));
 			 validAssetList.splice(0, 0, 'all');
-			 this.lambdaResourceNameArr = response.data.assets.map( asset => asset.provider_id );
-			for( let i = 0 ; i<this.lambdaResourceNameArr.length; i++ ){
-				let tokens = this.lambdaResourceNameArr[i].split(':');
-				let reduced = tokens[tokens.length-1];
-				let reducedTokens = reduced.split('-');
-				this.lambdaResourceNameArr[i] = reducedTokens[reducedTokens.length-1];
-			}
-			this.lambdaResourceNameArr = _.uniq(this.lambdaResourceNameArr);
-			this.lambdaResourceNameArr.splice(0,0,'All');
+			this.responseArray = this.assetsNameArray[0].data.assets.filter(asset=>(validAssetList.indexOf(asset.asset_type)>-1));
 			 self.assetWithDefaultValue = validAssetList;
 			 for (var i = 0; i < self.assetWithDefaultValue.length; i++) {
 				 self.assetList[i] = self.assetWithDefaultValue[i].replace(/_/g, " ");
@@ -467,17 +553,18 @@ export class EnvLogsSectionComponent implements OnInit {
 			 if (!data) {
 				 self.assetSelected = validAssetList[0].replace(/_/g, " ");
 			 }
-			self.callLogsFunc();
+			 if (this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1) {
+				self.setAssetName(self.responseArray, self.assetSelected);
+			}
 			self.getFilter(self.advancedFilters);
 			self.instance_yes.showAsset = true;
 			self.instance_yes.assetSelected = validAssetList[0].replace(/_/g ," ");
 		}
-   })
-   .catch((error) => {
-	   return Promise.reject(error);
-   })
+	 })
+	 .catch((error) => {
+		 return Promise.reject(error);
+	 })
 }
-
 
 	callLogsFunc() {
 		this.loadingState = 'loading';
@@ -486,16 +573,15 @@ export class EnvLogsSectionComponent implements OnInit {
 		}
 		this.subscription = this.http.post('/jazz/logs', this.payload, this.service.id).subscribe(
 			response => {
-				if(response.data !== ""){
-					this.logs = response.data.logs  || response.data.data.logs;
-					if(this.logs !== undefined)
-					if (this.logs && this.logs.length != 0) {
-						var pageCount = response.data.count;
-						if (pageCount) {
-							this.totalPagesTable = Math.ceil(pageCount / this.limitValue);
-							if(this.totalPagesTable === 1){
-								this.paginationSelected = false;
-							}
+				if(response.data.logs !== undefined) {
+				this.logs = response.data.logs  || response.data.data.logs;
+				if(this.logs !== undefined)
+				if (this.logs && this.logs.length != 0) {
+					var pageCount = response.data.count;
+					if (pageCount) {
+						this.totalPagesTable = Math.ceil(pageCount / this.limitValue);
+						if(this.totalPagesTable === 1){
+							 this.paginationSelected = false;
 						}
 						else {
 							this.totalPagesTable = 0;
@@ -509,10 +595,9 @@ export class EnvLogsSectionComponent implements OnInit {
 						this.loadingState = 'empty';
 					}
 				} else {
-					this.loadingState = 'error';
-					this.errMessage = "Doesn't look like there is any data available here.";
+					this.loadingState = 'empty';
+						}
 				}
-
 			},
 			err => {
 				this.loadingState = 'error';
@@ -524,94 +609,94 @@ export class EnvLogsSectionComponent implements OnInit {
 					if (this.parsedErrBody.message != undefined && this.parsedErrBody.message != '') {
 						this.errMessage = this.errMessage || this.parsedErrBody.message;
 					}
+					this.getTime();
+					this.errorURL = window.location.href;
+					this.errorAPI = env_oss.baseurl+"/jazz/logs";
+					this.errorRequest = this.payload;
+					this.errorUser = this.authenticationservice.getUserId();
+					this.errorResponse = err._body;
+					this.cache.set('feedback', this.model.userFeedback)
+					this.cache.set('api', this.errorAPI)
+					this.cache.set('request', this.errorRequest)
+					this.cache.set('resoponse', this.errorResponse)
+					this.cache.set('url', this.errorURL)
+					this.cache.set('time', this.errorTime)
+					this.cache.set('user', this.errorUser)
+					this.cache.set('bugreport', this.json)
 				} catch (e) {
+					console.log(e);
 				}
-				this.getTime();
-				this.errorURL = window.location.href;
-				this.errorAPI = environment.baseurl+"/jazz/logs";
-				this.errorRequest = this.payload;
-				this.errorUser = this.authenticationservice.getUserId();
-				this.errorResponse = JSON.parse(err._body);
-				this.cache.set('feedback', this.model.userFeedback)
-				this.cache.set('api', this.errorAPI)
-				this.cache.set('request', this.errorRequest)
-				this.cache.set('resoponse', this.errorResponse)
-				this.cache.set('url', this.errorURL)
-				this.cache.set('time', this.errorTime)
-				this.cache.set('user', this.errorUser)
-				this.cache.set('bugreport', this.json)
-
 			})
 	};
 	cancelFilter(event){
 		switch(event){
-		  case 'time-range':{  this.instance_yes.onRangeListSelected('Day'); 
-			
-		    break;
-		  }
-		  case 'time-range-slider':{  this.instance_yes.onTimePeriodSelected(1);
-		  
+			case 'time-range':{  this.instance_yes.onRangeListSelected('Day');
+
+				break;
+			}
+			case 'time-range-slider':{  this.instance_yes.onTimePeriodSelected(1);
+
 			break;
-		  }
-		  case 'period':{       this.instance_yes.onPeriodSelected('15 Minutes');
-			
-		  break;
-		  }
-		  case 'statistic':{    this.instance_yes.onStatisticSelected('Average');
-		  
+			}
+			case 'period':{       this.instance_yes.onPeriodSelected('15 Minutes');
+
 			break;
-		  }
-		  case 'account':{      this.instance_yes.onaccSelected('Acc 1');
-		  
+			}
+			case 'statistic':{    this.instance_yes.onStatisticSelected('Average');
+
 			break;
-		  }
-		  case 'region':{       this.instance_yes.onregSelected('reg 1');
-		  
+			}
+			case 'account':{      this.instance_yes.onaccSelected('Acc 1');
+
 			break;
-		  }
-		  case 'env':{          this.instance_yes.onEnvSelected('prod');
-		  
+			}
+			case 'region':{       this.instance_yes.onregSelected('reg 1');
+
 			break;
-		  }
-		  case 'method':{       this.instance_yes.onMethodListSelected('POST');
-		  
+			}
+			case 'env':{          this.instance_yes.onEnvSelect('prod');
+
 			break;
-		  }
-		  case 'asset':{        this.instance_yes.getAssetType('all');
-		  
-		    break;
-		  }
-		  case 'asset-iden':{	this.instance_yes.getResourceType('all');
+			}
+			case 'method':{       this.instance_yes.onMethodListSelected('POST');
+
+			break;
+			}
+			case 'asset':{        this.instance_yes.getAssetType('all');
+
+				break;
+			}
+			case 'asset-iden':{	this.instance_yes.getResourceType('all');
 
 			break;
 		}
-		  case 'all':{
-		        this.instance_yes.onRangeListSelected('Day');    
+			case 'all':{
+						this.instance_yes.onRangeListSelected('Day');
 				this.instance_yes.onPeriodSelected('15 Minutes');
 				this.instance_yes.onTimePeriodSelected(1);
 				this.instance_yes.onStatisticSelected('Average');
 				this.instance_yes.onaccSelected('Acc 1');
 				this.instance_yes.onregSelected('reg 1');
-				this.instance_yes.onEnvSelected('prod');
+				this.instance_yes.onEnvSelect('prod');
 				this.instance_yes.onMethodListSelected('POST');
 				this.instance_yes.getAssetType('all');
 				this.instance_yes.getResourceType('all');
 				break;
-		  	}
+				}
 		}
-	   
+
 		this.getRangefunc(1);
 }
 	onFilterSelect(event){
 		switch(event.key){
-		  case 'slider':{
+			case 'slider':{
 			this.getRange(event.value);
 			break;
-		  }
-		  
-		  case 'range':{
+			}
+
+			case 'range':{
 			this.sendDefaults(event.value);
-			this.FilterTags.notifyLogs('filter-TimeRange',event.value);		
+			this.FilterTags.notifyLogs('filter-TimeRange',event.value);
 			this.sliderFrom =1;
 			this.FilterTags.notifyLogs('filter-TimeRangeSlider',this.sliderFrom);
 			var resetdate = this.getStartDate(event.value, this.sliderFrom);
@@ -619,47 +704,49 @@ export class EnvLogsSectionComponent implements OnInit {
 			this.selectedTimeRange = event.value;
 			this.payload.start_time = resetdate;
 			this.resetPayload();
-			
+
 			break;
-		  }
-		  
-		  case 'account':{
+			}
+
+			case 'account':{
 			this.FilterTags.notify('filter-Account',event.value);
 			this.accSelected=event.value;
 			break;
-		  }
-		  case 'region':{ 
+			}
+			case 'region':{
 			this.FilterTags.notify('filter-Region',event.value);
 			this.regSelected=event.value;
 			break;
-				
-		  }
-		  case 'asset' :{
-			  this.FilterTags.notify('filter-Asset',event.value)
+
+			}
+			case 'asset' :{
+				this.FilterTags.notify('filter-Asset',event.value)
 				this.assetSelected=event.value;
 				if (this.assetSelected !== 'all') {
 					this.payload.asset_type = this.assetSelected.replace(/ /g, "_");
+					var value = (<HTMLInputElement>document.getElementById('Allidentifier'))
+					if(value != null) {
+						var inputValue = value.checked = true;
+					}
+					delete this.payload['asset_identifier']
 				}
 				else {
 					delete this.payload['asset_type'];
 				}
-			  this.resetPayload();
-			  break;
-		  }
-		  case "resource" : {
-			if(this.service.serviceType == 'sls-app'){
+				this.resetPayload();
+				break;
+			}
+			case "resource" : {
+				this.FilterTags.notifyLogs('filter-Asset-Name', event.value);
 				this.resourceSelected = event.value;
 				this.payload.asset_identifier = this.resourceSelected;
-				if(this.resourceSelected === 'all'){
+				if(this.resourceSelected.toLowerCase() === 'all'){
 					delete this.payload['asset_identifier'];
 				}
 				this.resetPayload();
+				break;
 			}
 		}
-	
-	   
-		}
-		
 	}
 	getTime() {
 		var now = new Date();
@@ -686,7 +773,7 @@ export class EnvLogsSectionComponent implements OnInit {
 			"service": this.service.name,//"logs", //
 			"domain": this.service.domain,//"jazz", //
 			"environment": this.env, //"dev"
-			"category": this.service.serviceType,//"api",//
+			"category": this.service.serviceType === "custom" ? "sls-app" : this.service.serviceType,//"api",//
 			"size": this.limitValue,
 			"offset": this.offsetValue,
 			"type": this.filterloglevel || "ERROR",
@@ -696,10 +783,11 @@ export class EnvLogsSectionComponent implements OnInit {
 		if( this.assetSelected !== 'all') {
 			this.payload["asset_type"] = this.assetSelected;
 		}
+		this.selectedEnv = this.env;
 		this.callLogsFunc();
 		this.filter = new Filter(this.logs);
 		this.sort = new Sort(this.logs);
-		
+
 	}
- 
+
 }

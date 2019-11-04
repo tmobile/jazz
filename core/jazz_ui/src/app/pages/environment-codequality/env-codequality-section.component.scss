@@ -21,4 +21,34 @@
     cursor: pointer;
 }
 
+.jz-chart {
+  height: 100%;
+  margin: 0;
+}
+
+.jz-chart-header {
+  position: unset;
+}
+
+.jz-chart-content {
+  height: 100%;
+  position: unset;
+}
+
+.filter-wrapper {
+  margin-top: 0.5em;
+}
+
+.jz-text-center {
+  width: 100%;
+}
+
+metrics-carousel {
+  position: relative;
+}
+
+/deep/ .metrics-arrows {
+  height: calc(120rem / 12 - 10px) !important;
+}
+
 

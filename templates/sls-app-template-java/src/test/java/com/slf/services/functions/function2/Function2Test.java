@@ -14,7 +14,7 @@ public class Function2Test {
 
 	private Function2 f2 = new Function2();
 
-	public  Context context = new ContextStub("instprefx-java-pkg-sls-prod-function2");
+	public  Context context = new ContextStub("jazztest_sls-app-python-FN_function2-stg");
 
 	@Test
 	public void shouldExecuteRequest() {
@@ -25,7 +25,7 @@ public class Function2Test {
 
 		assertTrue(output.get("name").equals("value_2"));
 		// Should have read the value from the config
-		assertTrue(output.get("config_key").equals("config_value_prod_2"));
+		assertTrue(output.get("config_key").equals("config_value_stg_2"));
 
 	}
 }
