@@ -20,12 +20,28 @@
   @version: 1.0
 **/
 
+const AWS = require('aws-sdk');
 const crypto = require('crypto');
 const logger = require("../components/logger.js");
 const config = require("../config/global_config.json")
 var truncate = require('unicode-byte-truncate');
 
 // Helper functions
+
+function getLogsTags(logGroupName) {
+  var cloudwatchlogs = new AWS.CloudWatchLogs();
+  var params = {
+    logGroupName: logGroupName /* required */
+  };
+  cloudwatchlogs.listTagsLogGroup(params, function(err, data) {
+    if (err) {
+      logger.error("something went wrong while fetching tags..: " + JSON.stringify(err));
+    } else {
+      logger.info('data ' + JSON.stringify(data))
+    } 
+  });
+  // return cloudwatchlogs;
+}
 
 function getInfo(messages, patternStr) {
   let pattern = new RegExp(patternStr);
@@ -137,6 +153,7 @@ function getApiLogsData(payload) {
 }
 
 function getLambdaLogsData(payload) {
+  getLogsTags(payload.logGroup);
   let bulkRequestBody = '',
     data = {}
   data.asset_type = "lambda";
