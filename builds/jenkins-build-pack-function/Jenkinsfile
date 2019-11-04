@@ -184,8 +184,7 @@ node() {
 
 
   dir(repo_name) {
-    if (servicePlatform == null || servicePlatform != "azure") {
-
+    if (servicePlatform == "aws") {
       loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
     }
     if (domain == "jazz") {
@@ -212,7 +211,7 @@ node() {
       events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
     }
 
-    if (config['domain'] && config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
+    if (config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
       stage('Code Quality Check') {
         events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
         try {
@@ -716,7 +715,7 @@ def validateDeploymentConfigurations(def prop) {
 		if (_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x", "c#"]
+			def validRuntimes = ["nodejs8.10", "nodejs10.x", "python3.6", "java8", "go1.x", "c#"]
 			def flag = false
 
 			for (int i = 0; i < validRuntimes.size(); i++) {

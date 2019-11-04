@@ -283,8 +283,8 @@
           "description": "The runtime framework for executing your code",
           "enum": [
             "nodejs8.10",
+            "nodejs10.x",
             "java8",
-            "python2.7",
             "python3.6",
             "go1.x"
           ]
