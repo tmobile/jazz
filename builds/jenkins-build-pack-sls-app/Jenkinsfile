@@ -736,62 +736,6 @@ def echoServiceInfo(String env, String envBucketKey) {
   }
 }
 
-/**
-	Create the subscription filters and loggroup if not existing
-**/
-
-def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
-  def deploymentDescriptor = null
-  if( env_deployment_descriptor != null ){
-    deploymentDescriptor = env_deployment_descriptor
-  } else {
-    deploymentDescriptor = config['deployment_descriptor']
-  }
-   // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harmful as Map not String is expected below
-  def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:]
-  def functionsElem = doc['functions']
-  // changing variable names appropriately
-  def serviceDomain = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}"
-  functionsElem.each{functionName, funcConfig ->
-    def lambdaName = funcConfig['name'] ? funcConfig['name'] : "${serviceDomain}-FN_${functionName}-${environment_logical_id}"
-    def logGroupName = "/aws/lambda/${lambdaName}"
-    def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
-
-    try {
-      sh "aws logs create-log-group --log-group-name ${logGroupName} --region ${config.region} --profile ${credsId}"
-    } catch (Exception ex) { } // ignore if already existing
-
-    try {
-      filter_json = sh(
-        script: "aws logs describe-subscription-filters --output json --log-group-name \"${logGroupName}\" --profile ${credsId} --region ${config.region}",
-        returnStdout: true
-      ).trim()
-      echo "${filter_json}"
-      def resultJson = parseJson(filter_json)
-      filtername = resultJson.subscriptionFilters[0].filterName
-      echo "removing existing filter... $filtername"
-      if (filtername != "" && !filtername.equals(logGroupName)) {
-        sh "aws logs delete-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${filtername}\"  --profile ${credsId} --region ${config.region}"
-      }
-    } catch (Exception ex) { } // ignore error if not created yet
-    try {
-      def destLogStreamArn = configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == config.accountId}.PRIMARY ? logStreamer : 
-                            accountDetails.REGIONS.find{it.REGION == config.region}.LOGS.PROD
-      def isPrimaryAccount = configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == config.accountId}.PRIMARY ? true : false
-
-       if(!isPrimaryAccount){
-          updatePolicy(env_key, destLogStreamArn);
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${destLogStreamArn}\"  --profile ${credsId} --region ${config.region}"
-        } else {
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${destLogStreamArn}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId} --region ${config.region}"
-        }
-
-    } catch (Exception ex) {
-      echo "error occured: " + ex.getMessage()
-    }
-  }
-}
-
 def updatePolicy(env, destARN){
   def primaryData = utilModule.getAccountInfoPrimary();
   def primaryRegion
