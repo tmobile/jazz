@@ -102,9 +102,9 @@ function validateRoleArn(arn) {
 function validateFieldLength(data) {
   return new Promise((resolve, reject) => {
     let lessLengthKeyList = Object.keys(data).filter((field) => {
-      if (data[field].length <= global.globalConfig.FIELD_LENGTH_CONSTRAINTS) return field;
+      if (global.globalConfig.FIELD_LENGTH_CONSTRAINTS[field] && data[field].length <= global.globalConfig.FIELD_LENGTH_CONSTRAINTS[field]) return field;
     });
-    if (lessLengthKeyList.length > 0) return reject({ "errorType": "inputError", "message": `Following field(s) not satisfying the char length ${global.globalConfig.FIELD_LENGTH_CONSTRAINTS} -  ${lessLengthKeyList}` });
+    if (lessLengthKeyList.length > 0) return reject({ "errorType": "inputError", "message": `Following field(s) not satisfying the char length ${JSON.stringify(global.globalConfig.FIELD_LENGTH_CONSTRAINTS)} -  ${lessLengthKeyList}` });
     return resolve();
   });
 }

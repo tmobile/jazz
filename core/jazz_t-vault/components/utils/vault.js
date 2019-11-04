@@ -275,15 +275,41 @@ function createRole(roleDetails, configData, vaultToken, onComplete) {
   let rolename = `${accountId}_${role}`;
   roleDetails.rolename = rolename;
 
-  createRoleInVault(roleDetails, configData, vaultToken)
-    .then(() => { return createRoleInSafe(roleDetails, configData, vaultToken) })
+
+  getRoleInVault(roleDetails, configData, vaultToken)
+    .then((isExists) => { return createOrAddRole(isExists, roleDetails, configData, vaultToken) })
     .then((result) => {
-      logger.info("Successfully created role. ");
+      logger.info("Successfully created/added role. ");
       return onComplete(null, result);
     })
     .catch(err => {
       return onComplete(err);
     });
+}
+
+function createOrAddRole(isExists, roleDetails, configData, vaultToken) {
+  return new Promise((resolve, reject) => {
+    if (isExists) {
+      createRoleInSafe(roleDetails, configData, vaultToken)
+        .then((result) => {
+          logger.info("Successfully added role. ");
+          return resolve(result);
+        })
+        .catch(err => {
+          return reject(err);
+        });
+    } else {
+      createRoleInVault(roleDetails, configData, vaultToken)
+        .then(() => { return createRoleInSafe(roleDetails, configData, vaultToken) })
+        .then((result) => {
+          logger.info("Successfully created and added role. ");
+          return resolve(result);
+        })
+        .catch(err => {
+          return reject(err);
+        });
+    }
+  });
 }
 
 function createRoleInSafe(safeDetails, configData, vaultToken) {
@@ -314,6 +340,38 @@ function createRoleInSafe(safeDetails, configData, vaultToken) {
         return reject({
           "error": `Error in creating role ${safeDetails.rolename}  in safe ${safeDetails.safename}: ${response.body.errors}`
         });
+      }
+    });
+  });
+}
+
+function getRoleInVault(roleDetails, configData, vaultToken) {
+  return new Promise((resolve, reject) => {
+    let payload = {
+      uri: `${configData.T_VAULT_API}${global.globalConfig.API.VAULT_ROLES}/${roleDetails.rolename}`,
+      method: "GET",
+      headers: {
+        "vault-token": vaultToken
+      },
+      rejectUnauthorized: false
+    };
+
+    logger.debug("getRoleInVault payload: " + JSON.stringify(payload));
+    request(payload, function (error, response, body) {
+      logger.debug("getRoleInVault response: " + JSON.stringify(response));
+      if (response.statusCode && response.statusCode === 200 && body) {
+        logger.info("Successfully got role info from t-vault: " + JSON.stringify(body));
+        return resolve(true);
+      } else {
+        if (response.statusCode && response.statusCode === 404) {
+          logger.info(`Role ${roleDetails.rolename} not existing in t-vault.`);
+          return resolve(false);
+        } else {
+          logger.error("Error in getting role from t-vault. " + JSON.stringify(error));
+          return reject({
+            "error": `Error in getting role ${roleDetails.rolename} in t-vault: ${response.body.errors}`
+          });
+        }
       }
     });
   });
@@ -459,6 +517,8 @@ module.exports = {
   deleteUserFromSafe,
   getRoleInSafe,
   createRole,
+  getRoleInVault,
+  createOrAddRole,
   createRoleInSafe,
   createRoleInVault,
   deleteRoleFromSafe,
