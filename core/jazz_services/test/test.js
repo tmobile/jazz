@@ -359,7 +359,7 @@ describe('platform_services', function() {
 
     var dataType = "S";
     var scanParams = [":SERVICE_NAME", ":SERVICE_DOMAIN"];
-    var filterStrings = ["contains(SERVICE_NAME, :SERVICE_NAME)", "contains(SERVICE_DOMAIN, :SERVICE_DOMAIN)"];
+    var filterStrings = ["SERVICE_NAME = :SERVICE_NAME", "SERVICE_DOMAIN = :SERVICE_DOMAIN"];
 
     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB", "scan", spy);
