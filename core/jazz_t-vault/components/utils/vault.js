@@ -84,9 +84,9 @@ function createSafe(safeDetails, configData, vaultToken, onComplete) {
 
 function getSafeDetails(safename, configData, vaultToken, onComplete) {
   getSafeInfo(safename, configData, vaultToken)
-    .then((result) => { return massageRoleResponse(result, roleDetails, configData, vaultToken) })
+    .then((result) => { return massageRoleResponse(result, configData, vaultToken) })
     .then((result) => {
-      logger.info("Successfully created/added role. ");
+      logger.debug("Successfully got safe details: " + JSON.stringify(result));
       return onComplete(null, result);
     })
     .catch(err => {
@@ -95,43 +95,50 @@ function getSafeDetails(safename, configData, vaultToken, onComplete) {
 }
 
 function massageRoleResponse(safeDetails, configData, vaultToken) {
-  let roles = safeDetails.roles
-  let roleDetails = {};
-  let processEachPromises = [];
-
-  for (let i = 0; i < roles.length; i++) {
-    processEachPromises.push(processRole(role.key, roleDetails, configData, vaultToken));
-  }
-
-  Promise.all(processEachPromises)
-    .then((result) => {
-      delete safeDetails.roles;
-      safeDetails.roles = result;
-      return resolve(result);
-    })
-    .catch((error) => {
-      logger.error("processEvents failed" + JSON.stringify(error));
-      return reject(error);
-    });
-}
-
-function processRole(rolename, roleDetails, configData, vaultToken) {
   return new Promise((resolve, reject) => {
+    let roles = safeDetails.roles;
+    let processEachPromises = [];
 
-    getRoleDetails(rolename, configData, vaultToken)
+    for (let key in roles) {
+      processEachPromises.push(processRole(key, roles[key], configData, vaultToken));
+    }
+
+    Promise.all(processEachPromises)
       .then((result) => {
-        if (result) {
-          let details = JSON.parse(result);
-          roleDetails.rolename = { "arn": details.bound_iam_principal_arn[0], "policies": details.policies }
+        let roleDetails = {};
+        for (let idx in result) {
+          for (let key in result[idx]) {
+            roleDetails[key] = result[idx][key];
+          }
         }
-        logger.info("role details in processRole : " + JSON.stringify(roleDetails));
-        resolve(roleDetails);
+        delete safeDetails.roles;
+        safeDetails.roles = roleDetails;
+        return resolve(safeDetails);
       })
       .catch((error) => {
-        logger.error("processRole failed" + JSON.stringify(error));
+        logger.error("massageRoleResponse failed" + JSON.stringify(error));
         return reject(error);
       });
   });
+}
+
+function processRole(rolename, permission, configData, vaultToken) {
+  return new Promise((resolve, reject) => {
+    let roleDetails = {};
+    getRoleDetails(rolename, configData, vaultToken)
+    .then((result) => {
+      if (result) {
+        let details = JSON.parse(result);
+        roleDetails[rolename] = { "arn": details.bound_iam_principal_arn[0], "permission": permission }
+      }
+      logger.debug("role details in processRole : " + JSON.stringify(roleDetails));
+      resolve(roleDetails);
+    })
+    .catch((error) => {
+      logger.error("processRole failed" + JSON.stringify(error));
+      return reject(error);
+    });
+});
 }
 
 function getSafeInfo(safename, configData, vaultToken) {
@@ -331,7 +338,7 @@ function createRole(roleDetails, configData, vaultToken, onComplete) {
   getRoleDetails(rolename, configData, vaultToken)
     .then((result) => { return createOrAddRole(result, roleDetails, configData, vaultToken) })
     .then((result) => {
-      logger.info("Successfully created/added role. ");
+      logger.debug("Successfully created/added role. ");
       return onComplete(null, result);
     })
     .catch(err => {
@@ -344,7 +351,7 @@ function createOrAddRole(result, roleDetails, configData, vaultToken) {
     if (result) {
       createRoleInSafe(roleDetails, configData, vaultToken)
         .then((result) => {
-          logger.info("Successfully added role. ");
+          logger.debug("Successfully added role. ");
           return resolve(result);
         })
         .catch(err => {
@@ -354,7 +361,7 @@ function createOrAddRole(result, roleDetails, configData, vaultToken) {
       createRoleInVault(roleDetails, configData, vaultToken)
         .then(() => { return createRoleInSafe(roleDetails, configData, vaultToken) })
         .then((result) => {
-          logger.info("Successfully created and added role. ");
+          logger.debug("Successfully created and added role. ");
           return resolve(result);
         })
         .catch(err => {
@@ -412,11 +419,11 @@ function getRoleDetails(rolename, configData, vaultToken) {
     request(payload, function (error, response, body) {
       logger.debug("getRoleDetails response: " + JSON.stringify(response));
       if (response.statusCode && response.statusCode === 200 && body) {
-        logger.info("Successfully got role info from t-vault: " + JSON.stringify(body));
+        logger.debug("Successfully got role info from t-vault: " + JSON.stringify(body));
         return resolve(body);
       } else {
         if (response.statusCode && response.statusCode === 404) {
-          logger.info(`Role ${rolename} not existing in t-vault.`);
+          logger.debug(`Role ${rolename} not existing in t-vault.`);
           return resolve(null);
         } else {
           logger.error("Error in getting role from t-vault. " + JSON.stringify(error));
@@ -453,7 +460,7 @@ function createRoleInVault(roleDetails, configData, vaultToken) {
     request(payload, function (error, response, body) {
       logger.debug("createRoleInVault response: " + JSON.stringify(response));
       if (response.statusCode && response.statusCode === 200) {
-        logger.info("Successfully created role in t-vault: " + JSON.stringify(body));
+        logger.debug("Successfully created role in t-vault: " + JSON.stringify(body));
         const message = { "message": `Role ${roleDetails.rolename} is successfully created in t-vault.` };
         return resolve(message);
       } else {
