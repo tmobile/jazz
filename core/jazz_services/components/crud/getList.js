@@ -75,7 +75,7 @@ module.exports = (query, servicesList, onComplete) => {
         });
       } else if (query[key]) {
           if (query['isSearch']) {
-            filter = filter + `contains(${key_name} = :${key_name})` + insertAnd;
+            filter = filter + `contains(${key_name}, :${key_name})` + insertAnd;
           } else {
             filter = filter + `${key_name} = :${key_name}` + insertAnd;
           }
