@@ -160,6 +160,12 @@ function getSafeInfo(safename, configData, vaultToken) {
         let safeDetails = JSON.parse(body);
         safeDetails.data.roles = safeDetails.data['aws-roles'];
         delete safeDetails.data['aws-roles'];
+        let userDetails = {}
+        for (key in safeDetails.data.users) {
+          userDetails[key] = {"permission": safeDetails.data.users[key]}
+        }
+        delete safeDetails.data.users;
+        safeDetails.data.users = userDetails;
         return resolve(safeDetails.data);
       } else {
         logger.error("Error in getting safe details: " + JSON.stringify(error));
