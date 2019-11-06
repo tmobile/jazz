@@ -28,17 +28,21 @@ var truncate = require('unicode-byte-truncate');
 
 // Helper functions
 
-function getLogsTags(logGroupName) {
+function getLogsGroupsTags(logGroupName) {
   var cloudwatchlogs = new AWS.CloudWatchLogs();
   var params = {
     logGroupName: logGroupName /* required */
   };
-  cloudwatchlogs.listTagsLogGroup(params, function(err, data) {
-    if (err) {
-      logger.error("something went wrong while fetching tags..: " + JSON.stringify(err));
-    } else {
-      logger.info('data ' + JSON.stringify(data))
-    } 
+  return new Promise((resolve, reject) => {
+    cloudwatchlogs.listTagsLogGroup(params, function(err, data) {
+      if (err) {
+        logger.error("something went wrong while fetching tags..: " + JSON.stringify(err));
+        reject('error')
+      } else {
+        logger.debug('data ' + JSON.stringify(data))
+        resolve(data)
+      } 
+    });
   });
   // return cloudwatchlogs;
 }
@@ -152,94 +156,103 @@ function getApiLogsData(payload) {
   return bulkRequestBody;
 }
 
-function getLambdaLogsData(payload) {
-  getLogsTags(payload.logGroup);
-  let bulkRequestBody = '',
+function getLambdaLogsData(payload, callback) {
+  getLogsGroupsTags(payload.logGroup)
+  .then((tagsResult) => {
+    let bulkRequestBody = '',
     data = {}
-  data.asset_type = "lambda";
-  data.provider = "aws";
-  let domainAndservice, serviceInfo;
-  data.request_id = getInfo(payload.logEvents, config.PATTERNS.lambda_request_id);
-  if (data.request_id) {
-    data.asset_identifier = payload.logGroup.split(config.PATTERNS.asset_identifier_key)[1];
-    let environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment, 2);
-		if (environment === "dev") {
-			let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 2);
-			serviceInfo = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 1);
-			data.environment = dev_environment;
-		} else {
-			data.environment = environment;
-			serviceInfo = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service, 1);
-		}
-
-		domainAndservice = serviceInfo;
-		if(serviceInfo.indexOf(config.PATTERNS.sls_app_function) !== -1 ) { // if yes then sls-app function
-			let serviceInfoArr = serviceInfo.split(config.PATTERNS.sls_app_function);
-			domainAndservice = serviceInfoArr[0];
-		} 
-
-		logger.debug("domainAndservice: " + domainAndservice)
-    let domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));
-    if (domain) {
-      data.domain = domain;
-      data.servicename = domainAndservice.substring(domain.length + 1);
-    } else {
-      data.domain = "";
-      data.servicename = domainAndservice;
-    }
-
-    if (data.servicename) {
-      payload.logEvents.forEach(function (logEvent) {
-
-        data.request_id = getSubInfo(logEvent.message, config.PATTERNS.guid_regex, 0);
-
-        data.platform_log_group = payload.logGroup;
-        data.platform_log_stream = payload.logStream;
-        data.timestamp = new Date(1 * logEvent.timestamp).toISOString();
-        let message = logEvent.message;
-        let messageLength = Buffer.byteLength(message, 'utf8');
-        if (messageLength > 32766) { //since 32766(32KB) is the default message size
-          let truncatedMessage = truncate(message, 32740); // message size + ...[TRUNCATED]
-          data.message = truncatedMessage + "  ...[TRUNCATED]";
+    data.asset_type = "lambda";
+    data.provider = "aws";
+    let domainAndservice, serviceInfo, environment, dev_environment, serviceInfoArr, domain;
+    data.request_id = getInfo(payload.logEvents, config.PATTERNS.lambda_request_id);
+    if (data.request_id) {
+      data.asset_identifier = payload.logGroup.split(config.PATTERNS.asset_identifier_key)[1];
+      // if tags present, then it is for sls-app, otherwise for other services
+      if(tagsResult != 'error' && tagsResult != undefined && tagsResult.tags.environment){
+        data.environment = tagsResult.tags.environment;
+        data.domain = tagsResult.tags.namespace;
+        data.servicename = tagsResult.tags.service;
+      } else {
+        environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment, 2);
+        if (environment === "dev") {
+          dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 2);
+          serviceInfo = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 1);
+          data.environment = dev_environment;
         } else {
-          data.message = message;
+          data.environment = environment;
+          serviceInfo = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service, 1);
         }
 
-        data.log_level = getSubInfo(logEvent.message, config.PATTERNS.log_level, 0);
-        if (!data.log_level) {
-          data.log_level = config.DEFAULT_LOG_LEVEL;
+        domainAndservice = serviceInfo;
+        if(serviceInfo.indexOf(config.PATTERNS.sls_app_function) !== -1 ) { // if yes then sls-app function
+          serviceInfoArr = serviceInfo.split(config.PATTERNS.sls_app_function);
+          domainAndservice = serviceInfoArr[0];
+        } 
+    
+        logger.debug("domainAndservice: " + domainAndservice)
+        domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));
+        if (domain) {
+          data.domain = domain;
+          data.servicename = domainAndservice.substring(domain.length + 1);
+        } else {
+          data.domain = "";
+          data.servicename = domainAndservice;
         }
+      }
 
-        if (!(data.message.startsWith("REPORT") || data.message.startsWith("START") || data.message.startsWith("END"))) {
-          let timestmp = getSubInfo(data.message, config.PATTERNS.timestamp_pattern, 0);
-          data.message = data.message.replace(timestmp, "");
+      if (data.servicename) {
+        payload.logEvents.forEach(function (logEvent) {
 
-          let guid = getSubInfo(data.message, config.PATTERNS.guid_regex, 0);
-          data.message = data.message.replace(guid, "");
+          data.request_id = getSubInfo(logEvent.message, config.PATTERNS.guid_regex, 0);
 
-          data.message = data.message.replace(data.log_level, "");
-        }
-        data.message = data.message.trim();
-        let indexName = "applicationlogs";
-        let action = {
-          "index": {}
-        };
-        action.index._index = indexName;
-        action.index._type = "applicationlogs";
-        action.index._id = logEvent.id;
+          data.platform_log_group = payload.logGroup;
+          data.platform_log_stream = payload.logStream;
+          data.timestamp = new Date(1 * logEvent.timestamp).toISOString();
+          let message = logEvent.message;
+          let messageLength = Buffer.byteLength(message, 'utf8');
+          if (messageLength > 32766) { //since 32766(32KB) is the default message size
+            let truncatedMessage = truncate(message, 32740); // message size + ...[TRUNCATED]
+            data.message = truncatedMessage + "  ...[TRUNCATED]";
+          } else {
+            data.message = message;
+          }
 
-        bulkRequestBody += [
-          JSON.stringify(action),
-          JSON.stringify(data),
-        ].join('\n') + '\n';
-      });
+          data.log_level = getSubInfo(logEvent.message, config.PATTERNS.log_level, 0);
+          if (!data.log_level) {
+            data.log_level = config.DEFAULT_LOG_LEVEL;
+          }
+
+          if (!(data.message.startsWith("REPORT") || data.message.startsWith("START") || data.message.startsWith("END"))) {
+            let timestmp = getSubInfo(data.message, config.PATTERNS.timestamp_pattern, 0);
+            data.message = data.message.replace(timestmp, "");
+
+            let guid = getSubInfo(data.message, config.PATTERNS.guid_regex, 0);
+            data.message = data.message.replace(guid, "");
+
+            data.message = data.message.replace(data.log_level, "");
+          }
+          data.message = data.message.trim();
+          let indexName = "applicationlogs";
+          let action = {
+            "index": {}
+          };
+          action.index._index = indexName;
+          action.index._type = "applicationlogs";
+          action.index._id = logEvent.id;
+
+          bulkRequestBody += [
+            JSON.stringify(action),
+            JSON.stringify(data),
+          ].join('\n') + '\n';
+        });
+      } else {
+        logger.error("invalid lambda logs event..: " + JSON.stringify(payload));
+      }
+      callback(bulkRequestBody);
     } else {
-      logger.error("invalid lambda logs event..: " + JSON.stringify(payload));
+      callback(null);
     }
-    return bulkRequestBody;
-  } else {
-    return null;
-  }
+  })
 }
 
 function transform(payload) {
@@ -254,11 +267,13 @@ function transform(payload) {
         resolve();
       }
     } else if (payload && payload.logGroup.indexOf("/aws/lambda/") === 0) {
-      if (getLambdaLogsData(payload)) {
-        resolve(getLambdaLogsData(payload));
-      } else {
-        resolve();
-      }
+      getLambdaLogsData(payload, function(data){
+        if (data) {
+          resolve(data);
+        } else {
+          resolve();
+        }
+      })
     } else {
       logger.debug("Unsupported event logs.")
       resolve();

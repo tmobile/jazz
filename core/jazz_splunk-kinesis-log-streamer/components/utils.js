@@ -21,11 +21,31 @@
 	@version: 1.0
 **/
 
+const AWS = require('aws-sdk');
 const logger = require("../components/logger.js");
 const global_config = require("../config/global-config.json");
 const truncate = require('unicode-byte-truncate');
 
 // Helper functions
+function getLogsGroupsTags(logGroupName) {
+  var cloudwatchlogs = new AWS.CloudWatchLogs();
+  var params = {
+    logGroupName: logGroupName /* required */
+  };
+  return new Promise((resolve, reject) => {
+    cloudwatchlogs.listTagsLogGroup(params, function(err, data) {
+      if (err) {
+        logger.error("something went wrong while fetching tags..: " + JSON.stringify(err));
+        reject('error')
+      } else {
+        logger.debug('data ' + JSON.stringify(data))
+        resolve(data)
+      } 
+    });
+  });
+  // return cloudwatchlogs;
+}
+
 var getInfo = function (messages, patternStr) {
   let pattern = new RegExp(patternStr);
   let result = "";
@@ -56,47 +76,55 @@ var getSubInfo = function (message, patternStr, index) {
 }
 
 var getCommonData = function (payload) {
-  return new Promise((resolve, reject) => {
-    let data = {};
-    data.metadata = {};
-    data.asset_type = "lambda"
-    data.request_id = getInfo(payload.logEvents, global_config.PATTERNS.lambda_request_id);
-    if (data.request_id) {
-      data.provider = "aws_lambda";
-      let domainAndservice, serviceInfo;
-      data.asset_identifier = payload.logGroup.split(global_config.PATTERNS.asset_identifier_key)[1];
-      data.environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment, 2);
-      if (data.environment === "dev") {
-        let dev_environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 2);
-        serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 1);
-        data.environment = dev_environment;
+  getLogsGroupsTags(payload.logGroup)
+  .then((tagsResult) => {
+    return new Promise((resolve, reject) => {
+      let data = {};
+      data.metadata = {};
+      data.asset_type = "lambda"
+      data.request_id = getInfo(payload.logEvents, global_config.PATTERNS.lambda_request_id);
+      if (data.request_id) {
+        data.provider = "aws_lambda";
+        let domainAndservice, serviceInfo, dev_environment, serviceInfoArr, namespace;
+        data.asset_identifier = payload.logGroup.split(global_config.PATTERNS.asset_identifier_key)[1];
+        // if tags present, then it is for sls-app, otherwise for other services
+        if(tagsResult != 'error' && tagsResult != undefined && tagsResult.tags.environment){
+          data.environment = tagsResult.tags.environment;
+          data.namespace = tagsResult.tags.namespace;
+          data.service = tagsResult.tags.service;
+        } else {
+          data.environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment, 2);
+          if (data.environment === "dev") {
+            dev_environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 2);
+            serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 1);
+            data.environment = dev_environment;
+          } else {
+            serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_domain_service, 1);
+          }
+          domainAndservice = serviceInfo;
+          if (serviceInfo.indexOf(global_config.PATTERNS.sls_app_function) !== -1) { // if yes then sls-app function
+            serviceInfoArr = serviceInfo.split(global_config.PATTERNS.sls_app_function);
+            domainAndservice = serviceInfoArr[0];
+          }
+          logger.debug("domainAndservice: " + domainAndservice)
+  
+          namespace = domainAndservice.substring(0, domainAndservice.indexOf("_"));
+          if (namespace) {
+            data.namespace = namespace;
+            data.service = domainAndservice.substring(namespace.length + 1);
+          } else {
+            data.namespace = "";
+            data.service = domainAndservice;
+          }
+        }
+        data.metadata.platform_log_group = payload.logGroup;
+        data.metadata.platform_log_stream = payload.logStream;
+        resolve(data);
       } else {
-        serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_domain_service, 1);
+        resolve(data);
       }
-
-      domainAndservice = serviceInfo;
-      if (serviceInfo.indexOf(global_config.PATTERNS.sls_app_function) !== -1) { // if yes then sls-app function
-        let serviceInfoArr = serviceInfo.split(global_config.PATTERNS.sls_app_function);
-        domainAndservice = serviceInfoArr[0];
-      }
-
-      logger.debug("domainAndservice: " + domainAndservice)
-
-      let namespace = domainAndservice.substring(0, domainAndservice.indexOf("_"));
-      if (namespace) {
-        data.namespace = namespace;
-        data.service = domainAndservice.substring(namespace.length + 1);
-      } else {
-        data.namespace = "";
-        data.service = domainAndservice;
-      }
-      data.metadata.platform_log_group = payload.logGroup;
-      data.metadata.platform_log_stream = payload.logStream;
-      resolve(data);
-    } else {
-      resolve(data);
-    }
-  });
+    });
+  })
 }
 
 var transformApiLogs = function (payload) {
