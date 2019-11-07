@@ -51,6 +51,18 @@ export class UtilsService {
     return Object.values(object)
   }
 
-
+  /**
+   * Group object array by key
+   * @param {array} array Array to group
+   * @param {string} key Key to group by
+   * @returns {object}
+   */
+  groupByKey(array, key) {
+    return array && array.reduce((prev, curr) => {
+      prev[curr[key]] = prev[curr[key]] || [];
+      prev[curr[key]].push(curr);
+      return prev;
+    }, Object.create(null));
+  };
 
 }

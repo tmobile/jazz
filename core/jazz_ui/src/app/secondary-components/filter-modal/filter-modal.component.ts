@@ -16,6 +16,7 @@ export class FilterModalComponent implements OnInit {
   @Input() fields;
   @Input() options;
   @Input() assetList;
+  @Input() slsapp;
   // @ViewChild('sliderElement') sliderElement: IonRangeSliderModule;
   @ViewChild('checkboxGroup') checkboxGroup: CheckboxGroupComponent;
   @ViewChild('checkboxGroupRegion') checkboxGroupRegion: CheckboxGroupRegionComponent;
@@ -93,7 +94,6 @@ export class FilterModalComponent implements OnInit {
       if (columns.length > 2) {
         this.multiColumns = true;
       }
-      this.reOrderFilterColumns();
     }
 
 
@@ -172,5 +172,15 @@ export class FilterModalComponent implements OnInit {
       selected: selected
     };
     this.form.columns[columnIndex].fields.push(field);
+  }
+
+  removeField(column, label) {
+    let columnIndex = _.findIndex(this.form.columns, {label: column});
+    if (columnIndex >= 0) {
+      let fieldIndex = _.findIndex(this.form.columns[columnIndex].fields, {label: label});
+      if(fieldIndex >= 0) {
+        this.form.columns[columnIndex].fields.splice(fieldIndex, 1);
+      }
+    }
   }
 }

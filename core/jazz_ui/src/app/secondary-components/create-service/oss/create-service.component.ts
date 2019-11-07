@@ -6,7 +6,7 @@
 import { Http, Headers, Response } from '@angular/http';
 import { Component, Input, OnInit, Output, EventEmitter, NgModule, AfterViewInit,ElementRef } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
-import { ServiceFormData, RateExpression, CronObject, EventExpression } from '../service-form-data';
+import { ServiceFormData, RateExpression, CronObject, EventExpression, EventLabels, AzureEventExpression, AzureEventLabels } from '../service-form-data';
 import { FocusDirective } from '../focus.directive';
 import { CronParserService } from '../../../core/helpers';
 import { ToasterService} from 'angular2-toaster';
@@ -48,24 +48,31 @@ export class CreateServiceComponent implements OnInit {
   deploymenttargetSelected:boolean = false;
   typeOfRuntime:string = "nodejs";
   ids=[
-    "service-type-section",
-    "deployment-type-section",
-    "additional",
-    "typeevents"
+    "typeofservice",
+    "platform-type",
+    "runtime-type",
+    "website-type",
+    "additional"
   ]
   isyamlValid:boolean = true;
   typeform:boolean=false;
   typeevents:boolean=false;
+  version: string = ">=1.0.0 <2.0.0";
   deploymentDescriptorFilterData = ["Function Template", "Start New"];
   selectedList:string='Function Template';
   sqsStreamString:string = "arn:aws:sqs:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":";
   kinesisStreamString:string = "arn:aws:kinesis:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":stream/";
   dynamoStreamString:string = "arn:aws:dynamo:" + env_oss.aws.region + ":" + env_oss.aws.account_number + ":table/";
   SlackEnabled:boolean = false;
+  documentDBStreamString: string;
+  eventStreamString: string;
+  storageStreamString: string;
+  serviceBusStreamString: string;
+  invalidAzureEventName: boolean = false;
   docs_link = env_oss.urls.docs_link;
   typeOfService:string = "api";
   typeOfPlatform:string = "aws";
-  disablePlatform = true;
+  disablePlatform = false;
   selected:string = "Minutes";
   runtime:string = Object.keys(env_oss.envLists)[0];
   webtime:string = Object.keys(env_oss.webLists)[0];
@@ -82,6 +89,7 @@ export class CreateServiceComponent implements OnInit {
   isLoading: boolean = false;
   slackChannelLoader: boolean = false;
   serviceAvailable : boolean = false;
+  validrate: boolean = false;
   serviceNotAvailable : boolean = false;
   isDomainDefined : boolean = false;
   invalidttl : boolean = false;
@@ -89,7 +97,7 @@ export class CreateServiceComponent implements OnInit {
   serviceRequestFailure = false;
   serviceRequestSuccess = false;
   serviceLink:string;
-  Currentinterval : string = 'Minutes';
+  Currentinterval : string = 'minutes';
   rateExpressionIsValid : boolean = false;
   rateExpressionError : string = '';
   cronFieldValidity : any;
@@ -99,6 +107,10 @@ export class CreateServiceComponent implements OnInit {
   isDescriptorEmpty: boolean = false;
   resMessage:string='';
   cdnConfigSelected:boolean = false;
+  public lineNumberCount: any = new Array(8);
+  isfunction: boolean = true;
+  is_function: boolean = false;
+  linenumber:number;
   focusindex:any = -1;
   scrollList:any = '';
   toast : any;
@@ -114,8 +126,16 @@ export class CreateServiceComponent implements OnInit {
 
   model = new ServiceFormData('','','', '','','');
   cronObj = new CronObject('0/5','*','*','*','?','*')
-  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '');
+  rateExpression = new RateExpression(undefined, undefined, 'none', '5', this.selected, '', '');
   eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
+  azureEventExpression = new AzureEventExpression("azureEventsNone",undefined,undefined,undefined,undefined);
+
+  eventLabels = new EventLabels("Function","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
+
+  azureEventLabels = new AzureEventLabels("Function", "DocumentDB", "Table Name","Event Hubs", "Event Hub Name", "Storage", "Storage Account","Service Bus Queue", "Service Bus Name");
+
+  amazonEventLabels = new EventLabels("Function","DynamoDB", "Table ARN", "Kinesis", "Stream ARN" ,"S3", "Bucket ARN","SQS", "Queue ARN");
+
   private doctors = [];
   private toastmessage:any;
   errBody: any;
@@ -130,24 +150,30 @@ export class CreateServiceComponent implements OnInit {
   regionList = [];
   accountSelected;
   accountDetails;
+  events: string;
   regionSelected;
   accountMap: any;
   webObject : any;
   selectedDescriptorField: any;
   webKeys : any;
+  isstartNew: boolean = false;
   deploymentTargetSelected: any;
+  awsOnly: boolean = true;
+  public lineNumberCounting: any = new Array(5);
 
   public buildEnvironment:any = environment;
   public deploymentTargets = this.buildEnvironment["INSTALLER_VARS"]["CREATE_SERVICE"]["DEPLOYMENT_TARGETS"];
   public apigeeFeature = this.buildEnvironment.INSTALLER_VARS.feature.apigee && this.buildEnvironment.INSTALLER_VARS.feature.apigee.toString() === "true" ? true : false;
   public selectedDeploymentTarget = "aws_apigateway";
+  public azureEnabled: boolean = false;
+  public disableFunction: boolean = false;
 
   constructor (
     private toasterService: ToasterService,
     private cronParserService: CronParserService,
     private http: RequestService,
     private cache: DataCacheService,
-    private messageService: MessageService,
+    public messageService: MessageService,
     private serviceList: ServicesListComponent,
     private authenticationService: AuthenticationService,
     private elementRef:ElementRef
@@ -163,15 +189,20 @@ export class CreateServiceComponent implements OnInit {
   public focusKinesis = new EventEmitter<boolean>();
   public focusS3 = new EventEmitter<boolean>();
   public focusSQS = new EventEmitter<boolean>();
+  public focusDocumentDB = new EventEmitter<boolean>();
+  public focusEventHub = new EventEmitter<boolean>();
+  public focusStorageAccount = new EventEmitter<boolean>();
+  public focusServiceBus = new EventEmitter<boolean>();
 
   scrollTo(id) {
     const ele = document.getElementById(id);
     if(ele){
-      ele.scrollIntoView({ behavior: 'smooth', block: 'center'});
+      ele.scrollIntoView({ behavior: 'smooth', block: 'start'});
     }
   }
   selectAccountsRegions(){
-    this.accountMap = env_oss.accountMap;
+    if(this.typeOfPlatform === 'aws') {
+    this.accountMap = env_oss.aws.accountMap;
     this.accountList = [];
     this.regionList = [];
     this.accountMap.map((item)=>{
@@ -184,6 +215,7 @@ export class CreateServiceComponent implements OnInit {
     this.regionList = this.accountMap[0].regions;
     this.regionSelected = this.regionList[0];
     this.setAccountandRegion();
+    }
   }
 
   setAccountandRegion(){
@@ -192,6 +224,11 @@ export class CreateServiceComponent implements OnInit {
     this.dynamoStreamString = "arn:aws:dynamo:" + this.regionSelected + ":" + this.accountSelected + ":table/";
   }
 
+  azureEventsPrefix() {
+    this.documentDBStreamString = "subscriptions/" + env_oss.azure.azure_account_number + "/providers/Microsoft.cosmosdb/"
+    this.eventStreamString = "subscriptions/" + env_oss.azure.azure_account_number + "/providers/Microsoft.eventHub/";
+    this.serviceBusStreamString = "subscriptions/" + env_oss.azure.azure_account_number + "/providers/Microsoft.serviceBus/";
+  }
 
   chkDynamodb() {
     this.focusDynamo.emit(true);
@@ -211,6 +248,25 @@ export class CreateServiceComponent implements OnInit {
   chkS3() {
     this.focusS3.emit(true);
     return this.eventExpression.type === 's3';
+  }
+  chkDocumentdb() {
+    this.focusDocumentDB.emit(true);
+    return this.azureEventExpression.type === 'cosmosdb';
+  }
+
+  chkEventHub() {
+    this.focusEventHub.emit(true);
+    return this.azureEventExpression.type === 'eventhub';
+  }
+
+  chkStorageAccount() {
+    this.focusStorageAccount.emit(true);
+    return this.azureEventExpression.type === 'storageaccount';
+  }
+
+  chkServiceBus() {
+    this.focusServiceBus.emit(true);
+    return this.azureEventExpression.type === 'servicebusqueue'
   }
 
   getSelectedData(data){
@@ -238,20 +294,37 @@ export class CreateServiceComponent implements OnInit {
     this.onFilterSelected(this.selectedList);
   }
 
+  lineNumbers() {
+    let lines;
+    if(this.deploymentDescriptorText)
+    {
+      lines = this.deploymentDescriptorText.split(/\r*\n/);
+      let line_numbers = lines.length;
+      if(line_numbers < 5){
+        line_numbers = 5;
+      }
+      this.lineNumberCounting = new Array(line_numbers);
+    }
+  }
 
   onFilterSelected(event){
     if(event == "Function Template"){
       this.startNew = false;
-      this.onSelectionChange(this.runtime);
+      this.isfunction = true;
+      this.isstartNew = false;
+      this.is_function = true;
+      this.onSelectionChange(this.runtime, false);
     }
     else if(event == "Start New"){
       this.startNew = true;
+      this.isstartNew = true;
+      this.is_function = false;
+      this.isfunction = false;
       this.deploymentDescriptorText = "";
     }
     this.selectedDescriptorField = event[0];
     this.isDescriptorEmpty = false;
   }
-
   onaccountSelected(event){
     this.accountMap.map((item,index)=>{
       if((item.account + ' (' + item.accountName + ')') === event){
@@ -295,11 +368,24 @@ export class CreateServiceComponent implements OnInit {
 
   selectedApprovers = [];
 
-  rateData = ['Minutes','Hours','Days'];
+  rateData = ['minutes','hours','days','minute','hour','day'];
 
   // function for changing service type
   changeServiceType(serviceType){
     this.typeOfService = serviceType;
+    if(serviceType === 'sls-app' || serviceType === 'api'){
+      this.changePlatformType('aws');
+      this.azureEnabled = false;
+    } else {
+      if(typeof env_oss.azure.azure_enabled === "boolean" && env_oss.azure.azure_enabled === true){
+        this.azureEnabled = true;
+      }
+    }
+    if(this.typeOfService === 'function'){
+      this.disableFunction = true;
+    } else {
+      this.disableFunction = false;
+    }
     this.scrollTo('platform-type');
   }
 
@@ -307,6 +393,10 @@ export class CreateServiceComponent implements OnInit {
 
   changeDeploymentTarget(deploymentTarget){
     this.selectedDeploymentTarget =  deploymentTarget;
+    if(this.selectedDeploymentTarget === 'gcp_apigee'){
+      this.accountSelected = this.buildEnvironment.aws.account_number,
+      this.regionSelected = this.buildEnvironment.aws.region.region
+    }
     this.scrollTo('runtime-type');
   }
 
@@ -317,20 +407,60 @@ export class CreateServiceComponent implements OnInit {
 
   // function for changing platform type
   changePlatformType(platformType){
-    if(!this.disablePlatform){
-      this.typeOfPlatform = platformType;
+    if(typeof env_oss.azure.azure_enabled === "boolean" && env_oss.azure.azure_enabled === true && platformType !== 'gcloud'){
+      if(this.typeOfService === 'api' || this.typeOfService === 'sls-app'){
+        this.awsOnly = true;
+        this.typeOfPlatform = 'aws';
+      } else {
+        this.typeOfPlatform = platformType;
+        if(this.typeOfService === 'function'){
+          this.disableFunction = true;
+        } else {
+          this.disableFunction = false;
+        }
+        this.awsOnly = false;
+      }
+    } else {
+      this.awsOnly = true;
+      this.typeOfPlatform = 'aws';
     }
+    this.events = this.typeOfPlatform.charAt(0).toUpperCase() + this.typeOfPlatform.slice(1);
+    this.updateEventLabels(this.typeOfPlatform);
+    this.updateAvailableRuntimes(this.typeOfPlatform);
     if(document.getElementById('deployment-type')){
-      this.scrollTo('deployment-type');
+      this.scrollTo('deployment-type-section');
     }
     else{
-      this.scrollTo('runtime-type');
+      if(this.typeOfService == 'website'){
+        this.scrollTo('website-type');
+      } else {
+        this.scrollTo('runtime-type');
+      }
     }
 
   }
 
+
+  updateEventLabels(platformType){
+  	if(platformType === "aws"){
+    this.eventLabels = this.amazonEventLabels;
+    this.eventExpression.type = 'awsEventsNone';
+  	}
+  	else if(platformType === "azure"){
+      this.azureEventLabels = this.azureEventLabels;
+    this.azureEventExpression.type = 'azureEventsNone';
+  	}
+  }
+
+  updateAvailableRuntimes(platformType){
+    this.runtimeObject = env_oss[platformType].envLists;
+    this.runtimeKeys = Object.keys(this.runtimeObject);
+    this.runtime = this.runtimeKeys[0];
+  }
+
+
   // function called on runtime change(radio)
-  onSelectionChange(val){
+  onSelectionChange(val, shouldScroll = true){
     this.runtime = val;
     this.typeform = true;
     if(!this.startNew){
@@ -341,10 +471,11 @@ export class CreateServiceComponent implements OnInit {
         case 'go1.x' : this.deploymentDescriptorText = this.deploymentDescriptorTextgo; break;
         case 'python3.6' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
         case 'python2.7' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
+        case 'c#' : this.deploymentDescriptorText = this.deploymentDescriptorTextpython; break;
       }
     }
 
-    this.scrollTo('additional');
+    shouldScroll && this.scrollTo('additional');
 
   }
 
@@ -352,21 +483,52 @@ export class CreateServiceComponent implements OnInit {
 
   onWebSelectionChange(val){
     this.webtime = val;
+    this.scrollTo('additional');
   }
 
   // function called on event schedule change(radio)
   onEventScheduleChange(val){
     this.rateExpression.type = val;
     if(val !== `none`){
-      this.eventExpression.type = 'awsEventsNone';
+      if (this.typeOfPlatform === 'aws') {
+        this.eventExpression.type = 'awsEventsNone';
+      }
+      else if (this.typeOfPlatform === 'azure') {
+        this.azureEventExpression.type = 'azureEventsNone';
+      }
+      this.disableFunction = false;
+    } else {
+      this.disableFunction = true;
     }
+  }
+  onChangeText(val){
+    if((<HTMLInputElement>document.getElementById(val)).value.length > 2){
+      this.disableFunction = false;
+    } else {
+      this.disableFunction = true;
+    }
+    this.generateExpression(this.rateExpression);
   }
   onAWSEventChange(val){
     this.invalidEventName = false;
     this.eventExpression = new EventExpression("awsEventsNone",undefined,undefined,undefined,undefined);
     this.eventExpression.type = val;
-    if(val !== `none`){
+    if(val !== `awsEventsNone`){
       this.rateExpression.type = 'none';
+      this.disableFunction = false;
+    } else{
+      this.disableFunction = true;
+    }
+  }
+  onAzureEventChange(val) {
+    this.invalidAzureEventName = false;
+    this.azureEventExpression = new AzureEventExpression("azureEventsNone",undefined,undefined,undefined,undefined);
+    this.azureEventExpression.type = val;
+    if(val !== `azureEventsNone`){
+      this.rateExpression.type = 'none';
+      this.disableFunction = false;
+    } else{
+      this.disableFunction = true;
     }
   }
   onSelectedDr(selected){
@@ -386,7 +548,11 @@ export class CreateServiceComponent implements OnInit {
   //function to validate event source names
   validateEvents(value){
     if(value != null && ((value[0] === '-' || value[value.length - 1] === '-') || (value[0] === '.' || value[value.length - 1] === '.') || (value[0] === '_' || value[value.length - 1] === '_'))){
-      this.invalidEventName = true;
+      if(this.typeOfPlatform === 'aws') {
+      this.invalidEventName = true; }
+      else if(this.typeOfPlatform === 'azure') {
+        this.invalidAzureEventName = true;
+      }
     }
   }
   // function to validate slack channel
@@ -513,17 +679,31 @@ export class CreateServiceComponent implements OnInit {
     if (this.typeOfService == 'api') {
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
-      payload["deployment_targets"] = {
-        "api": this.selectedDeploymentTarget || "aws_apigateway"
+      if (this.typeOfPlatform === 'aws') {
+        payload["deployment_targets"] = {
+          "api": this.selectedDeploymentTarget || "aws_apigateway"
+        }
+      }
+      else if (this.typeOfPlatform === 'azure') {
+        payload["deployment_targets"] = {
+          "api": "azure_apigateway"
+        }
       }
     }
     else if(this.typeOfService == 'function'){
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
-      payload["deployment_targets"] = {
-        "function": "aws_lambda"
+      if (this.typeOfPlatform === 'aws') {
+        payload["deployment_targets"] = {
+          "function": "aws_lambda"
+        }
       }
-      if(this.rateExpression.type != 'none'){
+      else if (this.typeOfPlatform === 'azure') {
+        payload["deployment_targets"] = {
+          "function": "azure_function"
+        }
+      }
+      if(this.rateExpression.type !== 'none'){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
         if (this.rateExpression.cronStr == 'invalid') {
             return;
@@ -531,7 +711,7 @@ export class CreateServiceComponent implements OnInit {
             payload["rateExpression"] = this.rateExpression.cronStr;
         }
       }
-
+      if(this.typeOfPlatform === 'aws') {
       if(this.eventExpression.type !== "awsEventsNone") {
         var event = {};
         event["type"] = this.eventExpression.type;
@@ -550,20 +730,48 @@ export class CreateServiceComponent implements OnInit {
         payload["events"] = [];
         payload["events"].push(event);
       }
+    }
+    else if(this.typeOfPlatform === 'azure') {
+      if(this.azureEventExpression.type !== "azureEventsNone") {
+        var event = {};
+        event["type"] = this.azureEventExpression.type;
+        if(this.azureEventExpression.type === "cosmosdb") {
+          event["source"] =  "subscriptions/" + env_oss.azure.azure_account_number + "/providers/Microsoft.cosmosdb/"+ this.model.domainName + "/" + this.azureEventExpression.cosmosdb;
+          event["action"] = "PutItem";
+        } else if(this.azureEventExpression.type === "eventhub") {
+          event["source"] = "subscriptions/" + env_oss.azure.azure_account_number + "/providers/Microsoft.eventHub/" + this.model.domainName + "/" + this.azureEventExpression.eventhub;
+          event["action"] = "PutRecord";
+        } else if(this.azureEventExpression.type === "storageaccount") {
+          event["source"] = this.azureEventExpression.storageaccount;
+          event["action"] = "storageBus";
+        } else if (this.azureEventExpression.type === "servicebusqueue") {
+          event["source"] = "subscriptions/" + env_oss.azure.azure_account_number + "/providers/Microsoft.serviceBus/"+ this.model.domainName + "/" + this.azureEventExpression.servicebusqueue;
+        }
+        payload["events"] = [];
+        payload["events"].push(event);
+      }
+    }
 
     } else if(this.typeOfService == 'website'){
       payload["framework"] = this.webtime;
       payload["create_cloudfront_url"] = this.cdnConfigSelected;
-      payload["deployment_targets"] = {
-        "website": "aws_cloudfront"
+      if (this.typeOfPlatform === 'aws') {
+        payload["deployment_targets"] = {
+          "website": "aws_cloudfront"
+        }
+      } else if (this.typeOfPlatform === 'azure') {
+        payload["deployment_targets"] = {
+          "website": "azure_cdnprofile"
+        }
       }
     }
     else if(this.typeOfService == 'sls-app'){
-      payload["service_type"] = "sls-app";        
+      payload["service_type"] = "sls-app";
       payload["deployment_descriptor"] = this.deploymentDescriptorText;
       payload["deployment_targets"]={"sls-app":"aws_sls-app"};
       payload["runtime"] = this.runtime;
       payload["require_internal_access"] = this.vpcSelected;
+      payload["is_function_template"] = this.is_function;
     }
     if(this.slackSelected){
         payload["slack_channel"] = this.model.slackName;
@@ -573,15 +781,28 @@ export class CreateServiceComponent implements OnInit {
     }
 
     /* Including deployment_accounts in the payload */
-    let deployment_accounts = [
-      {
-        "accountId": this.accountSelected,
-        "region": this.regionSelected,
-        "provider":"aws",
-        "primary":true
-      }
-    ]
-    payload['deployment_accounts'] = deployment_accounts
+    if(this.typeOfPlatform === 'aws'){
+      const deployment_accounts = [
+        {
+          "accountId": this.accountSelected,
+          "region": this.regionSelected,
+          "provider": this.typeOfPlatform,
+          "primary":true
+        }
+      ]
+      payload['deployment_accounts'] = deployment_accounts
+    }
+    else if(this.typeOfPlatform === 'azure') {
+      const deployment_accounts = [
+        {
+          "accountId": env_oss.azure.azure_account_number,
+          "region": env_oss.azure.azure_region,
+          "provider": this.typeOfPlatform,
+          "primary":true
+        }
+      ]
+      payload['deployment_accounts'] = deployment_accounts
+    }
 
     this.isLoading = true;
     this.http.post('/jazz/create-serverless-service' , payload)
@@ -626,11 +847,16 @@ export class CreateServiceComponent implements OnInit {
     this.eventExpression.streamARN = "";
     this.eventExpression.S3BucketName = "";
     this.eventExpression.SQSstreamARN = "";
+    this.azureEventExpression.cosmosdb = "";
+    this.azureEventExpression.eventhub = "";
+    this.azureEventExpression.storageaccount = "";
+    this.azureEventExpression.servicebusqueue = "";
     this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
     this.rateExpression.error = undefined;
     this.rateExpression.type = 'none';
     this.rateExpression.duration = "5";
     this.eventExpression.type = 'awsEventsNone';
+    this.azureEventExpression.type = 'azureEventsNone';
     this.runtime = this.runtimeKeys[0];
   }
 
@@ -650,6 +876,7 @@ export class CreateServiceComponent implements OnInit {
     this.getData();
     this.createService();
     this.typeOfService = 'api';
+    this.typeOfPlatform = 'aws';
     this.selectedApprovers = [];
   }
 
@@ -758,10 +985,25 @@ export class CreateServiceComponent implements OnInit {
     if(this.eventExpression.type == 's3' && this.eventExpression.S3BucketName == undefined){
         return true
     }
+    if(this.eventExpression.type == 'sqs' && this.eventExpression.SQSstreamARN == undefined){
+      return true
+    }
+    if(this.azureEventExpression.type == 'cosmosdb' && this.azureEventExpression.cosmosdb == undefined){
+      return true
+    }
+    if(this.azureEventExpression.type == 'eventhub' && this.azureEventExpression.eventhub == undefined){
+      return true
+    }
+    if(this.azureEventExpression.type == 'storageaccount' && this.azureEventExpression.storageaccount == undefined){
+      return true
+    }
+    if(this.azureEventExpression.type == 'servicebusqueue' && this.azureEventExpression.servicebusqueue == undefined){
+      return true
+    }
     if(this.invalidServiceName || this.invalidDomainName){
       return true
     }
-    if(this.invalidEventName){
+    if(this.invalidEventName || this.invalidAzureEventName){
       return true
     }
     if(!this.isyamlValid){
@@ -859,6 +1101,7 @@ export class CreateServiceComponent implements OnInit {
   }
 
 
+
   onScroll(event){
     let el = document.getElementById('crs');
     for(let i=0;i<this.ids.length;i++){
@@ -875,7 +1118,7 @@ export class CreateServiceComponent implements OnInit {
 
       if(this.ids[i]=="additional"){
 
-        if(rect.top < windowHeight/2){
+        if(rect && rect.top < windowHeight/2){
           if(ele){
             ele.classList.add('ac-tive');
           }
@@ -922,14 +1165,21 @@ export class CreateServiceComponent implements OnInit {
 
       }
     }
-
-
   }
 
   ngOnInit() {
+    if(typeof env_oss.azure.azure_enabled === "boolean" && env_oss.azure.azure_enabled === true){
+      this.azureEnabled = true;
+    }
+    if(this.typeOfService == 'api'){
+      this.typeOfPlatform = 'aws';
+      this.azureEnabled = false;
+    }
     this.selectAccountsRegions();
     this.getData();
     this.loadMaxLength();
+    this.onFilterSelected('Function Template')
+    this.azureEventsPrefix();
     if(env_oss.slack_support) this.SlackEnabled=true;
   };
 
@@ -971,6 +1221,25 @@ export class CreateServiceComponent implements OnInit {
       }
     }
 
+    validRate(val,int){
+      if (val === 1) {
+        if (int.includes('s')) {
+          this.validrate = false;
+        }
+        else {
+          this.validrate = true;
+        }
+      }
+      else if(val > 1)
+      {
+        if(int.includes('s')){
+          this.validrate = true;
+        }
+        else{
+          this.validrate = false;
+        }
+      }
+    }
 
   generateExpression(rateExpression){
     if (this.rateExpression !== undefined) {
@@ -982,20 +1251,14 @@ export class CreateServiceComponent implements OnInit {
       var duration, interval;
       duration = rateExpression['duration'];
       interval = rateExpression['interval'];
+      this.validRate(duration, interval);
+      this.rateExpression.rateStr = `${duration} ${interval}`
 
-      if (duration === undefined || duration === null || duration <= 0) {
+      if (duration === undefined || duration === null || duration <= 0 || this.validrate === false) {
         this.rateExpression.isValid = false;
-        this.rateExpression.error = 'Please enter a valid duration';
+        this.rateExpression.error = 'Please enter a valid rate expression';
       } else {
-        if (interval == 'Minutes') {
-          this.cronObj = new CronObject(('0/' + duration),'*','*','*','?','*');
-        } else if (interval == 'Hours') {
-          this.cronObj = new CronObject('0', ('0/' + duration),'*','*','?','*');
-        } else if (interval == 'Days') {
-          this.cronObj = new CronObject('0', '0', ('1/' + duration), '*', '?', '*');
-        }
         this.rateExpression.isValid = true;
-        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
       }
     } else if (rateExpression['type'] == 'cron') {
       var cronExpression;
@@ -1016,8 +1279,12 @@ export class CreateServiceComponent implements OnInit {
       return undefined;
     } else if (this.rateExpression.isValid === false) {
       return 'invalid';
-    } else if (this.rateExpression.isValid === true) {
+    } else if (this.rateExpression.isValid === true && this.rateExpression.type === 'cron') {
       return this.rateExpression.cronStr;
     }
+    else if (this.rateExpression.isValid === true  && this.rateExpression.type === 'rate') {
+      return this.rateExpression.rateStr;
+    }
   };
+
 }

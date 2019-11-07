@@ -1,6 +1,6 @@
-<jazz-mob-header (addClick)='showService(true)' [icon]="'add'" [headText]="'Services'" [status]="'none'">
+<jazz-mob-header [icon]="'add'" [headText]="'Services'" [status]="'none'">
 </jazz-mob-header>
-<div class="section-centered" *ngIf="isPUTLoading === 'loading'">
+<div class="section-centered" *ngIf="isPUTLoading">
   <div class="loading-circle"></div>
 </div>
 <section class="table-wrap">
@@ -49,7 +49,7 @@
         </section>
       </div>
       <div class="tab-pane" id="users">
-        
+
         <section class="json-viewer-container" >
             <div *ngIf="state === 'loading'">
                 <div class="loading-circle"></div>

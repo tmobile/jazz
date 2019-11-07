@@ -13,7 +13,6 @@ import { ToasterService } from 'angular2-toaster';
 import { BarGraphComponent } from '../../secondary-components/bar-graph/bar-graph.component';
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
 import { ServiceMetricsComponent } from '../service-metrics/service-metrics.component';
-import { environment } from './../../../environments/environment';
 import { environment as env_oss } from './../../../environments/environment.oss';
 
 
@@ -45,9 +44,10 @@ export class ServiceDetailComponent implements OnInit {
 
   @Output() deleteServiceStatus: EventEmitter<boolean> = new EventEmitter<boolean>();
   @ViewChild('selectedTabComponent') selectedTabComponent;
-  isENVavailable: boolean = true;
+  isEnvAvailable: boolean = false;
   disblebtn: boolean = true;
   ServiceName: string;
+  platfrom: string;
   deleteServiceVal: boolean;
   id: string;
   errMessage: string = '';
@@ -58,6 +58,7 @@ export class ServiceDetailComponent implements OnInit {
   service: any = {};
   isGraphLoading: boolean = false;
   stageOverview: any = {};
+  provider: any;
   showPopUp: boolean = false;
   success: boolean = false;
   thisIndex: number = 0;
@@ -107,7 +108,6 @@ export class ServiceDetailComponent implements OnInit {
       let returnObject = {
         id: service.id,
         name: service.service,
-        serviceType: service.type,
         runtime: service.runtime,
         status: service.status.replace('_', ' '),
         description: service.description || '',
@@ -121,9 +121,14 @@ export class ServiceDetailComponent implements OnInit {
         deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type],
         is_public_endpoint: service.is_public_endpoint,
         created_by: service.created_by,
-        accountID: service.deployment_accounts && service.deployment_accounts[0].accountId,
-        region: service.deployment_accounts && service.deployment_accounts[0].region
+        accountID: service.deployment_accounts[0].accountId,
+        region: service.deployment_accounts[0].region,
+        provider: service.deployment_accounts[0].provider
       }
+      if(service.type === 'sls-app'){
+        service.type = 'custom'
+      }
+      returnObject['serviceType'] = service.type
       if (service.metadata) {
         returnObject["create_cloudfront_url"] = service.metadata.create_cloudfront_url;
         returnObject["eventScheduleRate"] = service.metadata.eventScheduleRate;
@@ -142,6 +147,18 @@ export class ServiceDetailComponent implements OnInit {
         }
         if(service.metadata.event_source_sqs){
           returnObject["event_source_arn"] = service.metadata.event_source_sqs;
+        }
+        if(service.metadata.event_source_cosmosdb){
+          returnObject["event_source_arn"] = service.metadata.event_source_cosmosdb;
+        }
+        if(service.metadata.event_source_eventhub){
+          returnObject["event_source_arn"] = service.metadata.event_source_eventhub;
+        }
+        if(service.metadata.event_source_storageaccount){
+          returnObject["event_source_arn"] = service.metadata.event_source_storageaccount;
+        }
+        if(service.metadata.event_source_servicebusqueue){
+          returnObject["event_source_arn"] = service.metadata.event_source_servicebusqueue;
         }
       }
       if(typeof returnObject["event_source_arn"] == "object"){
@@ -169,7 +186,6 @@ export class ServiceDetailComponent implements OnInit {
       }
 
       this.service = this.processService(service);
-
       // Update breadcrumbs
       this.breadcrumbs = [
         {
@@ -191,13 +207,13 @@ export class ServiceDetailComponent implements OnInit {
     let serviceType = this.service.type || this.service.serviceType;
     switch (serviceType) {
       case 'api':
-        this.tabData = ['overview', 'access control', 'metrics', 'cost', 'logs'];
+        this.tabData = ['overview', 'access control', 'metrics', 'logs', 'cost'];
         break;
       case 'website':
         this.tabData = ['overview', 'access control', 'metrics', 'cost'];
         break;
       case 'function':
-        this.tabData = ['overview', 'access control', 'metrics', 'cost', 'logs'];
+        this.tabData = ['overview', 'access control', 'metrics', 'logs', 'cost'];
         break;
     }
   }
@@ -206,6 +222,8 @@ export class ServiceDetailComponent implements OnInit {
     this.isLoadingService = true;
     this.http.get('/jazz/services/' + id, null, id).subscribe(response => {
       let service = response.data;
+      this.isEnvAvailable = true;
+      this.provider = response.data.deployment_accounts[0].provider
       this.cache.set(id, service);
       this.onDataFetched(service);
       this.isGraphLoading = false;

@@ -3,6 +3,7 @@ export class ServiceList {
 	type:String;
 	domain:String;
 	lastModified: Date;
+	platform:String;
 	health:Number;
 	status:String;
 }

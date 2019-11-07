@@ -31,6 +31,12 @@
   input[readonly] {
     color: #555;
   }
+
+  .radio-container > label > span.background {
+    margin: .1em;
+    position: absolute;
+    top: 0;
+  }
 }
 
 .groups-input {

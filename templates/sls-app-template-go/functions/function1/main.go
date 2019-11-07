@@ -10,7 +10,7 @@ package main
 import (
 	"context"
 
-	components "sls-api-template-go/components"
+	components "sls-app-template-go/components"
 
 	"github.com/aws/aws-lambda-go/lambda"
 	"github.com/spf13/viper"

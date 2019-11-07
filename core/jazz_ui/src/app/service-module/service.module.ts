@@ -1,64 +1,74 @@
 import {NgModule} from '@angular/core';
 import {RouterModule} from '@angular/router';
-import {environment} from '../../environments/environment';
 import {routes} from './service.route';
-
-//End
-// Importing The Required Modules via Barrel 
-import * as CommonServiceModules from './service.module.imports.common'
-import * as OssModules from './service.module.imports.oss'
-import * as InternalModules from './service.module.imports.internal'
-// End
-// Importing The Required Components via Barrel
-import * as CommonServiceComponents from './service.module.declarations.common';
-import * as OssComponents from './service.module.declarations.oss';
-import * as InternalComponents from './service.module.declarations.internal';
-
-import { AdvFilters }            from '../adv-filter.directive';
 import {AdvancedFilterService} from '../advanced-filter.service';
-
-import { Symbol } from 'rxjs';
-
-let routerRoutes:any;
-let specificComponents:any;
-let specificModules: any;
-if(environment.envName == 'oss'){
-  specificComponents = OssComponents;
-  specificModules =  OssModules
-}else  {
-  specificComponents = InternalComponents;
-  specificModules =  InternalModules;
-}
-let importsArray = [];
-let declarationsArray=[];
-for(let i in CommonServiceModules){
-  importsArray.push(CommonServiceModules[i]);
-}
-for(let i in specificModules){
- importsArray.push(specificModules[i]);
-}
-for(let i in CommonServiceComponents){
-  declarationsArray.push(CommonServiceComponents[i]);
-}
-for(let i in specificComponents){
- declarationsArray.push(specificComponents[i]);
-}
+import {CreateServiceComponent} from '../secondary-components/create-service/oss/create-service.component';
+import {ServiceOverviewComponent} from '../pages/service-overview/service-overview.component';
+import {BarGraphComponent} from '../secondary-components/bar-graph/bar-graph.component';
+import {AmountComponent} from '../primary-components/amount/amount.component';
+import {ServicesComponent} from '../pages/services/services.component';
+import {ServicesListComponent} from '../pages/services-list/services-list.component';
+import {ServiceLogsComponent} from '../pages/service-logs/service-logs.component';
+import {ServiceCostComponent} from '../pages/service-cost/service-cost.component';
+import {ServiceAccessControlComponent} from '../pages/service-access-control/service-access-control.component';
+import {ServiceDetailComponent} from '../pages/service-detail/service-detail.component';
+import {ServiceOverviewMultienvComponent} from '../secondary-components/service-overview-multienv/service-overview-multienv.component';
+import {ServiceOverviewNonMultienvComponent} from '../secondary-components/service-overview-non-multienv/service-overview-non-multienv.component';
+import {CommonModule} from '@angular/common';
+import {PopoverModule} from 'ngx-popover';
+import {ChartsModule} from 'ng2-charts';
+import {DropdownModule} from 'ngx-dropdown';
+import {DatePickerModule} from '../primary-components/daterange-picker/ng2-datepicker';
+import {MomentModule} from 'angular2-moment';
+import {SharedModule} from '../shared-module/shared.module';
+import {FormsModule} from '@angular/forms';
+import {EnvironmentModule } from '../environment-module/environment.module';
+import {JazzMobHeaderModule} from '../secondary-components/jazz-mob-header/jazz-mob-header.module';
 
 @NgModule({
   imports: [
     RouterModule.forChild(routes),
-    ...importsArray
-   
-    
+    CommonModule,
+    PopoverModule,
+    ChartsModule,
+    DropdownModule,
+    DatePickerModule,
+    MomentModule,
+    SharedModule,
+    FormsModule,
+    EnvironmentModule,
+    JazzMobHeaderModule,
+
   ],
   providers:[AdvancedFilterService],
   declarations: [
-    
-    ...declarationsArray,
-    // AdvFilters,
-    
+    CreateServiceComponent,
+    BarGraphComponent,
+    AmountComponent,
+    ServicesComponent,
+    ServicesListComponent,
+    ServiceOverviewComponent,
+    ServiceLogsComponent,
+    ServiceCostComponent,
+    ServiceAccessControlComponent,
+    ServiceDetailComponent,
+    ServiceOverviewMultienvComponent,
+    ServiceOverviewNonMultienvComponent,
   ],
-  
+  exports: [
+    CreateServiceComponent,
+    BarGraphComponent,
+    AmountComponent,
+    ServicesComponent,
+    ServicesListComponent,
+    ServiceOverviewComponent,
+    ServiceLogsComponent,
+    ServiceCostComponent,
+    ServiceAccessControlComponent,
+    ServiceDetailComponent,
+    ServiceOverviewMultienvComponent,
+    ServiceOverviewNonMultienvComponent,
+  ]
 })
 export class ServiceModule {
   constructor(){

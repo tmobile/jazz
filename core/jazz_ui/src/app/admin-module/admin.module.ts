@@ -8,17 +8,20 @@ import {JsonViewerComponent} from "../primary-components/json-viewer/json-viewer
 import {AdminComponent} from '../pages/admin/admin.component';
 import {AdminUtilsService} from '../core/services/admin-utils.service';
 import {AdminDashboardComponent} from '../pages/admin-dashboard/admin-dashboard.component';
+import {JazzMobHeaderModule} from '../secondary-components/jazz-mob-header/jazz-mob-header.module';
+
 
 @NgModule({
   declarations: [
     AdminDashboardComponent,
     AdminComponent,
-    JsonViewerComponent
+    JsonViewerComponent,
   ],
   imports: [
     CommonModule,
     RouterModule.forChild(routes),
-    SharedModule
+    SharedModule,
+    JazzMobHeaderModule,
   ],
   providers: [
     AdminUtilsService

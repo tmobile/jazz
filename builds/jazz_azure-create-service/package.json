@@ -1,0 +1,43 @@
+{
+  "name": "jazz-azure-cli",
+  "version": "1.0.6",
+  "description": "A jazz cli tool that allows creating and deleting api gateways. This is used internally by the Jazz framwork.",
+  "license": "MIT",
+  "preferGlobal": true,
+  "bin": {
+    "jazz-azure-cli": "bin/jazz-azure-cli"
+  },
+  "engines": {
+    "node": ">=8"
+  },
+  "keywords": [
+    "jazz",
+    "azure",
+    "cli",
+    "api gateway"
+  ],
+  "scripts": {},
+  "devDependencies": {},
+  "dependencies": {
+    "@azure/arm-appservice": "5.8.0",
+    "@azure/cosmos": "^2.1.2",
+    "@azure/arm-cosmosdb": "3.2.0",
+    "adm-zip": "^0.4.13",
+    "axios": "^0.18.0",
+    "@azure/arm-apimanagement": "5.1.0",
+    "@azure/arm-cdn": "4.2.0",
+    "@azure/ms-rest-nodeauth": "2.0.3",
+    "@azure/arm-eventhub": "3.2.0",
+    "@azure/arm-resources": "1.1.0",
+    "@azure/arm-servicebus": "3.2.0",
+    "@azure/arm-storage": "*",
+    "azure-storage": "^2.10.2",
+    "escape-json-node": "^2.0.0",
+    "form-data": "^2.3.3",
+    "mime-types": "^2.1.21",
+    "minimist": "^1.2.0",
+    "request": "^2.88.0",
+    "stream": "0.0.2",
+    "streamifier": "^0.1.1"
+  }
+}

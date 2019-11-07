@@ -3,12 +3,45 @@
 .page-title-wrap {
   overflow: hidden;
   padding: 26px 0 0 0;
+  display: flex;
+  justify-content: space-between;
   .header1 {
     float: left;
   }
   btn-jazz-secondary {
     float: right;
   }
+}
+.title-div {
+  display: flex;
+  justify-content: space-between;
+}
+.azure-image {
+  width: 30px;
+  height: 30px;
+}
+.page-content {
+  margin-top: 2.8rem;
+}
+#aws-watermark {
+  opacity: .075;
+  position: fixed;
+  right: 3em;
+  top: 7em;
+  width: 13em;
+}
+#azure-watermark {
+  opacity: .075;
+  position: fixed;
+  right: 3em;
+  top: 6.8em;
+  width: 12em;
+}
+.image-btn-div {
+  display: flex;
+}
+.image-container {
+  margin:0px 15px;
 }
 
 /deep/ .page-title-wrap button.btnT-radial-in {
@@ -183,5 +216,5 @@
   /deep/.sidebar-wrp .sidebar-inr{
     overflow-y:auto !important;
     }
-  
+
 }
