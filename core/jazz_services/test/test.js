@@ -70,8 +70,7 @@ describe('platform_services', function() {
         "type" : "api",
         "runtime" : "nodejs8.10",
         "created_by" : "g10$saryck",
-        "status" : "active",
-        "isSearch": true
+        "status" : "active"
       },
       "body" : {
         "description" : "g0nna_GET_a-L!tt1e_we!rd",
@@ -357,7 +356,7 @@ describe('platform_services', function() {
     var service = "admin";
     var domain = "pits";
     Object.assign(event.query, { service, domain });
-
+    event.query["isSearch"] = true;
     var dataType = "S";
     var scanParams = [":SERVICE_NAME", ":SERVICE_DOMAIN"];
     if (event.query.isSearch) {
