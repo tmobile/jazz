@@ -70,7 +70,8 @@ describe('platform_services', function() {
         "type" : "api",
         "runtime" : "nodejs8.10",
         "created_by" : "g10$saryck",
-        "status" : "active"
+        "status" : "active",
+        "isSearch": true
       },
       "body" : {
         "description" : "g0nna_GET_a-L!tt1e_we!rd",
@@ -359,8 +360,11 @@ describe('platform_services', function() {
 
     var dataType = "S";
     var scanParams = [":SERVICE_NAME", ":SERVICE_DOMAIN"];
-    var filterStrings = ["SERVICE_NAME = :SERVICE_NAME", "SERVICE_DOMAIN = :SERVICE_DOMAIN"];
-
+    if (event.query.isSearch) {
+      var filterStrings = ["contains(SERVICE_NAME, :SERVICE_NAME)", "contains(SERVICE_DOMAIN, :SERVICE_DOMAIN)"];
+    } else {
+      var filterStrings = ["SERVICE_NAME = :SERVICE_NAME", "SERVICE_DOMAIN = :SERVICE_DOMAIN"];
+    }    
     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB", "scan", spy);
     //trigger spy by calling index.handler()
