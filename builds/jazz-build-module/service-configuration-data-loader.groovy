@@ -145,6 +145,14 @@ def loadServiceConfigurationData() {
       }
     }
 
+    if (service_name.trim() == "jazz_t-vault") {
+      updateConfigValue("{tvault-host-name}", config_loader.VAULT.HOSTNAME)      
+      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.VAULT.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+        updateConfigValue("{tvault-username}", UNAME)
+        updateConfigValue("{tvault-password}", PWD)
+      }
+    }
+
     if (service_name.trim() == "jazz_codeq") {
       updateCoreAPI()
       updateConfigValue("{conf-region}", region)
