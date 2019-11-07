@@ -7,7 +7,7 @@
     "TOKEN_CREDS": "{jazz_admin_creds}"
   },
   "VAULT": {
-    "IS_ENABLED": "{is_enabled}"
+    "IS_ENABLED": true
   },
   "USER_POOL_ID": "ap-northeast-1_2x3yztest",
   "CLIENT_ID": "conf-client-id",

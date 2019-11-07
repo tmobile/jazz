@@ -84,5 +84,7 @@ function userInVault(configData, service_data, authToken) {
 }
 
 module.exports = {
-  createUserInVault
+  createUserInVault,
+  getAuthToken,
+  userInVault
 };

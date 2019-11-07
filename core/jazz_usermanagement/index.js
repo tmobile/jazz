@@ -145,7 +145,7 @@ function handler(event, context, cb) {
         .then((s) => rp(exportable.getRequestToCreateSCMUser(config, service_data)))
         .then((s) => { return exportable.createUserInVault(config, service_data) })
         .then(result => {
-          logger.info("User: " + service_data.userid + " registered successfully!");
+          logger.info("User: " + service_data.userid + " registered successfully!" + JSON.stringify(result));
           return cb(null, responseObj({
             result: "success",
             errorCode: "0",
@@ -268,7 +268,6 @@ function validateResetParams(userInput) {
 
 function validateUpdatePasswordParams(userInput) {
   return new Promise((resolve, reject) => {
-
     var errorHandler = errorHandlerModule();
 
     if (!userInput.email) {
@@ -476,6 +475,7 @@ function createUserInVault(config, service_data) {
       logger.info("Vault not enabled. So no need to create user in vault");
       return resolve();
     }
+    
     vault.createUserInVault(config, service_data, function (err, data) {
       if (err) {
         return reject(err);
@@ -501,4 +501,5 @@ const exportable = {
   updateUserDetails,
   createUserInVault
 };
+
 module.exports = exportable;
