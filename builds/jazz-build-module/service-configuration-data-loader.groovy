@@ -309,7 +309,6 @@ def loadServiceConfigurationData() {
       updateConfigValue("{conf-region}", region)
       updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
       updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
-     // updateConfigValue("{vault_is_enabled}", )
       sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/dev-config.json"
       sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/stg-config.json"
       sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/prod-config.json"
