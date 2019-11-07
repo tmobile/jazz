@@ -20,15 +20,11 @@ const awsContext = require('aws-lambda-mock-context');
 const AWS = require('aws-sdk-mock');
 const sinon = require('sinon');
 const index = require('../index');
-const logger = require("../components/logger.js");
-const errorHandlerModule = require("../components/error-handler.js");
-const scmFactory = require("../scm/scmFactory.js");
 const configModule = require("../components/config.js");
 const responseObj = require("../components/response.js");
 const rp = require('request-promise-native');
 const getList = require("../components/utils/getList.js");
 const vault = require("../components/utils/vault.js");
-const request = require("request");
 
 describe('User Management', function () {
   //Setting up default values for the aws event and context needed for handler params
