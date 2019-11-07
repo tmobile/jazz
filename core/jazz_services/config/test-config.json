@@ -8,8 +8,7 @@
     "runtime",
     "status",
     "deployment_targets",
-    "deployment_accounts",
-    "isSearch"
+    "deployment_accounts"
   ],
   "service_return_fields": [
     "service",
