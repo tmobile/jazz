@@ -284,6 +284,8 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
 
       // Update with DELETE status
       exportable.processEventUpdateEnvironment(environmentApiPayload, serviceDetails.id, configData, authToken)
+      .then((result) => { return exportable.getEnvDetails(environmentApiPayload, configData, authToken)})
+        .then((result) => { return exportable.deleteSafe(environmentApiPayload, configData, authToken, result)})
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventUpdateEnvironment Failed" + err);
@@ -293,7 +295,8 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
     } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.DELETE_BRANCH) {
       environmentApiPayload.physical_id = svcContext.branch;
       exportable.processEventDeleteBranch(environmentApiPayload, serviceDetails.id, configData, authToken)
-        .then((result) => { return exportable.deleteSafe(environmentApiPayload, serviceDetails.id, configData, authToken)})
+      .then((result) => { return exportable.getEnvDetails(environmentApiPayload, configData, authToken)})
+        .then((result) => { return exportable.deleteSafe(environmentApiPayload, configData, authToken, result)})
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventDeleteBranch Failed" + err);
@@ -636,7 +639,7 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
     const safeName = environmentPayload.service + '_' + environmentPayload.domain + '_' + environmentPayload.logical_id;
     updatePayload.name = safeName;
     updatePayload.owner = configData.SERVICE_USER;
-    updatePayload.description = "test safe";
+    updatePayload.description = "create safe for jazz tvault service: " + safeName;
 
     var svcPayload = {
       uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.CREATE_SAFE_API_RESOURCE
@@ -673,7 +676,7 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
   });
 }
 
-function deleteSafe(environmentPayload, service_id, configData, authToken) {
+function deleteSafe(environmentPayload, configData, authToken, envDetails) {
   return new Promise((resolve, reject) => {
     if (!configData.TVAULT && !configData.TVAULT.IS_ENABLED) {
         logger.info('t-vault not enabled **', configData.TVAULT);
@@ -682,9 +685,23 @@ function deleteSafe(environmentPayload, service_id, configData, authToken) {
       });
     }
     let safeName;
-    if (safeDetails && safeDetails.safe && safeDetails.safe.name) {
-      safeName = safeDetails.safe.name;
+    if (envDetails.data && envDetails.data.count > 0 && envDetails.data.environment.length){
+      const envResponse = envDetails.data.environment.filter(ele => ele.logical_id === environmentPayload.logical_id);
+      if (envResponse[0].metadata && envResponse[0].metadata.safeDetails && envResponse[0].metadata.safeDetails.safe) {
+        safeName = envResponse[0].metadata.safeDetails.safe.name;
+      } else {
+        return resolve({
+          "error": environmentPayload.logical_id + ": environment safe details is not found",
+        });
+      }
+    } else {
+      return resolve({
+        "error": environmentPayload.logical_id + ": environment safe details is not found",
+      });
     }
+    // if (safeDetails && safeDetails.safe && safeDetails.safe.name) {
+    //   safeName = safeDetails.safe.name;
+    // }
     var svcPayload = {
       uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.CREATE_SAFE_API_RESOURCE + '/' +safeName,
       method: "DELETE",
@@ -694,7 +711,7 @@ function deleteSafe(environmentPayload, service_id, configData, authToken) {
       },
       rejectUnauthorized: false
     };
-    logger.info("safe svcpayload ****" + JSON.stringify(svcPayload));
+    logger.info("delete safe svcpayload ****" + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200) {
         logger.info("response ***" + JSON.stringify(response));
@@ -782,6 +799,39 @@ function addAdminsToSafe(environmentPayload, configData, authToken, result) {
         logger.error("Error adding admins to safe: " + JSON.stringify(response));
         return reject({
           "error": "Error adding admins to safe",
+          "details": response.body.message
+        });
+      }
+    });
+
+  });
+}
+
+function getEnvDetails(environmentPayload, configData, authToken) {
+  return new Promise((resolve, reject) => {
+    if (!configData.TVAULT && !configData.TVAULT.IS_ENABLED) {
+      return resolve({
+        "error": "T-vault is not enabled",
+      });
+    }
+
+    var payload = {
+      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + "/jazz/environments?domain=" + environmentPayload.domain + "&service=" + environmentPayload.service,
+      method: "GET",
+      headers: {
+        "Authorization": authToken,
+        "Content-Type": "application/json"
+      }
+    };
+    logger.info("env details payload **" + JSON.stringify(payload));
+    request(payload, function (error, response, body) {
+      if (response.statusCode && response.statusCode === 200) {
+        logger.info("env details payload response **" + JSON.stringify(response));
+        return resolve(JSON.parse(body));
+      } else {
+        logger.error("Error getting environment details: " + JSON.stringify(response));
+        return reject({
+          "error": "Error getting environment details",
           "details": response.body.message
         });
       }
@@ -891,7 +941,8 @@ const exportable = {
   deleteSafe,
   createRole,
   getAdmins,
-  addAdminsToSafe
+  addAdminsToSafe,
+  getEnvDetails
 }
 
 module.exports = exportable;
