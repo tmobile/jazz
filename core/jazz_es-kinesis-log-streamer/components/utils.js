@@ -184,10 +184,6 @@ function getLambdaLogsData(payload, callback) {
         }
 
         domainAndservice = serviceInfo;
-        if(serviceInfo.indexOf(config.PATTERNS.sls_app_function) !== -1 ) { // if yes then sls-app function
-          serviceInfoArr = serviceInfo.split(config.PATTERNS.sls_app_function);
-          domainAndservice = serviceInfoArr[0];
-        } 
     
         logger.debug("domainAndservice: " + domainAndservice)
         domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));
