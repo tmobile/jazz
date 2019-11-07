@@ -168,7 +168,7 @@ function getLambdaLogsData(payload, callback) {
     if (data.request_id) {
       data.asset_identifier = payload.logGroup.split(config.PATTERNS.asset_identifier_key)[1];
       // if tags present, then it is for sls-app, otherwise for other services
-      if(tagsResult != 'error' && tagsResult != undefined && tagsResult.tags.environment){
+      if(tagsResult != 'error' && tagsResult.tags.environment){
         data.environment = tagsResult.tags.environment;
         data.domain = tagsResult.tags.namespace;
         data.servicename = tagsResult.tags.service;

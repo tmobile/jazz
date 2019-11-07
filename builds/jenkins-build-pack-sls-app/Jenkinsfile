@@ -418,7 +418,9 @@ def attachTagstoLogGroup(config, environment_logical_id, credsId){
       def environment = environment_logical_id
       sh "aws logs tag-log-group --log-group-name ${logGroupName} --tags '{\"service\":\"${serviceName}\", \"namespace\":\"${namespace}\", \"environment\":\"${environment}\", \"functionName\":\"${lambdaName}\"}' --profile ${credsId}"
     }
-  } catch (Exception ex) { } 
+  } catch (Exception ex) {
+    echo "Error occured while attaching tags to logGroup ${logGroupName}"
+  } 
 }
 
 def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, config, credsId){
