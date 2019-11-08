@@ -356,11 +356,14 @@ describe('platform_services', function() {
     var service = "admin";
     var domain = "pits";
     Object.assign(event.query, { service, domain });
-
+    event.query["isSearch"] = true;
     var dataType = "S";
     var scanParams = [":SERVICE_NAME", ":SERVICE_DOMAIN"];
-    var filterStrings = ["SERVICE_NAME = :SERVICE_NAME", "SERVICE_DOMAIN = :SERVICE_DOMAIN"];
-
+    if (event.query.isSearch) {
+      var filterStrings = ["contains(SERVICE_NAME, :SERVICE_NAME)", "contains(SERVICE_DOMAIN, :SERVICE_DOMAIN)"];
+    } else {
+      var filterStrings = ["SERVICE_NAME = :SERVICE_NAME", "SERVICE_DOMAIN = :SERVICE_DOMAIN"];
+    }    
     //mocking DynamoDB.scan, expecting callback to be returned with params (error,data)
     AWS.mock("DynamoDB", "scan", spy);
     //trigger spy by calling index.handler()
