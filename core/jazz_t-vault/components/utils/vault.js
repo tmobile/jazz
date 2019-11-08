@@ -173,7 +173,7 @@ function getSafeInfo(safename, configData, vaultToken) {
           "error": `Error in getting safe details with safe name ${safename}: ${response.body}`
         });
       }
-    });
+    }); 
   });
 }
 

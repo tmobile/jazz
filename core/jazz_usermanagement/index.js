@@ -29,8 +29,8 @@ const errorHandlerModule = require("./components/error-handler.js");
 const responseObj = require("./components/response.js");
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
-const getList = require("./components/getList.js");
-
+const getList = require("./components/utils/getList.js");
+const vault = require("./components/utils/vault.js");
 const scmFactory = require("./scm/scmFactory.js");
 
 function handler(event, context, cb) {
@@ -143,8 +143,9 @@ function handler(event, context, cb) {
       exportable.validateCreaterUserParams(config, service_data)
         .then((s) => exportable.createUser(cognito, config, s))
         .then((s) => rp(exportable.getRequestToCreateSCMUser(config, service_data)))
+        .then((s) => { return exportable.createUserInVault(config, service_data) })
         .then(result => {
-          logger.info("User: " + service_data.userid + " registered successfully!");
+          logger.info("User: " + service_data.userid + " registered successfully!" + JSON.stringify(result));
           return cb(null, responseObj({
             result: "success",
             errorCode: "0",
@@ -176,8 +177,8 @@ function handler(event, context, cb) {
             users: results.Users,
             paginationtoken: results.PaginationToken
           }, {
-            queryParams
-          }));
+              queryParams
+            }));
         })
         .catch(function (err) {
           logger.error("Failed while Fetching user list" + JSON.stringify(err));
@@ -206,9 +207,9 @@ function handler(event, context, cb) {
             result: 'Success',
             message: results.message
           }, {
-            userId: event.path.id,
-            input: service_data
-          }));
+              userId: event.path.id,
+              input: service_data
+            }));
         })
         .catch(function (err) {
           logger.error("Failed while Changing status " + JSON.stringify(err));
@@ -267,7 +268,6 @@ function validateResetParams(userInput) {
 
 function validateUpdatePasswordParams(userInput) {
   return new Promise((resolve, reject) => {
-
     var errorHandler = errorHandlerModule();
 
     if (!userInput.email) {
@@ -469,6 +469,23 @@ function updateUserDetails(cognitoClient, params, data) {
   });
 }
 
+function createUserInVault(config, service_data) {
+  return new Promise((resolve, reject) => {
+    if (!config.VAULT.IS_ENABLED) {
+      logger.info("Vault not enabled. So no need to create user in vault");
+      return resolve();
+    }
+    
+    vault.createUserInVault(config, service_data, function (err, data) {
+      if (err) {
+        return reject(err);
+      } else {
+        return resolve(data);
+      }
+    });
+  });
+}
+
 const exportable = {
   handler,
   validateResetParams,
@@ -481,7 +498,8 @@ const exportable = {
   validateUserListQuery,
   getUserList,
   validateUserPayloadDetails,
-  updateUserDetails
-
+  updateUserDetails,
+  createUserInVault
 };
+
 module.exports = exportable;

@@ -703,7 +703,7 @@ export class CreateServiceComponent implements OnInit {
           "function": "azure_function"
         }
       }
-      if(this.rateExpression.type === 'cron' && this.rateExpression.cronStr !== undefined){
+      if(this.rateExpression.type !== 'none'){
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
         if (this.rateExpression.cronStr == 'invalid') {
             return;

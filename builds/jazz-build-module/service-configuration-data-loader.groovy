@@ -305,6 +305,13 @@ def loadServiceConfigurationData() {
       updateConfigValue("{user_pool_id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.USER_POOL_ID)
       updateConfigValue("{user_client_id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.CLIENT_ID)
       updateConfigValue("{region}", region)
+      updateCoreAPI()
+      updateConfigValue("{conf-region}", region)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
+      sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/dev-config.json"
+      sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/stg-config.json"
+      sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/prod-config.json"
     }
 
     if ((service_name.trim() == "jazz_usermanagement") ) {

@@ -206,13 +206,13 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     }
     if (this.platform == 'azure'){
       const azPeriodFilterIndex = this.formFields.findIndex(formField => formField.label === 'PERIOD');
-      this.formFields[azPeriodFilterIndex].options =  ['1 Minutes', '3 Hours', '1 Day'];
+      this.formFields[azPeriodFilterIndex].options =  ['1 Minutes', '1 Hour', '1 Day'];
       this.formFields[azPeriodFilterIndex].values = [
         moment(0).add(1, 'minute').valueOf() / 1000,
-        moment(0).add(3, 'hour').valueOf() / 1000,
+        moment(0).add(1, 'hour').valueOf() / 1000,
         moment(0).add(1, 'day').valueOf() / 1000,
       ];
-      this.formFields[azPeriodFilterIndex].selected =  '3 Hours';
+      this.formFields[azPeriodFilterIndex].selected =  '1 Hour';
 
       const azPAggFilterIndex = this.formFields.findIndex(formField => formField.label === 'AGGREGATION');
       this.formFields[azPAggFilterIndex].options =  ['Total'];
@@ -322,6 +322,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
             'sqs',
             'kinesis_stream',
             'apigee_proxy',
+            'storage_account'
           ];
           assets = assets.filter(item => filterWhitelist.includes(item));
 

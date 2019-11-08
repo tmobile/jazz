@@ -1,6 +1,16 @@
 {
-  "USER_POOL_ID":"ap-northeast-1_2x3yztest",
-  "CLIENT_ID":"conf-client-id",
+  "API": {
+    "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod",
+    "VAULT_API": "/jazz/t-vault/user",
+    "LOGIN_API": "/jazz/login",
+    "SERVICE_USER": "{jazz_admin}",
+    "TOKEN_CREDS": "{jazz_admin_creds}"
+  },
+  "VAULT": {
+    "IS_ENABLED": true
+  },
+  "USER_POOL_ID": "ap-northeast-1_2x3yztest",
+  "CLIENT_ID": "conf-client-id",
   "USER_CLIENT_ID": "123",
   "REGION": "region-1"
 }

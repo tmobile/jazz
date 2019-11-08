@@ -138,34 +138,30 @@ function getApiLogsData(payload) {
 
 function getLambdaLogsData(payload) {
   let bulkRequestBody = '',
-    data = {},
-    domainAndservice = '';
+    data = {}
   data.asset_type = "lambda";
   data.provider = "aws";
+  let domainAndservice, serviceInfo;
   data.request_id = getInfo(payload.logEvents, config.PATTERNS.lambda_request_id);
   if (data.request_id) {
     data.asset_identifier = payload.logGroup.split(config.PATTERNS.asset_identifier_key)[1];
-    let lastSubstring = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment, 2);
-    if (lastSubstring === "prod" || lastSubstring === "stg" || lastSubstring === "dev") {
-      if (lastSubstring === "dev") {
-        let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 2);
-        domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 1);
-        data.environment = dev_environment;
-      } else {
-        data.environment = lastSubstring;
-        domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service, 1);
-      }
-    } else {      
-      let environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_in_slsapp, 2);
-      if (environment === "dev") {
-        let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev_in_slsapp, 2);
-        domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev_in_slsapp, 1);
-        data.environment = dev_environment;
-      } else {
-        data.environment = environment;
-        domainAndservice = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service_in_slsapp, 1);
-      }
-    }
+    let environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment, 2);
+		if (environment === "dev") {
+			let dev_environment = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 2);
+			serviceInfo = getSubInfo(payload.logGroup, config.PATTERNS.lambda_environment_dev, 1);
+			data.environment = dev_environment;
+		} else {
+			data.environment = environment;
+			serviceInfo = getSubInfo(payload.logGroup, config.PATTERNS.lambda_domain_service, 1);
+		}
+
+		domainAndservice = serviceInfo;
+		if(serviceInfo.indexOf(config.PATTERNS.sls_app_function) !== -1 ) { // if yes then sls-app function
+			let serviceInfoArr = serviceInfo.split(config.PATTERNS.sls_app_function);
+			domainAndservice = serviceInfoArr[0];
+		} 
+
+		logger.debug("domainAndservice: " + domainAndservice)
     let domain = domainAndservice.substring(0, domainAndservice.indexOf("_"));
     if (domain) {
       data.domain = domain;
