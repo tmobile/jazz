@@ -3344,12 +3344,12 @@
             "type": "object",
             "description": "Role details of the safe",
             "required": [
-                "rolename"
+                "arn"
             ],
             "properties": {
-                "rolename": {
+                "arn": {
                     "type": "string",
-                    "description": ""
+                    "description": "arn of the role"
                 }
             }
         },

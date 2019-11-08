@@ -91,6 +91,24 @@ function validateUserInVaultDeleteInput(event) {
   });
 }
 
+function validateRoleArn(arn) {
+  return new Promise((resolve, reject) => {
+    let regEx = new RegExp("^arn:aws:iam::\\d{12}:role/?[a-zA-Z_0-9+=,.@\\-_/]+");
+    if (regEx.test(arn)) return resolve();
+    else return reject({ "errorType": "inputError", "message": "The provided arn is not valid - " + arn });
+  });
+}
+
+function validateFieldLength(data) {
+  return new Promise((resolve, reject) => {
+    let lessLengthKeyList = Object.keys(data).filter((field) => {
+      if (global.globalConfig.FIELD_LENGTH_CONSTRAINTS[field] && data[field].length <= global.globalConfig.FIELD_LENGTH_CONSTRAINTS[field]) return field;
+    });
+    if (lessLengthKeyList.length > 0) return reject({ "errorType": "inputError", "message": `Following field(s) not satisfying the char length ${JSON.stringify(global.globalConfig.FIELD_LENGTH_CONSTRAINTS)} -  ${lessLengthKeyList}` });
+    return resolve();
+  });
+}
+
 const isEmpty = (obj) => {
   if (obj == null) return true;
   if (obj.length > 0) return false;
@@ -124,6 +142,8 @@ module.exports = {
   validateRoleInSafeInput,
   validateUserInVaultInput,
   validateUserInVaultDeleteInput,
+  validateRoleArn,
+  validateFieldLength,
   genericInputValidation,
   isEmpty
 };

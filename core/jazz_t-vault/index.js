@@ -55,6 +55,7 @@ function handler(event, context, cb) {
     if (event && event.method === 'POST' && resourcePath.endsWith("/safes")) {
       validations.validateCreateSafeInput(event)
         .then(() => { return validations.genericInputValidation(event.body) })
+        .then(() => { return validations.validateFieldLength(event.body) })
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.createSafe(event.body, configData, vaultToken) })
         .then((result) => {
@@ -89,6 +90,7 @@ function handler(event, context, cb) {
         .then(() => { return validations.validateUpdateSafeInput(event) })
         .then(() => { return validations.genericInputValidation(event.body) })
         .then(() => { return validations.genericInputValidation(event.path) })
+        .then(() => { return validations.validateFieldLength(event.body) })
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.updateSafe(event.body, event.path.safename, configData, vaultToken) })
         .then(result => {
@@ -124,6 +126,7 @@ function handler(event, context, cb) {
         .then(() => { return validations.validateUserInSafeInput(event) })
         .then(() => { return validations.genericInputValidation(event.body) })
         .then(() => { return validations.genericInputValidation(event.path) })
+        .then(() => { return validations.validateFieldLength(event.body) })
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.createUserInSafe(event.body, event.path.safename, configData, vaultToken) })
         .then(result => {
@@ -175,9 +178,10 @@ function handler(event, context, cb) {
 
     else if (event && event.method === 'POST' && resourcePath.endsWith("/{safename}/role")) {
       validations.validateSafeInput(event)
-        .then(() => { return validations.validateRoleInSafeInput(event) })
         .then(() => { return validations.genericInputValidation(event.body) })
         .then(() => { return validations.genericInputValidation(event.path) })
+        .then(() => { return validations.validateRoleInSafeInput(event) })
+        .then(() => { return validations.validateRoleArn(event.body.arn) })
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.createRoleInSafe(event.body, event.path.safename, configData, vaultToken) })
         .then(result => {
@@ -213,6 +217,7 @@ function handler(event, context, cb) {
     else if (event && event.method === 'POST' && resourcePath.endsWith("/t-vault/user")) {
       validations.validateUserInVaultInput(event)
         .then(() => { return validations.genericInputValidation(event.body) })
+        .then(() => { return validations.validateFieldLength(event.body) })
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.createUserInVault(event.body, configData, vaultToken) })
         .then(result => {
@@ -346,7 +351,7 @@ function getRoleInSafe(rolename, safename, configData, vaultToken) {
 function createRoleInSafe(safeDetails, safename, configData, vaultToken) {
   return new Promise((resolve, reject) => {
     safeDetails.safename = safename;
-    vault.createRoleInSafe(safeDetails, configData, vaultToken, function (err, data) {
+    vault.createRole(safeDetails, configData, vaultToken, function (err, data) {
       if (err) {
         return reject(err);
       } else {
