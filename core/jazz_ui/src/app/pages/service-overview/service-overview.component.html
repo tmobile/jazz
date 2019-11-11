@@ -138,8 +138,30 @@
             <div class="det-value" [class.PlaceHolder]="runtime_empty">{{service.runtime}}</div>
           </li>
           <li>
+              <div class="det-label">Provider</div>
+              <div class="det-value service-platform">{{ provider }}
+                  <div class="image-container">
+                      <img
+                        src="../../../assets/images/icons/Azure.svg"
+                        *ngIf="provider ==='azure'"
+                        alt="azureimage"
+                        class="azure-image">
+                      <img
+                        id="aws-logo-single-block"
+                        class="tiny"
+                        *ngIf="provider === 'aws'"
+                        src="../../../assets/images/aws-logo-small.jpg">
+                  </div>
+              </div>
+          </li>
+          <li>
             <div class="det-label">Service Type</div>
-            <div class="det-value service-type">{{ service.serviceType || 'Pick your service type'}}</div>
+            <div *ngIf="service.serviceType !== 'sls-app'" class="det-value">
+              {{ service.serviceType || 'Pick your service type' }}
+            </div>
+            <div *ngIf="service.serviceType === 'sls-app'" class="det-value">
+              {{ (service.serviceType && 'custom') || 'Pick your service type' }}
+            </div>
           </li>
           <li>
             <div class="det-label">Description</div>
@@ -157,7 +179,8 @@
           </li>
           <li>
             <div class="det-label">Account</div>
-            <div class="det-value">{{service.accountID}} ({{accountName}})</div>
+            <div *ngIf="provider ==='aws'" class="det-value">{{service.accountID}} ({{accountName}})</div>
+            <div *ngIf="provider ==='azure'" class="det-value">{{service.accountID}} </div>
           </li>
           <li>
             <div class="det-label">Region</div>
@@ -251,19 +274,19 @@
                         <section class="pad-left0">
                             <div class="radio-container">
                                 <input type="radio" name="EventSchedule" id="none" [value]="none" [checked]="rateExpression.type == 'none'" (click)="onEventScheduleChange('none')">
-                                <label for="none"><span></span><span class="background"></span>None</label>
+                                <label for="none"><span><span class="background"></span></span>None</label>
                             </div>
                         </section>
                         <section class="fixed-rate pad-left0">
                             <div class="radio-container">
                                 <input type="radio" name="EventSchedule" id="fixedRate" [value]="rate" [checked]="rateExpression.type == 'rate'" (click)="onEventScheduleChange('rate')">
-                                <label for="fixedRate"><span></span><span class="background"></span>Fixed Rate of</label>
+                                <label for="fixedRate"><span><span class="background"></span></span>Fixed Rate of</label>
                             </div>
                         </section>
                         <section class="pad-left0">
                             <div class="radio-container">
                                 <input type="radio" name="EventSchedule" id="cron" [value]="cron" [checked]="rateExpression.type == 'cron'" (click)="onEventScheduleChange('cron')">
-                                <label for="cron"><span></span><span class="background"></span>Cron Expression</label>
+                                <label for="cron"><span><span class="background"></span></span>Cron Expression</label>
                             </div>
                         </section>
                     </div>

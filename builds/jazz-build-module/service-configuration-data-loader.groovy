@@ -16,7 +16,6 @@ echo "Service configuration module loaded successfully"
 @Field def accountId
 @Field def jenkins_url
 @Field def current_environment
-@Field def es_hostname
 @Field def service_name
 @Field def utilModule
 @Field def awsAPIGatewayModule
@@ -110,12 +109,46 @@ def loadServiceConfigurationData() {
           updateConfigValue("{apigee_password}", PASS)
         }
       }
+
+      if (config_loader.AZURE && config_loader.AZURE.IS_ENABLED instanceof Boolean && config_loader.AZURE.IS_ENABLED) {
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_SUBSCRIPTIONID', passwordVariable: 'PASS', usernameVariable: 'USER']]){
+          sh """
+             sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/dev-config.json
+             sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/stg-config.json
+             sed -i -- 's/{azure_subscriptionid}/${PASS}/g' ./config/prod-config.json
+          """
+        }
+
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_CLIENTID', passwordVariable: 'PASS', usernameVariable: 'USER']]){
+          sh """
+             sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/dev-config.json
+             sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/stg-config.json
+             sed -i -- 's/{azure_clientid}/${PASS}/g' ./config/prod-config.json
+          """
+        }
+
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_PASSWORD', passwordVariable: 'PASS', usernameVariable: 'USER']]){
+          sh """
+             sed -i -- 's/{azure_password}/${PASS}/g' ./config/dev-config.json
+             sed -i -- 's/{azure_password}/${PASS}/g' ./config/stg-config.json
+             sed -i -- 's/{azure_password}/${PASS}/g' ./config/prod-config.json
+          """
+        }
+
+        withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: 'AZ_TENANTID', passwordVariable: 'PASS', usernameVariable: 'USER']]){
+          sh """
+             sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/dev-config.json
+             sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/stg-config.json
+             sed -i -- 's/{azure_tenantid}/${PASS}/g' ./config/prod-config.json
+          """
+        }
+      }
     }
 
-    if (service_name.trim() == "jazz_t-vault") {
-      updateConfigValue("{tvault-enabled}", config_loader.TVAULT.IS_ENABLED) 
+    if (service_name.trim() == "jazz_t-vault" && config_loader.TVAULT.IS_ENABLED ) {
+      updateConfigValue("{tvault-enabled}", config_loader.TVAULT.IS_ENABLED)
       updateConfigValue("{tvault-host-name}", config_loader.TVAULT.HOSTNAME)      
-      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.VAULT.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.TVAULT.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
         updateConfigValue("{tvault-username}", UNAME)
         updateConfigValue("{tvault-password}", PWD)
       }
@@ -246,6 +279,7 @@ def loadServiceConfigurationData() {
 
     if ((service_name.trim() == "jazz_logs") || (service_name.trim() == "jazz_cloud-logs-streamer") || (service_name.trim() == "jazz_es-kinesis-log-streamer")) {
       updateConfigValue("{inst_elastic_search_hostname}", config_loader.JAZZ.ES_HOSTNAME)
+      updateConfigValue("{inst_kibana_search_hostname}", config_loader.JAZZ.KIBANA_HOSTNAME)
 
       if (service_name.trim() == "jazz_logs") {
         updateConfigValue("{env-prefix}", config_loader.INSTANCE_PREFIX)
@@ -272,6 +306,13 @@ def loadServiceConfigurationData() {
       updateConfigValue("{user_pool_id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.USER_POOL_ID)
       updateConfigValue("{user_client_id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.CLIENT_ID)
       updateConfigValue("{region}", region)
+      updateCoreAPI()
+      updateConfigValue("{conf-region}", region)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
+      sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/dev-config.json"
+      sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/stg-config.json"
+      sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/prod-config.json"
     }
 
     if ((service_name.trim() == "jazz_usermanagement") ) {
@@ -355,6 +396,15 @@ def loadServiceConfigurationData() {
       sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/prod-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_website}\"/$websiteOptions/g' ./config/test-config.json"
 
+      updateConfigValue("{aws-primary-region}", region)
+      updateConfigValue("{aws-providerId}", config_loader.AWS.DEFAULTS.PROVIDER)
+      updateConfigValue("{aws-primary-accountId}", config_loader.AWS.DEFAULTS.ACCOUNTID)
+
+      if(config_loader.AZURE && config_loader.AZURE.IS_ENABLED instanceof Boolean && config_loader.AZURE.IS_ENABLED){
+        updateConfigValue("{azure-primary-region}", config_loader.AZURE.DEFAULTS.REGION)
+        updateConfigValue("{azure-providerId}", config_loader.AZURE.DEFAULTS.PROVIDER)
+        updateConfigValue("{azure-primary-accountId}", config_loader.AZURE.DEFAULTS.ACCOUNTID)
+      }
       sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/dev-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/stg-config.json"
       sh "sed -i -- 's/\"{conf_deployment_targets_sls-app}\"/$slsAppOptions/g' ./config/prod-config.json"
@@ -368,9 +418,9 @@ def loadServiceConfigurationData() {
 }
 
 def updateConfigValue(key, val) {
-  sh "sed -i -- 's/${key}/${val}/g' ./config/dev-config.json"
-  sh "sed -i -- 's/${key}/${val}/g' ./config/stg-config.json"
-  sh "sed -i -- 's/${key}/${val}/g' ./config/prod-config.json"
+  sh "sed -i -- 's#${key}#${val}#g' ./config/dev-config.json"
+  sh "sed -i -- 's#${key}#${val}#g' ./config/stg-config.json"
+  sh "sed -i -- 's#${key}#${val}#g' ./config/prod-config.json"
 }
 
 def updateCoreAPI() {

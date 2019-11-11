@@ -83,30 +83,97 @@ function createSafe(safeDetails, configData, vaultToken, onComplete) {
 }
 
 function getSafeDetails(safename, configData, vaultToken, onComplete) {
-  let payload = {
-    uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.GET_SAFE}${safename.toLowerCase()}`,
-    method: "GET",
-    headers: {
-      "vault-token": vaultToken
-    },
-    rejectUnauthorized: false
-  };
+  getSafeInfo(safename, configData, vaultToken)
+    .then((result) => { return massageRoleResponse(result, configData, vaultToken) })
+    .then((result) => {
+      logger.debug("Successfully got safe details: " + JSON.stringify(result));
+      return onComplete(null, result);
+    })
+    .catch(err => {
+      return onComplete(err);
+    });
+}
 
-  logger.debug("getSafeDetails payload: " + JSON.stringify(payload));
-  request(payload, function (error, response, body) {
-    logger.debug("getSafeDetails response: " + JSON.stringify(response));
-    if (response.statusCode && response.statusCode === 200) {
-      logger.debug("Successfully got safe details");
-      let safeDetails = JSON.parse(body);
-      safeDetails.data.roles = safeDetails.data['aws-roles'];
-      delete safeDetails.data['aws-roles'];
-      return onComplete(null, safeDetails.data);
-    } else {
-      logger.error("Error in getting safe details: " + JSON.stringify(error));
-      return onComplete({
-        "error": `Error in getting safe details with safe name ${safename}: ${response.body}`
-      });
+function massageRoleResponse(safeDetails, configData, vaultToken) {
+  return new Promise((resolve, reject) => {
+    let roles = safeDetails.roles;
+    let processEachPromises = [];
+
+    for (let key in roles) {
+      processEachPromises.push(processRole(key, roles[key], configData, vaultToken));
     }
+
+    Promise.all(processEachPromises)
+      .then((result) => {
+        let roleDetails = {};
+        for (let idx in result) {
+          for (let key in result[idx]) {
+            roleDetails[key] = result[idx][key];
+          }
+        }
+        delete safeDetails.roles;
+        safeDetails.roles = roleDetails;
+        return resolve(safeDetails);
+      })
+      .catch((error) => {
+        logger.error("massageRoleResponse failed" + JSON.stringify(error));
+        return reject(error);
+      });
+  });
+}
+
+function processRole(rolename, permission, configData, vaultToken) {
+  return new Promise((resolve, reject) => {
+    let roleDetails = {};
+    getRoleDetails(rolename, configData, vaultToken)
+    .then((result) => {
+      if (result) {
+        let details = JSON.parse(result);
+        roleDetails[rolename] = { "arn": details.bound_iam_principal_arn[0], "permission": permission }
+      }
+      logger.debug("role details in processRole : " + JSON.stringify(roleDetails));
+      resolve(roleDetails);
+    })
+    .catch((error) => {
+      logger.error("processRole failed" + JSON.stringify(error));
+      return reject(error);
+    });
+});
+}
+
+function getSafeInfo(safename, configData, vaultToken) {
+  return new Promise((resolve, reject) => {
+    let payload = {
+      uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.GET_SAFE}${safename.toLowerCase()}`,
+      method: "GET",
+      headers: {
+        "vault-token": vaultToken
+      },
+      rejectUnauthorized: false
+    };
+
+    logger.debug("getSafeInfo payload: " + JSON.stringify(payload));
+    request(payload, function (error, response, body) {
+      logger.debug("getSafeInfo response: " + JSON.stringify(response));
+      if (response.statusCode && response.statusCode === 200) {
+        logger.debug("Successfully got safe details");
+        let safeDetails = JSON.parse(body);
+        safeDetails.data.roles = safeDetails.data['aws-roles'];
+        delete safeDetails.data['aws-roles'];
+        let userDetails = {}
+        for (key in safeDetails.data.users) {
+          userDetails[key] = {"permission": safeDetails.data.users[key]}
+        }
+        delete safeDetails.data.users;
+        safeDetails.data.users = userDetails;
+        return resolve(safeDetails.data);
+      } else {
+        logger.error("Error in getting safe details: " + JSON.stringify(error));
+        return reject({
+          "error": `Error in getting safe details with safe name ${safename}: ${response.body}`
+        });
+      }
+    }); 
   });
 }
 
@@ -195,8 +262,9 @@ function createUserInSafe(safeDetails, configData, vaultToken, onComplete) {
       return onComplete(null, message);
     } else {
       logger.error("Error in creating user in safe. " + JSON.stringify(error));
+      let errorMessage = (response.body.errors) ? response.body.errors : response.body.messages;
       return onComplete({
-        "error": `Error in creating user ${safeDetails.username} in safe ${safeDetails.safename}: ${response.body.errors}`
+        "error": `Error in creating user ${safeDetails.username} in safe ${safeDetails.safename}: ${errorMessage}`
       });
     }
   });
@@ -234,7 +302,6 @@ function deleteUserFromSafe(safeDetails, configData, vaultToken, onComplete) {
   });
 }
 
-
 function getRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
   let payload = {
     uri: `${configData.T_VAULT_API}${global.globalConfig.API.GET_ROLE}${safeDetails.rolename}`,
@@ -268,34 +335,147 @@ function getRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
   });
 }
 
-function createRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
-  let payload = {
-    uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.SAFE_ROLES}`,
-    method: "POST",
-    headers: {
-      "vault-token": vaultToken
-    },
-    json: {
-      "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.safename.toLowerCase()}`,
-      "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`,
-      "role": safeDetails.rolename
-    },
-    rejectUnauthorized: false
-  };
+function createRole(roleDetails, configData, vaultToken, onComplete) {
+  let role = roleDetails.arn.split("/")[1];
+  let accountId = roleDetails.arn.split("/")[0].split(":")[4];
+  let rolename = `${accountId}_${role}`;
+  roleDetails.rolename = rolename;
 
-  logger.debug("createRoleInSafe payload: " + JSON.stringify(payload));
-  request(payload, function (error, response, body) {
-    logger.debug("createRoleInSafe response: " + JSON.stringify(response));
-    if (response.statusCode && response.statusCode === 200) {
-      logger.debug("Successfully created role in safe: " + JSON.stringify(body));
-      const message = { "message": `Role ${safeDetails.rolename} is successfully associated with safe ${safeDetails.safename}.` };
-      return onComplete(null, message);
+  getRoleDetails(rolename, configData, vaultToken)
+    .then((result) => { return createOrAddRole(result, roleDetails, configData, vaultToken) })
+    .then((result) => {
+      logger.debug("Successfully created/added role. ");
+      return onComplete(null, result);
+    })
+    .catch(err => {
+      return onComplete(err);
+    });
+}
+
+function createOrAddRole(result, roleDetails, configData, vaultToken) {
+  return new Promise((resolve, reject) => {
+    if (result) {
+      createRoleInSafe(roleDetails, configData, vaultToken)
+        .then((result) => {
+          logger.debug("Successfully added role. ");
+          return resolve(result);
+        })
+        .catch(err => {
+          return reject(err);
+        });
     } else {
-      logger.error("Error in creating role in safe. " + JSON.stringify(error));
-      return onComplete({
-        "error": `Error in creating role ${safeDetails.rolename}  in safe ${safeDetails.safename}: ${response.body.errors}`
-      });
+      createRoleInVault(roleDetails, configData, vaultToken)
+        .then(() => { return createRoleInSafe(roleDetails, configData, vaultToken) })
+        .then((result) => {
+          logger.debug("Successfully created and added role. ");
+          return resolve(result);
+        })
+        .catch(err => {
+          return reject(err);
+        });
     }
+  });
+}
+
+function createRoleInSafe(safeDetails, configData, vaultToken) {
+  return new Promise((resolve, reject) => {
+    let payload = {
+      uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.SAFE_ROLES}`,
+      method: "POST",
+      headers: {
+        "vault-token": vaultToken
+      },
+      json: {
+        "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.safename.toLowerCase()}`,
+        "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`,
+        "role": safeDetails.rolename
+      },
+      rejectUnauthorized: false
+    };
+
+    logger.debug("createRoleInSafe payload: " + JSON.stringify(payload));
+    request(payload, function (error, response, body) {
+      logger.debug("createRoleInSafe response: " + JSON.stringify(response));
+      if (response.statusCode && response.statusCode === 200) {
+        logger.debug("Successfully created role in safe: " + JSON.stringify(body));
+        const message = { "message": `Role ${safeDetails.rolename} is successfully associated with safe ${safeDetails.safename}.` };
+        return resolve(message);
+      } else {
+        logger.error("Error in creating role in safe. " + JSON.stringify(error));
+        return reject({
+          "error": `Error in creating role ${safeDetails.rolename}  in safe ${safeDetails.safename}: ${response.body.errors}`
+        });
+      }
+    });
+  });
+}
+
+function getRoleDetails(rolename, configData, vaultToken) {
+  return new Promise((resolve, reject) => {
+    let payload = {
+      uri: `${configData.T_VAULT_API}${global.globalConfig.API.VAULT_ROLES}/${rolename}`,
+      method: "GET",
+      headers: {
+        "vault-token": vaultToken
+      },
+      rejectUnauthorized: false
+    };
+
+    logger.debug("getRoleDetails payload: " + JSON.stringify(payload));
+    request(payload, function (error, response, body) {
+      logger.debug("getRoleDetails response: " + JSON.stringify(response));
+      if (response.statusCode && response.statusCode === 200 && body) {
+        logger.debug("Successfully got role info from t-vault: " + JSON.stringify(body));
+        return resolve(body);
+      } else {
+        if (response.statusCode && response.statusCode === 404) {
+          logger.debug(`Role ${rolename} not existing in t-vault.`);
+          return resolve(null);
+        } else {
+          logger.error("Error in getting role from t-vault. " + JSON.stringify(error));
+          return reject({
+            "error": `Error in getting role ${rolename} in t-vault: ${response.body.errors}`
+          });
+        }
+      }
+    });
+  });
+}
+
+function createRoleInVault(roleDetails, configData, vaultToken) {
+  return new Promise((resolve, reject) => {
+    let payload = {
+      uri: `${configData.T_VAULT_API}${global.globalConfig.API.VAULT_ROLES}`,
+      method: "POST",
+      headers: {
+        "vault-token": vaultToken
+      },
+      json: {
+        "auth_type": "iam",
+        "bound_iam_principal_arn": [roleDetails.arn],
+        "policies": [
+          "default"
+        ],
+        "resolve_aws_unique_ids": false,
+        "role": roleDetails.rolename
+      },
+      rejectUnauthorized: false
+    };
+
+    logger.debug("createRoleInVault payload: " + JSON.stringify(payload));
+    request(payload, function (error, response, body) {
+      logger.debug("createRoleInVault response: " + JSON.stringify(response));
+      if (response.statusCode && response.statusCode === 200) {
+        logger.debug("Successfully created role in t-vault: " + JSON.stringify(body));
+        const message = { "message": `Role ${roleDetails.rolename} is successfully created in t-vault.` };
+        return resolve(message);
+      } else {
+        logger.error("Error in creating role in t-vault. " + JSON.stringify(error));
+        return reject({
+          "error": `Error in creating role ${roleDetails.rolename} in t-vault: ${response.body.errors}`
+        });
+      }
+    });
   });
 }
 
@@ -401,7 +581,11 @@ module.exports = {
   createUserInSafe,
   deleteUserFromSafe,
   getRoleInSafe,
+  createRole,
+  getRoleDetails,
+  createOrAddRole,
   createRoleInSafe,
+  createRoleInVault,
   deleteRoleFromSafe,
   createUserInVault,
   deleteUserFromVault

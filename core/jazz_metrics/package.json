@@ -8,20 +8,25 @@
     "name": "Jazz"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "start": "node index.js"
   },
   "dependencies": {
     "aws-arn-parser": "*",
     "lodash": "*",
+    "@azure/arm-monitor": "*",
+    "@azure/ms-rest-azure-js": "*",
+    "@azure/ms-rest-nodeauth": "*",
+    "moment-timezone": "*",
+    "moment-duration-format": "*",
     "moment": "^2.22.2",
-    "request": "*",
-    "aws-sdk": "*"
+    "request": "*"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.1.1",
     "aws-sdk-mock": "^1.7.0",
     "chai": "^3.5.0",
-    "mocha": "^v3.0.0",
+    "mocha": "^5.2.0",
     "sinon": "^5.0.10"
   }
 }

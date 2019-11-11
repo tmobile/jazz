@@ -83,6 +83,10 @@ module.exports = (service_data, onComplete) => {
             logger.info("Inside validateRemoveEmptyValues: ");
             validateUtils.validateRemoveEmptyValues(service_data, onComplete);
         },
+        validateProviderValue: function (onComplete) {
+            logger.info("Inside validateProviderValue");
+            validateUtils.validateProviderValue(service_data, onComplete);
+        },
         // Check if a service with same domain and service_name combination exists
         validateServiceExists: function (onComplete) {
             var query = { service: service_data.service.toLowerCase(), domain: service_data.domain.toLowerCase() };

@@ -7,7 +7,8 @@
     "DELETE_SAFE": "/delete?path=shared/",
     "GET_SAFE": "?path=shared/",
     "GET_ROLE": "/auth/aws/role/",
-    "USERS": "/auth/userpass/users"
+    "USERS": "/auth/userpass/users",
+    "VAULT_ROLES": "/auth/aws/iam/role"
   },
   "CREATE_SAFE_REQUIRED_FIELDS": [
     "name",
@@ -18,7 +19,7 @@
     "username"
   ],
   "CREATE_ROLE_IN_SAFE_REQUIRED_FIELDS": [
-    "rolename"
+    "arn"
   ],
   "CREATE_USER_IN_VAULT_REQUIRED_FIELDS": [
     "username",
@@ -27,6 +28,10 @@
   "USER_IN_VAULT_REQUIRED_FIELDS": [
     "username"
   ],
+  "FIELD_LENGTH_CONSTRAINTS": {
+    "name" : 3,
+    "description": 10
+  },
   "PATH_TO_SAFE": "shared/",
   "ACCESS_LEVEL_IN_SAFE": "write",
   "DEFAULT_USER_POLICY": "default"

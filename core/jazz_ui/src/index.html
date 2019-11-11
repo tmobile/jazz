@@ -6,7 +6,7 @@
     <title>Jazz Serverless Platform</title>
     <base href="/">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>    
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <link rel="icon" type="image/x-icon" href="assets/images/favicon.png">
     <!-- <script src="../node_modules/chart.js/src/chart.js"></script>     -->
     <!--<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">-->
@@ -95,6 +95,12 @@
             <div class="inner three"></div>
         </div>
     </app-root>
+
+    <!--
+        ReDoc does not currently support versions < Angular 4 via NPM.
+        Therefore, we use the standalone version.
+    -->
+    <script src="https://cdn.jsdelivr.net/npm/redoc/bundles/redoc.standalone.js"></script>
 </body>
 
 </html>

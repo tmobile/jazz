@@ -2,12 +2,18 @@ import sys
 import os
 import json
 
-sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+#sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+#sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import index
+from .. import index
 
+class DotDict(dict):
+   pass
 
 def test():
 
-    response = index.handler({}, None)
-    assert response == {"message": "Your function executed successfully!", "event":{}}
+    context = DotDict()
+    context.function_name = "jazztest_sls-app-python-FN_function1-stg"
+    response = index.handler({}, context)    
+    assert response == {"message": "Your function executed successfully!", "event":{}, "myconfig": "config_val_stg-1"}
+   

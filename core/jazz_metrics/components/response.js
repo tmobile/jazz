@@ -23,6 +23,7 @@
 **/
 
 module.exports = (response, input) => {
+  delete input["platform"];
   var output = {
     "data": response,
     "input": input
