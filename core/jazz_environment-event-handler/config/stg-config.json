@@ -54,5 +54,11 @@
     "website": "build-pack-website",
     "sls-app": "build-pack-sls-app",
     "ui": "jazz_ui"
+  },
+  "TVAULT": {
+    "IS_ENABLED": "{tvault-enabled}",
+    "API": "/jazz/t-vault/safes",
+    "ENDPOINT": "/t-vault/safes/",
+    "HOSTNAME": "{tvault-host-name}"
   }
 }

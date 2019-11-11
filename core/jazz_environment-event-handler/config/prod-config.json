@@ -56,11 +56,9 @@
     "ui": "jazz_ui"
   },
   "TVAULT": {
-    "IS_ENABLED": true,
-    "ENDPOINT": "{endpoint_url}",
-    "API": "{t-vault_api}",
-    "CREATE_SAFE_API_RESOURCE": "/jazz/t-vault/safes",
-    "SAFE_API": "/t-vault/safes/",
-    "HOSTNAME": "http://secret1024-tvault-alb-420222041.us-east-1.elb.amazonaws.com"
+    "IS_ENABLED": "{tvault-enabled}",
+    "API": "/jazz/t-vault/safes",
+    "ENDPOINT": "/t-vault/safes/",
+    "HOSTNAME": "{tvault-host-name}"
   }
 }

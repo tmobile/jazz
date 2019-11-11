@@ -642,7 +642,7 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
     updatePayload.description = "create safe for jazz tvault service: " + safeName;
 
     var svcPayload = {
-      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.CREATE_SAFE_API_RESOURCE
+      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.API
         + `?domain=${environmentPayload.domain}&service=${environmentPayload.service}&environment=${environmentPayload.logical_id}`,
       method: "POST",
       headers: {
@@ -687,8 +687,8 @@ function deleteSafe(environmentPayload, configData, authToken, envDetails) {
     let safeName;
     if (envDetails.data && envDetails.data.count > 0 && envDetails.data.environment.length){
       const envResponse = envDetails.data.environment.filter(ele => ele.logical_id === environmentPayload.logical_id);
-      if (envResponse[0].metadata && envResponse[0].metadata.safeDetails && envResponse[0].metadata.safeDetails.safe) {
-        safeName = envResponse[0].metadata.safeDetails.safe.name;
+      if (envResponse[0].metadata && envResponse[0].metadata.safe_details && envResponse[0].metadata.safe_details.safe) {
+        safeName = envResponse[0].metadata.safe_details.safe.name;
       } else {
         return resolve({
           "error": environmentPayload.logical_id + ": environment safe details is not found",
@@ -699,11 +699,8 @@ function deleteSafe(environmentPayload, configData, authToken, envDetails) {
         "error": environmentPayload.logical_id + ": environment safe details is not found",
       });
     }
-    // if (safeDetails && safeDetails.safe && safeDetails.safe.name) {
-    //   safeName = safeDetails.safe.name;
-    // }
     var svcPayload = {
-      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.CREATE_SAFE_API_RESOURCE + '/' +safeName,
+      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.API + '/' +safeName,
       method: "DELETE",
       headers: {
         "Authorization": authToken,
@@ -781,7 +778,7 @@ function addAdminsToSafe(environmentPayload, configData, authToken, result) {
     }
     updatePayload.username = adminsList[0];
     var payload = {
-      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.CREATE_SAFE_API_RESOURCE + '/' + safeName + '/user',
+      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.API + '/' + safeName + '/user',
       method: "POST",
       headers: {
         "Authorization": authToken,
@@ -816,7 +813,7 @@ function getEnvDetails(environmentPayload, configData, authToken) {
     }
 
     var payload = {
-      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + "/jazz/environments?domain=" + environmentPayload.domain + "&service=" + environmentPayload.service,
+      uri: configData.BASE_API_URL + "/prod/jazz/environments?domain=" + environmentPayload.domain + "&service=" + environmentPayload.service,
       method: "GET",
       headers: {
         "Authorization": authToken,
@@ -827,7 +824,7 @@ function getEnvDetails(environmentPayload, configData, authToken) {
     request(payload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200) {
         logger.info("env details payload response **" + JSON.stringify(response));
-        return resolve(JSON.parse(body));
+        return resolve(JSON.parse(response.body));
       } else {
         logger.error("Error getting environment details: " + JSON.stringify(response));
         return reject({
@@ -854,7 +851,7 @@ function createRole(environmentPayload, configData, authToken) {
       safeName = safeDetails.safe.name;
     }
     var svcPayload = {
-      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.SAFE_API + safeName + '/role' 
+      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.ENDPOINT + safeName + '/role' 
         + `?domain=${environmentPayload.domain}&service=${environmentPayload.service}&environment=${environmentPayload.logical_id}`,
       method: "POST",
       headers: {
