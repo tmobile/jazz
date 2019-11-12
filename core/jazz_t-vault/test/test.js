@@ -396,7 +396,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject with in valid iam role arn', (done) => {
+  it('should reject with invalid iam role arn', (done) => {
     let arn = "arn:aws:iam::1234567889:role/test_role";
     validations.validateRoleArn(arn)
       .catch((err) => {
