@@ -6,7 +6,8 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "mocha"
+    "test": "nyc mocha",
+    "coverage": "nyc npm run test"
   },
   "dependencies": {
   },
@@ -17,6 +18,7 @@
     "chai": "^3.5.0",
     "lambda-local": "^1.4.2",
     "mocha": "^4.0.1",
+    "nyc": "^13.3.0",
     "sinon": "^1.17.7"
   }
 }

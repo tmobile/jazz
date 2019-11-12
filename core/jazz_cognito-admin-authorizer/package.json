@@ -8,7 +8,8 @@
     "name": "Jazz"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "nyc mocha",
+    "coverage": "nyc npm run test"
   },
   "dependencies": {
     "request": "^2.75.0",
@@ -18,6 +19,7 @@
   },
   "devDependencies": {
     "chai": "^3.5.0",
+    "nyc": "^13.3.0",
     "mocha": "^v3.0.0",
     "lambda-local": "^1.4.2",
     "aws-sdk": "^2.245.1"
