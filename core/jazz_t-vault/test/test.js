@@ -449,7 +449,6 @@ describe('Validations', () => {
       });
     done();
   });
-
 });
 
 //Create Safe
@@ -505,7 +504,6 @@ describe('Create safe', () => {
       });
     done();
   });
-
 });
 
 //Get Safe
@@ -638,7 +636,6 @@ describe('Update safe', () => {
       });
     done();
   });
-
 });
 
 //Delete Safe
@@ -748,7 +745,6 @@ describe('Create user in safe', () => {
       });
     done();
   });
-
 });
 
 //Delete user from safe
@@ -805,7 +801,6 @@ describe('Delete user from safe', () => {
       });
     done();
   });
-
 });
 
 //Create role in safe
@@ -862,7 +857,6 @@ describe('Create role in safe', () => {
       });
     done();
   });
-
 });
 
 //Delete role from safe
@@ -919,7 +913,6 @@ describe('Delete role from safe', () => {
       });
     done();
   });
-
 });
 
 //Get role
@@ -1035,7 +1028,6 @@ describe('Create user in vault', () => {
       });
     done();
   });
-
 });
 
 //Delete user from vault
@@ -1089,7 +1081,6 @@ describe('Delete user from vault', () => {
       });
     done();
   });
-
 });
 
 //Index file - Create safe
@@ -1128,7 +1119,6 @@ describe('Index file - Create safe', () => {
     let error = "{\"errorType\":\"BadRequest\",\"message\":\"Method cannot be empty\"}";
 
     index.handler(event, context, (err, res) => {
-      console.log("ERRRRR: " + JSON.stringify(err))
       expect(err).to.eq(error);
       sinon.assert.notCalled(validateCreateSafeInputStub);
       sinon.assert.notCalled(genericInputValidationStub);
@@ -1317,7 +1307,6 @@ describe('Index file - Create safe', () => {
     })
     done();
   });
-
 });
 
 //Index file - Update safe
@@ -1542,7 +1531,6 @@ describe('Index file - Update safe', () => {
     })
     done();
   });
-
 });
 
 //Index file - Get safe details
@@ -1717,7 +1705,6 @@ describe('Index file - Get safe details', () => {
     })
     done();
   });
-
 });
 
 //Index file - Delete safe
@@ -1892,7 +1879,6 @@ describe('Index file - Delete safe', () => {
     })
     done();
   });
-
 });
 
 //Index file - Create user in safe
@@ -2168,5 +2154,1380 @@ describe('Index file - Create user in safe', () => {
     })
     done();
   });
+});
 
+//Index file - Delete user from safe
+describe('Index file - Delete user from safe', () => {
+  beforeEach(function () {
+    event = {
+      "method": "DELETE",
+      "stage": "test",
+      "principalId": "test123",
+      "resourcePath": "/safes/{safename}/user",
+      "path": {
+        "safename": "testsafe"
+      },
+      "body": {
+        "username": "test@test.com"
+      }
+    };
+    context = awsContext();
+    callback = (value) => {
+      return value;
+    };
+    config = configModule.getConfig(event, context);
+    vaultToken = "s.ktdfdsfltn";
+  });
+
+  it('should throw error if the method is empty', (done) => {
+    delete event.method;
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteUserFromSafeStub = sinon.stub(index, "deleteUserFromSafe").resolves();
+    let error = "{\"errorType\":\"BadRequest\",\"message\":\"Method cannot be empty\"}";
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(error);
+      sinon.assert.notCalled(validateSafeInputStub);
+      sinon.assert.notCalled(validateUserInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteUserFromSafeStub);
+      validateSafeInputStub.restore();
+      validateUserInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if the principalId is not there', (done) => {
+    delete event.principalId;
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteUserFromSafeStub = sinon.stub(index, "deleteUserFromSafe").resolves();
+    let error = "{\"errorType\":\"Unauthorized\",\"message\":\"You aren't authorized to access this service\"}";
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(error);
+      sinon.assert.notCalled(validateSafeInputStub);
+      sinon.assert.notCalled(validateUserInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteUserFromSafeStub);
+      validateSafeInputStub.restore();
+      validateUserInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should delete user from safe with valid input', (done) => {
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteUserFromSafeStub = sinon.stub(index, "deleteUserFromSafe").resolves();
+
+    index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateUserInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.calledOnce(deleteUserFromSafeStub);
+      validateSafeInputStub.restore();
+      validateUserInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateSafeInput throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Input cannot be empty" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").rejects(error);
+    const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteUserFromSafeStub = sinon.stub(index, "deleteUserFromSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Input cannot be empty" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.notCalled(validateUserInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteUserFromSafeStub);
+      validateSafeInputStub.restore();
+      validateUserInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateUserInSafeInput throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Following field(s) are required - username" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").rejects(error);
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteUserFromSafeStub = sinon.stub(index, "deleteUserFromSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) are required - username" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateUserInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteUserFromSafeStub);
+      validateSafeInputStub.restore();
+      validateUserInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if genericInputValidation throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Following field(s) has empty value - username" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").rejects(error);
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteUserFromSafeStub = sinon.stub(index, "deleteUserFromSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) has empty value - username" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateUserInSafeInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteUserFromSafeStub);
+      validateSafeInputStub.restore();
+      validateUserInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if getVaultToken fails', (done) => {
+    let error = { "error": "InternalServerError", "message": "Internal server error" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").rejects(error);
+    const deleteUserFromSafeStub = sinon.stub(index, "deleteUserFromSafe").resolves();
+
+    let errorResp = { "errorType": "InternalServerError", "message": "InternalServerError" };
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateUserInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.notCalled(deleteUserFromSafeStub);
+      validateSafeInputStub.restore();
+      validateUserInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if deleteUserFromSafe fails', (done) => {
+    let error = { "error": "InternalServerError", "message": "Internal server error" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves("s.token");
+    const deleteUserFromSafeStub = sinon.stub(index, "deleteUserFromSafe").rejects(error);
+
+    let errorResp = { "errorType": "InternalServerError", "message": "InternalServerError" };
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateUserInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.calledOnce(deleteUserFromSafeStub);
+      validateSafeInputStub.restore();
+      validateUserInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromSafeStub.restore();
+    })
+    done();
+  });
+});
+
+//Index file - Create role in safe
+describe('Index file - Create role in safe', () => {
+  beforeEach(function () {
+    event = {
+      "method": "POST",
+      "stage": "test",
+      "principalId": "test123",
+      "resourcePath": "/safes/{safename}/role",
+      "path": {
+        "safename": "testsafe"
+      },
+      "body": {
+        "arn": "arn:aws:iam::1234567889:role/test_role"
+      }
+    };
+    context = awsContext();
+    callback = (value) => {
+      return value;
+    };
+    config = configModule.getConfig(event, context);
+    vaultToken = "s.ktdfdsfltn";
+  });
+
+  it('should throw error if the method is empty', (done) => {
+    delete event.method;
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
+    let error = "{\"errorType\":\"BadRequest\",\"message\":\"Method cannot be empty\"}";
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(error);
+      sinon.assert.notCalled(validateSafeInputStub);
+      sinon.assert.notCalled(validateRoleInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(validateRoleArnStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
+      getVaultTokenStub.restore();
+      createRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if the principalId is not there', (done) => {
+    delete event.principalId;
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
+    let error = "{\"errorType\":\"Unauthorized\",\"message\":\"You aren't authorized to access this service\"}";
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(error);
+      sinon.assert.notCalled(validateSafeInputStub);
+      sinon.assert.notCalled(validateRoleInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(validateRoleArnStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
+      getVaultTokenStub.restore();
+      createRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should create role in safe with valid input', (done) => {
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
+
+    index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(validateRoleArnStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.calledOnce(createRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
+      getVaultTokenStub.restore();
+      createRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateSafeInput throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Input cannot be empty" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").rejects(error);
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Input cannot be empty" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.notCalled(validateRoleInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(validateRoleArnStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
+      getVaultTokenStub.restore();
+      createRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateRoleInSafeInput throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Following field(s) are required - arn" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").rejects(error);
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) are required - arn" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.notCalled(validateRoleArnStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
+      getVaultTokenStub.restore();
+      createRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if genericInputValidation throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Following field(s) has empty value - arn" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").rejects(error);
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) has empty value - arn" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.notCalled(validateRoleInSafeInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.notCalled(validateRoleArnStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
+      getVaultTokenStub.restore();
+      createRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateRoleArn throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "The provided role is not valid." };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").rejects(error);
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "The provided role is not valid." }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(validateRoleArnStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
+      getVaultTokenStub.restore();
+      createRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if getVaultToken fails', (done) => {
+    let error = { "error": "InternalServerError", "message": "Internal server error" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").rejects(error);
+    const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
+
+    let errorResp = { "errorType": "InternalServerError", "message": "InternalServerError" };
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(validateRoleArnStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.notCalled(createRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
+      getVaultTokenStub.restore();
+      createRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if createRoleInSafe fails', (done) => {
+    let error = { "error": "InternalServerError", "message": "Internal server error" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves("s.token");
+    const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").rejects(error);
+
+    let errorResp = { "errorType": "InternalServerError", "message": "InternalServerError" };
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(validateRoleArnStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.calledOnce(createRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
+      getVaultTokenStub.restore();
+      createRoleInSafeStub.restore();
+    })
+    done();
+  });
+});
+
+//Index file - Delete role from safe
+describe('Index file - Delete role from safe', () => {
+  beforeEach(function () {
+    event = {
+      "method": "DELETE",
+      "stage": "test",
+      "principalId": "test123",
+      "resourcePath": "/safes/{safename}/role",
+      "path": {
+        "safename": "testsafe"
+      },
+      "body": {
+        "rolename": "testrole"
+      }
+    };
+    context = awsContext();
+    callback = (value) => {
+      return value;
+    };
+    config = configModule.getConfig(event, context);
+    vaultToken = "s.ktdfdsfltn";
+  });
+
+  it('should throw error if the method is empty', (done) => {
+    delete event.method;
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
+    let error = "{\"errorType\":\"BadRequest\",\"message\":\"Method cannot be empty\"}";
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(error);
+      sinon.assert.notCalled(validateSafeInputStub);
+      sinon.assert.notCalled(validateRoleInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteRoleFromSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteRoleFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if the principalId is not there', (done) => {
+    delete event.principalId;
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
+    let error = "{\"errorType\":\"Unauthorized\",\"message\":\"You aren't authorized to access this service\"}";
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(error);
+      sinon.assert.notCalled(validateSafeInputStub);
+      sinon.assert.notCalled(validateRoleInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteRoleFromSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteRoleFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should delete role from safe with valid input', (done) => {
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
+
+    index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.calledOnce(deleteRoleFromSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteRoleFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateSafeInput throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Input cannot be empty" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").rejects(error);
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Input cannot be empty" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.notCalled(validateRoleInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteRoleFromSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteRoleFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateRoleInSafeInput throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Following field(s) are required - rolename" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").rejects(error);
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) are required - rolename" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteRoleFromSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteRoleFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if genericInputValidation throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Following field(s) has empty value - rolename" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").rejects(error);
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) has empty value - rolename" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteRoleFromSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteRoleFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if getVaultToken fails', (done) => {
+    let error = { "error": "InternalServerError", "message": "Internal server error" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").rejects(error);
+    const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
+
+    let errorResp = { "errorType": "InternalServerError", "message": "InternalServerError" };
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.notCalled(deleteRoleFromSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteRoleFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if deleteRoleFromSafe fails', (done) => {
+    let error = { "error": "InternalServerError", "message": "Internal server error" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves("s.token");
+    const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").rejects(error);
+
+    let errorResp = { "errorType": "InternalServerError", "message": "InternalServerError" };
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.calledOnce(deleteRoleFromSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteRoleFromSafeStub.restore();
+    })
+    done();
+  });
+});
+
+//Index file - Get role details from safe
+describe('Index file - Get role details from safe', () => {
+  beforeEach(function () {
+    event = {
+      "method": "GET",
+      "stage": "test",
+      "principalId": "test123",
+      "resourcePath": "/safes/{safename}/role",
+      "path": {
+        "safename": "testsafe"
+      },
+      "query": {
+        "rolename": "testrole"
+      }
+    };
+    context = awsContext();
+    callback = (value) => {
+      return value;
+    };
+    config = configModule.getConfig(event, context);
+    vaultToken = "s.ktdfdsfltn";
+  });
+
+  it('should throw error if the method is empty', (done) => {
+    delete event.method;
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateGetRoleInSafeInputStub = sinon.stub(validations, "validateGetRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const getRoleInSafeStub = sinon.stub(index, "getRoleInSafe").resolves();
+    let error = "{\"errorType\":\"BadRequest\",\"message\":\"Method cannot be empty\"}";
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(error);
+      sinon.assert.notCalled(validateSafeInputStub);
+      sinon.assert.notCalled(validateGetRoleInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(getRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateGetRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      getRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if the principalId is not there', (done) => {
+    delete event.principalId;
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateGetRoleInSafeInputStub = sinon.stub(validations, "validateGetRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const getRoleInSafeStub = sinon.stub(index, "getRoleInSafe").resolves();
+    let error = "{\"errorType\":\"Unauthorized\",\"message\":\"You aren't authorized to access this service\"}";
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(error);
+      sinon.assert.notCalled(validateSafeInputStub);
+      sinon.assert.notCalled(validateGetRoleInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(getRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateGetRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      getRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should get role details from safe with valid input', (done) => {
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateGetRoleInSafeInputStub = sinon.stub(validations, "validateGetRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const getRoleInSafeStub = sinon.stub(index, "getRoleInSafe").resolves();
+
+    index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateGetRoleInSafeInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.calledOnce(getRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateGetRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      getRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateSafeInput throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Input cannot be empty" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").rejects(error);
+    const validateGetRoleInSafeInputStub = sinon.stub(validations, "validateGetRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const getRoleInSafeStub = sinon.stub(index, "getRoleInSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Input cannot be empty" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.notCalled(validateGetRoleInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(getRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateGetRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      getRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateGetRoleInSafeInput throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Following field(s) are required - rolename" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateGetRoleInSafeInputStub = sinon.stub(validations, "validateGetRoleInSafeInput").rejects(error);
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const getRoleInSafeStub = sinon.stub(index, "getRoleInSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) are required - rolename" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateGetRoleInSafeInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(getRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateGetRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      getRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if genericInputValidation throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Following field(s) has empty value - rolename" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateGetRoleInSafeInputStub = sinon.stub(validations, "validateGetRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").rejects(error);
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const getRoleInSafeStub = sinon.stub(index, "getRoleInSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) has empty value - rolename" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateGetRoleInSafeInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(getRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateGetRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      getRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if getVaultToken fails', (done) => {
+    let error = { "error": "InternalServerError", "message": "Internal server error" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateGetRoleInSafeInputStub = sinon.stub(validations, "validateGetRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").rejects(error);
+    const getRoleInSafeStub = sinon.stub(index, "getRoleInSafe").resolves();
+
+    let errorResp = { "errorType": "InternalServerError", "message": "InternalServerError" };
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateGetRoleInSafeInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.notCalled(getRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateGetRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      getRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if getRoleInSafe fails', (done) => {
+    let error = { "error": "InternalServerError", "message": "Internal server error" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateGetRoleInSafeInputStub = sinon.stub(validations, "validateGetRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves("s.token");
+    const getRoleInSafeStub = sinon.stub(index, "getRoleInSafe").rejects(error);
+
+    let errorResp = { "errorType": "InternalServerError", "message": "InternalServerError" };
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateGetRoleInSafeInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.calledOnce(getRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateGetRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      getRoleInSafeStub.restore();
+    })
+    done();
+  });
+});
+
+//Index file - Create user in vault
+describe('Index file - Create user in vault', () => {
+  beforeEach(function () {
+    event = {
+      "method": "POST",
+      "stage": "test",
+      "principalId": "test123",
+      "resourcePath": "/t-vault/user",
+      "body": {
+        "username": "test@test.com",
+        "password": "tester"
+      }
+    };
+    context = awsContext();
+    callback = (value) => {
+      return value;
+    };
+    config = configModule.getConfig(event, context);
+    vaultToken = "s.ktdfdsfltn";
+  });
+
+  it('should throw error if the method is empty', (done) => {
+    delete event.method;
+    const validateUserInVaultInputStub = sinon.stub(validations, "validateUserInVaultInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createUserInVaultStub = sinon.stub(index, "createUserInVault").resolves();
+    let error = "{\"errorType\":\"BadRequest\",\"message\":\"Method cannot be empty\"}";
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(error);
+      sinon.assert.notCalled(validateUserInVaultInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(validateFieldLengthStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createUserInVaultStub);
+      validateUserInVaultInputStub.restore();
+      genericInputValidationStub.restore();
+      validateFieldLengthStub.restore();
+      getVaultTokenStub.restore();
+      createUserInVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if the principalId is not there', (done) => {
+    delete event.principalId;
+    const validateUserInVaultInputStub = sinon.stub(validations, "validateUserInVaultInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createUserInVaultStub = sinon.stub(index, "createUserInVault").resolves();
+    let error = "{\"errorType\":\"Unauthorized\",\"message\":\"You aren't authorized to access this service\"}";
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(error);
+      sinon.assert.notCalled(validateUserInVaultInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(validateFieldLengthStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createUserInVaultStub);
+      validateUserInVaultInputStub.restore();
+      genericInputValidationStub.restore();
+      validateFieldLengthStub.restore();
+      getVaultTokenStub.restore();
+      createUserInVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should create user in tvault with valid input', (done) => {
+    const validateUserInVaultInputStub = sinon.stub(validations, "validateUserInVaultInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createUserInVaultStub = sinon.stub(index, "createUserInVault").resolves();
+
+    index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(validateUserInVaultInputStub);
+
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.calledOnce(validateFieldLengthStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.calledOnce(createUserInVaultStub);
+      validateUserInVaultInputStub.restore();
+      genericInputValidationStub.restore();
+      validateFieldLengthStub.restore();
+      getVaultTokenStub.restore();
+      createUserInVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateUserInVaultInput throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Input cannot be empty" };
+    const validateUserInVaultInputStub = sinon.stub(validations, "validateUserInVaultInput").rejects(error);
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createUserInVaultStub = sinon.stub(index, "createUserInVault").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Input cannot be empty" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateUserInVaultInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(validateFieldLengthStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createUserInVaultStub);
+      validateUserInVaultInputStub.restore();
+      genericInputValidationStub.restore();
+      validateFieldLengthStub.restore();
+      getVaultTokenStub.restore();
+      createUserInVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if genericInputValidation throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Following field(s) has empty value - username" };
+    const validateUserInVaultInputStub = sinon.stub(validations, "validateUserInVaultInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").rejects(error);
+    const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createUserInVaultStub = sinon.stub(index, "createUserInVault").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) has empty value - username" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateUserInVaultInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.notCalled(validateFieldLengthStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createUserInVaultStub);
+      validateUserInVaultInputStub.restore();
+      genericInputValidationStub.restore();
+      validateFieldLengthStub.restore();
+      getVaultTokenStub.restore();
+      createUserInVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateFieldLength throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "The provided user is not valid." };
+    const validateUserInVaultInputStub = sinon.stub(validations, "validateUserInVaultInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").rejects(error);
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createUserInVaultStub = sinon.stub(index, "createUserInVault").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "The provided user is not valid." }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateUserInVaultInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.calledOnce(validateFieldLengthStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createUserInVaultStub);
+      validateUserInVaultInputStub.restore();
+      genericInputValidationStub.restore();
+      validateFieldLengthStub.restore();
+      getVaultTokenStub.restore();
+      createUserInVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if getVaultToken fails', (done) => {
+    let error = { "error": "InternalServerError", "message": "Internal server error" };
+    const validateUserInVaultInputStub = sinon.stub(validations, "validateUserInVaultInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").rejects(error);
+    const createUserInVaultStub = sinon.stub(index, "createUserInVault").resolves();
+
+    let errorResp = { "errorType": "InternalServerError", "message": "InternalServerError" };
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));
+      sinon.assert.calledOnce(validateUserInVaultInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.calledOnce(validateFieldLengthStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.notCalled(createUserInVaultStub);
+      validateUserInVaultInputStub.restore();
+      genericInputValidationStub.restore();
+      validateFieldLengthStub.restore();
+      getVaultTokenStub.restore();
+      createUserInVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if createUserInVault fails', (done) => {
+    let error = { "error": "InternalServerError", "message": "Internal server error" };
+    const validateUserInVaultInputStub = sinon.stub(validations, "validateUserInVaultInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves("s.token");
+    const createUserInVaultStub = sinon.stub(index, "createUserInVault").rejects(error);
+
+    let errorResp = { "errorType": "InternalServerError", "message": "InternalServerError" };
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));
+      sinon.assert.calledOnce(validateUserInVaultInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.calledOnce(validateFieldLengthStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.calledOnce(createUserInVaultStub);
+      validateUserInVaultInputStub.restore();
+      genericInputValidationStub.restore();
+      validateFieldLengthStub.restore();
+      getVaultTokenStub.restore();
+      createUserInVaultStub.restore();
+    })
+    done();
+  });
+});
+
+//Index file - Delete user from vault
+describe('Index file - Delete user from vault', () => {
+  beforeEach(function () {
+    event = {
+      "method": "DELETE",
+      "stage": "test",
+      "principalId": "test123",
+      "resourcePath": "/t-vault/user",
+      "body": {
+        "username": "test@test.com"
+      }
+    };
+    context = awsContext();
+    callback = (value) => {
+      return value;
+    };
+    config = configModule.getConfig(event, context);
+    vaultToken = "s.ktdfdsfltn";
+  });
+
+  it('should throw error if the method is empty', (done) => {
+    delete event.method;
+    const validateUserInVaultDeleteInputStub = sinon.stub(validations, "validateUserInVaultDeleteInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteUserFromVaultStub = sinon.stub(index, "deleteUserFromVault").resolves();
+    let error = "{\"errorType\":\"BadRequest\",\"message\":\"Method cannot be empty\"}";
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(error);
+      sinon.assert.notCalled(validateUserInVaultDeleteInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteUserFromVaultStub);
+      validateUserInVaultDeleteInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if the principalId is not there', (done) => {
+    delete event.principalId;
+    const validateUserInVaultDeleteInputStub = sinon.stub(validations, "validateUserInVaultDeleteInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteUserFromVaultStub = sinon.stub(index, "deleteUserFromVault").resolves();
+    let error = "{\"errorType\":\"Unauthorized\",\"message\":\"You aren't authorized to access this service\"}";
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(error);
+      sinon.assert.notCalled(validateUserInVaultDeleteInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteUserFromVaultStub);
+      validateUserInVaultDeleteInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should create user in tvault with valid input', (done) => {
+    const validateUserInVaultDeleteInputStub = sinon.stub(validations, "validateUserInVaultDeleteInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteUserFromVaultStub = sinon.stub(index, "deleteUserFromVault").resolves();
+
+    index.handler(event, context, (err, res) => {
+      sinon.assert.calledOnce(validateUserInVaultDeleteInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.calledOnce(deleteUserFromVaultStub);
+      validateUserInVaultDeleteInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateUserInVaultDeleteInput throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Input cannot be empty" };
+    const validateUserInVaultDeleteInputStub = sinon.stub(validations, "validateUserInVaultDeleteInput").rejects(error);
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteUserFromVaultStub = sinon.stub(index, "deleteUserFromVault").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Input cannot be empty" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateUserInVaultDeleteInputStub);
+      sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteUserFromVaultStub);
+      validateUserInVaultDeleteInputStub.restore();
+      genericInputValidationStub.restore();
+
+      getVaultTokenStub.restore();
+      deleteUserFromVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if genericInputValidation throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Following field(s) has empty value - username" };
+    const validateUserInVaultDeleteInputStub = sinon.stub(validations, "validateUserInVaultDeleteInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").rejects(error);
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteUserFromVaultStub = sinon.stub(index, "deleteUserFromVault").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) has empty value - username" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateUserInVaultDeleteInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteUserFromVaultStub);
+      validateUserInVaultDeleteInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if getVaultToken fails', (done) => {
+    let error = { "error": "InternalServerError", "message": "Internal server error" };
+    const validateUserInVaultDeleteInputStub = sinon.stub(validations, "validateUserInVaultDeleteInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").rejects(error);
+    const deleteUserFromVaultStub = sinon.stub(index, "deleteUserFromVault").resolves();
+
+    let errorResp = { "errorType": "InternalServerError", "message": "InternalServerError" };
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));
+      sinon.assert.calledOnce(validateUserInVaultDeleteInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.notCalled(deleteUserFromVaultStub);
+      validateUserInVaultDeleteInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromVaultStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if deleteUserFromVault fails', (done) => {
+    let error = { "error": "InternalServerError", "message": "Internal server error" };
+    const validateUserInVaultDeleteInputStub = sinon.stub(validations, "validateUserInVaultDeleteInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves("s.token");
+    const deleteUserFromVaultStub = sinon.stub(index, "deleteUserFromVault").rejects(error);
+
+    let errorResp = { "errorType": "InternalServerError", "message": "InternalServerError" };
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));
+      sinon.assert.calledOnce(validateUserInVaultDeleteInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.calledOnce(getVaultTokenStub);
+      sinon.assert.calledOnce(deleteUserFromVaultStub);
+      validateUserInVaultDeleteInputStub.restore();
+      genericInputValidationStub.restore();
+      getVaultTokenStub.restore();
+      deleteUserFromVaultStub.restore();
+    })
+    done();
+  });
+});
+
+//Index file - Delete user from vault
+describe('Index file - Common scenarios', () => {
+  beforeEach(function () {
+    event = {
+      "method": "DELETE",
+      "stage": "test",
+      "principalId": "test123",
+      "resourcePath": "/t-vault/user",
+      "body": {
+        "username": "test@test.com"
+      }
+    };
+    context = awsContext();
+    callback = (value) => {
+      return value;
+    };
+    config = configModule.getConfig(event, context);
+    vaultToken = "s.ktdfdsfltn";
+  });
+
+  it('Should throw error if not a valid resourcePath', (done) => { 
+    event.resourcePath = "something";
+    let errorResp = {"errorType":"BadRequest","message":"The requested method is not supported."};
+
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errorResp));      
+    })
+    done();
+  });
 });
