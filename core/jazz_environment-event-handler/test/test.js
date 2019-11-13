@@ -30,6 +30,7 @@ const index = require('../index');
 const config = require('../components/config');
 const testPayloads = require('./response_payloads.js')();
 const kinesisPayload = require('./KINESIS_PAYLOAD');
+const logger = require("../components/logger.js");
 
 let event, context, configData, authToken;
 
@@ -260,14 +261,18 @@ describe('jazz environment handler tests: ', () => {
     let resMsg = "Successfully Updated environment for service";
 
     let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
-      return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+      if (obj.method === "GET") {
+        return obj.callback(null, testPayloads.envDetailsResponse, testPayloads.envDetailsResponse.body);
+      } else if (obj.method === "DELETE" || "PUT") {
+        return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+      }
     });
     const service = JSON.stringify({ data: { services: [{ id: 1, type: "api", service: "test", domain: "tst" }] } });
     const serviceStub = sinon.stub(index, "getServiceDetails").resolves(service);
     const processServiceDetailsStub = sinon.stub(index, "processServiceDetails").resolves({ id: 1, type: "api", service: "test", domain: "tst" });
     index.processEachEvent(kinesisPayload.Records[0], configData, authToken)
       .then((res) => {
-        sinon.assert.calledOnce(requestPromiseStub);
+        sinon.assert.calledThrice(requestPromiseStub);
         requestPromiseStub.restore();
         sinon.assert.calledOnce(serviceStub);
         sinon.assert.calledOnce(processServiceDetailsStub);
@@ -282,13 +287,17 @@ describe('jazz environment handler tests: ', () => {
     event.Item.EVENT_STATUS.S = 'FAILED';
 
     let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
-      return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+      if (obj.method === "GET") {
+        return obj.callback(null, testPayloads.envDetailsResponse, testPayloads.envDetailsResponse.body);
+      } else if (obj.method === "DELETE" || "PUT") {
+        return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+      }
     });
     const service = { id: 1, type: "api", service: "test", domain: "tst" }
 
     index.manageProcessItem(event.Item, service, configData, authToken)
       .then((res) => {
-        sinon.assert.calledOnce(requestPromiseStub);
+        sinon.assert.calledThrice(requestPromiseStub);
         requestPromiseStub.restore();
         expect(res.data.message).to.include('Successfully Updated environment for service');
       });
@@ -299,13 +308,17 @@ describe('jazz environment handler tests: ', () => {
     event.Item.EVENT_STATUS.S = 'STARTED';
 
     let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
-      return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+      if (obj.method === "GET") {
+        return obj.callback(null, testPayloads.envDetailsResponse, testPayloads.envDetailsResponse.body);
+      } else if (obj.method === "DELETE" || "PUT") {
+        return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+      }
     });
     const service = { id: 1, type: "api", service: "test", domain: "tst" }
 
     index.manageProcessItem(event.Item, service, configData, authToken)
       .then((res) => {
-        sinon.assert.calledOnce(requestPromiseStub);
+        sinon.assert.calledThrice(requestPromiseStub);
         requestPromiseStub.restore();
         expect(res.data.message).to.include('Successfully Updated environment for service');
       });
@@ -316,13 +329,18 @@ describe('jazz environment handler tests: ', () => {
 
     testPayloads.apiResponse.body.data.environment = [{ 'physical_id': 'master' }];
     let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
-      return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+      if (obj.method === "GET") {
+        return obj.callback(null, testPayloads.envDetailsResponse, testPayloads.envDetailsResponse.body);
+      } else if (obj.method === "DELETE" || "PUT") {
+        return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+      }
     });
     const service = { id: 1, type: "api", service: "test", domain: "tst" }
 
     index.manageProcessItem(event.Item, service, configData, authToken)
       .then((res) => {
-        sinon.assert.calledTwice(requestPromiseStub);
+        sinon.assert.callCount(requestPromiseStub, 4);
+        // sinon.assert.calledThrice(requestPromiseStub);
         requestPromiseStub.restore();
         expect(res.data.message).to.include('Successfully Updated environment for service');
       });
@@ -331,7 +349,9 @@ describe('jazz environment handler tests: ', () => {
   it('Verify processEachEvent for CREATE_BRANCH event failed', () => {
     let event = require('./CREATE_BRANCH');
     let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
-      return obj.callback(null, testPayloads.createBranchError, testPayloads.createBranchError.body);
+      if (obj.uri.includes("/dev/jazz/environments") ) {
+        return obj.callback(null, testPayloads.createBranchError, testPayloads.createBranchError.body);
+      }
     });
     const service = { id: 1, type: "api", service: "test", domain: "tst" }
 
@@ -792,6 +812,8 @@ describe('handler', () => {
 
     processRequestStub.resolves(responseObject.body);
     getServiceDetailsStub.resolves(responseObject.body);
+    const processServiceDetailsStub = sinon.stub(index, "processServiceDetails").resolves({ id: 1, type: "api", service: "test", domain: "tst" });
+    const manageProcessItem = sinon.stub(index, "manageProcessItem").resolves();
     triggerBuildJobStub.resolves();
     processBuildStub.resolves();
     let processEventCreateBranchStub = sinon.stub(index, "processEventCreateBranch").resolves(testPayloads.createBranchSuccess.body);
@@ -800,6 +822,8 @@ describe('handler', () => {
       .then((res) => {
         sinon.assert.calledOnce(requestPromiseStub);
         requestPromiseStub.restore();
+        manageProcessItem.restore()
+        processServiceDetailsStub.restore();
         expect(res.data.result).to.include(resMsg);
         processEventCreateBranchStub.restore();
       });
@@ -855,12 +879,31 @@ describe('handler', () => {
     requestPromiseStub.onSecondCall().callsFake((obj) => {
       return obj.callback(null, testPayloads.processEventInitialCommitSuccess, testPayloads.processEventInitialCommitSuccess.body);
     });
-
+    let body = {
+      data: {
+        services: [{
+          id: "00001-test-serivice-id-00001",
+          type: "function",
+          service: "test",
+          domain: "testing"
+        }]
+      }
+    };
+    let responseObject = {
+      statusCode: 200,
+      body: JSON.stringify(body)
+    };
+    processRequestStub.resolves(responseObject.body);
+    getServiceDetailsStub.resolves(responseObject.body);
+    triggerBuildJobStub.resolves();
+    processBuildStub.resolves();
     index.processEvents(event, configData, authToken)
       .then(res => {
         sinon.assert.calledTwice(requestPromiseStub);
         requestPromiseStub.restore();
         expect(res[0].message).to.eql('Stage and Prod environments are created successfully');
+        
+        
       });
   });
   it('handleError should return error response json for valid input', function () {

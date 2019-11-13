@@ -116,6 +116,7 @@ function processEachEvent(record, configData, authToken) {
       })
       .then(result => {
         exportable.handleProcessedEvents(sequenceNumber, payload);
+        
         return resolve(result);
       })
       .catch(err => {
@@ -128,7 +129,6 @@ function processEachEvent(record, configData, authToken) {
 
 function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
   return new Promise((resolve, reject) => {
-    logger.info("JSON parse 1", new Buffer(encodedPayload, 'base64').toString('ascii'));
     var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
     if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
       if (config.EVENTS.EVENT_TYPE.indexOf(kinesisPayload.Item.EVENT_TYPE.S) > -1 &&
@@ -151,9 +151,7 @@ function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
 
 function processItem(eventPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
-    logger.info("JSON parse 2", eventPayload.SERVICE_CONTEXT.S);
     var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
-    logger.info("svcContext: " + JSON.stringify(svcContext));
 
     var environmentApiPayload = {};
     environmentApiPayload.service = eventPayload.SERVICE_NAME.S;
@@ -174,7 +172,6 @@ function processServiceDetails(result) {
   return new Promise((resolve, reject) => {
     var output;
     if (result) {
-      logger.info("JSON parse 3", result);
       output = JSON.parse(result);
     }
     if (!output.data && !output.data.services && output.data.services.length > 0) {
@@ -189,9 +186,7 @@ function processServiceDetails(result) {
 
 function manageProcessItem(eventPayload, serviceDetails, configData, authToken) {
   return new Promise((resolve, reject) => {
-    logger.info("JSON parse 4", eventPayload.SERVICE_CONTEXT.S);
     var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
-    logger.info("svcContext: " + JSON.stringify(svcContext));
 
     var environmentApiPayload = {};
     environmentApiPayload.service = eventPayload.SERVICE_NAME.S;
@@ -266,7 +261,6 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
     } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.DELETE_ENVIRONMENT) {
       environmentApiPayload.endpoint = svcContext.endpoint;
       environmentApiPayload.logical_id = svcContext.environment;
-
       var event_status = eventPayload.EVENT_STATUS.S;
       if (event_status === 'STARTED') {
         environmentApiPayload.status = configData.ENVIRONMENT_DELETE_STARTED_STATUS;
@@ -323,8 +317,6 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
         rejectUnauthorized: false
       };
 
-
-      logger.info("svcPayload" + JSON.stringify(svcPayload));
       request(svcPayload, function (error, response, body) {
         if (response.statusCode === 200 && body && body.data) {
           return resolve(null, body);
@@ -364,7 +356,6 @@ function processEventCreateBranch(environmentPayload, service_id, configData, au
     environmentPayload.logical_id = nano_id + "-dev";
     environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
 
-    logger.info("environmentPayload: " + JSON.stringify(environmentPayload));
     var svcPayload = {
       uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
       method: "POST",
@@ -376,8 +367,6 @@ function processEventCreateBranch(environmentPayload, service_id, configData, au
       rejectUnauthorized: false
     };
 
-
-    logger.info("svcPayload" + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200 && body && body.data) {
         return resolve(body);
@@ -397,7 +386,6 @@ function processEventDeleteBranch(environmentPayload, service_id, configData, au
 
     exportable.getEnvironmentLogicalId(environmentPayload, service_id, configData, authToken)
       .then((logical_id) => {
-        logger.info("logical_id" + logical_id);
         environmentPayload.logical_id = logical_id;
 
         // Update catalog status first. @TODO
@@ -443,8 +431,6 @@ function processEventDeleteBranch(environmentPayload, service_id, configData, au
 function processEventUpdateEnvironment(environmentPayload, service_id, configData, authToken) {
   return new Promise((resolve, reject) => {
     var updatePayload = {};
-    logger.info("environmentPayload processEventUpdateEnvironment" + JSON.stringify(environmentPayload));
-    logger.info("safeDetails updateenv" + JSON.stringify(safeDetails));
     updatePayload.status = environmentPayload.status;
     updatePayload.endpoint = environmentPayload.endpoint;
     updatePayload.friendly_name = environmentPayload.friendly_name;
@@ -506,7 +492,6 @@ function getEnvironmentLogicalId(environmentPayload, service_id, configData, aut
     request(svcPayload, function (error, response, body) {
       if (response.statusCode === 200 && body) {
         var env_logical_id = null;
-        logger.info("JSON parse 0"+ body);
         var dataJson = typeof body === 'string' ? JSON.parse(body) : body;
         if (dataJson.data && dataJson.data.environment) {
           var envList = dataJson.data.environment;
@@ -533,7 +518,6 @@ function getEnvironmentLogicalId(environmentPayload, service_id, configData, aut
 
 function processBuild(payload, serviceDetails, configData, authToken) {
   return new Promise((resolve, reject) => {
-    logger.info("environmentPayload processBuild" + JSON.stringify(payload));
     exportable.triggerBuildJob(payload, serviceDetails, configData)
       .then(result => { return resolve(result) })
       .catch(error => {
@@ -637,16 +621,12 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
       json: updatePayload,
       rejectUnauthorized: false
     };
-    logger.info("safe svcpayload ****" + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200) {
-        logger.info("response ***" + JSON.stringify(response));
-        logger.info("enviornmnet***" + JSON.stringify(environmentPayload));
         const timestamp = new Date().toISOString();
         const vaultLink = configData.TVAULT.HOSTNAME + "/#!/admin";
         environmentPayload['safe_details'] = { "name": safeName, "ts": timestamp, "link": vaultLink };
         safeDetails = environmentPayload['safe_details'];
-        logger.info("environmentPayload createsafe" + JSON.stringify(environmentPayload));
         return resolve(environmentPayload);
       } else {
         logger.error("Error creating safe: " + JSON.stringify(response));
@@ -663,7 +643,6 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
 function deleteSafe(environmentPayload, configData, authToken, envDetails) {
   return new Promise((resolve, reject) => {
     if (!configData.TVAULT && !configData.TVAULT.IS_ENABLED) {
-        logger.info('t-vault not enabled **', configData.TVAULT);
       return resolve({
         "error": "T-vault is not enabled",
       });
@@ -671,7 +650,7 @@ function deleteSafe(environmentPayload, configData, authToken, envDetails) {
     let safeName;
     if (envDetails.data && envDetails.data.count > 0 && envDetails.data.environment.length){
       const envResponse = envDetails.data.environment.filter(ele => ele.logical_id === environmentPayload.logical_id);
-      if (envResponse[0].metadata && envResponse[0].metadata.safe_details) {
+      if (envResponse.length && envResponse[0].metadata && envResponse[0].metadata.safe_details) {
         safeName = envResponse[0].metadata.safe_details.name;
       } else {
         return resolve({
@@ -692,10 +671,8 @@ function deleteSafe(environmentPayload, configData, authToken, envDetails) {
       },
       rejectUnauthorized: false
     };
-    logger.info("delete safe svcpayload ****" + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200) {
-        logger.info("response ***" + JSON.stringify(response));
         return resolve(body);
       } else {
         logger.error("Error deleting safe: " + JSON.stringify(response));
@@ -719,10 +696,8 @@ function getAdmins(environmentPayload, configData, authToken) {
         "Content-Type": "application/json"
       }
     };
-    logger.info("admin payload **" + JSON.stringify(payload));
     request(payload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200) {
-        logger.info("response **" + JSON.stringify(response));
         return resolve(JSON.parse(body));
       } else {
         logger.error("Error getting admins: " + JSON.stringify(response));
@@ -759,10 +734,8 @@ function addAdminsToSafe(environmentPayload, configData, authToken, result) {
       },
       json: updatePayload
     };
-    logger.info("add admin payload **" + JSON.stringify(payload));
     request(payload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200) {
-        logger.info("response **" + JSON.stringify(response));
         safeDetails['users'] = adminsList[0];
         return resolve(body);
       } else {
@@ -793,11 +766,9 @@ function getEnvDetails(environmentPayload, configData, authToken) {
         "Content-Type": "application/json"
       }
     };
-    logger.info("env details payload **" + JSON.stringify(payload));
     request(payload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200) {
-        logger.info("env details payload response **" + JSON.stringify(response));
-        return resolve(JSON.parse(response.body));
+        return resolve(body);
       } else {
         logger.error("Error getting environment details: " + JSON.stringify(response));
         return reject({
@@ -829,10 +800,8 @@ function createRole(environmentPayload, configData, authToken) {
       json: updatePayload,
       rejectUnauthorized: false
     };
-    logger.info("role svcpayload **" + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200) {
-        logger.info("response **" + JSON.stringify(response));
         safeDetails['role'] = response.data;
         return resolve(body);
       } else {
