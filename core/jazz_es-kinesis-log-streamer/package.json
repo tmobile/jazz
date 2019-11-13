@@ -10,9 +10,11 @@
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {    
+  "dependencies": {
     "unicode-byte-truncate": "*",
-    "request": "*"
+    "request": "*",
+    "uuid": "*",
+    "aws-sdk": "*"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.2.1",
