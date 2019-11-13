@@ -8,8 +8,8 @@
     "name": "Jazz"
   },
   "scripts": {
-    "test": "mocha",
-    "start": "node index.js"
+    "test": "nyc mocha",
+    "coverage": "nyc npm run test"
   },
   "dependencies": {
     "aws-arn-parser": "*",
@@ -26,6 +26,7 @@
     "aws-lambda-mock-context": "^3.1.1",
     "aws-sdk-mock": "^1.7.0",
     "chai": "^3.5.0",
+    "nyc": "^13.3.0",
     "mocha": "^5.2.0",
     "sinon": "^5.0.10"
   }

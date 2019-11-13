@@ -1,0 +1,5 @@
+{
+  "T_VAULT_API": "{tvault-host-name}/vault/v2",
+  "T_VAULT_USERNAME": "{tvault-username}",
+  "T_VAULT_PASSWORD": "{tvault-password}"
+}
