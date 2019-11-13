@@ -37,7 +37,7 @@ function validateSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.path) return reject({ "errorType": "inputError", "message": "Input path cannot be empty" });
     if (isEmpty(event.path)) return reject({ "errorType": "inputError", "message": "Input path cannot be empty" });
-    if (!event.path.safename) return reject({ "errorType": "inputError", "message": "Following field(s) are required in path- safename" });
+    if (!event.path.safename) return reject({ "errorType": "inputError", "message": "Following field(s) are required in path - safename" });
     return resolve();
   });
 }
@@ -66,7 +66,7 @@ function validateGetRoleInSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.query) return reject({ "errorType": "inputError", "message": "Query cannot be empty" });
     if (isEmpty(event.query)) return reject({ "errorType": "inputError", "message": "Query cannot be empty" });
-    if (!event.query.rolename) return reject({ "errorType": "inputError", "message": "Following field(s) are required in query- rolename" });
+    if (!event.query.rolename) return reject({ "errorType": "inputError", "message": "Following field(s) are required in query - rolename" });
     return resolve();
   });
 }
@@ -104,7 +104,7 @@ function validateFieldLength(data) {
     let lessLengthKeyList = Object.keys(data).filter((field) => {
       if (global.globalConfig.FIELD_LENGTH_CONSTRAINTS[field] && data[field].length <= global.globalConfig.FIELD_LENGTH_CONSTRAINTS[field]) return field;
     });
-    if (lessLengthKeyList.length > 0) return reject({ "errorType": "inputError", "message": `Following field(s) not satisfying the char length ${JSON.stringify(global.globalConfig.FIELD_LENGTH_CONSTRAINTS)} -  ${lessLengthKeyList}` });
+    if (lessLengthKeyList.length > 0) return reject({ "errorType": "inputError", "message": `Following field(s) not satisfying the char length ${JSON.stringify(global.globalConfig.FIELD_LENGTH_CONSTRAINTS)} - ${lessLengthKeyList}` });
     return resolve();
   });
 }

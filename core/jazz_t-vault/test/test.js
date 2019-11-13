@@ -63,7 +63,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating create safe input params with out event.body', (done) => {
+  it('should reject while validating create safe input params without event.body', (done) => {
     delete event.body;
     validations.validateCreateSafeInput(event)
       .catch((err) => {
@@ -75,7 +75,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating create safe input params with out required fields', (done) => {
+  it('should reject while validating create safe input params without required fields', (done) => {
     delete event.body.name;
     validations.validateCreateSafeInput(event)
       .catch((err) => {
@@ -107,7 +107,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating update safe input params with out event.body', (done) => {
+  it('should reject while validating update safe input params without event.body', (done) => {
     delete event.body;
     validations.validateUpdateSafeInput(event)
       .catch((err) => {
@@ -140,7 +140,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating with out event.path', (done) => {
+  it('should reject while validating without event.path', (done) => {
     validations.validateSafeInput(event)
       .catch((err) => {
         expect(err).to.include({
@@ -151,13 +151,13 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating path params with out safename', (done) => {
+  it('should reject while validating path params without safename', (done) => {
     event.path = { "name": "test" };
     validations.validateSafeInput(event)
       .catch((err) => {
         expect(err).to.include({
           errorType: 'inputError',
-          message: 'Following field(s) are required in path- safename'
+          message: 'Following field(s) are required in path - safename'
         });
       });
     done();
@@ -184,7 +184,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating create user in safe input params with out event.body', (done) => {
+  it('should reject while validating create user in safe input params without event.body', (done) => {
     delete event.body;
     validations.validateUserInSafeInput(event)
       .catch((err) => {
@@ -196,7 +196,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating create user in safe input params with out required fields', (done) => {
+  it('should reject while validating create user in safe input params without required fields', (done) => {
     event.body = { "name": "safe" };
     validations.validateUserInSafeInput(event)
       .catch((err) => {
@@ -229,7 +229,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating create role in safe input params with out event.body', (done) => {
+  it('should reject while validating create role in safe input params without event.body', (done) => {
     delete event.body;
     validations.validateRoleInSafeInput(event)
       .catch((err) => {
@@ -241,7 +241,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating create role in safe input params with out required fields', (done) => {
+  it('should reject while validating create role in safe input params without required fields', (done) => {
     event.body = { "name": "safe" };
     validations.validateRoleInSafeInput(event)
       .catch((err) => {
@@ -274,7 +274,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating with out event.query', (done) => {
+  it('should reject while validating without event.query', (done) => {
     validations.validateGetRoleInSafeInput(event)
       .catch((err) => {
         expect(err).to.include({
@@ -285,13 +285,13 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating query params with out rolename', (done) => {
+  it('should reject while validating query params without rolename', (done) => {
     event.query = { "name": "test" };
     validations.validateGetRoleInSafeInput(event)
       .catch((err) => {
         expect(err).to.include({
           errorType: 'inputError',
-          message: 'Following field(s) are required in query- rolename'
+          message: 'Following field(s) are required in query - rolename'
         });
       });
     done();
@@ -318,7 +318,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating create user in vault input params with out event.body', (done) => {
+  it('should reject while validating create user in vault input params without event.body', (done) => {
     delete event.body;
     validations.validateUserInVaultInput(event)
       .catch((err) => {
@@ -330,7 +330,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating create user in vault input params with out required fields', (done) => {
+  it('should reject while validating create user in vault input params without required fields', (done) => {
     event.body = { "name": "safe" };
     validations.validateUserInVaultInput(event)
       .catch((err) => {
@@ -363,7 +363,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating delete user from vault input params with out event.body', (done) => {
+  it('should reject while validating delete user from vault input params without event.body', (done) => {
     delete event.body;
     validations.validateUserInVaultDeleteInput(event)
       .catch((err) => {
@@ -375,7 +375,7 @@ describe('Validations', () => {
     done();
   });
 
-  it('should reject while validating delete user from vault input params with out required fields', (done) => {
+  it('should reject while validating delete user from vault input params without required fields', (done) => {
     event.body = { "name": "safe" };
     validations.validateUserInVaultDeleteInput(event)
       .catch((err) => {
@@ -423,7 +423,7 @@ describe('Validations', () => {
       .catch((err) => {
         expect(err).to.include({
           errorType: 'inputError',
-          message: 'Following field(s) not satisfying the char length {"name":3,"description":10} -  name,description'
+          message: 'Following field(s) not satisfying the char length {"name":3,"description":10} - name, description'
         });
       });
     done();
@@ -3521,12 +3521,12 @@ describe('Index file - Common scenarios', () => {
     vaultToken = "s.ktdfdsfltn";
   });
 
-  it('Should throw error if not a valid resourcePath', (done) => { 
+  it('Should throw error if not a valid resourcePath', (done) => {
     event.resourcePath = "something";
-    let errorResp = {"errorType":"BadRequest","message":"The requested method is not supported."};
+    let errorResp = { "errorType": "BadRequest", "message": "The requested method is not supported." };
 
     index.handler(event, context, (err, res) => {
-      expect(err).to.eq(JSON.stringify(errorResp));      
+      expect(err).to.eq(JSON.stringify(errorResp));
     })
     done();
   });
