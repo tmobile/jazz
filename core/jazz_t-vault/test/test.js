@@ -1937,7 +1937,8 @@ describe('Index file - Create user in safe', () => {
         "safename": "testsafe"
       },
       "body": {
-        "username": "test@test.com"
+        "username": "test@test.com",
+        "permission": "read"
       }
     };
     context = awsContext();
@@ -1954,6 +1955,7 @@ describe('Index file - Create user in safe', () => {
     const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createUserInSafeStub = sinon.stub(index, "createUserInSafe").resolves();
     let error = "{\"errorType\":\"BadRequest\",\"message\":\"Method cannot be empty\"}";
@@ -1964,12 +1966,14 @@ describe('Index file - Create user in safe', () => {
       sinon.assert.notCalled(validateUserInSafeInputStub);
       sinon.assert.notCalled(genericInputValidationStub);
       sinon.assert.notCalled(validateFieldLengthStub);
+      sinon.assert.notCalled(validateEnumStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(createUserInSafeStub);
       validateSafeInputStub.restore();
       validateUserInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateFieldLengthStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createUserInSafeStub.restore();
     })
@@ -1982,6 +1986,7 @@ describe('Index file - Create user in safe', () => {
     const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createUserInSafeStub = sinon.stub(index, "createUserInSafe").resolves();
     let error = "{\"errorType\":\"Unauthorized\",\"message\":\"You aren't authorized to access this service\"}";
@@ -1992,12 +1997,14 @@ describe('Index file - Create user in safe', () => {
       sinon.assert.notCalled(validateUserInSafeInputStub);
       sinon.assert.notCalled(genericInputValidationStub);
       sinon.assert.notCalled(validateFieldLengthStub);
+      sinon.assert.notCalled(validateEnumStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(createUserInSafeStub);
       validateSafeInputStub.restore();
       validateUserInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateFieldLengthStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createUserInSafeStub.restore();
     })
@@ -2009,6 +2016,7 @@ describe('Index file - Create user in safe', () => {
     const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createUserInSafeStub = sinon.stub(index, "createUserInSafe").resolves();
 
@@ -2017,12 +2025,14 @@ describe('Index file - Create user in safe', () => {
       sinon.assert.calledOnce(validateUserInSafeInputStub);
       sinon.assert.calledTwice(genericInputValidationStub);
       sinon.assert.calledOnce(validateFieldLengthStub);
+      sinon.assert.calledOnce(validateEnumStub);
       sinon.assert.calledOnce(getVaultTokenStub);
       sinon.assert.calledOnce(createUserInSafeStub);
       validateSafeInputStub.restore();
       validateUserInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateFieldLengthStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createUserInSafeStub.restore();
     })
@@ -2035,6 +2045,7 @@ describe('Index file - Create user in safe', () => {
     const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createUserInSafeStub = sinon.stub(index, "createUserInSafe").resolves();
 
@@ -2045,12 +2056,14 @@ describe('Index file - Create user in safe', () => {
       sinon.assert.notCalled(validateUserInSafeInputStub);
       sinon.assert.notCalled(genericInputValidationStub);
       sinon.assert.notCalled(validateFieldLengthStub);
+      sinon.assert.notCalled(validateEnumStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(createUserInSafeStub);
       validateSafeInputStub.restore();
       validateUserInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateFieldLengthStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createUserInSafeStub.restore();
     })
@@ -2063,6 +2076,7 @@ describe('Index file - Create user in safe', () => {
     const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").rejects(error);
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createUserInSafeStub = sinon.stub(index, "createUserInSafe").resolves();
 
@@ -2073,12 +2087,14 @@ describe('Index file - Create user in safe', () => {
       sinon.assert.calledOnce(validateUserInSafeInputStub);
       sinon.assert.notCalled(genericInputValidationStub);
       sinon.assert.notCalled(validateFieldLengthStub);
+      sinon.assert.notCalled(validateEnumStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(createUserInSafeStub);
       validateSafeInputStub.restore();
       validateUserInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateFieldLengthStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createUserInSafeStub.restore();
     })
@@ -2091,6 +2107,7 @@ describe('Index file - Create user in safe', () => {
     const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").rejects(error);
     const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createUserInSafeStub = sinon.stub(index, "createUserInSafe").resolves();
 
@@ -2101,12 +2118,14 @@ describe('Index file - Create user in safe', () => {
       sinon.assert.calledOnce(validateUserInSafeInputStub);
       sinon.assert.calledOnce(genericInputValidationStub);
       sinon.assert.notCalled(validateFieldLengthStub);
+      sinon.assert.notCalled(validateEnumStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(createUserInSafeStub);
       validateSafeInputStub.restore();
       validateUserInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateFieldLengthStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createUserInSafeStub.restore();
     })
@@ -2119,6 +2138,7 @@ describe('Index file - Create user in safe', () => {
     const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").rejects(error);
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createUserInSafeStub = sinon.stub(index, "createUserInSafe").resolves();
 
@@ -2128,13 +2148,46 @@ describe('Index file - Create user in safe', () => {
       sinon.assert.calledOnce(validateSafeInputStub);
       sinon.assert.calledOnce(validateUserInSafeInputStub);
       sinon.assert.calledTwice(genericInputValidationStub);
-      sinon.assert.calledOnce(validateFieldLengthStub);
+      sinon.assert.calledOnce(validateFieldLengthStub)
+      sinon.assert.notCalled(validateEnumStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(createUserInSafeStub);
       validateSafeInputStub.restore();
       validateUserInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateFieldLengthStub.restore();
+      validateEnumStub.restore();
+      getVaultTokenStub.restore();
+      createUserInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateEnum throws error', (done) => {
+    let error = { "errorType": "inputError", "message": 'Following field(s) has invalid values - permission . Expecting values are {"permission":["read","write"]}' };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").rejects(error);
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createUserInSafeStub = sinon.stub(index, "createUserInSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": 'Following field(s) has invalid values - permission . Expecting values are {"permission":["read","write"]}' }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateUserInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(validateFieldLengthStub)
+      sinon.assert.calledOnce(validateEnumStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createUserInSafeStub);
+      validateSafeInputStub.restore();
+      validateUserInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      validateFieldLengthStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createUserInSafeStub.restore();
     })
@@ -2147,6 +2200,7 @@ describe('Index file - Create user in safe', () => {
     const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").rejects(error);
     const createUserInSafeStub = sinon.stub(index, "createUserInSafe").resolves();
 
@@ -2158,12 +2212,14 @@ describe('Index file - Create user in safe', () => {
       sinon.assert.calledOnce(validateUserInSafeInputStub);
       sinon.assert.calledTwice(genericInputValidationStub);
       sinon.assert.calledOnce(validateFieldLengthStub);
+      sinon.assert.calledOnce(validateEnumStub);
       sinon.assert.calledOnce(getVaultTokenStub);
       sinon.assert.notCalled(createUserInSafeStub);
       validateSafeInputStub.restore();
       validateUserInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateFieldLengthStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createUserInSafeStub.restore();
     })
@@ -2176,6 +2232,7 @@ describe('Index file - Create user in safe', () => {
     const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateFieldLengthStub = sinon.stub(validations, "validateFieldLength").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves("s.token");
     const createUserInSafeStub = sinon.stub(index, "createUserInSafe").rejects(error);
 
@@ -2187,12 +2244,14 @@ describe('Index file - Create user in safe', () => {
       sinon.assert.calledOnce(validateUserInSafeInputStub);
       sinon.assert.calledTwice(genericInputValidationStub);
       sinon.assert.calledOnce(validateFieldLengthStub);
+      sinon.assert.calledOnce(validateEnumStub);
       sinon.assert.calledOnce(getVaultTokenStub);
       sinon.assert.calledOnce(createUserInSafeStub);
       validateSafeInputStub.restore();
       validateUserInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateFieldLengthStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createUserInSafeStub.restore();
     })
@@ -2436,7 +2495,8 @@ describe('Index file - Create role in safe', () => {
         "safename": "testsafe"
       },
       "body": {
-        "arn": "arn:aws:iam::1234567889:role/test_role"
+        "arn": "arn:aws:iam::1234567889:role/test_role",
+        "permission": "read"
       }
     };
     context = awsContext();
@@ -2453,6 +2513,7 @@ describe('Index file - Create role in safe', () => {
     const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
     let error = "{\"errorType\":\"BadRequest\",\"message\":\"Method cannot be empty\"}";
@@ -2463,12 +2524,14 @@ describe('Index file - Create role in safe', () => {
       sinon.assert.notCalled(validateRoleInSafeInputStub);
       sinon.assert.notCalled(genericInputValidationStub);
       sinon.assert.notCalled(validateRoleArnStub);
+      sinon.assert.notCalled(validateEnumStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(createRoleInSafeStub);
       validateSafeInputStub.restore();
       validateRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateRoleArnStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createRoleInSafeStub.restore();
     })
@@ -2481,6 +2544,7 @@ describe('Index file - Create role in safe', () => {
     const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
     let error = "{\"errorType\":\"Unauthorized\",\"message\":\"You aren't authorized to access this service\"}";
@@ -2491,12 +2555,14 @@ describe('Index file - Create role in safe', () => {
       sinon.assert.notCalled(validateRoleInSafeInputStub);
       sinon.assert.notCalled(genericInputValidationStub);
       sinon.assert.notCalled(validateRoleArnStub);
+      sinon.assert.notCalled(validateEnumStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(createRoleInSafeStub);
       validateSafeInputStub.restore();
       validateRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateRoleArnStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createRoleInSafeStub.restore();
     })
@@ -2508,6 +2574,7 @@ describe('Index file - Create role in safe', () => {
     const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
 
@@ -2516,12 +2583,14 @@ describe('Index file - Create role in safe', () => {
       sinon.assert.calledOnce(validateRoleInSafeInputStub);
       sinon.assert.calledTwice(genericInputValidationStub);
       sinon.assert.calledOnce(validateRoleArnStub);
+      sinon.assert.calledOnce(validateEnumStub);
       sinon.assert.calledOnce(getVaultTokenStub);
       sinon.assert.calledOnce(createRoleInSafeStub);
       validateSafeInputStub.restore();
       validateRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateRoleArnStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createRoleInSafeStub.restore();
     })
@@ -2534,6 +2603,7 @@ describe('Index file - Create role in safe', () => {
     const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
 
@@ -2544,12 +2614,14 @@ describe('Index file - Create role in safe', () => {
       sinon.assert.notCalled(validateRoleInSafeInputStub);
       sinon.assert.notCalled(genericInputValidationStub);
       sinon.assert.notCalled(validateRoleArnStub);
+      sinon.assert.notCalled(validateEnumStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(createRoleInSafeStub);
       validateSafeInputStub.restore();
       validateRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateRoleArnStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createRoleInSafeStub.restore();
     })
@@ -2562,6 +2634,7 @@ describe('Index file - Create role in safe', () => {
     const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").rejects(error);
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
 
@@ -2572,12 +2645,14 @@ describe('Index file - Create role in safe', () => {
       sinon.assert.calledOnce(validateRoleInSafeInputStub);
       sinon.assert.calledTwice(genericInputValidationStub);
       sinon.assert.notCalled(validateRoleArnStub);
+      sinon.assert.notCalled(validateEnumStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(createRoleInSafeStub);
       validateSafeInputStub.restore();
       validateRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateRoleArnStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createRoleInSafeStub.restore();
     })
@@ -2590,6 +2665,7 @@ describe('Index file - Create role in safe', () => {
     const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").rejects(error);
     const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
 
@@ -2599,13 +2675,15 @@ describe('Index file - Create role in safe', () => {
       sinon.assert.calledOnce(validateSafeInputStub);
       sinon.assert.notCalled(validateRoleInSafeInputStub);
       sinon.assert.calledOnce(genericInputValidationStub);
-      sinon.assert.notCalled(validateRoleArnStub);
+      sinon.assert.notCalled(validateRoleArnStub)
+      sinon.assert.notCalled(validateEnumStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(createRoleInSafeStub);
       validateSafeInputStub.restore();
       validateRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateRoleArnStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createRoleInSafeStub.restore();
     })
@@ -2618,6 +2696,7 @@ describe('Index file - Create role in safe', () => {
     const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").rejects(error);
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
 
@@ -2627,13 +2706,46 @@ describe('Index file - Create role in safe', () => {
       sinon.assert.calledOnce(validateSafeInputStub);
       sinon.assert.calledOnce(validateRoleInSafeInputStub);
       sinon.assert.calledTwice(genericInputValidationStub);
-      sinon.assert.calledOnce(validateRoleArnStub);
+      sinon.assert.calledOnce(validateRoleArnStub)
+      sinon.assert.notCalled(validateEnumStub);;
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(createRoleInSafeStub);
       validateSafeInputStub.restore();
       validateRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateRoleArnStub.restore();
+      validateEnumStub.restore();
+      getVaultTokenStub.restore();
+      createRoleInSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateEnum throws error', (done) => {
+    let error = { "errorType": "inputError", "message": 'Following field(s) has invalid values - permission . Expecting values are {"permission":["read","write"]}' };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").rejects(error);
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": 'Following field(s) has invalid values - permission . Expecting values are {"permission":["read","write"]}' }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(validateRoleArnStub)
+      sinon.assert.calledOnce(validateEnumStub);;
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(createRoleInSafeStub);
+      validateSafeInputStub.restore();
+      validateRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createRoleInSafeStub.restore();
     })
@@ -2646,6 +2758,7 @@ describe('Index file - Create role in safe', () => {
     const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").rejects(error);
     const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
 
@@ -2657,12 +2770,14 @@ describe('Index file - Create role in safe', () => {
       sinon.assert.calledOnce(validateRoleInSafeInputStub);
       sinon.assert.calledTwice(genericInputValidationStub);
       sinon.assert.calledOnce(validateRoleArnStub);
+      sinon.assert.calledOnce(validateEnumStub);
       sinon.assert.calledOnce(getVaultTokenStub);
       sinon.assert.notCalled(createRoleInSafeStub);
       validateSafeInputStub.restore();
       validateRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateRoleArnStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createRoleInSafeStub.restore();
     })
@@ -2675,6 +2790,7 @@ describe('Index file - Create role in safe', () => {
     const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
     const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const validateEnumStub = sinon.stub(validations, "validateEnum").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves("s.token");
     const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").rejects(error);
 
@@ -2686,12 +2802,14 @@ describe('Index file - Create role in safe', () => {
       sinon.assert.calledOnce(validateRoleInSafeInputStub);
       sinon.assert.calledTwice(genericInputValidationStub);
       sinon.assert.calledOnce(validateRoleArnStub);
+      sinon.assert.calledOnce(validateEnumStub);
       sinon.assert.calledOnce(getVaultTokenStub);
       sinon.assert.calledOnce(createRoleInSafeStub);
       validateSafeInputStub.restore();
       validateRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
       validateRoleArnStub.restore();
+      validateEnumStub.restore();
       getVaultTokenStub.restore();
       createRoleInSafeStub.restore();
     })
