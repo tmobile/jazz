@@ -62,6 +62,15 @@ function validateRoleInSafeInput(event) {
   });
 }
 
+function validateDeleteRoleInSafeInput(event) {
+  return new Promise((resolve, reject) => {
+    if (event && !event.body) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
+    if (isEmpty(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
+    if (!event.body.arn) return reject({ "errorType": "inputError", "message": "Following field(s) are required - arn" });
+    return resolve();
+  });
+}
+
 function validateGetRoleInSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.query) return reject({ "errorType": "inputError", "message": "Query cannot be empty" });
@@ -109,6 +118,15 @@ function validateFieldLength(data) {
   });
 }
 
+function validateEnum(data) {
+  return new Promise((resolve, reject) => {
+    let invalidEnumList = Object.keys(data).filter((field) => {
+      if (global.globalConfig.PERMISSION_LEVELS[field] && !global.globalConfig.PERMISSION_LEVELS[field].includes(data[field])) return field;
+    });
+    if (invalidEnumList.length > 0) return reject({ "errorType": "inputError", "message": `Following field(s) has invalid values - ${invalidEnumList} . Expecting values are ${JSON.stringify(global.globalConfig.PERMISSION_LEVELS)}` });
+    return resolve();
+  });
+}
 const isEmpty = (obj) => {
   if (obj == null) return true;
   if (obj.length > 0) return false;
@@ -140,10 +158,12 @@ module.exports = {
   validateUserInSafeInput,
   validateGetRoleInSafeInput,
   validateRoleInSafeInput,
+  validateDeleteRoleInSafeInput,
   validateUserInVaultInput,
   validateUserInVaultDeleteInput,
   validateRoleArn,
   validateFieldLength,
+  validateEnum,
   genericInputValidation,
   isEmpty
 };

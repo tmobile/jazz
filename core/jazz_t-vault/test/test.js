@@ -164,7 +164,7 @@ describe('Validations', () => {
   });
 
   it('should resolve while validating create user in safe input params with valid input', (done) => {
-    event.body = { "username": "test@test.com" }
+    event.body = { "username": "test@test.com", "permission": "read" }
     validations.validateUserInSafeInput(event)
       .then((result) => {
         assert(true);
@@ -202,14 +202,14 @@ describe('Validations', () => {
       .catch((err) => {
         expect(err).to.include({
           errorType: 'inputError',
-          message: 'Following field(s) are required - username'
+          message: 'Following field(s) are required - username, permission'
         });
       });
     done();
   });
 
   it('should resolve while validating create role in safe input params with valid input', (done) => {
-    event.body = { "arn": "arn:aws:iam::1234567889:role/test_role" }
+    event.body = { "arn": "arn:aws:iam::1234567889:role/test_role", "permission": "read" }
     validations.validateRoleInSafeInput(event)
       .then((result) => {
         assert(true);
@@ -247,7 +247,7 @@ describe('Validations', () => {
       .catch((err) => {
         expect(err).to.include({
           errorType: 'inputError',
-          message: 'Following field(s) are required - arn'
+          message: 'Following field(s) are required - arn, permission'
         });
       });
     done();
@@ -292,6 +292,29 @@ describe('Validations', () => {
         expect(err).to.include({
           errorType: 'inputError',
           message: 'Following field(s) are required in query - rolename'
+        });
+      });
+    done();
+  });
+
+  it('should reject while validating delete role in safe without arn', (done) => {
+    validations.validateDeleteRoleInSafeInput(event)
+      .catch((err) => {
+        expect(err).to.include({
+          errorType: 'inputError',
+          message: 'Following field(s) are required - arn'
+        });
+      });
+    done();
+  });
+
+  it('should resolve while validating delete role with valid arn', (done) => {
+    event.body.arn = "arn:aws:iam::123456788909:role/test_role";
+    validations.validateDeleteRoleInSafeInput(event)
+      .catch((err) => {
+        expect(err).to.include({
+          errorType: 'inputError',
+          message: 'Following field(s) are required - username, password'
         });
       });
     done();
@@ -423,7 +446,7 @@ describe('Validations', () => {
       .catch((err) => {
         expect(err).to.include({
           errorType: 'inputError',
-          message: 'Following field(s) not satisfying the char length {"name":3,"description":10} - name, description'
+          message: 'Following field(s) not satisfying the char length {"name":3,"description":10} - name,description'
         });
       });
     done();
@@ -445,6 +468,27 @@ describe('Validations', () => {
         expect(err).to.include({
           errorType: 'inputError',
           message: 'Input cannot be empty'
+        });
+      });
+    done();
+  });
+
+  it('should resolve with valid enum values', (done) => {
+    let data = { "permission": "read" }
+    validations.validateEnum(data)
+      .then((result) => {
+        assert(true);
+      })
+    done();
+  });
+
+  it('should rejects with invalid enum values', (done) => {
+    let data = { "permission": "read-write" }
+    validations.validateEnum(data)
+      .catch((err) => {
+        expect(err).to.include({
+          errorType: 'inputError',
+          message: 'Following field(s) has invalid values - permission . Expecting values are {"permission":["read","write"]}'
         });
       });
     done();
@@ -2014,7 +2058,7 @@ describe('Index file - Create user in safe', () => {
   });
 
   it('should throw error if validateUserInSafeInput throws error', (done) => {
-    let error = { "errorType": "inputError", "message": "Following field(s) are required - username" };
+    let error = { "errorType": "inputError", "message": "Following field(s) are required - username, permission" };
     const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
     const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").rejects(error);
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
@@ -2022,7 +2066,7 @@ describe('Index file - Create user in safe', () => {
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createUserInSafeStub = sinon.stub(index, "createUserInSafe").resolves();
 
-    let errResp = { "errorType": "BadRequest", "message": "Following field(s) are required - username" }
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) are required - username, permission" }
     index.handler(event, context, (err, res) => {
       expect(err).to.eq(JSON.stringify(errResp));
       sinon.assert.calledOnce(validateSafeInputStub);
@@ -2513,7 +2557,7 @@ describe('Index file - Create role in safe', () => {
   });
 
   it('should throw error if validateRoleInSafeInput throws error', (done) => {
-    let error = { "errorType": "inputError", "message": "Following field(s) are required - arn" };
+    let error = { "errorType": "inputError", "message": "Following field(s) are required - arn, permission" };
     const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
     const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").rejects(error);
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
@@ -2521,7 +2565,7 @@ describe('Index file - Create role in safe', () => {
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
 
-    let errResp = { "errorType": "BadRequest", "message": "Following field(s) are required - arn" }
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) are required - arn, permission" }
     index.handler(event, context, (err, res) => {
       expect(err).to.eq(JSON.stringify(errResp));
       sinon.assert.calledOnce(validateSafeInputStub);
@@ -2667,7 +2711,7 @@ describe('Index file - Delete role from safe', () => {
         "safename": "testsafe"
       },
       "body": {
-        "rolename": "testrole"
+        "arn": "arn:aws:iam::1234567889:role/test_role"
       }
     };
     context = awsContext();
@@ -2681,8 +2725,9 @@ describe('Index file - Delete role from safe', () => {
   it('should throw error if the method is empty', (done) => {
     delete event.method;
     const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
-    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const validateDeleteRoleInSafeInputStub = sinon.stub(validations, "validateDeleteRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
     let error = "{\"errorType\":\"BadRequest\",\"message\":\"Method cannot be empty\"}";
@@ -2690,13 +2735,15 @@ describe('Index file - Delete role from safe', () => {
     index.handler(event, context, (err, res) => {
       expect(err).to.eq(error);
       sinon.assert.notCalled(validateSafeInputStub);
-      sinon.assert.notCalled(validateRoleInSafeInputStub);
+      sinon.assert.notCalled(validateDeleteRoleInSafeInputStub);
       sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(validateRoleArnStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(deleteRoleFromSafeStub);
       validateSafeInputStub.restore();
-      validateRoleInSafeInputStub.restore();
+      validateDeleteRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
       getVaultTokenStub.restore();
       deleteRoleFromSafeStub.restore();
     })
@@ -2706,9 +2753,9 @@ describe('Index file - Delete role from safe', () => {
   it('should throw error if the principalId is not there', (done) => {
     delete event.principalId;
     const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
-    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const validateDeleteRoleInSafeInputStub = sinon.stub(validations, "validateDeleteRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
-
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
     let error = "{\"errorType\":\"Unauthorized\",\"message\":\"You aren't authorized to access this service\"}";
@@ -2716,13 +2763,15 @@ describe('Index file - Delete role from safe', () => {
     index.handler(event, context, (err, res) => {
       expect(err).to.eq(error);
       sinon.assert.notCalled(validateSafeInputStub);
-      sinon.assert.notCalled(validateRoleInSafeInputStub);
+      sinon.assert.notCalled(validateDeleteRoleInSafeInputStub);
       sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(validateRoleArnStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(deleteRoleFromSafeStub);
       validateSafeInputStub.restore();
-      validateRoleInSafeInputStub.restore();
+      validateDeleteRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
       getVaultTokenStub.restore();
       deleteRoleFromSafeStub.restore();
     })
@@ -2731,20 +2780,23 @@ describe('Index file - Delete role from safe', () => {
 
   it('should delete role from safe with valid input', (done) => {
     const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
-    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const validateDeleteRoleInSafeInputStub = sinon.stub(validations, "validateDeleteRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
 
     index.handler(event, context, (err, res) => {
       sinon.assert.calledOnce(validateSafeInputStub);
-      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledOnce(validateDeleteRoleInSafeInputStub);
       sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(validateRoleArnStub);
       sinon.assert.calledOnce(getVaultTokenStub);
       sinon.assert.calledOnce(deleteRoleFromSafeStub);
       validateSafeInputStub.restore();
-      validateRoleInSafeInputStub.restore();
+      validateDeleteRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
       getVaultTokenStub.restore();
       deleteRoleFromSafeStub.restore();
     })
@@ -2754,8 +2806,9 @@ describe('Index file - Delete role from safe', () => {
   it('should throw error if validateSafeInput throws error', (done) => {
     let error = { "errorType": "inputError", "message": "Input cannot be empty" };
     const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").rejects(error);
-    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const validateDeleteRoleInSafeInputStub = sinon.stub(validations, "validateDeleteRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
 
@@ -2763,38 +2816,43 @@ describe('Index file - Delete role from safe', () => {
     index.handler(event, context, (err, res) => {
       expect(err).to.eq(JSON.stringify(errResp));
       sinon.assert.calledOnce(validateSafeInputStub);
-      sinon.assert.notCalled(validateRoleInSafeInputStub);
+      sinon.assert.notCalled(validateDeleteRoleInSafeInputStub);
       sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(validateRoleArnStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(deleteRoleFromSafeStub);
       validateSafeInputStub.restore();
-      validateRoleInSafeInputStub.restore();
+      validateDeleteRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
       getVaultTokenStub.restore();
       deleteRoleFromSafeStub.restore();
     })
     done();
   });
 
-  it('should throw error if validateRoleInSafeInput throws error', (done) => {
-    let error = { "errorType": "inputError", "message": "Following field(s) are required - rolename" };
+  it('should throw error if validateDeleteRoleInSafeInput throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "Following field(s) are required - arn" };
     const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
-    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").rejects(error);
+    const validateDeleteRoleInSafeInputStub = sinon.stub(validations, "validateDeleteRoleInSafeInput").rejects(error);
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
 
-    let errResp = { "errorType": "BadRequest", "message": "Following field(s) are required - rolename" }
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) are required - arn" }
     index.handler(event, context, (err, res) => {
       expect(err).to.eq(JSON.stringify(errResp));
       sinon.assert.calledOnce(validateSafeInputStub);
-      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledOnce(validateDeleteRoleInSafeInputStub);
       sinon.assert.notCalled(genericInputValidationStub);
+      sinon.assert.notCalled(validateRoleArnStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(deleteRoleFromSafeStub);
       validateSafeInputStub.restore();
-      validateRoleInSafeInputStub.restore();
+      validateDeleteRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
       getVaultTokenStub.restore();
       deleteRoleFromSafeStub.restore();
     })
@@ -2802,24 +2860,55 @@ describe('Index file - Delete role from safe', () => {
   });
 
   it('should throw error if genericInputValidation throws error', (done) => {
-    let error = { "errorType": "inputError", "message": "Following field(s) has empty value - rolename" };
+    let error = { "errorType": "inputError", "message": "Following field(s) has empty value - arn" };
     const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
-    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const validateDeleteRoleInSafeInputStub = sinon.stub(validations, "validateDeleteRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").rejects(error);
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
 
-    let errResp = { "errorType": "BadRequest", "message": "Following field(s) has empty value - rolename" }
+    let errResp = { "errorType": "BadRequest", "message": "Following field(s) has empty value - arn" }
     index.handler(event, context, (err, res) => {
       expect(err).to.eq(JSON.stringify(errResp));
       sinon.assert.calledOnce(validateSafeInputStub);
-      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledOnce(validateDeleteRoleInSafeInputStub);
       sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.notCalled(validateRoleArnStub);
       sinon.assert.notCalled(getVaultTokenStub);
       sinon.assert.notCalled(deleteRoleFromSafeStub);
       validateSafeInputStub.restore();
-      validateRoleInSafeInputStub.restore();
+      validateDeleteRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
+      getVaultTokenStub.restore();
+      deleteRoleFromSafeStub.restore();
+    })
+    done();
+  });
+
+  it('should throw error if validateRoleArn throws error', (done) => {
+    let error = { "errorType": "inputError", "message": "The provided arn is not valid - arn:aws:iam::1234567889:role/test_role" };
+    const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
+    const validateDeleteRoleInSafeInputStub = sinon.stub(validations, "validateDeleteRoleInSafeInput").resolves();
+    const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").rejects(error);
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
+    const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
+    const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
+
+    let errResp = { "errorType": "BadRequest", "message": "The provided arn is not valid - arn:aws:iam::1234567889:role/test_role" }
+    index.handler(event, context, (err, res) => {
+      expect(err).to.eq(JSON.stringify(errResp));
+      sinon.assert.calledOnce(validateSafeInputStub);
+      sinon.assert.calledOnce(validateDeleteRoleInSafeInputStub);
+      sinon.assert.calledOnce(genericInputValidationStub);
+      sinon.assert.notCalled(validateRoleArnStub);
+      sinon.assert.notCalled(getVaultTokenStub);
+      sinon.assert.notCalled(deleteRoleFromSafeStub);
+      validateSafeInputStub.restore();
+      validateDeleteRoleInSafeInputStub.restore();
+      genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
       getVaultTokenStub.restore();
       deleteRoleFromSafeStub.restore();
     })
@@ -2829,8 +2918,9 @@ describe('Index file - Delete role from safe', () => {
   it('should throw error if getVaultToken fails', (done) => {
     let error = { "error": "InternalServerError", "message": "Internal server error" };
     const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
-    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const validateDeleteRoleInSafeInputStub = sinon.stub(validations, "validateDeleteRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").rejects(error);
     const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").resolves();
 
@@ -2839,13 +2929,15 @@ describe('Index file - Delete role from safe', () => {
     index.handler(event, context, (err, res) => {
       expect(err).to.eq(JSON.stringify(errorResp));
       sinon.assert.calledOnce(validateSafeInputStub);
-      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledOnce(validateDeleteRoleInSafeInputStub);
       sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(validateRoleArnStub);
       sinon.assert.calledOnce(getVaultTokenStub);
       sinon.assert.notCalled(deleteRoleFromSafeStub);
       validateSafeInputStub.restore();
-      validateRoleInSafeInputStub.restore();
+      validateDeleteRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
       getVaultTokenStub.restore();
       deleteRoleFromSafeStub.restore();
     })
@@ -2855,8 +2947,9 @@ describe('Index file - Delete role from safe', () => {
   it('should throw error if deleteRoleFromSafe fails', (done) => {
     let error = { "error": "InternalServerError", "message": "Internal server error" };
     const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
-    const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
+    const validateDeleteRoleInSafeInputStub = sinon.stub(validations, "validateDeleteRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
+    const validateRoleArnStub = sinon.stub(validations, "validateRoleArn").resolves();
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves("s.token");
     const deleteRoleFromSafeStub = sinon.stub(index, "deleteRoleFromSafe").rejects(error);
 
@@ -2865,13 +2958,15 @@ describe('Index file - Delete role from safe', () => {
     index.handler(event, context, (err, res) => {
       expect(err).to.eq(JSON.stringify(errorResp));
       sinon.assert.calledOnce(validateSafeInputStub);
-      sinon.assert.calledOnce(validateRoleInSafeInputStub);
+      sinon.assert.calledOnce(validateDeleteRoleInSafeInputStub);
       sinon.assert.calledTwice(genericInputValidationStub);
+      sinon.assert.calledOnce(validateRoleArnStub);
       sinon.assert.calledOnce(getVaultTokenStub);
       sinon.assert.calledOnce(deleteRoleFromSafeStub);
       validateSafeInputStub.restore();
-      validateRoleInSafeInputStub.restore();
+      validateDeleteRoleInSafeInputStub.restore();
       genericInputValidationStub.restore();
+      validateRoleArnStub.restore();
       getVaultTokenStub.restore();
       deleteRoleFromSafeStub.restore();
     })

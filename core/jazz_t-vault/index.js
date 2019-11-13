@@ -127,6 +127,7 @@ function handler(event, context, cb) {
         .then(() => { return validations.genericInputValidation(event.body) })
         .then(() => { return validations.genericInputValidation(event.path) })
         .then(() => { return validations.validateFieldLength(event.body) })
+        .then(() => { return validations.validateEnum(event.body) })
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.createUserInSafe(event.body, event.path.safename, configData, vaultToken) })
         .then(result => {
@@ -182,6 +183,7 @@ function handler(event, context, cb) {
         .then(() => { return validations.genericInputValidation(event.path) })
         .then(() => { return validations.validateRoleInSafeInput(event) })
         .then(() => { return validations.validateRoleArn(event.body.arn) })
+        .then(() => { return validations.validateEnum(event.body) })
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.createRoleInSafe(event.body, event.path.safename, configData, vaultToken) })
         .then(result => {
@@ -197,9 +199,10 @@ function handler(event, context, cb) {
 
     else if (event && event.method === 'DELETE' && resourcePath.endsWith("/{safename}/role")) {
       validations.validateSafeInput(event)
-        .then(() => { return validations.validateRoleInSafeInput(event) })
+        .then(() => { return validations.validateDeleteRoleInSafeInput(event) })
         .then(() => { return validations.genericInputValidation(event.body) })
         .then(() => { return validations.genericInputValidation(event.path) })
+        .then(() => { return validations.validateRoleArn(event.body.arn) })
         .then(() => { return vault.getVaultToken(configData) })
         .then((vaultToken) => { return exportable.deleteRoleFromSafe(event.body, event.path.safename, configData, vaultToken) })
         .then(result => {

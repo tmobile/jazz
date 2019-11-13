@@ -129,7 +129,7 @@ function processRole(rolename, permission, configData, vaultToken) {
     .then((result) => {
       if (result) {
         let details = JSON.parse(result);
-        roleDetails[rolename] = { "arn": details.bound_iam_principal_arn[0], "permission": permission }
+        roleDetails[rolename] = { "arn": details.bound_iam_principal_arn[0], "permission": permission };
       }
       logger.debug("role details in processRole : " + JSON.stringify(roleDetails));
       resolve(roleDetails);
@@ -160,9 +160,9 @@ function getSafeInfo(safename, configData, vaultToken) {
         let safeDetails = JSON.parse(body);
         safeDetails.data.roles = safeDetails.data['aws-roles'];
         delete safeDetails.data['aws-roles'];
-        let userDetails = {}
-        for (key in safeDetails.data.users) {
-          userDetails[key] = {"permission": safeDetails.data.users[key]}
+        let userDetails = {};
+        for (let key in safeDetails.data.users) {
+          userDetails[key] = {"permission": safeDetails.data.users[key]};
         }
         delete safeDetails.data.users;
         safeDetails.data.users = userDetails;
@@ -247,7 +247,7 @@ function createUserInSafe(safeDetails, configData, vaultToken, onComplete) {
     },
     json: {
       "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.safename.toLowerCase()}`,
-      "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`,
+      "access": safeDetails.permission,
       "username": `${username}`
     },
     rejectUnauthorized: false
@@ -335,13 +335,10 @@ function getRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
   });
 }
 
-function createRole(roleDetails, configData, vaultToken, onComplete) {
-  let role = roleDetails.arn.split("/")[1];
-  let accountId = roleDetails.arn.split("/")[0].split(":")[4];
-  let rolename = `${accountId}_${role}`;
-  roleDetails.rolename = rolename;
+function createRole(roleDetails, configData, vaultToken, onComplete) { 
+  roleDetails.rolename = makeRolenameFromArn(roleDetails.arn);
 
-  getRoleDetails(rolename, configData, vaultToken)
+  getRoleDetails(roleDetails.rolename, configData, vaultToken)
     .then((result) => { return createOrAddRole(result, roleDetails, configData, vaultToken) })
     .then((result) => {
       logger.debug("Successfully created/added role. ");
@@ -387,7 +384,7 @@ function createRoleInSafe(safeDetails, configData, vaultToken) {
       },
       json: {
         "path": `${global.globalConfig.PATH_TO_SAFE}${safeDetails.safename.toLowerCase()}`,
-        "access": `${global.globalConfig.ACCESS_LEVEL_IN_SAFE}`,
+        "access": safeDetails.permission,
         "role": safeDetails.rolename
       },
       rejectUnauthorized: false
@@ -480,6 +477,7 @@ function createRoleInVault(roleDetails, configData, vaultToken) {
 }
 
 function deleteRoleFromSafe(safeDetails, configData, vaultToken, onComplete) {
+  safeDetails.rolename = makeRolenameFromArn(safeDetails.arn);
   let payload = {
     uri: `${configData.T_VAULT_API}${global.globalConfig.API.SAFE}${global.globalConfig.API.SAFE_ROLES}`,
     method: "DELETE",
@@ -570,6 +568,13 @@ function deleteUserFromVault(userDetails, configData, vaultToken, onComplete) {
       });
     }
   });
+}
+
+function makeRolenameFromArn(arn) {
+  let role = arn.split("/")[1];
+  let accountId = arn.split("/")[0].split(":")[4];
+  let rolename = `${accountId}_${role}`;
+  return rolename;
 }
 
 module.exports = {
