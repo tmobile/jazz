@@ -164,8 +164,9 @@ function handler(event, context, cb) {
       validations.validateSafeInput(event)
         .then(() => { return validations.validateGetRoleInSafeInput(event) })
         .then(() => { return validations.genericInputValidation(event.path) })
+        .then(() => { return validations.validateRoleArn(event.query.arn) })
         .then(() => { return vault.getVaultToken(configData) })
-        .then((vaultToken) => { return exportable.getRoleInSafe(event.query.rolename, event.path.safename, configData, vaultToken) })
+        .then((vaultToken) => { return exportable.getRoleInSafe(event.query.arn, event.path.safename, configData, vaultToken) })
         .then(result => {
           logger.info("Successfully got role details from safe");
           return cb(null, responseObj(result, event.query));
@@ -336,11 +337,11 @@ function deleteUserFromSafe(safeDetails, safename, configData, vaultToken) {
   });
 }
 
-function getRoleInSafe(rolename, safename, configData, vaultToken) {
+function getRoleInSafe(arn, safename, configData, vaultToken) {
   return new Promise((resolve, reject) => {
     let safeDetails = {};
     safeDetails.safename = safename;
-    safeDetails.rolename = rolename;
+    safeDetails.arn = arn;
     vault.getRoleInSafe(safeDetails, configData, vaultToken, function (err, data) {
       if (err) {
         return reject(err);

@@ -303,6 +303,7 @@ function deleteUserFromSafe(safeDetails, configData, vaultToken, onComplete) {
 }
 
 function getRoleInSafe(safeDetails, configData, vaultToken, onComplete) {
+  safeDetails.rolename = makeRolenameFromArn(safeDetails.arn);
   let payload = {
     uri: `${configData.T_VAULT_API}${global.globalConfig.API.GET_ROLE}${safeDetails.rolename}`,
     method: "GET",

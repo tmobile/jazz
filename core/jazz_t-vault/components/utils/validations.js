@@ -75,7 +75,7 @@ function validateGetRoleInSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.query) return reject({ "errorType": "inputError", "message": "Query cannot be empty" });
     if (isEmpty(event.query)) return reject({ "errorType": "inputError", "message": "Query cannot be empty" });
-    if (!event.query.rolename) return reject({ "errorType": "inputError", "message": "Following field(s) are required in query - rolename" });
+    if (!event.query.arn) return reject({ "errorType": "inputError", "message": "Following field(s) are required in query - arn" });
     return resolve();
   });
 }
