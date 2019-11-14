@@ -488,7 +488,7 @@ describe('Validations', () => {
       .catch((err) => {
         expect(err).to.include({
           errorType: 'inputError',
-          message: 'Following field(s) has invalid values - permission . Expecting values are {"permission":["read","write"]}'
+          message: 'Following field(s) has invalid values - permission. Expecting values are {"permission":["read","write"]}'
         });
       });
     done();
@@ -2164,7 +2164,7 @@ describe('Index file - Create user in safe', () => {
   });
 
   it('should throw error if validateEnum throws error', (done) => {
-    let error = { "errorType": "inputError", "message": 'Following field(s) has invalid values - permission . Expecting values are {"permission":["read","write"]}' };
+    let error = { "errorType": "inputError", "message": 'Following field(s) has invalid values - permission. Expecting values are {"permission":["read","write"]}' };
     const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
     const validateUserInSafeInputStub = sinon.stub(validations, "validateUserInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
@@ -2173,7 +2173,7 @@ describe('Index file - Create user in safe', () => {
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createUserInSafeStub = sinon.stub(index, "createUserInSafe").resolves();
 
-    let errResp = { "errorType": "BadRequest", "message": 'Following field(s) has invalid values - permission . Expecting values are {"permission":["read","write"]}' }
+    let errResp = { "errorType": "BadRequest", "message": 'Following field(s) has invalid values - permission. Expecting values are {"permission":["read","write"]}' }
     index.handler(event, context, (err, res) => {
       expect(err).to.eq(JSON.stringify(errResp));
       sinon.assert.calledOnce(validateSafeInputStub);
@@ -2722,7 +2722,7 @@ describe('Index file - Create role in safe', () => {
   });
 
   it('should throw error if validateEnum throws error', (done) => {
-    let error = { "errorType": "inputError", "message": 'Following field(s) has invalid values - permission . Expecting values are {"permission":["read","write"]}' };
+    let error = { "errorType": "inputError", "message": 'Following field(s) has invalid values - permission. Expecting values are {"permission":["read","write"]}' };
     const validateSafeInputStub = sinon.stub(validations, "validateSafeInput").resolves();
     const validateRoleInSafeInputStub = sinon.stub(validations, "validateRoleInSafeInput").resolves();
     const genericInputValidationStub = sinon.stub(validations, "genericInputValidation").resolves();
@@ -2731,7 +2731,7 @@ describe('Index file - Create role in safe', () => {
     const getVaultTokenStub = sinon.stub(vault, "getVaultToken").resolves();
     const createRoleInSafeStub = sinon.stub(index, "createRoleInSafe").resolves();
 
-    let errResp = { "errorType": "BadRequest", "message": 'Following field(s) has invalid values - permission . Expecting values are {"permission":["read","write"]}' }
+    let errResp = { "errorType": "BadRequest", "message": 'Following field(s) has invalid values - permission. Expecting values are {"permission":["read","write"]}' }
     index.handler(event, context, (err, res) => {
       expect(err).to.eq(JSON.stringify(errResp));
       sinon.assert.calledOnce(validateSafeInputStub);

@@ -123,7 +123,7 @@ function validateEnum(data) {
     let invalidEnumList = Object.keys(data).filter((field) => {
       if (global.globalConfig.PERMISSION_LEVELS[field] && !global.globalConfig.PERMISSION_LEVELS[field].includes(data[field])) return field;
     });
-    if (invalidEnumList.length > 0) return reject({ "errorType": "inputError", "message": `Following field(s) has invalid values - ${invalidEnumList} . Expecting values are ${JSON.stringify(global.globalConfig.PERMISSION_LEVELS)}` });
+    if (invalidEnumList.length > 0) return reject({ "errorType": "inputError", "message": `Following field(s) has invalid values - ${invalidEnumList}. Expecting values are ${JSON.stringify(global.globalConfig.PERMISSION_LEVELS)}` });
     return resolve();
   });
 }
