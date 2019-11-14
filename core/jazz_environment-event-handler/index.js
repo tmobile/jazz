@@ -719,12 +719,14 @@ function addAdminsToSafe(environmentPayload, configData, authToken, result) {
         "error": "No admins found for safe",
       });
     }
-    var updatePayload = {};
+    var updatePayload = {
+      'username': adminsList[0],
+      'permission': 'write'
+    };
     let safeName;
     if (safeDetails && safeDetails.name) {
       safeName = safeDetails.name;
     }
-    updatePayload.username = adminsList[0];
     var payload = {
       uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.API + '/' + safeName + configData.TVAULT.ADD_ADMINS,
       method: "POST",
