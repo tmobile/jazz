@@ -125,7 +125,7 @@ module.exports.handler = (event, context, cb) => {
                     // fetch services list from dynamodb, filter if required
                     fetchServices: function (onComplete) {
                         var query = event.query;
-                        if (event.resourcePath.includes('/services/search')) {
+                        if (event.resourcePath && event.resourcePath.includes('/services/search')) {
                             query['isSearch'] = true;
                         }
                         crud.getList(query, servicesList,onComplete);
