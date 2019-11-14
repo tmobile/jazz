@@ -31,11 +31,16 @@ var truncate = require('unicode-byte-truncate');
 // Helper functions
 
 function assumeRole(configData, serviceData){
-  var isPrimary = checkIsPrimary(serviceData.deployment_accounts[0].accountId, configData);
-  var roleArn = getRolePlatformService(serviceData.deployment_accounts[0].accountId, configData);
+  var isPrimary, roleArn, nonSlsApp = false;
+  if(serviceData){
+  	isPrimary = checkIsPrimary(serviceData.deployment_accounts[0].accountId, configData);
+  	roleArn = getRolePlatformService(serviceData.deployment_accounts[0].accountId, configData);
+  } else {
+  	nonSlsApp = true
+  }
   var accessparams;
   return new Promise((resolve, reject) => {
-    if (isPrimary) {
+    if (isPrimary || nonSlsApp) {
         accessparams = {};
         resolve(accessparams)
       } else {
@@ -67,7 +72,9 @@ function assumeRole(configData, serviceData){
 }
 
 function getLogsGroupsTags(logGroupName, tempCreds, serviceData) {
-  tempCreds.region = serviceData.deployment_accounts[0].region;
+  if(serviceData){
+  	tempCreds.region = serviceData.deployment_accounts[0].region;
+  }
   var cloudwatchlogs = new AWS.CloudWatchLogs(tempCreds);
   var params = {
     logGroupName: logGroupName /* required */
