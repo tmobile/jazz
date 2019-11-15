@@ -130,7 +130,7 @@ var getCommonData = function (payload, config) {
     getConfigJson(config, creds)
     .then((configData) => {
       // get accountId and region through service Data
-      getserviceMetaData(config, payload.logGroup, creds)
+      getsServiceMetaData(config, payload.logGroup, creds)
       .then((serviceData) => {
         // execute sts:assumeRole
         assumeRole(configData, serviceData)
@@ -192,7 +192,7 @@ var getCommonData = function (payload, config) {
 }
 
 // Function to get service metadata using service API
-function getserviceMetaData(config, logGroup, authToken) {
+function getsServiceMetaData(config, logGroup, authToken) {
   var serviceParts = logGroup.split('_');
   return new Promise((resolve, reject) => {
     var service_api_options = {
