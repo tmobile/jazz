@@ -57,10 +57,9 @@
   },
   "TVAULT": {
     "IS_ENABLED": "{tvault-enabled}",
-    "API": "/jazz/t-vault/safes",
-    "ENDPOINT": "/t-vault/safes/",
+    "API": "/dev/jazz/t-vault/safes",
     "HOSTNAME": "{tvault-host-name}",
-    "USERS": "/jazz/usermanagement/users",
+    "USERS": "/dev/jazz/usermanagement/users",
     "ADD_ADMINS": "/user",
     "ENV_DETAILS": "/dev/jazz/environments",
     "ADD_ROLE": "/role"

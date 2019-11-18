@@ -30,7 +30,6 @@ var errorHandler = errorHandlerModule(logger);
 
 var processedEvents = [];
 var failedEvents = [];
-var safeDetails;
 function handler(event, context, cb) {
   var configData = config(context);
 
@@ -56,7 +55,7 @@ function handler(event, context, cb) {
 
 function getTokenRequest(configData) {
   return {
-    uri: configData.BASE_API_URL + configData.TOKEN_URL,
+    uri: `${configData.BASE_API_URL}${configData.TOKEN_URL}`,
     method: 'post',
     json: {
       "username": configData.SERVICE_USER,
@@ -198,8 +197,8 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
       if (serviceDetails.deployment_descriptor) {
         environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
       }
-      exportable.processEventInitialCommit(environmentApiPayload, serviceDetails.id, configData, authToken)
-        .then((result) => { return exportable.addSafe(environmentApiPayload, serviceDetails, configData, authToken)})
+      exportable.addSafe(environmentApiPayload, serviceDetails, configData, authToken)
+        .then((result) => { return exportable.processEventInitialCommit(environmentApiPayload, serviceDetails.id, configData, authToken)})
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
         .catch((err) => {
@@ -212,9 +211,8 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
       if (serviceDetails.deployment_descriptor) {
         environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
       }
-
-      exportable.processEventCreateBranch(environmentApiPayload, serviceDetails.id, configData, authToken)
-      .then((result) => { return exportable.addSafe(environmentApiPayload, serviceDetails, configData, authToken)})
+      exportable.addSafe(environmentApiPayload, serviceDetails, configData, authToken)
+        .then((result) => { return exportable.processEventCreateBranch(environmentApiPayload, serviceDetails.id, configData, authToken)})
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
         .catch((err) => {
@@ -307,7 +305,7 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
       environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
 
       var svcPayload = {
-        uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
+        uri: `${configData.BASE_API_URL}${configData.ENVIRONMENT_API_RESOURCE}`,
         method: "POST",
         headers: {
           "Authorization": authToken,
@@ -357,7 +355,7 @@ function processEventCreateBranch(environmentPayload, service_id, configData, au
     environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
 
     var svcPayload = {
-      uri: configData.BASE_API_URL + configData.ENVIRONMENT_API_RESOURCE,
+      uri: `${configData.BASE_API_URL}${configData.ENVIRONMENT_API_RESOURCE}`,
       method: "POST",
       headers: {
         "Authorization": authToken,
@@ -391,7 +389,7 @@ function processEventDeleteBranch(environmentPayload, service_id, configData, au
         // Update catalog status first. @TODO
 
         var delSerPayload = {
-          uri: configData.BASE_API_URL + configData.DELETE_ENVIRONMENT_API_RESOURCE,
+          uri: `${configData.BASE_API_URL}${configData.DELETE_ENVIRONMENT_API_RESOURCE}`,
           method: "POST",
           headers: {
             "Authorization": authToken,
@@ -436,15 +434,6 @@ function processEventUpdateEnvironment(environmentPayload, service_id, configDat
     updatePayload.friendly_name = environmentPayload.friendly_name;
     if (environmentPayload.metadata) {
       updatePayload.metadata = environmentPayload.metadata;
-    }
-    if (safeDetails) {
-      if (updatePayload.metadata) {
-        updatePayload.metadata['safe_details'] = safeDetails;
-      } else {
-        updatePayload.metadata = {
-          'safe_details': safeDetails
-        }
-      }
     }
     if (environmentPayload.deployment_descriptor) {
       updatePayload.deployment_descriptor = environmentPayload.deployment_descriptor;
@@ -604,14 +593,13 @@ function triggerBuildJob(payload, serviceDetails, configData) {
 function createSafe(environmentPayload, service_id, configData, authToken) {
   return new Promise((resolve, reject) => {
     var updatePayload = {};
-    const safeName = environmentPayload.service + '_' + environmentPayload.domain + '_' + environmentPayload.logical_id;
+    const safeName = environmentPayload.service + '_' + environmentPayload.domain;
     updatePayload.name = safeName;
     updatePayload.owner = configData.SERVICE_USER;
     updatePayload.description = "create safe for jazz tvault service: " + safeName;
 
     var svcPayload = {
-      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.API
-        + `?domain=${environmentPayload.domain}&service=${environmentPayload.service}&environment=${environmentPayload.logical_id}`,
+      uri: `${configData.BASE_API_URL}${configData.TVAULT.API}`,
       method: "POST",
       headers: {
         "Authorization": authToken,
@@ -624,10 +612,18 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
     request(svcPayload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200) {
         const timestamp = new Date().toISOString();
-        const vaultLink = configData.TVAULT.HOSTNAME + "/#!/admin";
-        environmentPayload['safe_details'] = { "name": safeName, "ts": timestamp, "link": vaultLink };
-        safeDetails = environmentPayload['safe_details'];
-        return resolve(environmentPayload);
+        const safeDetails = { "name": safeName, "timestamp": timestamp };
+        const vaultLink = `${configData.TVAULT.HOSTNAME}/#!/admin`;
+        if (environmentPayload.metadata) {
+          environmentPayload.metadata['safe_details'] = safeDetails;
+          environmentPayload.metadata['vault_link'] = vaultLink;
+        } else {
+          environmentPayload.metadata = {
+            'safe_details': safeDetails,
+            'vault_link': vaultLink
+          };
+        }
+        return resolve(safeName);
       } else {
         logger.error("Error creating safe: " + JSON.stringify(response));
         return reject({
@@ -663,7 +659,7 @@ function deleteSafe(environmentPayload, configData, authToken, envDetails) {
       });
     }
     var svcPayload = {
-      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.API + '/' +safeName,
+      uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}`,
       method: "DELETE",
       headers: {
         "Authorization": authToken,
@@ -686,10 +682,10 @@ function deleteSafe(environmentPayload, configData, authToken, envDetails) {
   });
 }
 
-function getAdmins(environmentPayload, configData, authToken) {
+function getAdmins(environmentPayload, configData, authToken, safeName) {
   return new Promise((resolve, reject) => {
     var payload = {
-      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.USERS,
+      uri: `${configData.BASE_API_URL}${configData.TVAULT.USERS}`,
       method: "GET",
       headers: {
         "Authorization": authToken,
@@ -711,7 +707,7 @@ function getAdmins(environmentPayload, configData, authToken) {
   });
 }
 
-function addAdminsToSafe(environmentPayload, configData, authToken, result) {
+function addAdminsToSafe(environmentPayload, configData, authToken, result, safeName) {
   return new Promise((resolve, reject) => {
     var adminsList = result.data && result.data.result;
     if (!adminsList && adminsList.length === 0) {
@@ -723,12 +719,8 @@ function addAdminsToSafe(environmentPayload, configData, authToken, result) {
       'username': adminsList[0],
       'permission': 'write'
     };
-    let safeName;
-    if (safeDetails && safeDetails.name) {
-      safeName = safeDetails.name;
-    }
     var payload = {
-      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.API + '/' + safeName + configData.TVAULT.ADD_ADMINS,
+      uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}${configData.TVAULT.ADD_ADMINS}`,
       method: "POST",
       headers: {
         "Authorization": authToken,
@@ -738,7 +730,6 @@ function addAdminsToSafe(environmentPayload, configData, authToken, result) {
     };
     request(payload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200) {
-        safeDetails['users'] = adminsList[0];
         return resolve(body);
       } else {
         logger.error("Error adding admins to safe: " + JSON.stringify(response));
@@ -761,7 +752,7 @@ function getEnvDetails(environmentPayload, configData, authToken) {
     }
 
     var payload = {
-      uri: configData.BASE_API_URL + configData.TVAULT.ENV_DETAILS + "?domain=" + environmentPayload.domain + "&service=" + environmentPayload.service,
+      uri: `${configData.BASE_API_URL}${configData.TVAULT.ENV_DETAILS}?service=${environmentPayload.service}&domain=${environmentPayload.domain}`,
       method: "GET",
       headers: {
         "Authorization": authToken,
@@ -783,40 +774,6 @@ function getEnvDetails(environmentPayload, configData, authToken) {
   });
 }
 
-function createRole(environmentPayload, configData, authToken) {
-  return new Promise((resolve, reject) => {
-    var updatePayload = {};
-    updatePayload.rolename = environmentPayload.service;
-    let safeName;
-    if (safeDetails && safeDetails.name) {
-      safeName = safeDetails.name;
-    }
-    var svcPayload = {
-      uri: configData.BASE_API_URL + '/' + environmentPayload.logical_id + configData.TVAULT.ENDPOINT + safeName + configData.TVAULT.ADD_ROLE 
-        + `?domain=${environmentPayload.domain}&service=${environmentPayload.service}&environment=${environmentPayload.logical_id}`,
-      method: "POST",
-      headers: {
-        "Authorization": authToken,
-        "Content-Type": "application/json"
-      },
-      json: updatePayload,
-      rejectUnauthorized: false
-    };
-    request(svcPayload, function (error, response, body) {
-      if (response.statusCode && response.statusCode === 200) {
-        safeDetails['role'] = response.data;
-        return resolve(body);
-      } else {
-        logger.error("Error creating role: " + JSON.stringify(response));
-        return reject({
-          "error": "Error creating role",
-          "details": response.body.message
-        });
-      }
-    });
-
-  });
-}
 
 function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
   try{
@@ -827,9 +784,8 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
       });
     }
     exportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
-        .then((result) => { return exportable.getAdmins(environmentApiPayload, configData, authToken)})
-        .then((result) => { return exportable.addAdminsToSafe(environmentApiPayload, configData, authToken, result)})
-        // .then((result) => { return exportable.createRole(environmentApiPayload, configData, authToken)})
+        .then((safeName) => { return exportable.getAdmins(environmentApiPayload, configData, authToken, safeName)})
+        .then((result) => { return exportable.addAdminsToSafe(environmentApiPayload, configData, authToken, result, safeName)})
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("add safe details failed: " + err);
@@ -921,7 +877,6 @@ const exportable = {
   removeSafe,
   createSafe,
   deleteSafe,
-  createRole,
   getAdmins,
   addAdminsToSafe,
   getEnvDetails
