@@ -17,19 +17,23 @@
 const errorHandler = require("./components/error-handler.js")();
 const configModule = require("./components/config.js");
 const logger = require("./components/logger.js");
-const validation = require("./components/validation.js");
+const validation = require("./components/utils/validation.js");
 const casbinUtil = require("./components/casbin.js");
-const util = require("./components/util.js");
+const util = require("./components/utils/util.js");
+const environment = require("./components/utils/environment.js");
+const vault = require("./components/utils/vault.js");
 const scmUtil = require("./components/scm/index.js");
 const services = require("./components/scm/services.js");
 const auth = require("./components/scm/login.js");
 const globalConfig = require("./config/global-config.json");
 
-async function handler(event, context) {
+global.globalConfig = globalConfig;
 
+async function handler(event, context) {
   //Initializations
-  const config = configModule.getConfig(event, context);
+  const config = configModule.getConfig(event, context);  
   logger.init(event, context);
+  let authToken, serviceData;
 
   try {
     validation.validateBasicInput(event);
@@ -69,6 +73,12 @@ async function processACLRequest(event, config) {
       }
 
       await exportable.processScmPermissions(config, serviceId, policies, 'add');
+
+      logger.info("vault is enabled. global.globalConfig.VAULT.IS_ENALED : " + global.globalConfig.VAULT.IS_ENABLED)
+      if (global.globalConfig.VAULT.IS_ENABLED) {
+        logger.info("vault is enabled.")
+        await exportable.addOrRemoveAdminUsersToSafe(config, serviceId, policies);
+      }
     } else {//delete policies
       result = await casbinUtil.addOrRemovePolicy(serviceId, config, 'remove');
 
@@ -143,8 +153,8 @@ async function processACLRequest(event, config) {
 async function processScmPermissions(config, serviceId, policies, key) {
   try {
     let scm = new scmUtil(globalConfig);
-    let authToken = await auth.getAuthToken(config);
-    let serviceData = await services.getServiceMetadata(config, authToken, serviceId);
+    authToken = await auth.getAuthToken(config);
+    serviceData = await services.getServiceMetadata(config, authToken, serviceId);
     let res = await scm.processScmPermissions(serviceData, policies, key);
     return (res);
   } catch (ex) {
@@ -152,10 +162,31 @@ async function processScmPermissions(config, serviceId, policies, key) {
   }
 }
 
+async function addOrRemoveAdminUsersToSafe(config, serviceId, policies) {
+  return new Promise((resolve, reject) => {
+    const adminPolicy = policies.filter(policy => policy.category === 'manage' && policy.permission === 'admin');
+    logger.info("adminPolicy: " + JSON.stringify(adminPolicy))
+    const adminUsers = adminPolicy.map(policy => policy.userId);
+    logger.info("adminUsers: " + JSON.stringify(adminUsers))
+    if (adminUsers.length > 0) {
+      logger.info("adminUsers: length >0")
+      environment.getEnvironmentDetails(config, serviceData, authToken)
+        .then((result) => { return vault.addOrRemoveAllAdminUsersToSafe(result, config, serviceId, authToken, adminUsers) })
+        .then((res) => {
+          return resolve(res);
+        })
+        .catch((ex) => {
+          return reject(ex);
+        })
+    }
+  });
+}
+
 const exportable = {
   handler,
   processACLRequest,
-  processScmPermissions
+  processScmPermissions,
+  addOrRemoveAdminUsersToSafe
 };
 
 module.exports = exportable;

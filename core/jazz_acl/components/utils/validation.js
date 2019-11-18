@@ -14,7 +14,7 @@
 // limitations under the License.
 // =========================================================================
 
-const errorHandlerModule = require("./error-handler.js")();
+const errorHandlerModule = require("../error-handler.js")();
 
 function validateBasicInput(userInput) {
   if (!userInput) {

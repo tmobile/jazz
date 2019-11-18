@@ -20,15 +20,15 @@ const sinon = require('sinon');
 const chai = require('chai')
 const chaiAsPromised = require('chai-as-promised');
 const expect = chai.expect;
-const validationUtil = require('../components/validation');
+const validationUtil = require('../components/utils/validation');
 const auth = require("../components/scm/login");
 const bitbucketUtil = require("../components/scm/bitbucket");
 const gitlabUtil = require("../components/scm/gitlab");
 const services = require("../components/scm/services");
-const util = require("../components/util");
+const util = require("../components/utils/util");
 const globalConfig = require("../config/global-config.json");
 const request = require('request');
-const getList = require("../components/getList");
+const getList = require("../components/utils/getList");
 const AWS = require("aws-sdk-mock");
 const casbin = require("../components/casbin");
 chai.use(chaiAsPromised);
@@ -130,12 +130,12 @@ describe('processACLRequest tests', () => {
       getEvent = {};
     });
 
-    it('POST policies - add user successfully', async () => {
+    it('POST policies - add user successfully when vault is not enabled', async () => {
       // arrange
       const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
       const processScmPermissionsStub = sinon.stub(index, "processScmPermissions").resolves(true);
       const config = {};
-
+      globalConfig.VAULT.IS_ENABLED = false
       // act
       const result = await index.processACLRequest(postEvent, config);
 
@@ -143,6 +143,44 @@ describe('processACLRequest tests', () => {
       expect(result.success).to.equal(true);
       sinon.assert.calledOnce(addOrRemovePolicyStub);
       sinon.assert.calledOnce(processScmPermissionsStub);
+      addOrRemovePolicyStub.restore();
+      processScmPermissionsStub.restore();
+    });
+
+    it('POST policies - add user successfully when vault is enabled', async () => {
+      // arrange
+      const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
+      const processScmPermissionsStub = sinon.stub(index, "processScmPermissions").resolves(true);
+      const addOrRemoveAdminUsersToSafeStub = sinon.stub(index, "addOrRemoveAdminUsersToSafe").resolves(true); 
+      const config = {};
+      globalConfig.VAULT.IS_ENABLED = true
+      // act
+      const result = await index.processACLRequest(postEvent, config);
+
+      // assert
+      expect(result.success).to.equal(true);
+      sinon.assert.calledOnce(addOrRemovePolicyStub);
+      sinon.assert.calledOnce(processScmPermissionsStub);
+      sinon.assert.calledOnce(addOrRemoveAdminUsersToSafeStub);
+      addOrRemoveAdminUsersToSafeStub.restore();
+      addOrRemovePolicyStub.restore();
+      processScmPermissionsStub.restore();
+    });
+
+    it('POST policies - add user fails when add/remove user to safe fails.' , async () => {
+      // arrange
+      const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
+      const processScmPermissionsStub = sinon.stub(index, "processScmPermissions").resolves(true);
+      const addOrRemoveAdminUsersToSafeStub = sinon.stub(index, "addOrRemoveAdminUsersToSafe").rejects(); 
+      const config = {};
+      globalConfig.VAULT.IS_ENABLED = true
+      // act
+      await expect(index.processACLRequest(postEvent, config)).to.be.rejected;
+     
+      sinon.assert.calledOnce(addOrRemovePolicyStub);
+      sinon.assert.calledOnce(processScmPermissionsStub);
+      sinon.assert.calledOnce(addOrRemoveAdminUsersToSafeStub);
+      addOrRemoveAdminUsersToSafeStub.restore();
       addOrRemovePolicyStub.restore();
       processScmPermissionsStub.restore();
     });
@@ -721,6 +759,7 @@ describe("getList", () => {
 describe("super user implementation", () =>{
   it("should return list of services with admin policies for super user", () => {
     let adminId = "adminUser";
+    globalConfig.CREDENTIAL.SERVICE_USER = "adminUser";
     const config = {
       "SERVICE_USER": adminId,
       "SERVICES_TABLE_NAME": "test_table",
