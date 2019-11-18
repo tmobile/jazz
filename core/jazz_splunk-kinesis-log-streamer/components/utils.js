@@ -162,10 +162,6 @@ var getCommonData = function (payload, config) {
                     serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_domain_service, 1);
                   }
                   domainAndservice = serviceInfo;
-                  if (serviceInfo.indexOf(global_config.PATTERNS.sls_app_function) !== -1) { // if yes then sls-app function
-                    serviceInfoArr = serviceInfo.split(global_config.PATTERNS.sls_app_function);
-                    domainAndservice = serviceInfoArr[0];
-                  }
                   logger.debug("domainAndservice: " + domainAndservice)
           
                   namespace = domainAndservice.substring(0, domainAndservice.indexOf("_"));

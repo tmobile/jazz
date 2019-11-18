@@ -319,15 +319,13 @@ function getsServiceMetaData(config, logGroup, authToken) {
   var serviceParts = logGroup.split('_');
   return new Promise((resolve, reject) => {
     var service_api_options = {
-      url: `${config.SERVICE_API_URL}${config.SERVICE_URL}?domain=${serviceParts[1]}&service=${serviceParts[2]}&environment=${serviceParts[4]}`,
+      url: `${config.SERVICE_API_URL}${config.SERVICE_URL}?domain=${serviceParts[1]}&service=${serviceParts[2]}&environment=${serviceParts[serviceParts.length - 1]}`,
       headers: {
         "Content-Type": "application/json",
         "Authorization": authToken
       },
       method: "GET",
-      rejectUnauthorized: false,
-      requestCert: true,
-      async: true
+      rejectUnauthorized: false
     };
 
     request(service_api_options, (error, response, body) => {
@@ -375,9 +373,7 @@ function getConfigJson(config, token) {
         "Authorization": token
       },
       method: "GET",
-      rejectUnauthorized: false,
-      requestCert: true,
-      async: true
+      rejectUnauthorized: false
     };
 
     request(config_json_api_options, (error, response, body) => {
