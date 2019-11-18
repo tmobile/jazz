@@ -172,7 +172,7 @@ describe('jazz environment handler tests: ', () => {
 
     index.manageProcessItem(event.Item, service, configData, authToken)
       .catch((res) => {
-        sinon.assert.calledTwice(requestPromiseStub);
+        sinon.assert.calledOnce(requestPromiseStub);
         requestPromiseStub.restore();
         expect(res.error).to.include('Error creating');
         testPayloads.apiResponse.statusCode = statusCode;
@@ -352,19 +352,12 @@ describe('jazz environment handler tests: ', () => {
     });
 
     const service = { id: 1, type: "api", service: "test", domain: "tst" }
-    // let processEventCreateBranchStub = sinon.stub(index, "processEventCreateBranch").rejects(testPayloads.createBranchError);
-    // let addSafeStub = sinon.stub(index, "addSafe").resolves(testPayloads.createBranchError.body);
-    // let processBuildStub = sinon.stub(index, "processBuild").resolves(testPayloads.createBranchError.body);
+    let addSafeStub = sinon.stub(index, "addSafe").resolves(testPayloads.createBranchError.body);
     index.manageProcessItem(event.Item, service, configData, authToken)
       .catch((res) => {
         sinon.assert.calledOnce(requestPromiseStub);
         requestPromiseStub.restore();
-
-        // sinon.assert.calledOnce(processEventCreateBranchStub);
-        // // sinon.assert.calledOnce(addSafeStub);
-        // // processBuildStub.restore();
-        // processEventCreateBranchStub.restore();
-        // // addSafeStub.restore();
+        addSafeStub.restore();
         expect(res.details).to.include('error');
       });
   });
@@ -1392,7 +1385,7 @@ describe('handler', () => {
     };
     processRequestStub.resolves(service_responseObject.body);
     getServiceDetailsStub.resolves(service_responseObject.body);
-
+    const addSafeStub = sinon.stub(index, "addSafe").resolves(testPayloads.processEventInitialCommitSuccess.body);
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
@@ -1404,6 +1397,7 @@ describe('handler', () => {
     });
     let processEvents = index.processEvents(kinesisPayload, configData, "token");
     expect(processEvents.then(function (res) {
+      addSafeStub.restore();
       return res;
     })).to.be.resolve;
   });
@@ -1424,6 +1418,7 @@ describe('handler', () => {
     };
     processRequestStub.resolves(service_responseObject.body);
     getServiceDetailsStub.resolves(service_responseObject.body);
+    const addSafeStub = sinon.stub(index, "addSafe").resolves(testPayloads.createBranchSuccess.body);
     requestPromiseStub.callsFake((obj) => {
       if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz/services?service=test-env-oss-3&domain=jazztesting&isAdmin=true") {
         return obj.callback(null, service_responseObject, service_responseObject.body);
@@ -1435,6 +1430,7 @@ describe('handler', () => {
     });
     let processEvents = index.processEvents(kinesisPayload, configData, "token");
     expect(processEvents.then(function (res) {
+      addSafeStub.restore();
       return res;
     })).to.be.rejected;
   });
