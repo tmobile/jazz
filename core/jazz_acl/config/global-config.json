@@ -12,7 +12,7 @@
     "SERVICE_API": "/jazz/services",
     "LOGIN_API": "/jazz/login",
     "ENVIRONMENTS": "/jazz/environments",
-    "SAFE": "jazz/t-vault/safes/",
+    "SAFE": "/jazz/t-vault/safes/",
     "USER_TO_SAFE": "/user"
   },
   "VAULT": {
