@@ -694,7 +694,11 @@ function getAdmins(environmentPayload, configData, authToken, safeName) {
     };
     request(payload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200) {
-        return resolve(JSON.parse(body));
+        const resultData = {
+          'admins': JSON.parse(body),
+          'safeName': safeName
+        };
+        return resolve(resultData);
       } else {
         logger.error("Error getting admins: " + JSON.stringify(response));
         return reject({
@@ -707,9 +711,9 @@ function getAdmins(environmentPayload, configData, authToken, safeName) {
   });
 }
 
-function addAdminsToSafe(environmentPayload, configData, authToken, result, safeName) {
+function addAdminsToSafe(environmentPayload, configData, authToken, res) {
   return new Promise((resolve, reject) => {
-    var adminsList = result.data && result.data.result;
+    var adminsList = res.admins && res.admins.data && res.admins.data.result;
     if (!adminsList && adminsList.length === 0) {
       return resolve({
         "error": "No admins found for safe",
@@ -719,6 +723,7 @@ function addAdminsToSafe(environmentPayload, configData, authToken, result, safe
       'username': adminsList[0],
       'permission': 'write'
     };
+    const safeName = res.safeName;
     var payload = {
       uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}${configData.TVAULT.ADD_ADMINS}`,
       method: "POST",
@@ -785,7 +790,7 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
     }
     exportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
         .then((safeName) => { return exportable.getAdmins(environmentApiPayload, configData, authToken, safeName)})
-        .then((result) => { return exportable.addAdminsToSafe(environmentApiPayload, configData, authToken, result, safeName)})
+        .then((result) => { return exportable.addAdminsToSafe(environmentApiPayload, configData, authToken, result)})
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("add safe details failed: " + err);
