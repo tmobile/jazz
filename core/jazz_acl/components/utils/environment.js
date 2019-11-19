@@ -30,10 +30,10 @@ function getEnvironmentDetails(configData, serviceInfo, authToken) {
       }
     };
 
-    logger.info("getEnvironmentDetails : " + JSON.stringify(payload))
+    logger.debug("getEnvironmentDetails : " + JSON.stringify(payload))
     request(payload, function (error, response, body) {
       if (response.statusCode && response.statusCode === 200 && body) {
-        logger.info("Successfully got environment details : " + JSON.stringify(response))
+        logger.debug("Successfully got environment details : " + JSON.stringify(response))
         let resp = JSON.parse(body);
         return resolve(resp.data);
       } else {
