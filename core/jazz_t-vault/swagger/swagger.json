@@ -3344,12 +3344,21 @@
             "type": "object",
             "description": "Role details of the safe",
             "required": [
-                "arn"
+                "arn",
+                "permission"
             ],
             "properties": {
                 "arn": {
                     "type": "string",
                     "description": "arn of the role"
+                },
+                "permission": {
+                    "type": "string",
+                    "description": "Access level of the role to the safe",
+                    "enum": [
+                        "read",
+                        "write"
+                    ]
                 }
             }
         },
@@ -3357,12 +3366,21 @@
             "type": "object",
             "description": "Details of the user to be associated with the safe",
             "required": [
-                "username"
+                "username",
+                "permission"
             ],
             "properties": {
                 "username": {
                     "type": "string",
                     "description": "Name of the user to be asociated with the safe"
+                },
+                "permission": {
+                    "type": "string",
+                    "description": "Access level of the user to the safe",
+                    "enum": [
+                        "read",
+                        "write"
+                    ]
                 }
             }
         },

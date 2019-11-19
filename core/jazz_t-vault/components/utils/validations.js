@@ -37,7 +37,7 @@ function validateSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.path) return reject({ "errorType": "inputError", "message": "Input path cannot be empty" });
     if (isEmpty(event.path)) return reject({ "errorType": "inputError", "message": "Input path cannot be empty" });
-    if (!event.path.safename) return reject({ "errorType": "inputError", "message": "Following field(s) are required in path- safename" });
+    if (!event.path.safename) return reject({ "errorType": "inputError", "message": "Following field(s) are required in path - safename" });
     return resolve();
   });
 }
@@ -62,11 +62,20 @@ function validateRoleInSafeInput(event) {
   });
 }
 
+function validateDeleteRoleInSafeInput(event) {
+  return new Promise((resolve, reject) => {
+    if (event && !event.body) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
+    if (isEmpty(event.body)) return reject({ "errorType": "inputError", "message": "Input cannot be empty" });
+    if (!event.body.arn) return reject({ "errorType": "inputError", "message": "Following field(s) are required - arn" });
+    return resolve();
+  });
+}
+
 function validateGetRoleInSafeInput(event) {
   return new Promise((resolve, reject) => {
     if (event && !event.query) return reject({ "errorType": "inputError", "message": "Query cannot be empty" });
     if (isEmpty(event.query)) return reject({ "errorType": "inputError", "message": "Query cannot be empty" });
-    if (!event.query.rolename) return reject({ "errorType": "inputError", "message": "Following field(s) are required in query- rolename" });
+    if (!event.query.arn) return reject({ "errorType": "inputError", "message": "Following field(s) are required in query - arn" });
     return resolve();
   });
 }
@@ -104,11 +113,20 @@ function validateFieldLength(data) {
     let lessLengthKeyList = Object.keys(data).filter((field) => {
       if (global.globalConfig.FIELD_LENGTH_CONSTRAINTS[field] && data[field].length <= global.globalConfig.FIELD_LENGTH_CONSTRAINTS[field]) return field;
     });
-    if (lessLengthKeyList.length > 0) return reject({ "errorType": "inputError", "message": `Following field(s) not satisfying the char length ${JSON.stringify(global.globalConfig.FIELD_LENGTH_CONSTRAINTS)} -  ${lessLengthKeyList}` });
+    if (lessLengthKeyList.length > 0) return reject({ "errorType": "inputError", "message": `Following field(s) not satisfying the char length ${JSON.stringify(global.globalConfig.FIELD_LENGTH_CONSTRAINTS)} - ${lessLengthKeyList}` });
     return resolve();
   });
 }
 
+function validateEnum(data) {
+  return new Promise((resolve, reject) => {
+    let invalidEnumList = Object.keys(data).filter((field) => {
+      if (global.globalConfig.PERMISSION_LEVELS[field] && !global.globalConfig.PERMISSION_LEVELS[field].includes(data[field])) return field;
+    });
+    if (invalidEnumList.length > 0) return reject({ "errorType": "inputError", "message": `Following field(s) has invalid values - ${invalidEnumList}. Expecting values are ${JSON.stringify(global.globalConfig.PERMISSION_LEVELS)}` });
+    return resolve();
+  });
+}
 const isEmpty = (obj) => {
   if (obj == null) return true;
   if (obj.length > 0) return false;
@@ -140,10 +158,12 @@ module.exports = {
   validateUserInSafeInput,
   validateGetRoleInSafeInput,
   validateRoleInSafeInput,
+  validateDeleteRoleInSafeInput,
   validateUserInVaultInput,
   validateUserInVaultDeleteInput,
   validateRoleArn,
   validateFieldLength,
+  validateEnum,
   genericInputValidation,
   isEmpty
 };
