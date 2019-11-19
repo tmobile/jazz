@@ -489,6 +489,173 @@ describe('jazz environment handler tests: ', () => {
     expect(error.failure_code).to.eq('errorType');
     expect(error.failure_message).to.eq('errorMessage');
   });
+
+  it("safe created successfully ", () => {
+    let environmentPayload = testPayloads.environmentPayload;
+    let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
+        return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+    });
+    const safeName = environmentPayload.service + '_' + environmentPayload.domain;
+    const service = { id: 1, type: "api", service: "test", domain: "tst" }
+    index.createSafe(environmentPayload, service, configData, authToken)
+      .then((res) => {
+        sinon.assert.calledOnce(requestPromiseStub);
+        requestPromiseStub.restore();
+        expect(res).to.eq(safeName);
+      });
+  });
+
+  it("get admins list to add to safe", () => {
+    let environmentPayload = testPayloads.environmentPayload;
+    let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
+        return obj.callback(null, testPayloads.adminsResponse, testPayloads.adminsResponse.body);
+    });
+    const safeName = environmentPayload.service + '_' + environmentPayload.domain;
+    const resultData = {
+      'admins': testPayloads.adminsResponse.body,
+      'safeName': safeName
+    };
+    index.getAdmins(environmentPayload, configData, authToken, safeName)
+      .then((res) => {
+        sinon.assert.calledOnce(requestPromiseStub);
+        requestPromiseStub.restore();
+        expect(res).to.eq(resultData);
+      });
+  });
+
+  it("add admins list to safe", () => {
+    let environmentPayload = testPayloads.environmentPayload;
+    let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
+        return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+    });
+    const safeName = environmentPayload.service + '_' + environmentPayload.domain;
+    const resultData = {
+      'admins': JSON.parse(testPayloads.adminsResponse.body),
+      'safeName': safeName
+    };
+    index.addAdminsToSafe(environmentPayload, configData, authToken, resultData)
+      .then((res) => {
+        sinon.assert.calledOnce(requestPromiseStub);
+        requestPromiseStub.restore();
+        expect(res.data.message).to.include('Success');
+      });
+  });
+
+  it("safe added successfully with valid response", () => {
+    let event = require('./COMMIT_TEMPLATE');
+    const statusCode = testPayloads.apiResponse.statusCode;
+    const safeName = 'test-safe';
+    const resultData = {
+      'admins': testPayloads.adminsResponse.body,
+      'safeName': safeName
+    };
+    let createSafeStub = sinon.stub(index, "createSafe").resolves(safeName);
+    let getAdminsStub = sinon.stub(index, "getAdmins").resolves(resultData);
+    let addAdminstoSafeStub = sinon.stub(index, "addAdminsToSafe").resolves(testPayloads.processEventInitialCommitSuccess.body);
+    const service = { id: 1, type: "api", service: "test", domain: "tst" }
+    index.addSafe(event.Item, service, configData, authToken)
+      .then((res) => {
+        sinon.assert.calledOnce(createSafeStub);
+        sinon.assert.calledOnce(getAdminsStub);
+        sinon.assert.calledOnce(addAdminstoSafeStub);
+        createSafeStub.restore();
+        getAdminsStub.restore();
+        addAdminstoSafeStub.restore();
+        expect(res.data.result).to.include('success');
+      });
+  });
+
+  it("remove safe details successfully", () => {
+    let environmentPayload = testPayloads.environmentPayload;
+    let getEnvDetailsStub = sinon.stub(index, "getEnvDetails").resolves(testPayloads.envDetailsResponse.body);
+    let deleteSafeStub = sinon.stub(index, "deleteSafe").resolves(testPayloads.apiResponse.body);
+    index.removeSafe(environmentPayload, configData, authToken)
+      .then((res) => {
+        sinon.assert.calledOnce(getEnvDetailsStub);
+        sinon.assert.calledOnce(deleteSafeStub);
+        getEnvDetailsStub.restore();
+        deleteSafeStub.restore();
+        expect(res.data.message).to.include('success');
+      });
+  });
+
+  it("get environment details of safe", () => {
+    let environmentPayload = testPayloads.environmentPayload;
+    environmentPayload["metadata"] = {
+      "safe_details":
+          {
+              "name":"test-vault-user_jazztest_prod",
+              "link":"https://vault/#!/admin",
+              "ts":"2019-11-11T15:56:02.290Z"
+          }
+    };
+    let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
+        return obj.callback(null, testPayloads.envDetailsResponse, testPayloads.envDetailsResponse.body);
+    });
+    index.getEnvDetails(environmentPayload, configData, authToken)
+      .then((res) => {
+        sinon.assert.calledOnce(requestPromiseStub);
+        requestPromiseStub.restore();
+        expect(res.data.environment[0].metadata.safe_details.name).to.eq(environmentPayload["metadata"].safe_details.name);
+      });
+  });
+
+  it("delete safe successfully", () => {
+    let environmentPayload = testPayloads.environmentPayload;
+    environmentPayload["metadata"] = {
+      "safe_details":
+          {
+              "name":"test-vault-user_jazztest_prod",
+              "link":"https://vault/#!/admin",
+              "ts":"2019-11-11T15:56:02.290Z"
+          }
+    };
+    environmentPayload.logical_id = 'ehrswzx36b-dev';
+    let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
+        return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
+    });
+    index.deleteSafe(environmentPayload, configData, authToken, testPayloads.envDetailsResponse.body)
+      .then((res) => {
+        sinon.assert.calledOnce(requestPromiseStub);
+        requestPromiseStub.restore();
+        expect(res.data.message).to.include('Success');
+      });
+  });
+
+  it("safe details not found for deleting safe", () => {
+    let environmentPayload = testPayloads.environmentPayload;
+    environmentPayload["metadata"] = {
+      "safe_details":
+          {
+              "name":"test-vault-user_jazztest_prod",
+              "link":"https://vault/#!/admin",
+              "ts":"2019-11-11T15:56:02.290Z"
+          }
+    };
+    environmentPayload.logical_id = 'ehrswzx36b-dev';
+    
+    testPayloads.envDetailsResponse.body.data.environment = [];
+    index.deleteSafe(environmentPayload, configData, authToken, testPayloads.envDetailsResponse.body)
+      .then((res) => {
+        expect(res.error).to.include("environment safe details is not found");
+      });
+  });
+
+  it("tvault is not configured error", () => {
+    let event = require('./COMMIT_TEMPLATE');
+    const statusCode = testPayloads.apiResponse.statusCode;
+    configData.TVAULT.IS_ENABLED = false;
+    const safeName = 'test-safe';
+    const resultData = {
+      'admins': testPayloads.adminsResponse.body,
+      'safeName': safeName
+    };
+    const service = { id: 1, type: "api", service: "test", domain: "tst" }
+    index.addSafe(event.Item, service, configData, authToken)
+      .catch((err) => {
+        expect(res.err).to.include('T-vault is not enabled');
+      });
+  });
 });
 
 describe("getServiceDetails", () => {

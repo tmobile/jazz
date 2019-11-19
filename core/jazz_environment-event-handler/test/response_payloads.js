@@ -103,7 +103,6 @@ var envDetailsResponse = {
                             {
                                 "name":"test-vault-user_jazztest_prod",
                                 "link":"https://vault/#!/admin",
-                                "users":"testuser@t-mobile.com",
                                 "ts":"2019-11-11T15:56:02.290Z"
                             }
                     },

@@ -638,7 +638,7 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
 
 function deleteSafe(environmentPayload, configData, authToken, envDetails) {
   return new Promise((resolve, reject) => {
-    if (!configData.TVAULT && !configData.TVAULT.IS_ENABLED) {
+    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
       return resolve({
         "error": "T-vault is not enabled",
       });
@@ -750,7 +750,7 @@ function addAdminsToSafe(environmentPayload, configData, authToken, res) {
 
 function getEnvDetails(environmentPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
-    if (!configData.TVAULT && !configData.TVAULT.IS_ENABLED) {
+    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
       return resolve({
         "error": "T-vault is not enabled",
       });
@@ -783,7 +783,7 @@ function getEnvDetails(environmentPayload, configData, authToken) {
 function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
   try{
   return new Promise((resolve, reject) => {
-    if (!configData.TVAULT && !configData.TVAULT.IS_ENABLED) {
+    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
       return resolve({
         "error": "T-vault is not enabled",
       });
@@ -805,7 +805,7 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
 function removeSafe(environmentApiPayload, configData, authToken) {
   try{
   return new Promise((resolve, reject) => {
-    if (!configData.TVAULT && !configData.TVAULT.IS_ENABLED) {
+    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
       return resolve({
         "error": "T-vault is not enabled",
       });
