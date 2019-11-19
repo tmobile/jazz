@@ -6,6 +6,8 @@
   "SERVICE_API_RESOURCE": "/stg/jazz/services",
   "SERVICE_USER": "{jazz_admin}",
   "TOKEN_CREDS": "{jazz_admin_creds}",
+  "LIST_USERS": "/stg/jazz/usermanagement/users",
+  "ENV_DETAILS": "/prod/jazz/environments",
   "EVENTS": {
     "EVENT_TYPE": [
       "SERVICE_DEPLOYMENT",
@@ -59,9 +61,7 @@
     "IS_ENABLED": "{tvault-enabled}",
     "API": "/prod/jazz/t-vault/safes",
     "HOSTNAME": "{tvault-host-name}",
-    "USERS": "/stg/jazz/usermanagement/users",
     "ADD_ADMINS": "/user",
-    "ENV_DETAILS": "/prod/jazz/environments",
     "ADD_ROLE": "/role"
   }
 }

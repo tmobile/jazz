@@ -685,7 +685,7 @@ function deleteSafe(environmentPayload, configData, authToken, envDetails) {
 function getAdmins(environmentPayload, configData, authToken, safeName) {
   return new Promise((resolve, reject) => {
     var payload = {
-      uri: `${configData.BASE_API_URL}${configData.TVAULT.USERS}`,
+      uri: `${configData.BASE_API_URL}${configData.LIST_USERS}`,
       method: "GET",
       headers: {
         "Authorization": authToken,
@@ -757,7 +757,7 @@ function getEnvDetails(environmentPayload, configData, authToken) {
     }
 
     var payload = {
-      uri: `${configData.BASE_API_URL}${configData.TVAULT.ENV_DETAILS}?service=${environmentPayload.service}&domain=${environmentPayload.domain}`,
+      uri: `${configData.BASE_API_URL}${configData.ENV_DETAILS}?service=${environmentPayload.service}&domain=${environmentPayload.domain}`,
       method: "GET",
       headers: {
         "Authorization": authToken,
