@@ -35,9 +35,7 @@ function assumeRole(configData, serviceData){
   if(serviceData){
   	isPrimary = checkIsPrimary(serviceData.deployment_accounts[0].accountId, configData);
   	roleArn = getRolePlatformService(serviceData.deployment_accounts[0].accountId, configData);
-  } else {
-  	nonSlsApp = true
-  }
+  } 
   var accessparams;
   return new Promise((resolve, reject) => {
     if (isPrimary || nonSlsApp) {
@@ -202,15 +200,15 @@ function getApiLogsData(payload) {
   return bulkRequestBody;
 }
 
-function getLambdaLogsData(config, payload, callback) {
+function getLambdaLogsData(configValue, payload, callback) {
   // first get token for calling respective APIs
-  getToken(config)
+  getToken(configValue)
   .then((creds) => {
     // get configDB data for getting roleArn specific to account
-    getConfigJson(config, creds)
+    getConfigJson(configValue, creds)
     .then((configData) => {
       // get accountId and region through service Data
-      getsServiceMetaData(config, payload.logGroup, creds)
+      getsServiceMetaData(configValue, payload.logGroup, creds)
       .then((serviceData) => {
         // execute sts:assumeRole
         assumeRole(configData, serviceData)
@@ -317,6 +315,9 @@ function getLambdaLogsData(config, payload, callback) {
 // Function to get service metadata using service API
 function getsServiceMetaData(config, logGroup, authToken) {
   var serviceParts = logGroup.split('_');
+  if(serviceParts.length < 2){
+    serviceParts = logGroup.split('-');
+  }
   return new Promise((resolve, reject) => {
     var service_api_options = {
       url: `${config.SERVICE_API_URL}${config.SERVICE_URL}?domain=${serviceParts[1]}&service=${serviceParts[2]}&environment=${serviceParts[serviceParts.length - 1]}`,

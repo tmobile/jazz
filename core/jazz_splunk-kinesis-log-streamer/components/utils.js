@@ -35,9 +35,7 @@ function assumeRole(configData, serviceData){
   if(serviceData){
   	isPrimary = checkIsPrimary(serviceData.deployment_accounts[0].accountId, configData);
   	roleArn = getRolePlatformService(serviceData.deployment_accounts[0].accountId, configData);
-  } else {
-  	nonSlsApp = true
-  }
+  } 
   var accessparams;
   return new Promise((resolve, reject) => {
     if (isPrimary || nonSlsApp) {
@@ -190,9 +188,12 @@ var getCommonData = function (payload, config) {
 // Function to get service metadata using service API
 function getsServiceMetaData(config, logGroup, authToken) {
   var serviceParts = logGroup.split('_');
+  if(serviceParts.length < 2){
+    serviceParts = logGroup.split('-');
+  }
   return new Promise((resolve, reject) => {
     var service_api_options = {
-      url: `${config.SERVICE_API_URL}${config.SERVICE_URL}?domain=${serviceParts[1]}&service=${serviceParts[2]}&environment=${serviceParts[4]}`,
+      url: `${config.SERVICE_API_URL}${config.SERVICE_URL}?domain=${serviceParts[1]}&service=${serviceParts[2]}&environment=${serviceParts[serviceParts.length - 1]}`,
       headers: {
         "Content-Type": "application/json",
         "Authorization": authToken
