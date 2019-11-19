@@ -31,6 +31,8 @@ const request = require('request');
 const getList = require("../components/utils/getList");
 const AWS = require("aws-sdk-mock");
 const casbin = require("../components/casbin");
+const environment = require("../components/utils/environment.js");
+const vault = require("../components/utils/vault.js");
 chai.use(chaiAsPromised);
 
 describe("Validation tests", () => {
@@ -134,6 +136,7 @@ describe('processACLRequest tests', () => {
       // arrange
       const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
       const processScmPermissionsStub = sinon.stub(index, "processScmPermissions").resolves(true);
+      const addOrRemoveAdminUsersToSafeStub = sinon.stub(index, "addOrRemoveAdminUsersToSafe").resolves(true);
       const config = {};
       globalConfig.VAULT.IS_ENABLED = false
       // act
@@ -143,7 +146,9 @@ describe('processACLRequest tests', () => {
       expect(result.success).to.equal(true);
       sinon.assert.calledOnce(addOrRemovePolicyStub);
       sinon.assert.calledOnce(processScmPermissionsStub);
+      sinon.assert.notCalled(addOrRemoveAdminUsersToSafeStub);
       addOrRemovePolicyStub.restore();
+      addOrRemoveAdminUsersToSafeStub.restore();
       processScmPermissionsStub.restore();
     });
 
@@ -151,7 +156,7 @@ describe('processACLRequest tests', () => {
       // arrange
       const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
       const processScmPermissionsStub = sinon.stub(index, "processScmPermissions").resolves(true);
-      const addOrRemoveAdminUsersToSafeStub = sinon.stub(index, "addOrRemoveAdminUsersToSafe").resolves(true); 
+      const addOrRemoveAdminUsersToSafeStub = sinon.stub(index, "addOrRemoveAdminUsersToSafe").resolves(true);
       const config = {};
       globalConfig.VAULT.IS_ENABLED = true
       // act
@@ -167,16 +172,16 @@ describe('processACLRequest tests', () => {
       processScmPermissionsStub.restore();
     });
 
-    it('POST policies - add user fails when add/remove user to safe fails.' , async () => {
+    it('POST policies - add user fails when add/remove user to safe fails.', async () => {
       // arrange
       const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
       const processScmPermissionsStub = sinon.stub(index, "processScmPermissions").resolves(true);
-      const addOrRemoveAdminUsersToSafeStub = sinon.stub(index, "addOrRemoveAdminUsersToSafe").rejects(); 
+      const addOrRemoveAdminUsersToSafeStub = sinon.stub(index, "addOrRemoveAdminUsersToSafe").rejects();
       const config = {};
       globalConfig.VAULT.IS_ENABLED = true
       // act
       await expect(index.processACLRequest(postEvent, config)).to.be.rejected;
-     
+
       sinon.assert.calledOnce(addOrRemovePolicyStub);
       sinon.assert.calledOnce(processScmPermissionsStub);
       sinon.assert.calledOnce(addOrRemoveAdminUsersToSafeStub);
@@ -196,13 +201,14 @@ describe('processACLRequest tests', () => {
       addOrRemovePolicyStub.restore();
     });
 
-    it('POST policies - remove users successfully', async () => {
+    it('POST policies - remove users successfully when vault is not enabled', async () => {
       // arrange
       const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
       const processScmPermissionsStub = sinon.stub(index, "processScmPermissions").resolves(true);
+      const removeAllUsersFromSafeStub = sinon.stub(index, "removeAllUsersFromSafe").resolves(true);
       const config = {};
       postEvent.body.policies = [];
-
+      globalConfig.VAULT.IS_ENABLED = false
       // act
       const result = await index.processACLRequest(postEvent, config);
 
@@ -210,8 +216,51 @@ describe('processACLRequest tests', () => {
       expect(result.success).to.equal(true);
       sinon.assert.calledOnce(addOrRemovePolicyStub);
       sinon.assert.calledOnce(processScmPermissionsStub);
+      sinon.assert.notCalled(removeAllUsersFromSafeStub);
+      removeAllUsersFromSafeStub.restore();
       addOrRemovePolicyStub.restore();
       processScmPermissionsStub.restore();
+    });
+
+    it('POST policies - remove users successfully when vault is enabled', async () => {
+      // arrange
+      const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
+      const processScmPermissionsStub = sinon.stub(index, "processScmPermissions").resolves(true);
+      const removeAllUsersFromSafeStub = sinon.stub(index, "removeAllUsersFromSafe").resolves(true);
+
+      const config = {};
+      postEvent.body.policies = [];
+      globalConfig.VAULT.IS_ENABLED = true
+      // act
+      const result = await index.processACLRequest(postEvent, config);
+
+      // assert
+      expect(result.success).to.equal(true);
+      sinon.assert.calledOnce(addOrRemovePolicyStub);
+      sinon.assert.calledOnce(processScmPermissionsStub);
+      sinon.assert.calledOnce(removeAllUsersFromSafeStub);
+      removeAllUsersFromSafeStub.restore();
+      addOrRemovePolicyStub.restore();
+      processScmPermissionsStub.restore();
+    });
+
+    it('POST policies - remove users throw error when vault is enabled and removing user from safe fails', async () => {
+      // arrange
+      const addOrRemovePolicyStub = sinon.stub(casbinUtil, "addOrRemovePolicy").resolves(true);
+      const processScmPermissionsStub = sinon.stub(index, "processScmPermissions").resolves(true);
+      const removeAllUsersFromSafeStub = sinon.stub(index, "removeAllUsersFromSafe").rejects();
+
+      const config = {};
+      postEvent.body.policies = [];
+      globalConfig.VAULT.IS_ENABLED = true
+      // act
+      await expect(index.processACLRequest(postEvent, config)).to.be.rejected;
+      sinon.assert.calledOnce(addOrRemovePolicyStub);
+      sinon.assert.calledOnce(processScmPermissionsStub);
+      sinon.assert.calledOnce(removeAllUsersFromSafeStub);
+      addOrRemovePolicyStub.restore();
+      processScmPermissionsStub.restore();
+      removeAllUsersFromSafeStub.restore();
     });
 
     it('POST policies - remove users throws error', async () => {
@@ -717,15 +766,15 @@ describe("getList", () => {
     }
     let data = {
       Items: [{
-        SERVICE_ID:{
+        SERVICE_ID: {
           S: "1"
         }
       }, {
-        SERVICE_ID:{
+        SERVICE_ID: {
           S: "2"
         }
       }, {
-        SERVICE_ID:{
+        SERVICE_ID: {
           S: "3"
         }
       }]
@@ -736,7 +785,7 @@ describe("getList", () => {
       let dataObj;
       if (count) {
         data.LastEvaluatedKey = {
-          SERVICE_ID:{
+          SERVICE_ID: {
             S: "3"
           }
         }
@@ -756,7 +805,7 @@ describe("getList", () => {
   });
 });
 
-describe("super user implementation", () =>{
+describe("super user implementation", () => {
   it("should return list of services with admin policies for super user", () => {
     let adminId = "adminUser";
     globalConfig.CREDENTIAL.SERVICE_USER = "adminUser";
@@ -765,12 +814,12 @@ describe("super user implementation", () =>{
       "SERVICES_TABLE_NAME": "test_table",
       "REGION": "region",
     };
-    let response = {data: ["123", "456", "789"]};
+    let response = { data: ["123", "456", "789"] };
     let getSeviceIdList = sinon.stub(getList, "getSeviceIdList").returns(response);
     casbin.getPolicyForUser(adminId, config).then(res => {
       sinon.assert.calledOnce(getSeviceIdList);
       for (eachSvc of res) {
-        for(each of eachSvc.policies) {
+        for (each of eachSvc.policies) {
           if (each.category === "manage") {
             expect(each.permission).to.be.eq("admin")
           } else {
@@ -789,7 +838,7 @@ describe("super user implementation", () =>{
       "SERVICES_TABLE_NAME": "test_table",
       "REGION": "region",
     };
-    let errorRes = {error: "No data available"};
+    let errorRes = { error: "No data available" };
     let getSeviceIdList = sinon.stub(getList, "getSeviceIdList").returns(errorRes);
     casbin.getPolicyForUser(adminId, config).then(res => {
       sinon.assert.calledOnce(getSeviceIdList);
@@ -803,22 +852,22 @@ describe("super user implementation", () =>{
     const config = {
       "SERVICE_USER": adminId
     };
-    let response = {data: ["123"]};
+    let response = { data: ["123"] };
     let getSeviceIdList = sinon.stub(getList, "getSeviceIdList").returns(response);
     casbin.getPolicyForServiceUser("123", adminId, config)
-    .then(res => {
-      sinon.assert.calledOnce(getSeviceIdList);
-      for (eachSvc of res) {
-        for(each of eachSvc.policies) {
-          if (each.category === "manage") {
-            expect(each.permission).to.be.eq("admin")
-          } else {
-            expect(each.permission).to.be.eq("write")
+      .then(res => {
+        sinon.assert.calledOnce(getSeviceIdList);
+        for (eachSvc of res) {
+          for (each of eachSvc.policies) {
+            if (each.category === "manage") {
+              expect(each.permission).to.be.eq("admin")
+            } else {
+              expect(each.permission).to.be.eq("write")
+            }
           }
         }
-      }
-      getSeviceIdList.restore();
-    });
+        getSeviceIdList.restore();
+      });
   });
 
   it("should show no data available if no items available from db", () => {
@@ -826,7 +875,7 @@ describe("super user implementation", () =>{
     const config = {
       "SERVICE_USER": adminId
     };
-    let errorRes = {error: "No data available"};
+    let errorRes = { error: "No data available" };
     let getSeviceIdList = sinon.stub(getList, "getSeviceIdList").returns(errorRes);
     casbin.getPolicyForServiceUser("123", adminId, config).then(res => {
       sinon.assert.calledOnce(getSeviceIdList);
@@ -835,4 +884,89 @@ describe("super user implementation", () =>{
     });
   });
 
+});
+
+describe("addOrRemoveAdminUsersToSafe", () => {
+  it("should resolve addOrRemoveAdminUsersToSafe when user is successfully added/removed to/from safe", () => {
+    let getEnvironmentDetailsStub = sinon.stub(environment, "getEnvironmentDetails").resolves();
+    let addOrRemoveAllAdminUsersToSafeStub = sinon.stub(vault, "addOrRemoveAllAdminUsersToSafe").resolves();
+    let serviceId = "abcd";
+    let policies = [{ "userId": "test@test.com", "permission": "admin", "category": "manage" }];
+    let config = {};
+    index.addOrRemoveAdminUsersToSafe(config, serviceId, policies).then(res => {
+      sinon.assert.calledOnce(getEnvironmentDetailsStub);
+      sinon.assert.calledOnce(addOrRemoveAllAdminUsersToSafeStub);
+      getEnvironmentDetailsStub.restore();
+      addOrRemoveAllAdminUsersToSafeStub.restore();
+    });
+  });
+
+  it("should reject addOrRemoveAdminUsersToSafe getEnvironmentDetails fails", () => {
+    let getEnvironmentDetailsStub = sinon.stub(environment, "getEnvironmentDetails").rejects();
+    let addOrRemoveAllAdminUsersToSafeStub = sinon.stub(vault, "addOrRemoveAllAdminUsersToSafe").resolves();
+    let serviceId = "abcd";
+    let policies = [{ "userId": "test@test.com", "permission": "admin", "category": "manage" }];
+    let config = {};
+    index.addOrRemoveAdminUsersToSafe(config, serviceId, policies).catch(err => {
+      sinon.assert.calledOnce(getEnvironmentDetailsStub);
+      sinon.assert.notCalled(addOrRemoveAllAdminUsersToSafeStub);
+      getEnvironmentDetailsStub.restore();
+      addOrRemoveAllAdminUsersToSafeStub.restore();
+    });
+  });
+
+  it("should reject addOrRemoveAdminUsersToSafe addOrRemoveAllAdminUsersToSafe fails", () => {
+    let getEnvironmentDetailsStub = sinon.stub(environment, "getEnvironmentDetails").resolves();
+    let addOrRemoveAllAdminUsersToSafeStub = sinon.stub(vault, "addOrRemoveAllAdminUsersToSafe").rejects();
+    let serviceId = "abcd";
+    let policies = [{ "userId": "test@test.com", "permission": "admin", "category": "manage" }];
+    let config = {};
+    index.addOrRemoveAdminUsersToSafe(config, serviceId, policies).catch(err => {
+      sinon.assert.calledOnce(getEnvironmentDetailsStub);
+      sinon.assert.calledOnce(addOrRemoveAllAdminUsersToSafeStub);
+      getEnvironmentDetailsStub.restore();
+      addOrRemoveAllAdminUsersToSafeStub.restore();
+    });
+  });
+});
+
+describe("removeAllUsersFromSafe", () => {
+  it("should resolve removeAllUsersFromSafe when user is successfully added/removed to/from safe", () => {
+    let getEnvironmentDetailsStub = sinon.stub(environment, "getEnvironmentDetails").resolves();
+    let removeAllUsersFromSafeStub = sinon.stub(vault, "removeAllUsersFromSafe").resolves();
+    let serviceId = "abcd";
+    let config = {};
+    index.removeAllUsersFromSafe(config, serviceId).then(res => {
+      sinon.assert.calledOnce(getEnvironmentDetailsStub);
+      sinon.assert.calledOnce(removeAllUsersFromSafeStub);
+      getEnvironmentDetailsStub.restore();
+      removeAllUsersFromSafeStub.restore();
+    });
+  });
+
+  it("should reject removeAllUsersFromSafe getEnvironmentDetails fails", () => {
+    let getEnvironmentDetailsStub = sinon.stub(environment, "getEnvironmentDetails").rejects();
+    let removeAllUsersFromSafeStub = sinon.stub(vault, "removeAllUsersFromSafe").resolves();
+    let serviceId = "abcd";
+    let config = {};
+    index.removeAllUsersFromSafe(config, serviceId).catch(err => {
+      sinon.assert.calledOnce(getEnvironmentDetailsStub);
+      sinon.assert.notCalled(removeAllUsersFromSafeStub);
+      getEnvironmentDetailsStub.restore();
+      removeAllUsersFromSafeStub.restore();
+    });
+  });
+
+  it("should reject removeAllUsersFromSafe removeAllUsersFromSafe fails", () => {
+    let getEnvironmentDetailsStub = sinon.stub(environment, "getEnvironmentDetails").resolves();
+    let removeAllUsersFromSafeStub = sinon.stub(vault, "removeAllUsersFromSafe").rejects();
+    let serviceId = "abcd";
+    let config = {};
+    index.removeAllUsersFromSafe(config, serviceId).catch(err => {
+      sinon.assert.calledOnce(getEnvironmentDetailsStub);
+      sinon.assert.calledOnce(removeAllUsersFromSafeStub);
+      getEnvironmentDetailsStub.restore();
+      removeAllUsersFromSafeStub.restore();
+    });
+  });
 });

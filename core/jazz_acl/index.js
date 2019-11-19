@@ -28,12 +28,12 @@ const auth = require("./components/scm/login.js");
 const globalConfig = require("./config/global-config.json");
 
 global.globalConfig = globalConfig;
+let authToken, serviceData;
 
 async function handler(event, context) {
   //Initializations
-  const config = configModule.getConfig(event, context);  
+  const config = configModule.getConfig(event, context);
   logger.init(event, context);
-  let authToken, serviceData;
 
   try {
     validation.validateBasicInput(event);
@@ -74,9 +74,7 @@ async function processACLRequest(event, config) {
 
       await exportable.processScmPermissions(config, serviceId, policies, 'add');
 
-      logger.info("vault is enabled. global.globalConfig.VAULT.IS_ENALED : " + global.globalConfig.VAULT.IS_ENABLED)
       if (global.globalConfig.VAULT.IS_ENABLED) {
-        logger.info("vault is enabled.")
         await exportable.addOrRemoveAdminUsersToSafe(config, serviceId, policies);
       }
     } else {//delete policies
@@ -87,6 +85,9 @@ async function processACLRequest(event, config) {
       }
 
       await exportable.processScmPermissions(config, serviceId, null, 'remove');
+      if (global.globalConfig.VAULT.IS_ENABLED) {
+        await exportable.removeAllUsersFromSafe(config, serviceId);
+      }
     }
 
     return { success: true };
@@ -164,12 +165,8 @@ async function processScmPermissions(config, serviceId, policies, key) {
 
 async function addOrRemoveAdminUsersToSafe(config, serviceId, policies) {
   return new Promise((resolve, reject) => {
-    const adminPolicy = policies.filter(policy => policy.category === 'manage' && policy.permission === 'admin');
-    logger.info("adminPolicy: " + JSON.stringify(adminPolicy))
-    const adminUsers = adminPolicy.map(policy => policy.userId);
-    logger.info("adminUsers: " + JSON.stringify(adminUsers))
+    const adminUsers = policies.filter(policy => policy.category === 'manage');
     if (adminUsers.length > 0) {
-      logger.info("adminUsers: length >0")
       environment.getEnvironmentDetails(config, serviceData, authToken)
         .then((result) => { return vault.addOrRemoveAllAdminUsersToSafe(result, config, serviceId, authToken, adminUsers) })
         .then((res) => {
@@ -182,11 +179,25 @@ async function addOrRemoveAdminUsersToSafe(config, serviceId, policies) {
   });
 }
 
+async function removeAllUsersFromSafe(config, serviceId) {
+  return new Promise((resolve, reject) => {
+    environment.getEnvironmentDetails(config, serviceData, authToken)
+      .then((result) => { return vault.removeAllUsersFromSafe(result, config, serviceId, authToken) })
+      .then((res) => {
+        return resolve(res);
+      })
+      .catch((ex) => {
+        return reject(ex);
+      });
+  });
+}
+
 const exportable = {
   handler,
   processACLRequest,
   processScmPermissions,
-  addOrRemoveAdminUsersToSafe
+  addOrRemoveAdminUsersToSafe,
+  removeAllUsersFromSafe
 };
 
 module.exports = exportable;
