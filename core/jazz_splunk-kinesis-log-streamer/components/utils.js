@@ -31,14 +31,14 @@ const truncate = require('unicode-byte-truncate');
 // Helper functions
 
 function assumeRole(configData, serviceData){
-  var isPrimary, roleArn, nonSlsApp = false;
+  var isPrimary, roleArn;
   if(serviceData){
   	isPrimary = checkIsPrimary(serviceData.deployment_accounts[0].accountId, configData);
   	roleArn = getRolePlatformService(serviceData.deployment_accounts[0].accountId, configData);
   } 
   var accessparams;
   return new Promise((resolve, reject) => {
-    if (isPrimary || nonSlsApp) {
+    if (isPrimary) {
         accessparams = {};
         resolve(accessparams)
       } else {
@@ -56,7 +56,6 @@ function assumeRole(configData, serviceData){
               "message": "Unknown internal error occurred"
             })
           } else {
-            logger.info("Temporary Credentials are : " + JSON.stringify(data));
             accessparams = {
               accessKeyId: data.Credentials.AccessKeyId,
               secretAccessKey: data.Credentials.SecretAccessKey,
@@ -83,7 +82,7 @@ function getLogsGroupsTags(logGroupName, tempCreds, serviceData) {
         logger.error("something went wrong while fetching tags..: " + JSON.stringify(err));
         reject('error')
       } else {
-        logger.debug('data ' + JSON.stringify(data))
+        logger.debug(`tags for log group - ${logGroupName}: ` + JSON.stringify(data))
         resolve(data)
       } 
     });
@@ -142,11 +141,11 @@ var getCommonData = function (payload, config) {
               data.asset_type = "lambda"
               data.request_id = getInfo(payload.logEvents, global_config.PATTERNS.lambda_request_id);
               if (data.request_id) {
-                data.provider = "aws_lambda";
+                data.provider = "aws";
                 let domainAndservice, serviceInfo, dev_environment, serviceInfoArr, namespace;
                 data.asset_identifier = payload.logGroup.split(global_config.PATTERNS.asset_identifier_key)[1];
                 // if tags present, then it is for sls-app, otherwise for other services
-                if(tagsResult != 'error' && tagsResult != undefined && tagsResult.tags.environment){
+                if(tagsResult != 'error' && tagsResult.tags.environment && tagsResult.tags.namespace && tagsResult.tags.service){
                   data.environment = tagsResult.tags.environment;
                   data.namespace = tagsResult.tags.namespace;
                   data.service = tagsResult.tags.service;
