@@ -1,5 +1,14 @@
 {
   "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod",  
   "SERVICES_TABLE_NAME": "{inst_stack_prefix}_services_prod",
-  "REGION": "{conf-region}"  
+  "REGION": "{conf-region}",
+  "CASBIN": {
+    "TYPE": "{casbin_type}",
+    "HOST": "{casbin_host}",
+    "USER": "{casbin_user}",
+    "PASSWORD": "{casbin_password}",
+    "PORT": "{casbin_port}",
+    "DATABASE": "{casbin_database}",
+    "TIMEOUT": "{casbin_timeout}"
+  } 
 }

@@ -1,13 +1,4 @@
 {
-  "CASBIN": {
-    "TYPE": "{casbin_type}",
-    "HOST": "{casbin_host}",
-    "USER": "{casbin_user}",
-    "PASSWORD": "{casbin_password}",
-    "PORT": "{casbin_port}",
-    "DATABASE": "{casbin_database}",
-    "TIMEOUT": "{casbin_timeout}"
-  },
   "API": {
     "SERVICE_API": "/jazz/services",
     "LOGIN_API": "/jazz/login",

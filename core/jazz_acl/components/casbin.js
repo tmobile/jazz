@@ -25,13 +25,13 @@ async function dbConnection(config) {
   let conn;
   try {
     conn = await TypeORMAdapter.default.newAdapter({
-      type: global.globalConfig.CASBIN.TYPE,
-      host: global.globalConfig.CASBIN.HOST,
-      port: global.globalConfig.CASBIN.PORT,
-      username: global.globalConfig.CASBIN.USER,
-      password: global.globalConfig.CASBIN.PASSWORD,
-      database: global.globalConfig.CASBIN.DATABASE,
-      timeout: global.globalConfig.CASBIN.TIMEOUT
+      type: config.CASBIN.TYPE,
+      host: config.CASBIN.HOST,
+      port: config.CASBIN.PORT,
+      username: config.CASBIN.USER,
+      password: config.CASBIN.PASSWORD,
+      database: config.CASBIN.DATABASE,
+      timeout: config.CASBIN.TIMEOUT
     });
   } catch (err) {
     if (err.name !== "AlreadyHasActiveConnectionError") {

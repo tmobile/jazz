@@ -55,20 +55,20 @@ def loadServiceConfigurationData() {
 
     if (service_name.trim() == "jazz_acl") {
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.ACL.DATABASE.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-        updateConfigValueInGlobalFile("{casbin_user}", UNAME)
-        updateConfigValueInGlobalFile("{casbin_password}", PWD)
+        updateConfigValue("{casbin_user}", UNAME)
+        updateConfigValue("{casbin_password}", PWD)
       }
 
       updateCoreAPI()
       updateConfigValueInGlobalFile("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
       updateConfigValueInGlobalFile("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)      
-      updateConfigValueInGlobalFile("{casbin_host}", config_loader.ACL.DATABASE.ENDPOINT)
-      updateConfigValueInGlobalFile("{casbin_port}", config_loader.ACL.DATABASE.PORT)
-      updateConfigValueInGlobalFile("{casbin_database}", config_loader.ACL.DATABASE.NAME)
-      updateConfigValueInGlobalFile("{casbin_type}", config_loader.ACL.DATABASE.TYPE_DB)
-      updateConfigValueInGlobalFile("{casbin_timeout}", config_loader.ACL.DATABASE.TIMEOUT)      
-      updateConfigValueInGlobalFile("{scm_type}", config_loader.SCM.TYPE)
-      updateConfigValueInGlobalFile("{scm_base_url}", "http://${config_loader.REPOSITORY.BASE_URL}")
+      updateConfigValue("{casbin_host}", config_loader.ACL.DATABASE.ENDPOINT)
+      updateConfigValue("{casbin_port}", config_loader.ACL.DATABASE.PORT)
+      updateConfigValue("{casbin_database}", config_loader.ACL.DATABASE.NAME)
+      updateConfigValue("{casbin_type}", config_loader.ACL.DATABASE.TYPE_DB)
+      updateConfigValue("{casbin_timeout}", config_loader.ACL.DATABASE.TIMEOUT)      
+      updateConfigValue("{scm_type}", config_loader.SCM.TYPE)
+      updateConfigValue("{scm_base_url}", "http://${config_loader.REPOSITORY.BASE_URL}")
       updateConfigValue("{inst_stack_prefix}", config_loader.INSTANCE_PREFIX)
       updateConfigValue("{conf-region}", region)
 
