@@ -59,26 +59,30 @@ def loadServiceConfigurationData() {
         updateConfigValue("{casbin_password}", PWD)
       }
 
+      updateCoreAPI()
+      updateConfigValueInGlobalFile("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValueInGlobalFile("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)      
       updateConfigValue("{casbin_host}", config_loader.ACL.DATABASE.ENDPOINT)
       updateConfigValue("{casbin_port}", config_loader.ACL.DATABASE.PORT)
       updateConfigValue("{casbin_database}", config_loader.ACL.DATABASE.NAME)
       updateConfigValue("{casbin_type}", config_loader.ACL.DATABASE.TYPE_DB)
-      updateConfigValue("{casbin_timeout}", config_loader.ACL.DATABASE.TIMEOUT)
+      updateConfigValue("{casbin_timeout}", config_loader.ACL.DATABASE.TIMEOUT)      
+      updateConfigValue("{scm_type}", config_loader.SCM.TYPE)
+      updateConfigValue("{scm_base_url}", "http://${config_loader.REPOSITORY.BASE_URL}")
       updateConfigValue("{inst_stack_prefix}", config_loader.INSTANCE_PREFIX)
       updateConfigValue("{conf-region}", region)
 
-      sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/global-config.json"
-      sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/global-config.json"
-
+      sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/global-config.json"
+    
       if (config_loader.SCM.TYPE == "bitbucket") {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-          sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/global-config.json"
-          sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/global-config.json"
+          updateConfigValueInGlobalFile("{bb_username}", UNAME)
+          updateConfigValueInGlobalFile("{bb_password}", PWD)
         }
       }
 
       if (config_loader.SCM.TYPE == "gitlab") {
-        sh "sed -i -- 's/{private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/global-config.json"
+         updateConfigValueInGlobalFile("{private_token}", config_loader.SCM.PRIVATE_TOKEN)
       }
     }
 
@@ -230,8 +234,7 @@ def loadServiceConfigurationData() {
       }
     }
 
-    if ((service_name.trim() == "jazz_services-handler") || (service_name.trim() == "jazz_create-serverless-service")
-      || (service_name.trim() == "jazz_acl")) {
+    if ((service_name.trim() == "jazz_services-handler") || (service_name.trim() == "jazz_create-serverless-service")) {
       updateCoreAPI()
       updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
       updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
@@ -414,6 +417,10 @@ def loadServiceConfigurationData() {
     echo "error occured while loading service configuration: " + e.getMessage()
     error "error occured while loading service configuration: " + e.getMessage()
   }
+}
+
+def updateConfigValueInGlobalFile(key, val) {
+  sh "sed -i -- 's#${key}#${val}#g' ./config/global-config.json"
 }
 
 def updateConfigValue(key, val) {
