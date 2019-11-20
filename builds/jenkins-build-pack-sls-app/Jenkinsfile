@@ -754,7 +754,6 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
       def isPrimaryAccount = configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == config.accountId}.PRIMARY ? true : false
 
        if(!isPrimaryAccount){
-          updatePolicy(env_key, destLogStreamArn);
           sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${destLogStreamArn}\"  --profile ${credsId} --region ${config.region}"
         } else {
           sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${destLogStreamArn}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId} --region ${config.region}"
@@ -765,46 +764,6 @@ def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
     }
   }
 }
-
-def updatePolicy(env, destARN){
-  def primaryData = utilModule.getAccountInfoPrimary();
-  def primaryRegion
-  for (item in primaryData.REGIONS) {
-		if(item.PRIMARY){
-			primaryRegion = item.REGION
-		}
-	}
-  def primaryCredsId = null
-
-	withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'PRIMARY_AWS_ACCESS_KEY_ID', credentialsId: primaryData.CREDENTIAL_ID, secretKeyVariable: 'PRIMARY_AWS_SECRET_ACCESS_KEY']])  {
-		try {
-			 // initialize aws credentials
-			 def randomStringPrimary = utilModule.generateRequestId();
-			 primaryCredsId = "jazzprimary-${randomStringPrimary}";
-
-			 sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
-			 sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
-			 sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
-
-			 def destinationName = destARN;
-			 def destArnArray = [];
-			 destArnArray = destinationName.tokenize(":").last();
-
-			 def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
-			 sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${config['region']} --profile ${primaryCredsId}"
-		} catch(ex){
-			send_status_email('FAILED', '')
-			events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
-			events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-			events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
-			error ex.getMessage()
-		} finally {
-			// reset Credentials
-			resetCredentials(primaryCredsId)
-		}
-  }
-}
-
 
 /**
  * For getting token to access catalog APIs.
