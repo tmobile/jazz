@@ -25,6 +25,7 @@ import groovy.transform.Field
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
 @Field def azureDeployer
+@Field def vaultUtilityModule
 
 @Field def azureRG
 @Field def azureApim
@@ -151,6 +152,10 @@ node() {
     def stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
     def internalAccess = config['require_internal_access']
+
+     if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+        vaultUtilityModule.initialize(configLoader, config, g_base_url, auth_token, environment_logical_id)      
+     }
 
     def roleId
     if(config['provider'] == 'aws'){
@@ -1279,6 +1284,11 @@ def loadBuildModules(buildModuleUrl){
 
     sonarModule = load "sonar-module.groovy"
     echo "Sonar module loaded successfully."
+
+    if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+      vaultUtilityModule = load "vault-utility-module.groovy"      
+      echo "Vault utility module loaded successfully."
+    }
 
     if (configLoader.APIGEE && configLoader.APIGEE.ENABLE_APIGEE instanceof Boolean && configLoader.APIGEE.ENABLE_APIGEE) {
       apigeeModule = load "apigee-module.groovy"

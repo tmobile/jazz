@@ -623,9 +623,11 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
     sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
   }
 
-  if (isScheduleEnabled && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ) 
-    sedCommand = sedCommand + "; /#Start:isVaultAndVpcEnabled/,/#End:isVaultAndVpcEnabled/d" // scheduled event does not have custome role so we need the vault custom role
-  else sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultAndVpcEnabled/d"  // Removing vault role since all other events has custom role
+  if (isScheduleEnabled && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ) {
+    // scheduled event does not have custome role so we need the vault custom role
+    if (internalAccess ) sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultEnabled/d" 
+    else sedCommand = sedCommand + "; /#Start:isVaultAndVpcEnabled/,/#End:isVaultAndVpcEnabled/d" 
+  } else sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultAndVpcEnabled/d"  // Removing vault role since all other events has custom role
   
 
   sh "sed -i -- '$sedCommand' ./serverless.yml"
