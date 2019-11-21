@@ -239,7 +239,7 @@ node() {
     stage("Deployment to ${env_key} environment") {
       def env_info = environmentDeploymentMetadata.getEnvironmentInfo()
 
-      def env_metadata = [: ]
+      def env_metadata = [:]
 
       if (env_info && env_info["metadata"]) {
         env_metadata = env_info["metadata"]
@@ -595,19 +595,19 @@ def getBasePath() {
 def createPathMethodList() { //Creates a list consisting of all path-method combination from the swagger
   def swaggerFile = readFile('swagger/swagger.json').trim()
   def lazyMap = new groovy.json.JsonSlurper().parseText(swaggerFile)
-  def jsonMap = [: ]
+  def jsonMap = [:]
   jsonMap.putAll(lazyMap.paths)
   def composedList = []
 
   for (path in jsonMap) {
     def pathKey = path.key
-    def pathVal = [: ]
+    def pathVal = [:]
     pathVal.putAll(path.value)
 
     //loop through all methods in path
     for (method in pathVal) {
       def methodVal = method.key.toUpperCase()
-      def pathMap = [: ]
+      def pathMap = [:]
       pathMap[pathKey] = methodVal
       composedList.add(pathMap)
     }
@@ -669,7 +669,7 @@ def echoServerlessFile() {
 def LoadConfiguration() {
   def result = readFile('deployment-env.yml').trim()
   echo "result of yaml parsing....$result"
-  def prop = [: ]
+  def prop = [:]
   def resultList = result.tokenize("\n")
 
   // delete commented lines
@@ -1222,7 +1222,7 @@ def updatePlatformServiceTemplate(config, roleARN, roleId, environment_logical_i
 @NonCPS
 def parseJson(jsonString) {
   def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-  def m = [: ]
+  def m = [:]
   m.putAll(lazyMap)
   return m
 }

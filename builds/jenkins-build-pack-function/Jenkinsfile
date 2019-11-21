@@ -26,6 +26,7 @@ import groovy.transform.Field
 @Field def environmentDeploymentMetadata
 @Field def sonarModule
 @Field def azureDeployer
+@Field def vaultUtilityModule
 
 @Field def auth_token = ''
 @Field def config
@@ -163,6 +164,10 @@ node() {
     roleARN = accountDetails.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
   } 
 
+  if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+    vaultUtilityModule.initialize(configLoader,config, g_base_url, auth_token, environment_logical_id)      
+  }
+
   sonarModule.initialize(configLoader, config, branch)
   stackName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
 
@@ -185,7 +190,6 @@ node() {
 
   dir(repo_name) {
     if (servicePlatform == null || servicePlatform != "azure") {
-
       loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
     }
     if (domain == "jazz") {
@@ -225,7 +229,7 @@ node() {
         }
         events.sendCompletedEvent('CODE_QUALITY_CHECK', 'code quality check completed', context_map, environment_logical_id)
       }
-    }
+    }    
 
     stage('Build') {
       events.sendStartedEvent('BUILD', 'build starts', context_map, environment_logical_id)
@@ -398,6 +402,37 @@ node() {
         } //end of withCredentials
       }
     } //end of deployment to an environment
+
+    //Udating safe details
+    if (config['domain'] && config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+      stage('Update Safe') {
+        events.sendStartedEvent('UPDATE_SAFE', 'safe updation started', context_map, environment_logical_id)
+        withCredentials([
+        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+          try {
+            // initialize aws credentials
+            def randomString = utilModule.generateRequestId();
+            credsId = "jazz-${randomString}";
+            sh "aws configure set profile.${credsId}.region ${service_config.region}"
+            sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+            sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+        
+            def environment = getEnvironmentInfo()
+            if(environment && environment.metadata && environment.metadata.SAFE_DETAILS){
+              def safeName = environment.metadata.SAFE_DETAILS.name
+              def updateSafeResp = vaultUtilityModule.updateSafeDetails(safeName, credsId)
+              if (updateSafeResp.isRoleAdded) events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], updateSafeResp.iamRoleARN, "iam_role", config), environment_logical_id);
+            }          
+          } catch (ex) {
+            events.sendFailureEvent('UPDATE_SAFE', ex.getMessage(), context_map, environment_logical_id)
+            events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+            error ex.getMessage()
+          } finally {
+            resetCredentials(credsId)
+          }
+        events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)
+      }
+    }
   }
   } catch (err) {
    throw err
@@ -405,7 +440,6 @@ node() {
    deleteDir()
   }
 }
-
 
 private void sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response) {
   def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
@@ -588,6 +622,11 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
   if (!isDynamoDbEnabled) {
     sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
   }
+
+  if (isScheduleEnabled && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ) 
+    sedCommand = sedCommand + "; /#Start:isVaultAndVpcEnabled/,/#End:isVaultAndVpcEnabled/d" // scheduled event does not have custome role so we need the vault custom role
+  else sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultAndVpcEnabled/d"  // Removing vault role since all other events has custom role
+  
 
   sh "sed -i -- '$sedCommand' ./serverless.yml"
   echoServerlessFile()
@@ -927,15 +966,7 @@ def updatePolicy(env, destARN){
           }
 }
 
-
-def writeServerlessFile(config, env, accountDetails) {
-
-  def iamRoleArnValue;
-  if(config['iamRoleARN'] != null && !config['iamRoleARN'].equals("")){
-      iamRoleArnValue = config['iamRoleARN']
-  } else {
-      iamRoleArnValue = accountDetails.IAM.USERSERVICES_ROLEID;
-  }
+def writeServerlessFile(config, env, accountDetails) {  
 
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
@@ -968,7 +999,6 @@ def writeServerlessFile(config, env, accountDetails) {
     sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
     sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
     sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' policyFile.yml"
-    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
   }
 
   if (config['event_source_sqs']) {
@@ -977,25 +1007,29 @@ def writeServerlessFile(config, env, accountDetails) {
     sh "sed -i -- 's/{event_source_sqs}/${event_source_sqs}/g' ./serverless.yml"
     sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' ./serverless.yml"
     sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' policyFile.yml"
-    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
   }
 
   if (config['event_source_kinesis']) {
     def event_source_kinesis = lambdaEvents.splitAndGetResourceName(config['event_source_kinesis'], env)
-    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -- 's|{event_source_kinesis}|${event_source_kinesis}|g' ./serverless.yml"
   }
 
   if (config['event_source_dynamodb']) {
     def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(config['event_source_dynamodb'], env)
-    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
   }
 
-  if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3']) {
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
+  if(config['iamRoleARN'] != null && !config['iamRoleARN'].equals("")){
+      sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
   } else {
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${iamRoleArnValue}|g' serverless.yml"
+      def iamRoleArnValue = accountDetails.IAM.USERSERVICES_ROLEID;
+      if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3'] 
+      || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED )) {
+        sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
+        sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
+      } else {        
+        sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${iamRoleArnValue}|g' serverless.yml"
+      }
   }
 
 }
@@ -1207,6 +1241,11 @@ def loadBuildModules(buildModuleUrl) {
     lambdaEvents = load "aws-lambda-events-module.groovy"
     lambdaEvents.initialize(configLoader, utilModule)
     echo "Lambda event module loaded successfully."
+
+    if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+      vaultUtilityModule = load "vault-utility-module.groovy"      
+      echo "Vault utility module loaded successfully."
+    }
 
     sonarModule = load "sonar-module.groovy"
     echo "Sonar module loaded successfully."
