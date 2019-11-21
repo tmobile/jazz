@@ -314,9 +314,6 @@ function getLambdaLogsData(configValue, payload, callback) {
 // Function to get service metadata using service API
 function getsServiceMetaData(config, logGroup, authToken) {
   var serviceParts = logGroup.split('_');
-  if(serviceParts.length < 2){
-    serviceParts = logGroup.split('-');
-  }
   return new Promise((resolve, reject) => {
     var service_api_options = {
       url: `${config.SERVICE_API_URL}${config.SERVICE_URL}?domain=${serviceParts[1]}&service=${serviceParts[2]}&environment=${serviceParts[serviceParts.length - 1]}`,
