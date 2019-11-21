@@ -24,6 +24,7 @@ const nanoid = require("nanoid/generate");
 const config = require("./components/config.js");
 const logger = require("./components/logger.js");
 const errorHandlerModule = require("./components/error-handler.js");
+const safe = require("./components/safe.js");
 const fcodes = require('./utils/failure-codes.js');
 const failureCodes = fcodes();
 var errorHandler = errorHandlerModule(logger);
@@ -197,7 +198,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
       if (serviceDetails.deployment_descriptor) {
         environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
       }
-      exportable.addSafe(environmentApiPayload, serviceDetails, configData, authToken)
+      safe.addSafe(environmentApiPayload, serviceDetails, configData, authToken)
         .then((result) => { return exportable.processEventInitialCommit(environmentApiPayload, serviceDetails.id, configData, authToken)})
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
@@ -211,7 +212,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
       if (serviceDetails.deployment_descriptor) {
         environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
       }
-      exportable.addSafe(environmentApiPayload, serviceDetails, configData, authToken)
+      safe.addSafe(environmentApiPayload, serviceDetails, configData, authToken)
         .then((result) => { return exportable.processEventCreateBranch(environmentApiPayload, serviceDetails.id, configData, authToken)})
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
@@ -270,7 +271,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
 
       // Update with DELETE status
       exportable.processEventUpdateEnvironment(environmentApiPayload, serviceDetails.id, configData, authToken)
-      .then((result) => { return exportable.removeSafe(environmentApiPayload, configData, authToken)})
+      .then((result) => { return safe.removeSafe(environmentApiPayload, configData, authToken)})
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventUpdateEnvironment Failed" + err);
@@ -280,7 +281,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
     } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.DELETE_BRANCH) {
       environmentApiPayload.physical_id = svcContext.branch;
       exportable.processEventDeleteBranch(environmentApiPayload, serviceDetails.id, configData, authToken)
-      .then((result) => { return exportable.removeSafe(environmentApiPayload, configData, authToken)})
+      .then((result) => { return safe.removeSafe(environmentApiPayload, configData, authToken)})
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventDeleteBranch Failed" + err);
@@ -590,239 +591,6 @@ function triggerBuildJob(payload, serviceDetails, configData) {
   });
 }
 
-function createSafe(environmentPayload, service_id, configData, authToken) {
-  return new Promise((resolve, reject) => {
-    var updatePayload = {};
-    const safeName = environmentPayload.service + '_' + environmentPayload.domain;
-    updatePayload.name = safeName;
-    updatePayload.owner = configData.SERVICE_USER;
-    updatePayload.description = "create safe for jazz tvault service: " + safeName;
-
-    var svcPayload = {
-      uri: `${configData.BASE_API_URL}${configData.TVAULT.API}`,
-      method: "POST",
-      headers: {
-        "Authorization": authToken,
-        "Content-Type": "application/json",
-        "Jazz-Service-ID": service_id
-      },
-      json: updatePayload,
-      rejectUnauthorized: false
-    };
-    request(svcPayload, function (error, response, body) {
-      if (response.statusCode && response.statusCode === 200) {
-        const timestamp = new Date().toISOString();
-        const safeDetails = { "name": safeName, "timestamp": timestamp };
-        const vaultLink = `${configData.TVAULT.HOSTNAME}/#!/admin`;
-        if (environmentPayload.metadata) {
-          environmentPayload.metadata['safe_details'] = safeDetails;
-          environmentPayload.metadata['vault_link'] = vaultLink;
-        } else {
-          environmentPayload.metadata = {
-            'safe_details': safeDetails,
-            'vault_link': vaultLink
-          };
-        }
-        return resolve(safeName);
-      } else {
-        logger.error("Error creating safe: " + JSON.stringify(response));
-        return reject({
-          "error": "Error creating safe",
-          "details": response.body.message
-        });
-      }
-    });
-
-  });
-}
-
-function deleteSafe(environmentPayload, configData, authToken, envDetails) {
-  return new Promise((resolve, reject) => {
-    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
-      return resolve({
-        "error": "T-vault is not enabled",
-      });
-    }
-    let safeName;
-    if (envDetails.data && envDetails.data.count > 0 && envDetails.data.environment.length){
-      const envResponse = envDetails.data.environment.filter(ele => ele.logical_id === environmentPayload.logical_id);
-      if (envResponse.length && envResponse[0].metadata && envResponse[0].metadata.safe_details) {
-        safeName = envResponse[0].metadata.safe_details.name;
-      } else {
-        return resolve({
-          "error": environmentPayload.logical_id + ": environment safe details is not found",
-        });
-      }
-    } else {
-      return resolve({
-        "error": environmentPayload.logical_id + ": environment safe details is not found",
-      });
-    }
-    var svcPayload = {
-      uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}`,
-      method: "DELETE",
-      headers: {
-        "Authorization": authToken,
-        "Content-Type": "application/json",
-      },
-      rejectUnauthorized: false
-    };
-    request(svcPayload, function (error, response, body) {
-      if (response.statusCode && response.statusCode === 200) {
-        return resolve(body);
-      } else {
-        logger.error("Error deleting safe: " + JSON.stringify(response));
-        return reject({
-          "error": "Error deleting safe",
-          "details": response.body.message
-        });
-      }
-    });
-
-  });
-}
-
-function getAdmins(environmentPayload, configData, authToken, safeName) {
-  return new Promise((resolve, reject) => {
-    var payload = {
-      uri: `${configData.BASE_API_URL}${configData.LIST_USERS}`,
-      method: "GET",
-      headers: {
-        "Authorization": authToken,
-        "Content-Type": "application/json"
-      }
-    };
-    request(payload, function (error, response, body) {
-      if (response.statusCode && response.statusCode === 200) {
-        const resultData = {
-          'admins': JSON.parse(body),
-          'safeName': safeName
-        };
-        return resolve(resultData);
-      } else {
-        logger.error("Error getting admins: " + JSON.stringify(response));
-        return reject({
-          "error": "Error getting admins",
-          "details": response.body.message
-        });
-      }
-    });
-
-  });
-}
-
-function addAdminsToSafe(environmentPayload, configData, authToken, res) {
-  return new Promise((resolve, reject) => {
-    var adminsList = res.admins && res.admins.data && res.admins.data.result;
-    if (!adminsList && adminsList.length === 0) {
-      return resolve({
-        "error": "No admins found for safe",
-      });
-    }
-    var updatePayload = {
-      'username': adminsList[0],
-      'permission': 'write'
-    };
-    const safeName = res.safeName;
-    var payload = {
-      uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}${configData.TVAULT.ADD_ADMINS}`,
-      method: "POST",
-      headers: {
-        "Authorization": authToken,
-        "Content-Type": "application/json"
-      },
-      json: updatePayload
-    };
-    request(payload, function (error, response, body) {
-      if (response.statusCode && response.statusCode === 200) {
-        return resolve(body);
-      } else {
-        logger.error("Error adding admins to safe: " + JSON.stringify(response));
-        return reject({
-          "error": "Error adding admins to safe",
-          "details": response.body.message
-        });
-      }
-    });
-
-  });
-}
-
-function getEnvDetails(environmentPayload, configData, authToken) {
-  return new Promise((resolve, reject) => {
-    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
-      return resolve({
-        "error": "T-vault is not enabled",
-      });
-    }
-
-    var payload = {
-      uri: `${configData.BASE_API_URL}${configData.ENV_DETAILS}?service=${environmentPayload.service}&domain=${environmentPayload.domain}`,
-      method: "GET",
-      headers: {
-        "Authorization": authToken,
-        "Content-Type": "application/json"
-      }
-    };
-    request(payload, function (error, response, body) {
-      if (response.statusCode && response.statusCode === 200) {
-        return resolve(body);
-      } else {
-        logger.error("Error getting environment details: " + JSON.stringify(response));
-        return reject({
-          "error": "Error getting environment details",
-          "details": response.body.message
-        });
-      }
-    });
-
-  });
-}
-
-
-function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
-  try{
-  return new Promise((resolve, reject) => {
-    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
-      return resolve({
-        "error": "T-vault is not enabled",
-      });
-    }
-    exportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
-        .then((safeName) => { return exportable.getAdmins(environmentApiPayload, configData, authToken, safeName)})
-        .then((result) => { return exportable.addAdminsToSafe(environmentApiPayload, configData, authToken, result)})
-        .then((result) => { return resolve(result); })
-        .catch((err) => {
-          logger.error("add safe details failed: " + err);
-          return reject(err);
-        })
-    });
-  } catch (err) {
-    logger.error("add safe details failed: " + err);
-  }
-}
-
-function removeSafe(environmentApiPayload, configData, authToken) {
-  try{
-  return new Promise((resolve, reject) => {
-    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
-      return resolve({
-        "error": "T-vault is not enabled",
-      });
-    }
-    exportable.getEnvDetails(environmentApiPayload, configData, authToken)
-        .then((result) => { return exportable.deleteSafe(environmentApiPayload, configData, authToken, result)})
-        .then((result) => { return resolve(result); })
-        .catch((err) => {
-          logger.error("removing safe details failed: " + err);
-          return reject(err);
-        })
-    });
-  } catch (err) {
-    logger.error("removing safe details failed: " + err);
-  }
-}
-
 function handleProcessedEvents(id, payload) {
   processedEvents.push({
     "sequence_id": id,
@@ -877,14 +645,7 @@ const exportable = {
   processServiceDetails,
   manageProcessItem,
   processRequest,
-  getSvcPayload,
-  addSafe,
-  removeSafe,
-  createSafe,
-  deleteSafe,
-  getAdmins,
-  addAdminsToSafe,
-  getEnvDetails
+  getSvcPayload
 }
 
 module.exports = exportable;

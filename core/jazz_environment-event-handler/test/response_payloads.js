@@ -97,11 +97,11 @@ var envDetailsResponse = {
                     "created_by":"bitbucket",
                     "physical_id":"master",
                     "created":"2019-11-11T15:55:50:020",
-                    "id":"76e2e72a-ec44-adb3-4cdc-39e79c23d2a8",
+                    "id":"76e2e72a-ec44-adb3-4cdc-39e79c23d000",
                     "metadata":{
                         "safe_details":
                             {
-                                "name":"test-vault-user_jazztest_prod",
+                                "name":"test-vault-user_jazztest",
                                 "link":"https://vault/#!/admin",
                                 "ts":"2019-11-11T15:56:02.290Z"
                             }
@@ -139,7 +139,7 @@ var envCreationResponseSuccess = {
 
 var adminsResponse = {
     "statusCode": 200,
-    "body": "{\"data\" : {\"result\":[\"serverless@t-mobile.com\"],\"errorCode\":\"0\",\"message\":null},\"input\" : \"\"}",
+    "body": "{\"data\" : {\"serviceId\":\"4b821bae-0300-239b-99c2-a62687a90000\",\"policies\":[{\"userId\":\"test@t-mobile.com\",\"permission\":\"admin\",\"category\":\"manage\"},{\"userId\":\"test@t-mobile.com\",\"permission\":\"write\",\"category\":\"code\"},{\"userId\":\"test@t-mobile.com\",\"permission\":\"write\",\"category\":\"deploy\"}]},\"input\" : \"\"}",
 }
 
 var envCreationResponseError = {
