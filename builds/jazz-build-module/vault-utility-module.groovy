@@ -28,7 +28,7 @@ def updateSafeDetails(safeName, lambdaARN, credsId) {
 
 	if (safeDetails) {
 		iamRoleArn = getRoleDetails(lambdaARN, credsId)
-		if(safeDetails.roles && safeDetails.roles.length != 0) {
+		if(safeDetails.data.roles && safeDetails.data.roles.length != 0) {
 			def isRoleArnExists = roleDetails.roles.find{val -> val.arn == iamRoleArn}
 			if(!isRoleArnExists) {
 				isRoleAdded = true
