@@ -26,9 +26,9 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
         "error": "T-vault is not enabled",
       });
     }
-    createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
-        .then((safeName) => { return getAdmins(environmentApiPayload, serviceDetails.id, configData, authToken, safeName)})
-        .then((result) => { return addAdminsToSafe(environmentApiPayload, configData, authToken, result)})
+    safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
+        .then((safeName) => { return safeExportable.getAdmins(environmentApiPayload, serviceDetails.id, configData, authToken, safeName)})
+        .then((result) => { return safeExportable.addAdminsToSafe(environmentApiPayload, configData, authToken, result)})
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("add safe details failed: " + err);
@@ -48,8 +48,8 @@ function removeSafe(environmentApiPayload, configData, authToken) {
         "error": "T-vault is not enabled",
       });
     }
-    getEnvDetails(environmentApiPayload, configData, authToken)
-        .then((result) => { return deleteSafe(environmentApiPayload, configData, authToken, result)})
+    safeExportable.getEnvDetails(environmentApiPayload, configData, authToken)
+        .then((result) => { return safeExportable.deleteSafe(environmentApiPayload, configData, authToken, result)})
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("removing safe details failed: " + err);
@@ -263,7 +263,6 @@ function getEnvDetails (environmentPayload, configData, authToken){
       }
     };
     request(payload, function (error, response, body) {
-      logger.info("response" + JSON.stringify(response))
       if (response.statusCode && response.statusCode === 200) {
         return resolve(body);
       } else {
@@ -278,7 +277,7 @@ function getEnvDetails (environmentPayload, configData, authToken){
   });
 }
 
-module.exports = {
+const safeExportable = {
   addSafe,
   removeSafe,
   createSafe,
@@ -287,4 +286,6 @@ module.exports = {
   addAdminsToSafe,
   getEnvDetails
 };
+
+module.exports = safeExportable;
 

@@ -519,7 +519,7 @@ describe('jazz environment handler tests: ', () => {
       .then((res) => {
         sinon.assert.calledOnce(requestPromiseStub);
         requestPromiseStub.restore();
-        expect(res).to.eq(resultData);
+        expect(res.safeName).to.eq(resultData.safeName);
       });
   });
 
@@ -541,6 +541,20 @@ describe('jazz environment handler tests: ', () => {
       });
   });
 
+  it("remove safe details successfully", () => {
+    let environmentPayload = testPayloads.environmentPayload;
+    let getEnvDetailStub = sinon.stub(safe, "getEnvDetails").resolves(testPayloads.envDetailsResponse.body);
+    let deleteStub = sinon.stub(safe, "deleteSafe").resolves(testPayloads.apiResponse.body);
+    safe.removeSafe(environmentPayload, configData, authToken)
+      .then((res) => {
+        sinon.assert.calledOnce(getEnvDetailStub);
+        sinon.assert.calledOnce(deleteStub);
+        getEnvDetailStub.restore();
+        deleteStub.restore();
+        expect(res.data.message).to.include('Success');
+      });
+  });
+
   it("safe added successfully with valid response", () => {
     let event = require('./COMMIT_TEMPLATE');
     let environmentPayload = testPayloads.environmentPayload;
@@ -553,7 +567,7 @@ describe('jazz environment handler tests: ', () => {
     let getAdminsStub = sinon.stub(safe, "getAdmins").resolves(resultData);
     let addAdminstoSafeStub = sinon.stub(safe, "addAdminsToSafe").resolves(testPayloads.processEventInitialCommitSuccess.body);
     const service = { id: 1, type: "api", service: "test", domain: "tst" }
-    safe.addSafe(event.Item, service, configData, authToken)
+    safe.addSafe(environmentPayload, service, configData, authToken)
       .then((res) => {
         sinon.assert.calledOnce(createSafeStub);
         sinon.assert.calledOnce(getAdminsStub);
@@ -565,37 +579,25 @@ describe('jazz environment handler tests: ', () => {
       });
   });
 
-  it("remove safe details successfully", () => {
-    let environmentPayload = testPayloads.environmentPayload;
-    let getEnvDetailsStub = sinon.stub(safe, "getEnvDetails").resolves(testPayloads.envDetailsResponse.body);
-    let deleteSafeStub = sinon.stub(safe, "deleteSafe").resolves(testPayloads.apiResponse.body);
-    safe.removeSafe(environmentPayload, configData, authToken)
-      .then((res) => {
-        sinon.assert.calledOnce(getEnvDetailsStub);
-        sinon.assert.calledOnce(deleteSafeStub);
-        getEnvDetailsStub.restore();
-        deleteSafeStub.restore();
-        expect(res.data.message).to.include('success');
-      });
-  });
+  
 
   it("get environment details of safe", () => {
     let environmentPayload = testPayloads.environmentPayload;
     environmentPayload["metadata"] = {
       "safe_details":
           {
-              "name":"test-vault-user_jazztest_prod",
+              "name":"test-vault-user_jazztest",
               "link":"https://vault/#!/admin",
               "ts":"2019-11-11T15:56:02.290Z"
           }
     };
-    let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
+    let requestStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, testPayloads.envDetailsResponse, testPayloads.envDetailsResponse.body);
     });
     safe.getEnvDetails(environmentPayload, configData, authToken)
       .then((res) => {
-        sinon.assert.calledOnce(requestPromiseStub);
-        requestPromiseStub.restore();
+        sinon.assert.calledOnce(requestStub);
+        requestStub.restore();
         expect(res.data.environment[0].metadata.safe_details.name).to.eq(environmentPayload["metadata"].safe_details.name);
       });
   });
@@ -611,13 +613,13 @@ describe('jazz environment handler tests: ', () => {
           }
     };
     environmentPayload.logical_id = 'ehrswzx36b-dev';
-    let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
+    let requestPromisesStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
     });
     safe.deleteSafe(environmentPayload, configData, authToken, testPayloads.envDetailsResponse.body)
       .then((res) => {
-        sinon.assert.calledOnce(requestPromiseStub);
-        requestPromiseStub.restore();
+        sinon.assert.calledOnce(requestPromisesStub);
+        requestPromisesStub.restore();
         expect(res.data.message).to.include('Success');
       });
   });
