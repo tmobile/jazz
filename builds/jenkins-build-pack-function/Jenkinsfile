@@ -427,7 +427,6 @@ node() {
                 events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
               } catch (ex) {
                 events.sendFailureEvent('UPDATE_SAFE', ex.getMessage(), context_map, environment_logical_id)
-                events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
                 error ex.getMessage()
               } finally {
                 resetCredentials(credsId)
