@@ -34,7 +34,7 @@ package:
 
 functions:
   handler:
-    name: ${file(deployment-env.yml):functionName}
+    name: ${functionName}
     handler: ${file(deployment-env.yml):mainClass}
     role: ${file(deployment-env.yml):iamRoleARN}
     description: ${self:service} Lambda Function
