@@ -21,13 +21,13 @@ def initialize(config_loader,service_config, base_url, auth_token, env){
 	environmentLogicalId = env
 }
 
-def updateSafeDetails(safeName, credsId) {
+def updateSafeDetails(safeName, lambdaARN, credsId) {
 	def iamRoleArn	
 	def isRoleAdded = false	
 	def safeDetails = getSafeDetails(safeName)
 
 	if (safeDetails) {
-		def iamRoleArn = getRoleDetails(credsId)
+		iamRoleArn = getRoleDetails(lambdaARN, credsId)
 		if(safeDetails.roles && safeDetails.roles.length != 0) {
 			def isRoleArnExists = roleDetails.roles.find{val -> val.arn == iamRoleArn}
 			if(!isRoleArnExists) {
@@ -55,7 +55,7 @@ def addRoleToSafe(iamRoleArn, safeName) {
 
 		def payload = JsonOutput.toJson(rolePayload)
 
-		def vaultApi = "${base_url}/jazz/t-vault/safes/${safeName}/role"
+		def vaultApi = "${baseUrl}/jazz/t-vault/safes/${safeName}/role"
 		def statusCode = sh(script: "curl -H \"Content-type: application/json\" \
 			-H \"Jazz-Service-ID: ${serviceConfig['service_id']}\" \
 			-H \"Authorization: $authToken \" -X POST \
@@ -67,11 +67,10 @@ def addRoleToSafe(iamRoleArn, safeName) {
 	} catch (ex) {
 		echo "Error in getting safe details. ${ex}"
 	}
-	return safeDetails
 }
 
 def getSafeDetails(safeName) {
-	def vaultApi = "${base_url}/jazz/t-vault/safes/${safeName}"
+	def vaultApi = "${baseUrl}/jazz/t-vault/safes/${safeName}"
 	def safeResponce = sh(script: "curl -H \"Content-type: application/json\" \
 		-H \"Jazz-Service-ID: ${serviceConfig['service_id']}\" \
 		-H \"Authorization: $authToken \" \
@@ -86,20 +85,20 @@ def getSafeDetails(safeName) {
 	return safeDetails
 }
 
-def getRoleDetails(credsId) {
+def getRoleDetails(lambdaARN, credsId) {
 	def lambdaName = "${configLoader.INSTANCE_PREFIX}-${serviceConfig['domain']}-${serviceConfig['service']}-${environmentLogicalId}"
 	def iamRoleArn
+	def functionDetails
 	try {
 		def getFunctionOutput = sh(returnStdout: true, script: "aws lambda get-function --function-name ${lambdaName} --output json  --profile ${credsId} --region ${serviceConfig.region}")
-		def functionDetails = parseJson(functionDetails)
+		if (getFunctionOutput) functionDetails = parseJson(getFunctionOutput)
 		echo "Function Details : $functionDetails"
 		if (functionDetails && functionDetails.Configuration) {
 			iamRoleArn = functionDetails.Configuration.Role
 		}
 	} catch (ex) {
 		echo "Error in getting function details. $ex"
-	}
-	
+	}	
 	return iamRoleArn
 }
 

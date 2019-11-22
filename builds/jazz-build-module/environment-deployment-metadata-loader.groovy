@@ -73,7 +73,8 @@ def getEnvironmentLogicalId() {
 }
 
 def getEnvironmentInfo() {
-	return g_environment_details;
+	if (!g_environment_details) getEnvironmentLogicalId()
+	return g_environment_details;	
 }
 
 def getEnvDeploymentDescriptor() {
