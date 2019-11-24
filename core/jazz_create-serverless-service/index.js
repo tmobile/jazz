@@ -352,7 +352,7 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
       serviceMetadataObj.providerRuntime = service_creation_data.runtime;
     }
     //Adding providerTimeout key in service catalog
-    if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function" || service_creation_data.service_type === "sls-app") {
+    if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
       if (service_creation_data.timeout)
       {
         serviceMetadataObj.providerTimeout = service_creation_data.timeout;
