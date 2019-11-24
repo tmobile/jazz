@@ -558,6 +558,7 @@ def servelessDeploy(env, envBucketKey, credsId, env_key, accountDetails){
     return "success"
   } catch (ex) {
     echo "Serverless deployment failed due to $ex"
+    sh "cat output.log"
   }
 
   def outputLog = readFile('output.log').trim()
