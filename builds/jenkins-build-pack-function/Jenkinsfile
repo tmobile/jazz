@@ -420,8 +420,8 @@ node() {
                 def environment = environmentDeploymentMetadata.getEnvironmentInfo()
                 if (environment && environment.metadata && environment.metadata.safe_details) {
                   def safeName = environment.metadata.safe_details.name
-                  def updateSafeResp = vaultUtilityModule.updateSafeDetails(safeName, lambdaARN, credsId)
-                  if (updateSafeResp.isRoleAdded) events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], updateSafeResp.iamRoleARN, "iam_role", config), environment_logical_id);
+                  def updatedIamRoleARN = vaultUtilityModule.updateSafeDetails(safeName, lambdaARN, credsId)
+                  events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], updatedIamRoleARN, "iam_role", config), environment_logical_id);
                 }
                 events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
               } catch (ex) {
