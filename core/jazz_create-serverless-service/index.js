@@ -354,15 +354,8 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
     
     //Adding providerTimeout key in service catalog
     if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
-      if (service_creation_data.timeout)
-      {
-        serviceMetadataObj.providerTimeout = service_creation_data.timeout;
-      }
-      else
-      {
-        // default to 160 seconds
-        serviceMetadataObj.providerTimeout = 160;
-      }  
+        // default to 30 seconds
+        serviceMetadataObj.providerTimeout = configData.DEFAULT_PROVIDER_TIMEOUT;
     }
 
     inputs.DEPLOYMENT_ACCOUNTS = deploymentAccounts;

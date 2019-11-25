@@ -4,6 +4,7 @@
   "API_TOKEN": "{api_token}",
   "SVC_USER": "{ci_user}",
   "SERVICE_API_URL": "https://test.execute-api.test-region.amazonaws.com",
+  "DEFAULT_PROVIDER_TIMEOUT": 30,
   "DEPLOYMENT_TARGETS": {
     "api": [
       "{conf_deployment_targets_api}"
