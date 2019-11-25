@@ -59,6 +59,7 @@ node() {
     def context_map
     def accountDetails
     def accountDetailsPrimary
+    def lambdaARN
 
     stage('Checkout code base') {
       sh 'rm -rf ' + repo_name
@@ -341,7 +342,7 @@ node() {
                 handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId, accountDetails, config)
               }
 
-              def lambdaARN = getLambdaARN(stackName, credsId);
+              lambdaARN = getLambdaARN(stackName, credsId);
               events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN.arn, "lambda", config), environment_logical_id);
 
               if (fileExists('swagger/swagger.json')) {
