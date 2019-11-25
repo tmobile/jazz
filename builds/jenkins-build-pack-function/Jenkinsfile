@@ -1,5 +1,4 @@
 #!groovy
-
 import groovy.json.JsonOutput
 import groovy.json.JsonSlurper
 import groovy.transform.Field
@@ -405,7 +404,7 @@ node() {
       } //end of deployment to an environment
 
       //Udating safe details
-      if (config['domain'] && config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+      if (config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
           stage('Update Safe') {
             events.sendStartedEvent('UPDATE_SAFE', 'safe updation started', context_map, environment_logical_id)
             withCredentials([
@@ -624,7 +623,7 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
     sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
   }
 
-  if (isScheduleEnabled && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ) {
+  if (isScheduleEnabled && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED && config['domain'] != 'jazz') {
     // scheduled event does not have custome role so we need the vault custom role
     if (config['require_internal_access']) sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultEnabled/d" 
     else sedCommand = sedCommand + "; /#Start:isVaultAndVpcEnabled/,/#End:isVaultAndVpcEnabled/d" 
@@ -844,7 +843,7 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
 	}
 
-	if (isS3EventEnabled || isSQSEventEnabled || isDynamoDbEnabled || isStreamEnabled || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED )) {
+	if (isS3EventEnabled || isSQSEventEnabled || isDynamoDbEnabled || isStreamEnabled || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED && config['domain'] != 'jazz')) {
     sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
  	}
 
@@ -1025,8 +1024,8 @@ def writeServerlessFile(config, env, accountDetails) {
     sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
   } 
   
-  if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3'] 
-  || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED )) {
+  if (config['domain'] != 'jazz' && (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3'] 
+  || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ))) {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
   } else {        
