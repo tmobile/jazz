@@ -23,7 +23,6 @@ def initialize(config_loader,service_config, base_url, auth_token, env){
 
 def updateSafeDetails(safeName, lambdaARN, credsId) {
 	def iamRoleArn	
-	def isRoleAdded = false	
 	def safeDetails = getSafeDetails(safeName)
 
 	if (safeDetails) {
@@ -31,19 +30,16 @@ def updateSafeDetails(safeName, lambdaARN, credsId) {
 		if(safeDetails.data.roles && safeDetails.data.roles.length != 0) {
 			def isRoleArnExists = safeDetails.data.roles.find{it -> it.value.arn == iamRoleArn}
 			if(!isRoleArnExists) {
-				isRoleAdded = true
 				addRoleToSafe(iamRoleArn, safeName)
 			} else echo "Role already exists"			
 		} else {
-			isRoleAdded = true			
 			addRoleToSafe(iamRoleArn, safeName)
 		}
 	} else {
 		echo "Safe not configured yet."
 	}
 
-	def updateSafeOutput = ["isRoleAdded" : isRoleAdded, "iamRoleArn" : iamRoleArn]
-	return updateSafeOutput 
+	return iamRoleArn 
 }
 
 def addRoleToSafe(iamRoleArn, safeName) {
