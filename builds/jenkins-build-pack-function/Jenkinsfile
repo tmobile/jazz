@@ -1307,7 +1307,7 @@ def isExistingLogGroup (groupName, credsId){
 	def filterLogsJSON = toJSON.parseText(filterLogs)
 	def logGroups = filterLogsJSON.logGroups
 	if(logGroups.size() > 0  && logGroups[0].logGroupName == groupName){
-		isExistingLogGrp = trues
+		isExistingLogGrp = true
   }
 	return isExistingLogGrp
 }
