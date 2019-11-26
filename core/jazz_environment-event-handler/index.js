@@ -27,10 +27,11 @@ const errorHandlerModule = require("./components/error-handler.js");
 const safe = require("./components/safe.js");
 const fcodes = require('./utils/failure-codes.js');
 const failureCodes = fcodes();
-var errorHandler = errorHandlerModule(logger);
+const errorHandler = errorHandlerModule(logger);
 
 var processedEvents = [];
 var failedEvents = [];
+
 function handler(event, context, cb) {
   var configData = config(context);
 

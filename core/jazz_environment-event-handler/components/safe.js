@@ -19,16 +19,16 @@ const request = require("request");
 const logger = require("./logger.js");
 
 function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
-  try{
-  return new Promise((resolve, reject) => {
-    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
-      return resolve({
-        "error": "T-vault is not enabled",
-      });
-    }
-    safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
-        .then((safeName) => { return safeExportable.getAdmins(environmentApiPayload, serviceDetails.id, configData, authToken, safeName)})
-        .then((result) => { return safeExportable.addAdminsToSafe(environmentApiPayload, configData, authToken, result)})
+  try {
+    return new Promise((resolve, reject) => {
+      if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
+        return resolve({
+          "error": "T-vault is not enabled",
+        });
+      }
+      safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
+        .then((safeName) => { return safeExportable.getAdmins(environmentApiPayload, serviceDetails.id, configData, authToken, safeName) })
+        .then((result) => { return safeExportable.addAdminsToSafe(environmentApiPayload, configData, authToken, result) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("add safe details failed: " + err);
@@ -41,15 +41,15 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
 }
 
 function removeSafe(environmentApiPayload, configData, authToken) {
-  try{
-  return new Promise((resolve, reject) => {
-    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
-      return resolve({
-        "error": "T-vault is not enabled",
-      });
-    }
-    safeExportable.getEnvDetails(environmentApiPayload, configData, authToken)
-        .then((result) => { return safeExportable.deleteSafe(environmentApiPayload, configData, authToken, result)})
+  try {
+    return new Promise((resolve, reject) => {
+      if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
+        return resolve({
+          "error": "T-vault is not enabled",
+        });
+      }
+      safeExportable.getEnvDetails(environmentApiPayload, configData, authToken)
+        .then((result) => { return safeExportable.deleteSafe(environmentApiPayload, configData, authToken, result) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("removing safe details failed: " + err);
@@ -58,13 +58,14 @@ function removeSafe(environmentApiPayload, configData, authToken) {
     });
   } catch (err) {
     logger.error("removing safe details failed: " + err);
+    return reject(err);
   }
 }
 
 function createSafe(environmentPayload, service_id, configData, authToken) {
   return new Promise((resolve, reject) => {
     var updatePayload = {};
-    const safeName = environmentPayload.service + '_' + environmentPayload.domain;
+    const safeName = `${environmentPayload.domain}_${environmentPayload.service}_${environmentPayload.logical_id}`;
     updatePayload.name = safeName;
     updatePayload.owner = configData.SERVICE_USER;
     updatePayload.description = "create safe for jazz tvault service: " + safeName;
@@ -103,11 +104,10 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
         });
       }
     });
-
   });
 }
 
-function deleteSafe(environmentPayload, configData, authToken, envDetails){
+function deleteSafe(environmentPayload, configData, authToken, envDetails) {
   return new Promise((resolve, reject) => {
     if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
       return resolve({
@@ -115,7 +115,7 @@ function deleteSafe(environmentPayload, configData, authToken, envDetails){
       });
     }
     let safeName;
-    if (envDetails.data && envDetails.data.count > 0 && envDetails.data.environment && envDetails.data.environment.length){
+    if (envDetails.data && envDetails.data.count > 0 && envDetails.data.environment && envDetails.data.environment.length) {
       const envResponse = envDetails.data.environment.filter(ele => ele.logical_id === environmentPayload.logical_id);
       if (envResponse.length && envResponse[0].metadata && envResponse[0].metadata.safe_details) {
         safeName = envResponse[0].metadata.safe_details.name;
@@ -149,7 +149,6 @@ function deleteSafe(environmentPayload, configData, authToken, envDetails){
         });
       }
     });
-
   });
 }
 
@@ -178,7 +177,6 @@ function getAdmins(environmentPayload, serviceId, configData, authToken, safeNam
         });
       }
     });
-
   });
 }
 
@@ -219,34 +217,34 @@ function addAdminsToSafe(environmentPayload, configData, authToken, res) {
   }
   return new Promise((resolve, reject) => {
     var adminsList = res.admins && res.admins.data && res.admins.data.policies;
-    var safeAdmins = adminsList.filter(ele => (ele.permission === "admin"  || ele.permission === "read") && ele.category === "manage");
-    if ((!adminsList || adminsList.length === 0) || (safeAdmins.length === 0 )) {
+    var safeAdmins = adminsList.filter(ele => (ele.permission === "admin" || ele.permission === "read") && ele.category === "manage");
+    if ((!adminsList || adminsList.length === 0) || (safeAdmins.length === 0)) {
       return resolve({
         "error": "No admins found for safe",
       });
     }
     var processPromises = [];
-    if(safeAdmins.length > 0) {
+    if (safeAdmins.length > 0) {
       for (var i = 0; i < safeAdmins.length; i++) {
         processPromises.push(processAdmins(safeAdmins[i]));
       }
     }
-    
+
     Promise.all(processPromises)
-        .then((result) => {
-          logger.info("result" + JSON.stringify(result));
-          return resolve({ message: "All admins added to safe" });
-        })
-        .catch((error) => {
-          logger.error("Promise.all failed to add admins to safe: " + JSON.stringify(error));
-          return reject(error);
-        });
+      .then((result) => {
+        logger.info("result" + JSON.stringify(result));
+        return resolve({ message: "All admins added to safe" });
+      })
+      .catch((error) => {
+        logger.error("Promise.all failed to add admins to safe: " + JSON.stringify(error));
+        return reject(error);
+      });
   });
 }
 
 
 
-function getEnvDetails (environmentPayload, configData, authToken){
+function getEnvDetails(environmentPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
     if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
       return resolve({
@@ -273,7 +271,6 @@ function getEnvDetails (environmentPayload, configData, authToken){
         });
       }
     });
-
   });
 }
 

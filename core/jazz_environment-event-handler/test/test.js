@@ -494,7 +494,7 @@ describe('jazz environment handler tests: ', () => {
     let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
         return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
     });
-    const safeName = environmentPayload.service + '_' + environmentPayload.domain;
+    const safeName = `${environmentPayload.domain}_${environmentPayload.service}_${environmentPayload.logical_id}`;
     const service = { id: 1, type: "api", service: "test", domain: "tst" }
     safe.createSafe(environmentPayload, service, configData, authToken)
       .then((res) => {
@@ -1432,6 +1432,7 @@ describe('handler', () => {
       statusCode: 200,
       body: JSON.stringify(body)
     };
+
     processRequestStub.resolves(service_responseObject.body);
     getServiceDetailsStub.resolves(service_responseObject.body);
     requestPromiseStub.callsFake((obj) => {
@@ -1441,7 +1442,7 @@ describe('handler', () => {
         return obj.callback(null, jenkins_job_responseObject, jenkins_job_responseObject.body);
       } else if (obj.uri == "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/dev/jazz/environments") {
         return obj.callback(null, testPayloads.createBranchSuccess, testPayloads.createBranchSuccess.body);
-      }
+      } 
     });
     let processEvents = index.processEvents(kinesisPayload, configData, "token");
     expect(processEvents.then(function (res) {
