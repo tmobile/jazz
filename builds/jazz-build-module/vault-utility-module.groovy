@@ -88,11 +88,10 @@ def getSafeDetails(safeName) {
 }
 
 def getRoleDetails(lambdaARN, credsId) {
-	def lambdaName = "${configLoader.INSTANCE_PREFIX}-${serviceConfig['domain']}-${serviceConfig['service']}-${environmentLogicalId}"
 	def iamRoleArn
 	def functionDetails
 	try {
-		def getFunctionOutput = sh(returnStdout: true, script: "aws lambda get-function --function-name ${lambdaName} --output json  --profile ${credsId} --region ${serviceConfig.region}")
+		def getFunctionOutput = sh(returnStdout: true, script: "aws lambda get-function --function-name ${lambdaARN} --output json  --profile ${credsId} --region ${serviceConfig.region}")
 		if (getFunctionOutput) functionDetails = parseJson(getFunctionOutput)
 		echo "Function Details : $functionDetails"
 		if (functionDetails && functionDetails.Configuration) {
