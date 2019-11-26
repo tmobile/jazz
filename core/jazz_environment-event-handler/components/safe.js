@@ -18,7 +18,7 @@
 const request = require("request");
 const logger = require("./logger.js");
 
-function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
+function addSafe(environmentApiPayload, serviceId, configData, authToken) {
   return new Promise((resolve, reject) => {
     try {
       if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
@@ -26,8 +26,8 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
           "error": "T-vault is not enabled",
         });
       }
-      safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
-        .then((safeName) => { return safeExportable.getAdmins(environmentApiPayload, serviceDetails.id, configData, authToken, safeName) })
+      safeExportable.createSafe(environmentApiPayload, serviceId, configData, authToken)
+        .then((safeName) => { return safeExportable.getAdmins(environmentApiPayload, serviceId, configData, authToken, safeName) })
         .then((result) => { return safeExportable.addAdminsToSafe(environmentApiPayload, configData, authToken, result) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
@@ -232,7 +232,7 @@ function addAdminsToSafe(environmentPayload, configData, authToken, res) {
 
     Promise.all(processPromises)
       .then((result) => {
-        logger.info("result" + JSON.stringify(result));
+        logger.debug("result" + JSON.stringify(result));
         return resolve({ message: "All admins added to safe" });
       })
       .catch((error) => {

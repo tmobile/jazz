@@ -44,7 +44,7 @@ function handler(event, context, cb) {
     })
     .then(result => {
       var records = exportable.getEventProcessStatus();
-      logger.info("Successfully processed events: " + JSON.stringify(records));
+      logger.debug("Successfully processed events: " + JSON.stringify(records));
       return cb(null, records);
     })
     .catch(err => {
@@ -117,7 +117,7 @@ function processEachEvent(record, configData, authToken) {
       })
       .then(result => {
         exportable.handleProcessedEvents(sequenceNumber, payload);
-        
+
         return resolve(result);
       })
       .catch(err => {
@@ -134,7 +134,7 @@ function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
     if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
       if (config.EVENTS.EVENT_TYPE.indexOf(kinesisPayload.Item.EVENT_TYPE.S) > -1 &&
         config.EVENTS.EVENT_NAME.indexOf(kinesisPayload.Item.EVENT_NAME.S) > -1) {
-        logger.info("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
+        logger.debug("found " + kinesisPayload.Item.EVENT_TYPE.S + " event with sequence number: " + sequenceNumber);
         return resolve({
           "interested_event": true,
           "payload": kinesisPayload.Item
@@ -199,8 +199,8 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
       if (serviceDetails.deployment_descriptor) {
         environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
       }
-      safe.addSafe(environmentApiPayload, serviceDetails, configData, authToken)
-        .then((result) => { return exportable.processEventInitialCommit(environmentApiPayload, serviceDetails.id, configData, authToken)})
+
+      exportable.processEventInitialCommit(environmentApiPayload, serviceDetails.id, configData, authToken)
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
         .catch((err) => {
@@ -213,8 +213,11 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
       if (serviceDetails.deployment_descriptor) {
         environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
       }
+      let nano_id = nanoid(configData.RANDOM_CHARACTERS, configData.RANDOM_ID_CHARACTER_COUNT);
+      environmentApiPayload.logical_id = nano_id + "-dev";
+
       safe.addSafe(environmentApiPayload, serviceDetails, configData, authToken)
-        .then((result) => { return exportable.processEventCreateBranch(environmentApiPayload, serviceDetails.id, configData, authToken)})
+        .then((result) => { return exportable.processEventCreateBranch(environmentApiPayload, serviceDetails.id, configData, authToken) })
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
         .catch((err) => {
@@ -226,7 +229,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
       environmentApiPayload.status = svcContext.status;
       environmentApiPayload.endpoint = svcContext.endpoint;
       environmentApiPayload.friendly_name = svcContext.friendly_name;
-      
+
       // update the deployment_descriptor when available
       if (svcContext.deployment_descriptor) {
         environmentApiPayload.deployment_descriptor = svcContext.deployment_descriptor;
@@ -272,7 +275,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
 
       // Update with DELETE status
       exportable.processEventUpdateEnvironment(environmentApiPayload, serviceDetails.id, configData, authToken)
-      .then((result) => { return safe.removeSafe(environmentApiPayload, configData, authToken)})
+        .then((result) => { return safe.removeSafe(environmentApiPayload, configData, authToken) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventUpdateEnvironment Failed" + err);
@@ -282,7 +285,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
     } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.DELETE_BRANCH) {
       environmentApiPayload.physical_id = svcContext.branch;
       exportable.processEventDeleteBranch(environmentApiPayload, serviceDetails.id, configData, authToken)
-      .then((result) => { return safe.removeSafe(environmentApiPayload, configData, authToken)})
+        .then((result) => { return safe.removeSafe(environmentApiPayload, configData, authToken) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventDeleteBranch Failed" + err);
@@ -296,7 +299,6 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
           return reject(err);
         })
     }
-
   });
 }
 
@@ -306,6 +308,18 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
       environmentPayload.logical_id = env;
       environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
 
+      safe.addSafe(environmentPayload, serviceId, configData, authToken)
+        .then((result) => { return processCreateEnv(environmentPayload, env) })
+        .then((result) => { return resolve(result); })
+        .catch((err) => {
+          logger.error("processEventInitialCommit Failed" + err);
+          return reject(err);
+        })
+    });
+  }
+
+  function processCreateEnv(environmentPayload, env) {
+    return new Promise((resolve, reject) => {
       var svcPayload = {
         uri: `${configData.BASE_API_URL}${configData.ENVIRONMENT_API_RESOURCE}`,
         method: "POST",
@@ -352,8 +366,6 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
 
 function processEventCreateBranch(environmentPayload, service_id, configData, authToken) {
   return new Promise((resolve, reject) => {
-    var nano_id = nanoid(configData.RANDOM_CHARACTERS, configData.RANDOM_ID_CHARACTER_COUNT);
-    environmentPayload.logical_id = nano_id + "-dev";
     environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
 
     var svcPayload = {

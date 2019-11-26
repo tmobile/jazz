@@ -170,11 +170,15 @@ describe('jazz environment handler tests: ', () => {
     let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
     });
+
+    let addSafeStub = sinon.stub(safe, "addSafe").resolves();
     const service = { id: 1, type: "api", service: "test", domain: "tst" }
 
     index.manageProcessItem(event.Item, service, configData, authToken)
       .catch((res) => {
-        sinon.assert.calledOnce(requestPromiseStub);
+        sinon.assert.calledTwice(requestPromiseStub);
+        sinon.assert.calledTwice(addSafeStub);
+        addSafeStub.restore();
         requestPromiseStub.restore();
         expect(res.error).to.include('Error creating');
         testPayloads.apiResponse.statusCode = statusCode;
@@ -433,10 +437,13 @@ describe('jazz environment handler tests: ', () => {
     let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, testPayloads.processEventInitialCommitError, JSON.stringify(testPayloads.processEventInitialCommitError.body));
     });
+    let addSafeStub = sinon.stub(safe, "addSafe").resolves();
     const serviceID = "test_id";
     index.processEventInitialCommit(environmentPayload,serviceID, configData, authToken)
       .catch(res => {
         sinon.assert.calledTwice(requestPromiseStub);
+        sinon.assert.calledTwice(addSafeStub);
+        addSafeStub.restore();
         requestPromiseStub.restore();
         expect(res.details).to.eql('error');
       });
@@ -458,11 +465,13 @@ describe('jazz environment handler tests: ', () => {
     let requestPromiseStub = sinon.stub(request, "Request").callsFake((obj) => {
       return obj.callback(null, testPayloads.processEventInitialCommitSuccess, testPayloads.processEventInitialCommitSuccess.body);
     });
-
+    let addSafeStub = sinon.stub(safe, "addSafe").resolves();
     const serviceID = "test_id";
     index.processEventInitialCommit(environmentPayload,serviceID, configData, authToken)
       .then(res => {
         sinon.assert.calledTwice(requestPromiseStub);
+        sinon.assert.calledTwice(addSafeStub);
+        addSafeStub.restore();
         requestPromiseStub.restore();
         expect(res.message).to.eql('Stage and Prod environments are created successfully');
       });
