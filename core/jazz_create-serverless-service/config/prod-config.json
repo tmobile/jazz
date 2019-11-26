@@ -8,6 +8,7 @@
   "TOKEN_URL": "/prod/jazz/login",
   "SERVICE_USER": "{jazz_admin}",
   "TOKEN_CREDS": "{jazz_admin_creds}",
+  "DEFAULT_PROVIDER_TIMEOUT": 30,
   "DEPLOYMENT_TARGETS": {
     "api": [
       "{conf_deployment_targets_api}"
