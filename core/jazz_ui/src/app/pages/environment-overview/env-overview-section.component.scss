@@ -1,6 +1,14 @@
 @import './../../../main-styles';
 @import './../service-detail/service-detail.component.scss';
 @import './../../secondary-components/create-service/create-service.component.scss';
+
+//Variables Declaration
+$color-white:#ffffff;
+$color-dark-gray: #aeb2bb;
+$color-dark-magenta: #ed008c;
+
+$env-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+
 .left-item {
   margin-right: 1rem;
   @media (max-width: $screen-sm) {
@@ -383,6 +391,7 @@ transform: rotateY(-50%)
 }
 .row-detail{
   display: flex;
+  justify-content: space-between;
 }
 .imp-label{
   display: flex;
@@ -408,8 +417,77 @@ transform: rotateY(-50%)
 }
 .col-detail{
   flex-grow: 1;
+  width: calc((100% - 2rem)/2);
+  background-color: $color-white;
+  box-shadow: $env-box-shadow;
   flex-basis: 0;
 }
+.secret-container{
+  margin-left: 25px;
+  &__edit{
+    display: flex;
+    color: white;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    height: 45px;
+    &--def{
+      margin-left: 5px;
+    }
+    &--icon{
+      margin-right: 5px;
+    .save-button{ 
+    background-color: #e20074;
+    border-radius: 22.5px;
+    border: 1px solid #fff;
+    width: 62px;
+     }
+    }
+  }
+  &__details{
+    padding: 10px;
+    height: 150px;
+    &--list{
+      height: 50px;
+      .secret__edit{
+        display: flex;
+        align-items: center;
+        background-color: #eeee;
+        height: 52px;
+        padding: 7px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        width: 85%;
+        &--input{
+          width: 90%;
+          .inputClass{
+            height: 35px;
+            border-radius: 5px;
+            margin: 0px;
+          }
+        }
+        .margin30{
+          margin-left: 30px;
+        }
+      }
+    }
+    &--addrole{
+      margin: 10px 0px;
+      color: $color-dark-magenta;
+    }
+    &--desc{
+
+    }
+  }
+}
+
+.editMode {
+  background-color: $color-dark-magenta;
+}
+.nonEditMode {
+  background-color: $color-dark-gray;
+}
+
 .line-numbers,
 .text-area
 {
@@ -440,8 +518,7 @@ transform: rotateY(-50%)
 }
 .service-details-application{
     border-radius: 3px;
-    margin: 0;
-    margin: 0 .8em 0 1.7em;
+    margin-top: 25px;
     flex-grow: 1;
     flex-basis: 0;
     background-color: #ffffff;
@@ -835,7 +912,15 @@ textarea[type="text"] {
 
 .env-details {
   margin: 0;
-  min-height: 60px;
+  padding: 1.6rem;
+  li {
+    list-style: none;
+    padding-bottom: 0.8rem;
+    display: flex;
+    &:last-child {
+      padding: 0;
+    }}
+
 }
 
 .parent-div:hover .tooltip {

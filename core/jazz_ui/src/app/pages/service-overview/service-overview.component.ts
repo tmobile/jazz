@@ -283,30 +283,7 @@ export class ServiceOverviewComponent implements OnInit {
     }
     return false;
   };
-  secretList = [
-    {
-      secretName:'emr-Gui-iamrole'
-    },
-    {
-      secretName:'emr-Gui-iamrole-Role'
-    },
-    {
-      secretName:'emr-Gui-iamrole-secretManagement'
-    }
-  ];
-  copyClipboard(copyapilinkid){
-    debugger
-    var element = null; // Should be <textarea> or <input>
-    element = document.getElementById(copyapilinkid);
-    element.select();
-    try {
-        document.execCommand("copy");
-        this.copylinkmsg = "LINK COPIED";
-    }
-    finally {
-       document.getSelection().removeAllRanges;
-    }
-  }
+
 
   validRate(val,int){
     if (val === 1) {

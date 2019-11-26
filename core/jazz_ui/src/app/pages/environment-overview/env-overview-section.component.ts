@@ -50,6 +50,8 @@ export class EnvOverviewSectionComponent implements OnInit {
   saveButton:boolean=false;
   isCancel:boolean=false;
   version: string = ">=1.0.0 <2.0.0";
+  showDisplay:boolean = false;
+  rolesList: any = []
   isValid:boolean=false;
   startNew: boolean = true;
   showCancel:boolean = false;
@@ -86,7 +88,9 @@ export class EnvOverviewSectionComponent implements OnInit {
   public lineNumberCount: any = new Array(7);
   copyLink:string="Copy Link";
   disableSave:boolean = true;
-
+  editEvents: boolean = true;
+  access:any = []
+  isAddOrDelete: boolean = false;
   errMessage: string = "Something went wrong while fetching your data";
   message:string="lalalala"
   private subscription:any;
@@ -254,6 +258,45 @@ popup(state){
 
 }
 
+  getSafeDetails() {
+    this.http.get('/jazz/t-vault/safes/safeme').subscribe(
+      (res) => {
+        console.log("res", res);
+      }
+    )
+  }
+
+  addRoleInSafe() {
+    let payload = {}
+    this.http.post('/jazz/t-vault/safes/safeme/role', payload).subscribe(
+      res => {
+        console.log("add", res)
+      }
+    )
+  }
+
+  deleteRoleFromSafe() {
+    let payload = {}
+    this.http.delete('/jazz/t-vault/safes/safeme/role', payload).subscribe(
+      res => {
+        console.log("del", res)
+      }
+    )
+  }
+  addSecret(category) {
+    let emptyInputAvalable = this.access.filter(each => (!each.arnVal))
+    if (!emptyInputAvalable.length) {
+      this.access[category].push({ 'arnVal': '' });
+      this.showDisplay = true;
+    }
+  }
+
+  secretEdiClick() {
+    this.editEvents = false;
+  }
+  secretSaveClick() {
+    this.editEvents = true;
+  }
   callServiceEnv(shouldUpdateYaml = true) {
     if ( this.subscription ) {
       this.subscription.unsubscribe();
@@ -452,6 +495,7 @@ form_endplist(){
 }
   ngOnInit() {
     this.form_endplist();
+    this.getSafeDetails();
     if(env_oss.envName=='oss')this.isOSS=true;
     if(this.service.domain != undefined)
       this.callServiceEnv();
