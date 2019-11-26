@@ -13,12 +13,18 @@ echo "Vault utility module loaded successfully"
 @Field def authToken
 @Field def environmentLogicalId
 
-def initialize(config_loader,service_config, base_url, auth_token, env){
+def initialize(config_loader,service_config, base_url, auth_token, env) {
 	configLoader = config_loader
 	serviceConfig = service_config
 	baseUrl = base_url
 	authToken = auth_token
 	environmentLogicalId = env
+}
+
+def updateCustomServicesSafeDetails(safeName, lambdaArns, credsId) {
+	for (arn in lambdaArns) {
+		updateSafeDetails(safeName, arn, credsId)
+	}
 }
 
 def updateSafeDetails(safeName, lambdaARN, credsId) {
