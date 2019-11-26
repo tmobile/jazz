@@ -52,6 +52,7 @@ node() {
     def gitCommitOwner
     def gitCommitHash
     def context_map
+    def lambdaArns = []
 
     accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
@@ -359,6 +360,9 @@ node() {
                     def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
                     if(arnAsArray.size() > 2) { // Making sure that the third element exists
                       def artifactType = arnAsArray[2]
+                      echo "artifactType : ${assetCatalogTypes[artifactType]}"
+                      echo "assetCatalogTypes[artifactType] : ${assetCatalogTypes[artifactType]}"
+                      if (assetCatalogTypes[artifactType] == 'lambda') lambdaArns.add(arn)
                       events.sendCompletedEvent('CREATE_ASSET',
                                                 null,
                                                 utilModule.generateAssetMap("aws",
