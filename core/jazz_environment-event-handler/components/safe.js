@@ -19,8 +19,8 @@ const request = require("request");
 const logger = require("./logger.js");
 
 function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
-  try {
-    return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
+    try {
       if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
         return resolve({
           "error": "T-vault is not enabled",
@@ -34,15 +34,15 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
           logger.error("add safe details failed: " + err);
           return reject(err);
         })
-    });
-  } catch (err) {
-    logger.error("add safe details failed: " + err);
-  }
+    } catch (err) {
+      logger.error("add safe details failed: " + err);
+    }
+  });
 }
 
 function removeSafe(environmentApiPayload, configData, authToken) {
-  try {
-    return new Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
+    try {
       if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
         return resolve({
           "error": "T-vault is not enabled",
@@ -55,11 +55,11 @@ function removeSafe(environmentApiPayload, configData, authToken) {
           logger.error("removing safe details failed: " + err);
           return reject(err);
         })
-    });
-  } catch (err) {
-    logger.error("removing safe details failed: " + err);
-    return reject(err);
-  }
+    } catch (err) {
+      logger.error("removing safe details failed: " + err);
+      return reject(err);
+    }
+  });
 }
 
 function createSafe(environmentPayload, service_id, configData, authToken) {
