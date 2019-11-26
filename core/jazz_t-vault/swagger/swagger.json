@@ -24,76 +24,15 @@
                     "Secret Management"
                 ],
                 "x-amazon-apigateway-integration": {
-                    "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
-                    "passthroughBehavior": "when_no_templates",
-                    "httpMethod": "POST",
-                    "credentials": "{conf-role}",
+                    "type": "mock",
                     "requestTemplates": {
-                        "application/json": "\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $input.json(\"$\"),\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"resourcePath\": \"$context.resourcePath\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}",
-                        "application/x-www-form-urlencoded": "\n#define( $body )\n  {\n  #foreach( $token in $input.path('$').split('&') )\n    #set( $keyVal = $token.split('=') )\n    #set( $keyValSize = $keyVal.size() )\n    #if( $keyValSize >= 1 )\n      #set( $key = $util.urlDecode($keyVal[0]) )\n      #if( $keyValSize >= 2 )\n        #set( $val = $util.urlDecode($keyVal[1]) )\n      #else\n        #set( $val = '' )\n      #end\n      \"$key\": \"$val\"#if($foreach.hasNext),#end\n    #end\n  #end\n  }\n#end\n\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $body,\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}"
+                        "application/json": "{\"statusCode\" : 200}"
                     },
-                    "contentHandling": "CONVERT_TO_TEXT",
-                    "type": "aws",
                     "responses": {
-                        ".*\"InternalServerError\".*": {
-                            "statusCode": "500",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"BadRequest\".*": {
-                            "statusCode": "400",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
                         "default": {
                             "statusCode": "200",
                             "responseTemplates": {
-                                "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"Unauthorized\".*": {
-                            "statusCode": "401",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"Forbidden\".*": {
-                            "statusCode": "403",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"NotFound\".*": {
-                            "statusCode": "404",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
+                                "application/json": "$input.json('$')"
                             },
                             "responseParameters": {
                                 "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
@@ -122,18 +61,6 @@
                         "description": "Bad Request",
                         "schema": {
                             "$ref": "#/definitions/400ErrorResponse"
-                        }
-                    },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/401ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/403ErrorResponse"
                         }
                     },
                     "404": {
@@ -381,14 +308,25 @@
                 "tags": [
                     "Secret Management"
                 ],
-                "parameters": [
-                    {
-                        "name": "safename",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
+                "x-amazon-apigateway-integration": {
+                    "type": "mock",
+                    "requestTemplates": {
+                        "application/json": "{\"statusCode\" : 200}"
+                    },
+                    "responses": {
+                        "default": {
+                            "statusCode": "200",
+                            "responseTemplates": {
+                                "application/json": "$input.json('$')"
+                            },
+                            "responseParameters": {
+                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
+                                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                                "method.response.header.Access-Control-Allow-Origin": "'*'"
+                            }
+                        }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
                         "description": "Default response for CORS method",
@@ -410,18 +348,6 @@
                             "$ref": "#/definitions/400ErrorResponse"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/401ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/403ErrorResponse"
-                        }
-                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -432,86 +358,6 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/500ErrorResponse"
-                        }
-                    }
-                },
-                "x-amazon-apigateway-integration": {
-                    "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
-                    "passthroughBehavior": "when_no_templates",
-                    "httpMethod": "POST",
-                    "credentials": "{conf-role}",
-                    "requestTemplates": {
-                        "application/json": "\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $input.json(\"$\"),\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"resourcePath\": \"$context.resourcePath\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}",
-                        "application/x-www-form-urlencoded": "\n#define( $body )\n  {\n  #foreach( $token in $input.path('$').split('&') )\n    #set( $keyVal = $token.split('=') )\n    #set( $keyValSize = $keyVal.size() )\n    #if( $keyValSize >= 1 )\n      #set( $key = $util.urlDecode($keyVal[0]) )\n      #if( $keyValSize >= 2 )\n        #set( $val = $util.urlDecode($keyVal[1]) )\n      #else\n        #set( $val = '' )\n      #end\n      \"$key\": \"$val\"#if($foreach.hasNext),#end\n    #end\n  #end\n  }\n#end\n\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $body,\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}"
-                    },
-                    "contentHandling": "CONVERT_TO_TEXT",
-                    "type": "aws",
-                    "responses": {
-                        ".*\"InternalServerError\".*": {
-                            "statusCode": "500",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"BadRequest\".*": {
-                            "statusCode": "400",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        "default": {
-                            "statusCode": "200",
-                            "responseTemplates": {
-                                "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"Unauthorized\".*": {
-                            "statusCode": "401",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"Forbidden\".*": {
-                            "statusCode": "403",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"NotFound\".*": {
-                            "statusCode": "404",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
                         }
                     }
                 }
@@ -1184,14 +1030,25 @@
                 "tags": [
                     "Secret Management"
                 ],
-                "parameters": [
-                    {
-                        "name": "safename",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
+                "x-amazon-apigateway-integration": {
+                    "type": "mock",
+                    "requestTemplates": {
+                        "application/json": "{\"statusCode\" : 200}"
+                    },
+                    "responses": {
+                        "default": {
+                            "statusCode": "200",
+                            "responseTemplates": {
+                                "application/json": "$input.json('$')"
+                            },
+                            "responseParameters": {
+                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
+                                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                                "method.response.header.Access-Control-Allow-Origin": "'*'"
+                            }
+                        }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
                         "description": "Default response for CORS method",
@@ -1213,18 +1070,6 @@
                             "$ref": "#/definitions/400ErrorResponse"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/401ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/403ErrorResponse"
-                        }
-                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -1235,86 +1080,6 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/500ErrorResponse"
-                        }
-                    }
-                },
-                "x-amazon-apigateway-integration": {
-                    "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
-                    "passthroughBehavior": "when_no_templates",
-                    "httpMethod": "POST",
-                    "credentials": "{conf-role}",
-                    "requestTemplates": {
-                        "application/json": "\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $input.json(\"$\"),\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"resourcePath\": \"$context.resourcePath\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}",
-                        "application/x-www-form-urlencoded": "\n#define( $body )\n  {\n  #foreach( $token in $input.path('$').split('&') )\n    #set( $keyVal = $token.split('=') )\n    #set( $keyValSize = $keyVal.size() )\n    #if( $keyValSize >= 1 )\n      #set( $key = $util.urlDecode($keyVal[0]) )\n      #if( $keyValSize >= 2 )\n        #set( $val = $util.urlDecode($keyVal[1]) )\n      #else\n        #set( $val = '' )\n      #end\n      \"$key\": \"$val\"#if($foreach.hasNext),#end\n    #end\n  #end\n  }\n#end\n\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $body,\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}"
-                    },
-                    "contentHandling": "CONVERT_TO_TEXT",
-                    "type": "aws",
-                    "responses": {
-                        ".*\"InternalServerError\".*": {
-                            "statusCode": "500",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"BadRequest\".*": {
-                            "statusCode": "400",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        "default": {
-                            "statusCode": "200",
-                            "responseTemplates": {
-                                "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"Unauthorized\".*": {
-                            "statusCode": "401",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"Forbidden\".*": {
-                            "statusCode": "403",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"NotFound\".*": {
-                            "statusCode": "404",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
                         }
                     }
                 }
@@ -2002,14 +1767,25 @@
                 "tags": [
                     "Secret Management"
                 ],
-                "parameters": [
-                    {
-                        "name": "safename",
-                        "in": "path",
-                        "required": true,
-                        "type": "string"
+                "x-amazon-apigateway-integration": {
+                    "type": "mock",
+                    "requestTemplates": {
+                        "application/json": "{\"statusCode\" : 200}"
+                    },
+                    "responses": {
+                        "default": {
+                            "statusCode": "200",
+                            "responseTemplates": {
+                                "application/json": "$input.json('$')"
+                            },
+                            "responseParameters": {
+                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
+                                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                                "method.response.header.Access-Control-Allow-Origin": "'*'"
+                            }
+                        }
                     }
-                ],
+                },
                 "responses": {
                     "200": {
                         "description": "Default response for CORS method",
@@ -2031,18 +1807,6 @@
                             "$ref": "#/definitions/400ErrorResponse"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/401ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/403ErrorResponse"
-                        }
-                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -2053,86 +1817,6 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/500ErrorResponse"
-                        }
-                    }
-                },
-                "x-amazon-apigateway-integration": {
-                    "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
-                    "passthroughBehavior": "when_no_templates",
-                    "httpMethod": "POST",
-                    "credentials": "{conf-role}",
-                    "requestTemplates": {
-                        "application/json": "\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $input.json(\"$\"),\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"resourcePath\": \"$context.resourcePath\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}",
-                        "application/x-www-form-urlencoded": "\n#define( $body )\n  {\n  #foreach( $token in $input.path('$').split('&') )\n    #set( $keyVal = $token.split('=') )\n    #set( $keyValSize = $keyVal.size() )\n    #if( $keyValSize >= 1 )\n      #set( $key = $util.urlDecode($keyVal[0]) )\n      #if( $keyValSize >= 2 )\n        #set( $val = $util.urlDecode($keyVal[1]) )\n      #else\n        #set( $val = '' )\n      #end\n      \"$key\": \"$val\"#if($foreach.hasNext),#end\n    #end\n  #end\n  }\n#end\n\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $body,\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}"
-                    },
-                    "contentHandling": "CONVERT_TO_TEXT",
-                    "type": "aws",
-                    "responses": {
-                        ".*\"InternalServerError\".*": {
-                            "statusCode": "500",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"BadRequest\".*": {
-                            "statusCode": "400",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        "default": {
-                            "statusCode": "200",
-                            "responseTemplates": {
-                                "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"Unauthorized\".*": {
-                            "statusCode": "401",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"Forbidden\".*": {
-                            "statusCode": "403",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"NotFound\".*": {
-                            "statusCode": "404",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
                         }
                     }
                 }
@@ -2600,6 +2284,25 @@
                 "tags": [
                     "Secret Management"
                 ],
+                "x-amazon-apigateway-integration": {
+                    "type": "mock",
+                    "requestTemplates": {
+                        "application/json": "{\"statusCode\" : 200}"
+                    },
+                    "responses": {
+                        "default": {
+                            "statusCode": "200",
+                            "responseTemplates": {
+                                "application/json": "$input.json('$')"
+                            },
+                            "responseParameters": {
+                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
+                                "method.response.header.Access-Control-Allow-Methods": "'*'",
+                                "method.response.header.Access-Control-Allow-Origin": "'*'"
+                            }
+                        }
+                    }
+                },
                 "responses": {
                     "200": {
                         "description": "Default response for CORS method",
@@ -2621,18 +2324,6 @@
                             "$ref": "#/definitions/400ErrorResponse"
                         }
                     },
-                    "401": {
-                        "description": "Unauthorized",
-                        "schema": {
-                            "$ref": "#/definitions/401ErrorResponse"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/403ErrorResponse"
-                        }
-                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -2643,86 +2334,6 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "$ref": "#/definitions/500ErrorResponse"
-                        }
-                    }
-                },
-                "x-amazon-apigateway-integration": {
-                    "uri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{lambda_function_name}/invocations",
-                    "passthroughBehavior": "when_no_templates",
-                    "httpMethod": "POST",
-                    "credentials": "{conf-role}",
-                    "requestTemplates": {
-                        "application/json": "\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $input.json(\"$\"),\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"resourcePath\": \"$context.resourcePath\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}",
-                        "application/x-www-form-urlencoded": "\n#define( $body )\n  {\n  #foreach( $token in $input.path('$').split('&') )\n    #set( $keyVal = $token.split('=') )\n    #set( $keyValSize = $keyVal.size() )\n    #if( $keyValSize >= 1 )\n      #set( $key = $util.urlDecode($keyVal[0]) )\n      #if( $keyValSize >= 2 )\n        #set( $val = $util.urlDecode($keyVal[1]) )\n      #else\n        #set( $val = '' )\n      #end\n      \"$key\": \"$val\"#if($foreach.hasNext),#end\n    #end\n  #end\n  }\n#end\n\n#define( $loop )\n  {\n  #foreach($key in $map.keySet())\n      \"$util.escapeJavaScript($key)\":\n        \"$util.escapeJavaScript($map.get($key))\"\n        #if( $foreach.hasNext ) , #end\n  #end\n  }\n#end\n\n{\n  \"body\": $body,\n  \"method\": \"$context.httpMethod\",\n  \"principalId\": \"$context.authorizer.principalId\",\n  \"stage\": \"$context.stage\",\n\n  #set( $map = $input.params().header )\n  \"headers\": $loop,\n\n  #set( $map = $input.params().querystring )\n  \"query\": $loop,\n\n  #set( $map = $input.params().path )\n  \"path\": $loop,\n\n  #set( $map = $context.identity )\n  \"identity\": $loop,\n\n  #set( $map = $stageVariables )\n  \"stageVariables\": $loop\n}"
-                    },
-                    "contentHandling": "CONVERT_TO_TEXT",
-                    "type": "aws",
-                    "responses": {
-                        ".*\"InternalServerError\".*": {
-                            "statusCode": "500",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"BadRequest\".*": {
-                            "statusCode": "400",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        "default": {
-                            "statusCode": "200",
-                            "responseTemplates": {
-                                "application/json": "{\"data\" : $input.json('$.data'),\"input\" : $input.json('$.input')}"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"Unauthorized\".*": {
-                            "statusCode": "401",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"Forbidden\".*": {
-                            "statusCode": "403",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
-                        },
-                        ".*\"NotFound\".*": {
-                            "statusCode": "404",
-                            "responseTemplates": {
-                                "application/json": "$input.path('$.errorMessage')"
-                            },
-                            "responseParameters": {
-                                "method.response.header.Access-Control-Allow-Headers": "'Content-Type,X-Amz-Date,Authorization,X-Api-Key,Jazz-Service-ID'",
-                                "method.response.header.Access-Control-Allow-Methods": "'*'",
-                                "method.response.header.Access-Control-Allow-Origin": "'*'"
-                            }
                         }
                     }
                 }

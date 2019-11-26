@@ -1051,6 +1051,10 @@ def loadBuildModules(buildModuleUrl) {
     awsAPIGatewayModule.initialize()
     echo "aws-apigateway-module has been loaded"
 
+    if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+      vaultUtilityModule = load "vault-utility-module.groovy"      
+      echo "Vault utility module loaded successfully."
+    }
   }
 }
 
