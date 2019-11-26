@@ -305,10 +305,10 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
 function processEventInitialCommit(environmentPayload, serviceId, configData, authToken) {
   function processEnv(env) {
     return new Promise((resolve, reject) => {
-      environmentPayload.logical_id = env;
-      environmentPayload.status = configData.CREATE_ENVIRONMENT_STATUS;
+      let payload = JSON.parse(JSON.stringify(environmentPayload))
+      payload.logical_id = env;
 
-      safe.addSafe(environmentPayload, serviceId, configData, authToken)
+      safe.addSafe(payload, serviceId, configData, authToken)
         .then((result) => { return processCreateEnv(environmentPayload, env) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
@@ -320,6 +320,10 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
 
   function processCreateEnv(environmentPayload, env) {
     return new Promise((resolve, reject) => {
+      let payload = JSON.parse(JSON.stringify(environmentPayload))
+      payload.logical_id = env;
+      payload.status = configData.CREATE_ENVIRONMENT_STATUS;
+
       var svcPayload = {
         uri: `${configData.BASE_API_URL}${configData.ENVIRONMENT_API_RESOURCE}`,
         method: "POST",
@@ -327,7 +331,7 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
           "Authorization": authToken,
           "Jazz-Service-ID": serviceId
         },
-        json: environmentPayload,
+        json: payload,
         rejectUnauthorized: false
       };
 
@@ -337,7 +341,7 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
         } else {
           logger.error(`Error creating ${env} environment in catalog: ${JSON.stringify(response)}`);
           return reject({
-            "error": `Error creating ${env} environment for ${environmentPayload.domain} "_" ${environmentPayload.service} in catalog`,
+            "error": `Error creating ${env} environment for ${payload.domain} "_" ${payload.service} in catalog`,
             "details": response.body.message
           });
         }
