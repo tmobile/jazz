@@ -20,7 +20,7 @@ const logger = require("../logger.js");
 const getServiceMetadata = async (config, authToken, serviceId) => {
   return new Promise((resolve, reject) => {
     const svcPayload = {
-      uri: `${config.BASE_API_URL}${config.SERVICE_API}/${serviceId}`,
+      uri: `${config.BASE_API_URL}${global.globalConfig.API.SERVICE_API}/${serviceId}`,
       method: 'GET',
       headers: {
         'Authorization': authToken,
@@ -31,7 +31,7 @@ const getServiceMetadata = async (config, authToken, serviceId) => {
 
     request(svcPayload, function (error, response, body) {
       if (error) {
-        logger.error("Failed to fetch service data: "+ JSON.stringify(error));
+        logger.error("Failed to fetch service data: " + JSON.stringify(error));
         return reject(error);
       }
       if (response.statusCode === 200 && body) {
@@ -39,13 +39,13 @@ const getServiceMetadata = async (config, authToken, serviceId) => {
         if (results.data) {
           return resolve(results.data);
         } else {
-          logger.error("Failed to fetch service data: "+ JSON.stringify(response));
+          logger.error("Failed to fetch service data: " + JSON.stringify(response));
           return reject({
             "error": "Could not find service with id : " + serviceId + " in service catalog. "
           });
         }
       } else {
-        logger.error("Failed to fetch service data: "+ JSON.stringify(response));
+        logger.error("Failed to fetch service data: " + JSON.stringify(response));
         return reject({
           "error": "Error finding service with id : " + serviceId + " in service catalog."
         });

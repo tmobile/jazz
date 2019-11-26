@@ -6,7 +6,8 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "mocha"
+    "test": "nyc mocha",
+    "coverage": "nyc npm run test"
   },
   "dependencies": {
     "lodash": "*",
@@ -19,6 +20,7 @@
     "istanbul": "^0.4.5",
     "mocha": "^v3.0.0",
     "nock": "^9.0.2",
+    "nyc": "^13.3.0",
     "sinon": "^5.0.7",
     "lambda-local": "^1.4.2"
   }
