@@ -35,7 +35,11 @@ function assumeRole(configData, serviceData){
   if(serviceData){
   	isPrimary = checkIsPrimary(serviceData.deployment_accounts[0].accountId, configData);
   	roleArn = getRolePlatformService(serviceData.deployment_accounts[0].accountId, configData);
-  } 
+  } else {
+    // this is to handle older services which had '-' in their naming convention, thus serviceData will be undefined for them
+    // and thus no need to assumRole for those services and pass empty response
+    isPrimary = true;
+  }
   var accessparams;
   return new Promise((resolve, reject) => {
     if (isPrimary) {
