@@ -309,7 +309,7 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
       payload.logical_id = env;
 
       safe.addSafe(payload, serviceId, configData, authToken)
-        .then((result) => { return processCreateEnv(environmentPayload, env) })
+        .then((result) => { return processCreateEnv(payload, env) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventInitialCommit Failed" + err);
