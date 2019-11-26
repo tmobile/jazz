@@ -35,6 +35,7 @@ const safe = require("../components/safe.js");
 
 let event, context, configData, authToken;
 
+//TODO some of the test cases promises are failing. Need to fix that
 describe('jazz environment handler tests: ', () => {
   let sandbox;
   beforeEach(() => {
@@ -1411,7 +1412,7 @@ describe('handler', () => {
   });
 
   it("should give error if jenkins job triggering fails with status code 500", () => {
-    let event = require('./CREATE_BRANCH');
+    let event = require('./CREATE_BRANCH'); 
     let event_BASE64 = new Buffer(JSON.stringify(event)).toString("base64");
     kinesisPayload.Records[0].kinesis.data = event_BASE64;
     let jenkins_job_responseObject = {
