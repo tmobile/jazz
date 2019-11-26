@@ -351,6 +351,12 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
     if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function" || service_creation_data.service_type === "sls-app") {
       serviceMetadataObj.providerRuntime = service_creation_data.runtime;
     }
+    
+    //Adding providerTimeout key in service catalog
+    if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
+        // default to 30 seconds
+        serviceMetadataObj.providerTimeout = configData.DEFAULT_PROVIDER_TIMEOUT;
+    }
 
     inputs.DEPLOYMENT_ACCOUNTS = deploymentAccounts;
 
