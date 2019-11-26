@@ -39,13 +39,14 @@ def initialize(serviceConfig, configLoader, scmMdule, branch, buildUrl, buildId,
 }
 
 def getEnvironmentLogicalId() {
-	if (g_environment_logical_id == null && g_service_config['domain'] != "jazz") {
+	if ((g_environment_logical_id == null || g_environment_details == null) 
+								&& g_service_config['domain'] != "jazz") {
 		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" \
-     -H \"Jazz-Service-ID: ${g_service_config['service_id']}\" \
-     -H \"Authorization: $g_login_token \" \
-     -X GET \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
+		-H \"Jazz-Service-ID: ${g_service_config['service_id']}\" \
+		-H \"Authorization: $g_login_token \" \
+		-X GET \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
 
-  	def environmentOutput
+		def environmentOutput
 		def environment_logical_id
 		if (getEnvironments != null) {
 			try {
@@ -72,9 +73,29 @@ def getEnvironmentLogicalId() {
 	return g_environment_logical_id
 }
 
-def getEnvironmentInfo() {
-	if (!g_environment_details) getEnvironmentLogicalId()
-	return g_environment_details;	
+def getEnvironmentInfo(g_environment_logical_id) {
+	if (g_service_config['domain'] != "jazz") {
+		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" \
+		-H \"Jazz-Service-ID: ${g_service_config['service_id']}\" \
+		-H \"Authorization: $g_login_token \" \
+		-X GET  \"${g_environment_api}?service=${g_service_config['service']}&domain=${g_service_config['domain']}\" ", returnStdout: true).trim()
+
+		def environmentOutput
+		if (getEnvironments != null) {
+			try {
+				environmentOutput = parseJson(getEnvironments)
+			} catch (ex) {
+				error ex.getMessage()
+			}
+			if (environmentOutput != null && environmentOutput.data != null && environmentOutput.data.environment != null) {
+				for (environment in environmentOutput.data.environment) {
+					if (environment.logical_id.equals(g_environment_logical_id)) {
+						return environment;
+					}
+				}
+			}
+		}
+	}	
 }
 
 def getEnvDeploymentDescriptor() {
