@@ -153,7 +153,7 @@ kinesisRole:
               Resource: "*"
 
 #Vault Role
-vaultRole:
+basicRole:
   Type: AWS::IAM::Role
   Properties:
     RoleName: ${self:service}-${self:custom.myStage}
@@ -182,7 +182,7 @@ vaultRole:
               Resource: "*"
 
 #Vault VPC Role
-vaultVPCRole:
+vpcRole:
   Type: AWS::IAM::Role
   Properties:
     RoleName: ${self:service}-${self:custom.myStage}

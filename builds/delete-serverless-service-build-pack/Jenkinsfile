@@ -30,8 +30,9 @@ import groovy.json.JsonSlurperClassic
 @Field def aclModule
 @Field def azureDeployer
 @Field def whiteListModule
-@Field def env_deployment_descriptor
+@Field def vaultUtilityModule
 
+@Field def env_deployment_descriptor
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def auth_token = ''
@@ -620,7 +621,7 @@ def writeServerlessFile(){
   }
 
   if ( service_config['event_source_dynamodb'] || service_config['event_source_sqs']){
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
   }else{
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${service_config['iamRoleARN']}|g' serverless.yml"
   }

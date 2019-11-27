@@ -889,7 +889,7 @@ def writeServerlessFile(config, environment_logical_id, accountDetails){
 
   if (config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ) {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
     if (config['require_internal_access']) {
       sh "sed -i -- '/#Start:isVaultEnabled/,/#End:isVaultEnabled/d' ./serverless.yml"  
       sh "sed -i -- '/#Start:isS3EventRoleEnabled/,/#End:resources/d' ./serverless.yml"
