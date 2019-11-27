@@ -375,7 +375,7 @@ node() {
             if(!accountDetails.PRIMARY){
               def primaryAccountData = utilModule.getAccountInfoPrimary();
               def primaryAccountValue = primaryAccountData.ACCOUNTID;
-              def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+              def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}"
 
               addPermission(lambdaFnNameValue, primaryAccountValue, credsId, config);
             }
@@ -558,6 +558,7 @@ def servelessDeploy(env, envBucketKey, credsId, env_key, accountDetails){
     return "success"
   } catch (ex) {
     echo "Serverless deployment failed due to $ex"
+    sh "cat output.log"
   }
 
   def outputLog = readFile('output.log').trim()
@@ -839,7 +840,7 @@ def echoServiceInfo(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(config, env_key, credsId, accountDetails) {
-  def logGroupName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+  def logGroupName = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}"
   def lambda = "/aws/lambda/${logGroupName}"
   def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
@@ -893,6 +894,7 @@ def writeServerlessFile(config, env, accountDetails) {
 
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
+  sh "sed -i -- 's/\${functionName}/${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${env}/g' serverless.yml"
   sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
   sh "sed -i -- 's/{env-stage}/${env}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
@@ -1048,7 +1050,7 @@ def send_status_email (build_status, email_content) {
 def getEventsArn(config, env, credsId) {
   def eventsArn = []
   try {
-    def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}"
+    def lambdaFnName = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${env}"
     def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${config['region']} --function-name $lambdaFnName --output json --profile ${credsId}", returnStdout: true)
 
     def policyLists = null

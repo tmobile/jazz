@@ -765,7 +765,7 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config, accountDetails)
         regionValue = config.region
   }
 
-  sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}/g' swagger/swagger.json"
+  sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${env}/g' swagger/swagger.json"
   sh "sed -i -- 's/{api_deployment_node_title}/${deploymentNode}/g' swagger/swagger.json" // {api_deployment_node_title}
   sh "sed -i -- 's/{service_name}/${config['service']}/g' swagger/swagger.json" // {service_name}
   sh "sed -i -- 's/{api_host_name}/${apiHostName}/g' swagger/swagger.json" // {api_host_name}
@@ -837,6 +837,7 @@ def writeServerlessFile(config, environment_logical_id, accountDetails){
   }
 
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
+  sh "sed -i -- 's/\${functionName}/${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}/g' serverless.yml"
   sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
   sh "sed -i -- 's/{env-stage}/${environment_logical_id}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
@@ -1025,7 +1026,7 @@ def updateApiDocUrl(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(config, region, roleId, accountDetails, env_key, credsId) {
-  def logGroupName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+  def logGroupName = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}"
   def lambda = "/aws/lambda/${logGroupName}"
   def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
@@ -1250,6 +1251,7 @@ def servelessDeploy(env, envBucketKey, s3BucketNameValue, credsId){
     return "success"
   } catch (ex) {
     echo "Serverless deployment failed due to $ex"
+    sh "cat output.log"
   }
 
   def outputLog = readFile('output.log').trim()
