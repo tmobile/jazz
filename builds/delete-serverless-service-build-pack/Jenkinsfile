@@ -1,4 +1,4 @@
-#!groovy.
+#!mgroovy.
 import groovy.json.JsonOutput
 import groovy.transform.Field
 import groovy.json.JsonSlurperClassic
@@ -398,7 +398,7 @@ def cleanupEventSourceMapping(env) {
 			sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-  		def lambda_arn = "arn:aws:lambda:${service_config['region']}:${service_config.accountId}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env}"
+  		def lambda_arn = "arn:aws:lambda:${service_config['region']}:${service_config.accountId}:function:${configLoader.INSTANCE_PREFIX}_${service_config['domain']}_${service_config['service']}_${env}"
   		def assets_api = g_base_url + "/jazz/assets"
   		lambdaEvents.deleteEventSourceMapping(lambda_arn, assets_api, auth_token,service_config, env,credsId)
 		} catch(ex) {

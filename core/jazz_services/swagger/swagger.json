@@ -1587,7 +1587,7 @@
       "x-amazon-apigateway-authorizer": {
         "authorizerCredentials": "{conf-role}",
         "authorizerResultTtlInSeconds": 0,
-        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-cognito-authorizer-{envmnt}/invocations",
+        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}_{domain}_cognito-authorizer_{envmnt}/invocations",
         "type": "request"
       }
     },
@@ -1599,7 +1599,7 @@
       "x-amazon-apigateway-authorizer": {
         "authorizerCredentials": "{conf-role}",
         "authorizerResultTtlInSeconds": 0,
-        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}-{domain}-token-authorizer-{envmnt}/invocations",
+        "authorizerUri": "arn:aws:apigateway:{conf-region}:lambda:path/2015-03-31/functions/arn:aws:lambda:{conf-region}:{conf-accId}:function:{envPrefix}_{domain}_token-authorizer_{envmnt}/invocations",
         "type": "token"
       }
     }
