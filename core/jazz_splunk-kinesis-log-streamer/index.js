@@ -127,7 +127,7 @@ function sendSplunkEvent(awslogsData, splunkLog, config) {
           resolve();
         });
     } else if (awslogsData.logGroup.indexOf("/aws/lambda/") === 0) {
-      utils.getCommonData(awslogsData)
+      utils.getCommonData(awslogsData, config)
         .then(commonData => {
           awslogsData.logEvents.forEach(logEvent => {
             utils.transformLambdaLogs(logEvent, commonData)

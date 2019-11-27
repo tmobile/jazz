@@ -341,6 +341,7 @@ node() {
           // After stack Deployment
 
           createAssetForHttpEvents(deployOutput)
+          attachTagstoLogGroup(config, environment_logical_id, credsId)
 
           def describeResources = getStackResources(environment_logical_id, credsId)
           def resources = describeResources['StackResources']
@@ -366,7 +367,6 @@ node() {
               }
             }
           }
-          //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
           send_status_email('COMPLETED', '')
         } catch (ex) {
           send_status_email('FAILED', '')
@@ -393,6 +393,33 @@ node() {
   } finally {
    deleteDir()
   }
+}
+
+def attachTagstoLogGroup(config, environment_logical_id, credsId){
+  try {
+    def deploymentDescriptor = null
+    if( env_deployment_descriptor != null ){
+      deploymentDescriptor = env_deployment_descriptor
+    } else {
+      deploymentDescriptor = config['deployment_descriptor']
+    }
+    // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harmful as Map not String is expected below
+    def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:]
+    def functionsElem = doc['functions']
+
+    // changing variable names appropriately
+    def serviceDomain = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}"
+    functionsElem.each{functionName, funcConfig ->
+      def lambdaName = funcConfig['name'] ? funcConfig['name'] : "${serviceDomain}_${functionName}_${environment_logical_id}"
+      def logGroupName = "/aws/lambda/${lambdaName}"
+      def serviceName = config['service']
+      def namespace = config['domain']
+      def environment = environment_logical_id
+      sh "aws logs tag-log-group --log-group-name ${logGroupName} --tags '{\"service\":\"${serviceName}\", \"namespace\":\"${namespace}\", \"environment\":\"${environment}\", \"functionName\":\"${lambdaName}\"}' --profile ${credsId}"
+    }
+  } catch (Exception ex) {
+    echo "Error occured while attaching tags to logGroup ${logGroupName}"
+  } 
 }
 
 def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, config, credsId){
@@ -711,61 +738,6 @@ def echoServiceInfo(String env, String envBucketKey) {
 }
 
 /**
-	Create the subscription filters and loggroup if not existing
-**/
-
-def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
-  def deploymentDescriptor = null
-  if( env_deployment_descriptor != null ){
-    deploymentDescriptor = env_deployment_descriptor
-  } else {
-    deploymentDescriptor = config['deployment_descriptor']
-  }
-   // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harmful as Map not String is expected below
-  def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:]
-  def functionsElem = doc['functions']
-  // changing variable names appropriately
-  def serviceDomain = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}"
-  functionsElem.each{functionName, funcConfig ->
-    def lambdaName = funcConfig['name'] ? funcConfig['name'] : "${serviceDomain}-FN_${functionName}-${environment_logical_id}"
-    def logGroupName = "/aws/lambda/${lambdaName}"
-    def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
-
-    try {
-      sh "aws logs create-log-group --log-group-name ${logGroupName} --region ${config.region} --profile ${credsId}"
-    } catch (Exception ex) { } // ignore if already existing
-
-    try {
-      filter_json = sh(
-        script: "aws logs describe-subscription-filters --output json --log-group-name \"${logGroupName}\" --profile ${credsId} --region ${config.region}",
-        returnStdout: true
-      ).trim()
-      echo "${filter_json}"
-      def resultJson = parseJson(filter_json)
-      filtername = resultJson.subscriptionFilters[0].filterName
-      echo "removing existing filter... $filtername"
-      if (filtername != "" && !filtername.equals(logGroupName)) {
-        sh "aws logs delete-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${filtername}\"  --profile ${credsId} --region ${config.region}"
-      }
-    } catch (Exception ex) { } // ignore error if not created yet
-    try {
-      def destLogStreamArn = configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == config.accountId}.PRIMARY ? logStreamer : 
-                            accountDetails.REGIONS.find{it.REGION == config.region}.LOGS.PROD
-      def isPrimaryAccount = configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == config.accountId}.PRIMARY ? true : false
-
-       if(!isPrimaryAccount){
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${destLogStreamArn}\"  --profile ${credsId} --region ${config.region}"
-        } else {
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${destLogStreamArn}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId} --region ${config.region}"
-        }
-
-    } catch (Exception ex) {
-      echo "error occured: " + ex.getMessage()
-    }
-  }
-}
-
-/**
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
  */
@@ -852,7 +824,7 @@ def send_status_email (build_status, email_content) {
 def getEventsArn(config, env) {
   def eventsArn = []
   try {
-    def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}"
+    def lambdaFnName = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${env}"
     def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${config['region']} --function-name $lambdaFnName --output json --profile ${credsId}", returnStdout: true)
 
     def policyLists = null
