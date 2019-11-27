@@ -20,11 +20,11 @@ const logger = require("../logger.js");
 const getAuthToken = async (config) => {
   return new Promise((resolve, reject) => {
     const svcPayload = {
-      uri: config.BASE_API_URL + config.LOGIN_API,
+      uri: config.BASE_API_URL + global.globalConfig.API.LOGIN_API,
       method: 'post',
       json: {
-        "username": config.SERVICE_USER,
-        "password": config.TOKEN_CREDS
+        "username": global.globalConfig.CREDENTIAL.SERVICE_USER,
+        "password": global.globalConfig.CREDENTIAL.TOKEN_CREDS
       },
       rejectUnauthorized: false
     };
@@ -33,7 +33,7 @@ const getAuthToken = async (config) => {
       if (response.statusCode === 200 && response.body && response.body.data && response.body.data.token) {
         return resolve(response.body.data.token);
       } else {
-        logger.error("Authentication failed !!! "+ JSON.stringify(response));
+        logger.error("Authentication failed !!! " + JSON.stringify(response));
         return reject({ "error": "Authentication failed !!!" });
       }
     });

@@ -7,7 +7,7 @@
     "TOKEN_CREDS": "{jazz_admin_creds}"
   },
   "VAULT": {
-    "IS_ENABLED": "{is_enabled}"
+    "IS_ENABLED": "{vault_is_enabled}"
   },
   "USER_POOL_ID": "{user_pool_id}",
   "REGION": "{region}",
