@@ -16,10 +16,12 @@
     "description"
   ],
   "CREATE_USER_IN_SAFE_REQUIRED_FIELDS": [
-    "username"
+    "username",
+    "permission"
   ],
   "CREATE_ROLE_IN_SAFE_REQUIRED_FIELDS": [
-    "arn"
+    "arn",
+    "permission"
   ],
   "CREATE_USER_IN_VAULT_REQUIRED_FIELDS": [
     "username",
@@ -28,8 +30,14 @@
   "USER_IN_VAULT_REQUIRED_FIELDS": [
     "username"
   ],
+  "PERMISSION_LEVELS": {
+    "permission": [
+      "read",
+      "write"
+    ]
+  },
   "FIELD_LENGTH_CONSTRAINTS": {
-    "name" : 3,
+    "name": 3,
     "description": 10
   },
   "PATH_TO_SAFE": "shared/",
