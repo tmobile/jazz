@@ -35,14 +35,11 @@ function assumeRole(configData, serviceData){
   if(serviceData){
   	isPrimary = checkIsPrimary(serviceData.deployment_accounts[0].accountId, configData);
   	roleArn = getRolePlatformService(serviceData.deployment_accounts[0].accountId, configData);
-  } else {
-    // this is to handle older services which had '-' in their naming convention, thus serviceData will be undefined for them
-    // and thus no need to assumRole for those services and pass empty response
-    isPrimary = true;
   }
   var accessparams;
   return new Promise((resolve, reject) => {
-    if (isPrimary) {
+    if(serviceData){
+      if (isPrimary) {
         accessparams = {};
         resolve(accessparams)
       } else {
@@ -69,6 +66,11 @@ function assumeRole(configData, serviceData){
           }
         })
       }
+    } else {
+      // if serviceData is undefined or null
+      logger.error('Service Metadata is undefined or null');
+      reject('Service Metadata is undefined or null');
+    }
   })
 }
 
@@ -84,7 +86,7 @@ function getLogsGroupsTags(logGroupName, tempCreds, serviceData) {
     cloudwatchlogs.listTagsLogGroup(params, function(err, data) {
       if (err) {
         logger.error("something went wrong while fetching tags..: " + JSON.stringify(err));
-        reject('error')
+        reject(err)
       } else {
         logger.debug(`tags for log group - ${logGroupName}: ` + JSON.stringify(data))
         resolve(data)
@@ -211,7 +213,7 @@ function getLambdaLogsData(configValue, payload, callback) {
     getConfigJson(configValue, creds)
     .then((configData) => {
       // get accountId and region through service Data
-      getsServiceMetaData(configValue, payload.logGroup, creds)
+      getServiceMetaData(configValue, payload.logGroup, creds)
       .then((serviceData) => {
         // execute sts:assumeRole
         assumeRole(configData, serviceData)
@@ -309,14 +311,34 @@ function getLambdaLogsData(configValue, payload, callback) {
               callback(null);
             }
           })
+          .catch(error => {
+            logger.error('Error in retreiving tags from logGroup:' + JSON.stringify(error));
+            return callback(null);
+          });
         })
+        .catch(error => {
+          logger.error('Error in executing sts:assumeRole:' + JSON.stringify(error));
+          return callback(null);
+        });
       })
+      .catch(error => {
+        logger.error('Error in retrieving service details:' + JSON.stringify(error));
+        return callback(null);
+      });
     })
+    .catch(error => {
+      logger.error('Error in retreiving admin config from DB:' + JSON.stringify(error));
+      return callback(null);
+    });
   })
+  .catch(error => {
+    logger.error('Error in retrieving token:' + JSON.stringify(error));
+    return callback(null);
+  });
 }
 
 // Function to get service metadata using service API
-function getsServiceMetaData(config, logGroup, authToken) {
+function getServiceMetaData(config, logGroup, authToken) {
   var serviceParts = logGroup.split('_');
   return new Promise((resolve, reject) => {
     var service_api_options = {
@@ -338,8 +360,8 @@ function getsServiceMetaData(config, logGroup, authToken) {
           logger.debug("Response Body of Service Metadata is: " + JSON.stringify(responseBody));
           resolve(responseBody.data.services[0])
         } else {
-          logger.debug("Service not found for this service, domain, environment: ", JSON.stringify(service_api_options));
-          resolve([])
+          logger.error("Service not found for this service, domain, environment: ", JSON.stringify(service_api_options));
+          reject('Service not found for this service, domain, environment');
         }
       }
     })
@@ -386,8 +408,8 @@ function getConfigJson(config, token) {
           logger.debug("Response body of Config Json is: " +  JSON.stringify(responseBody));
           resolve(responseBody.data)
         } else {
-          logger.debug("Service not found for this service, domain, environment: ", JSON.stringify(config_json_api_options));
-          resolve([])
+          logger.error("Error in retreiving admin config from DB");
+          reject('Error in retreiving admin config from DB');
         }
       }
     })
@@ -420,7 +442,7 @@ function getToken(config) {
         }
         logger.error(message);
         reject({
-          "error": "Could not get authentication token for updating service catalog.",
+          "error": "Failed while getting authentication token",
           "message": message
         });
       }
