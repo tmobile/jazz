@@ -185,8 +185,8 @@ function addOrRemoveAllAdminUsersToSafe(environmentDetails, configData, serviceI
 
     for (let key in environments) {
       const environment = environments[key];
-      if (environment.metadata && environment.metadata.SAFE_DETAILS)  //TODO to check the case after the environment changes added
-        processEachPromises.push(processEachPromise(environment.metadata.SAFE_DETAILS.name, configData, serviceId, authToken, adminUsers));
+      if (environment.metadata && environment.metadata.SAFE)  //TODO to check the case after the environment changes added
+        processEachPromises.push(processEachPromise(environment.metadata.SAFE.name, configData, serviceId, authToken, adminUsers));
     }
 
     Promise.all(processEachPromises)
@@ -249,8 +249,8 @@ function removeAllUsersFromSafe(environmentDetails, configData, serviceId, authT
 
     for (let key in environments) {
       const environment = environments[key];
-      if (environment.metadata && environment.metadata.SAFE_DETAILS)  //TODO to check the case after the environment changes added
-        processEachPromises.push(processEachRemoveAllUserPromise(environment.metadata.SAFE_DETAILS.name, configData, serviceId, authToken));
+      if (environment.metadata && environment.metadata.SAFE)  //TODO to check the case after the environment changes added
+        processEachPromises.push(processEachRemoveAllUserPromise(environment.metadata.SAFE.name, configData, serviceId, authToken));
     }
 
     Promise.all(processEachPromises)

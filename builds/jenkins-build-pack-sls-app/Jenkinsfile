@@ -410,8 +410,8 @@ node() {
               sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
           
               def environment = environmentDeploymentMetadata.getEnvironmentInfo(environment_logical_id)
-              if (environment && environment.metadata && environment.metadata.safe_details) {
-                def safeName = environment.metadata.safe_details.name
+              if (environment && environment.metadata && environment.metadata.safe) {
+                def safeName = environment.metadata.safe.name
                 def updatedIamRoleARN = vaultUtilityModule.updateCustomServicesSafeDetails(safeName, lambdaArns, credsId)
                 events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], updatedIamRoleARN, "iam_role", config), environment_logical_id);
               }
