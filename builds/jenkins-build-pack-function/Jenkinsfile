@@ -420,8 +420,9 @@ node() {
               def environment = environmentDeploymentMetadata.getEnvironmentInfo(environment_logical_id)
               if (environment && environment.metadata && environment.metadata.safe) {
                 def safeName = environment.metadata.safe.name
-                def updatedIamRoleARN = vaultUtilityModule.updateSafeDetails(safeName, lambdaARN, credsId)
-                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], updatedIamRoleARN, "iam_role", config), environment_logical_id);
+                def updateSafeDetails = vaultUtilityModule.updateSafeDetails(safeName, lambdaARN, credsId)
+                if (updateSafeDetails.isRoleAdded)
+                  events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], updateSafeDetails['iamRoleArn'], "iam_role", config), environment_logical_id);
               }
               events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
             } catch (ex) {
@@ -465,10 +466,10 @@ def handleFail(ex, context_map, environment_logical_id, config, gitCommitHash) {
 
 def addPermission(functionName, primaryAccountValue, credsId, service_config){
   try {
-		sh "aws lambda remove-permission --function-name ${functionName} --region ${service_config.region} --statement-id ${functionName}_invoke --profile ${credsId}"
-	} catch(Exception ex) {
-		// ignore if the policy is not there
-	}
+    sh "aws lambda remove-permission --function-name ${functionName} --region ${service_config.region} --statement-id ${functionName}_invoke --profile ${credsId}"
+  } catch(Exception ex) {
+    // ignore if the policy is not there
+  }
   /* Adding permission to invoke the function created in secondary account*/
   sh "aws lambda add-permission --function-name ${functionName} --region ${service_config.region} --statement-id ${functionName}_invoke --action 'lambda:InvokeFunction' --principal ${primaryAccountValue} --profile ${credsId}"
 }
@@ -689,37 +690,37 @@ def LoadConfiguration() {
 def buildFunction(String runtime, String repo_name) {
   echo "installing dependencies for $runtime"
   if (runtime.indexOf("nodejs") > -1) {
-		sh "npm install --save"
-	} else if (runtime.indexOf("java") > -1) {
-		sh "mvn package"
-	} else if (runtime.indexOf("python") > -1) {
-	  // install requirements.txt in library folder, these python modules will be a part of deployment package
-		sh "rm -rf library"
-		sh "mkdir library"
-		sh "touch library/__init__.py"
+    sh "npm install --save"
+  } else if (runtime.indexOf("java") > -1) {
+    sh "mvn package"
+  } else if (runtime.indexOf("python") > -1) {
+    // install requirements.txt in library folder, these python modules will be a part of deployment package
+    sh "rm -rf library"
+    sh "mkdir library"
+    sh "touch library/__init__.py"
 
     if (runtime == 'python3.6'){
       // Installing dependencies
       sh "pip3 install -r requirements.txt -t library"
       // create virtual environment and install pytest
       sh """
-			python3 -m venv virtualenv
-			. virtualenv/bin/activate
-			pip3 install pytest
-			pytest test
-		  """
+      python3 -m venv virtualenv
+      . virtualenv/bin/activate
+      pip3 install pytest
+      pytest test
+      """
     } else {
       // Installing dependencies
       sh "pip install -r requirements.txt -t library"
       // create virtual environment and install pytest
-		  sh """
-		  pip install virtualenv
-		  virtualenv venv
-		  . venv/bin/activate
-		  pip install pytest
-	  	"""
+      sh """
+      pip install virtualenv
+      virtualenv venv
+      . venv/bin/activate
+      pip install pytest
+      """
     }
-	} else if (runtime.indexOf("go") > -1 ) {
+  } else if (runtime.indexOf("go") > -1 ) {
     // Installing dependencies using dep ensure
     // golang build scripts
    	withEnv(["GOPATH=${env.WORKSPACE}"]) {
@@ -745,74 +746,74 @@ def resetCredentials(credsId) {
 	missing.
 */
 def validateDeploymentConfigurations(def prop) {
-	if (prop.containsKey("service")) {
-		if (prop['service'] == "") {
-			error "Wrong configuration. Value for Key 'service' is missing in the configuration"
-		}
-	} else {
-		error "Wrong configuration. Key 'service' is missing in the configuration"
-	}
-	if (prop.containsKey("providerRuntime")) {
-		def _runtime = prop['providerRuntime']
-		if (_runtime == "") {
-			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
-		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x", "c#"]
-			def flag = false
+  if (prop.containsKey("service")) {
+    if (prop['service'] == "") {
+      error "Wrong configuration. Value for Key 'service' is missing in the configuration"
+    }
+  } else {
+    error "Wrong configuration. Key 'service' is missing in the configuration"
+  }
+  if (prop.containsKey("providerRuntime")) {
+    def _runtime = prop['providerRuntime']
+    if (_runtime == "") {
+      error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
+    } else {
+      def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x", "c#"]
+      def flag = false
 
-			for (int i = 0; i < validRuntimes.size(); i++) {
-				if (_runtime == validRuntimes[i]) {
-					flag = true
-				}
-			}
+      for (int i = 0; i < validRuntimes.size(); i++) {
+        if (_runtime == validRuntimes[i]) {
+          flag = true
+        }
+      }
 
-			if (!flag) {
-				echo "$flag"
-				error "Runtime given in the configuration is not valid."
-			}
-		}
-	} else {
-		error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
-	}
-	if (prop.containsKey("providerTimeout")) {
-		if (prop['providerTimeout'] == "") {
-			error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
-		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
-			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
-		}
-	} else if (config['provider'] == "azure") {
+      if (!flag) {
+        echo "$flag"
+        error "Runtime given in the configuration is not valid."
+      }
+    }
+  } else {
+    error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
+  }
+  if (prop.containsKey("providerTimeout")) {
+    if (prop['providerTimeout'] == "") {
+      error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
+    } else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
+      error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
+    }
+  } else if (config['provider'] == "azure") {
     // we use azure default timeout
   } else {
-		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
-	}
+    error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
+  }
 
-	if (prop.containsKey("region")) {
-		if (prop['region'] == "") {
-			error "Wrong configuration. Value for Key 'region' is missing in the configuration"
-		}
-	} else {
-		error "Wrong configuration. Key 'region' is missing in the configuration"
-	}
+  if (prop.containsKey("region")) {
+    if (prop['region'] == "") {
+      error "Wrong configuration. Value for Key 'region' is missing in the configuration"
+    }
+  } else {
+    error "Wrong configuration. Key 'region' is missing in the configuration"
+  }
 
-	def runtime = prop['providerRuntime']
-	if (runtime.indexOf("java") > -1) {
+  def runtime = prop['providerRuntime']
+  if (runtime.indexOf("java") > -1) {
 
-		if (prop.containsKey("artifact")) {
-			if (prop['artifact'] == "") {
-				error "Wrong configuration. Value for Key 'artifact' is missing in the configuration"
-			}
-		} else {
-			error "Wrong configuration. Key 'artifact' is missing in the configuration"
-		}
+    if (prop.containsKey("artifact")) {
+      if (prop['artifact'] == "") {
+        error "Wrong configuration. Value for Key 'artifact' is missing in the configuration"
+      }
+    } else {
+      error "Wrong configuration. Key 'artifact' is missing in the configuration"
+    }
 
-		if (prop.containsKey("mainClass")) {
-			if (prop['mainClass'] == "") {
-				error "Wrong configuration. Value for Key 'mainClass' is missing in the configuration"
-			}
-		} else {
-			error "Wrong configuration. Key 'mainClass' is missing in the configuration"
-		}
-	}
+    if (prop.containsKey("mainClass")) {
+      if (prop['mainClass'] == "") {
+        error "Wrong configuration. Value for Key 'mainClass' is missing in the configuration"
+      }
+    } else {
+      error "Wrong configuration. Key 'mainClass' is missing in the configuration"
+    }
+  }
 }
 
 def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled, def isSQSEventEnabled, def isStreamEnabled, def isDynamoDbEnabled) {
@@ -841,11 +842,11 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
 
   if (isEventSchdld == true) {
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
-	}
+  }
 
-	if (isS3EventEnabled || isSQSEventEnabled || isDynamoDbEnabled || isStreamEnabled || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED && config['domain'] != 'jazz')) {
+  if (isS3EventEnabled || isSQSEventEnabled || isDynamoDbEnabled || isStreamEnabled || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED && config['domain'] != 'jazz')) {
     sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
- 	}
+  }
 
   if(!isEventSchdld) {
     removeEventResources()
@@ -930,42 +931,42 @@ def updatePolicy(env, destARN){
   def primaryData = utilModule.getAccountInfoPrimary();
   def primaryRegion
   for (item in primaryData.REGIONS) {
-		if(item.PRIMARY){
-			primaryRegion = item.REGION
-		}
-	}
+    if(item.PRIMARY){
+      primaryRegion = item.REGION
+    }
+  }
   def primaryCredsId = null
 
   withCredentials([
         [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'PRIMARY_AWS_ACCESS_KEY_ID', credentialsId: primaryData.CREDENTIAL_ID, secretKeyVariable: 'PRIMARY_AWS_SECRET_ACCESS_KEY']
       ])  {
-            try {
-              // initialize aws credentials
-              def randomStringPrimary = utilModule.generateRequestId();
-              primaryCredsId = "jazzprimary-${randomStringPrimary}";
+        try {
+          // initialize aws credentials
+          def randomStringPrimary = utilModule.generateRequestId();
+          primaryCredsId = "jazzprimary-${randomStringPrimary}";
 
-              sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
-              sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
-              sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
+          sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
+          sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
+          sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
 
-              def destinationName = destARN;
-              def destArnArray = [];
-              destArnArray = destinationName.tokenize(":").last();
+          def destinationName = destARN;
+          def destArnArray = [];
+          destArnArray = destinationName.tokenize(":").last();
 
-              def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${service_config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
-              sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
+          def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${service_config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
+          sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
 
-            } catch(ex){
-              send_status_email('FAILED', '')
-              events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
-              events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-              events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
-              error ex.getMessage()
-            } finally {
-              // reset Credentials
-              resetCredentials(primaryCredsId)
-            }
-          }
+        } catch(ex){
+          send_status_email('FAILED', '')
+          events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
+          events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+          events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
+          error ex.getMessage()
+        } finally {
+          // reset Credentials
+          resetCredentials(primaryCredsId)
+        }
+    }
 }
 
 def writeServerlessFile(config, env, accountDetails) {  
@@ -1064,9 +1065,9 @@ def setCredentials() {
 
     try {
       token = sh(script: "curl --silent -X POST -k -v \
-				-H \"Content-Type: application/json\" \
-					$loginUrl \
-				-d \'${payload}\'", returnStdout: true).trim()
+        -H \"Content-Type: application/json\" \
+          $loginUrl \
+        -d \'${payload}\'", returnStdout: true).trim()
 
       def tokenJson = parseJson(token)
       tokenJson_token = tokenJson.data.token
@@ -1086,38 +1087,38 @@ def setCredentials() {
  */
 def send_status_email (build_status, email_content) {
   echo "Sending build notification to ${config['created_by']}"
-	// TODO: Use this to make the notification look better?
-	def body_html = ''
-	def body_subject = "[Jazz Build Notification] Deployment ${build_status} for your service: ${config['service']}"
-	def body_text =  'View the complete build log here: ' + env.BUILD_URL + 'console'
-  	if (email_content != '') {
-    	body_text = email_content + '\n\n' + body_text
-	}
-	body = JsonOutput.toJson([
-		from: 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>',
-		to: config['created_by'],
-		subject: body_subject,
-		text: body_text,
-		bcc: configLoader.JAZZ.STACK_ADMIN,
-		html: body_html
-	])
-
-	try {
-		def sendMail = sh(script: "curl -X POST \
-						${g_base_url}/jazz/email \
-						-k -v -H \"Authorization: $auth_token\" \
-						-H \"Content-Type: application/json\" \
-						-d \'${body}\'", returnStdout: true).trim()
-    	def responseJSON = parseJson(sendMail)
-		if (responseJSON.data) {
-			echo "successfully sent e-mail to ${config['created_by']}"
-		} else {
-			echo "exception occured while sending e-mail: $responseJSON"
-		}
-	} catch (e) {
-    echo "Failed while sending build status notification: " + e.toString()
+  // TODO: Use this to make the notification look better?
+  def body_html = ''
+  def body_subject = "[Jazz Build Notification] Deployment ${build_status} for your service: ${config['service']}"
+  def body_text =  'View the complete build log here: ' + env.BUILD_URL + 'console'
+    if (email_content != '') {
+      body_text = email_content + '\n\n' + body_text
   }
-}
+  body = JsonOutput.toJson([
+    from: 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>',
+    to: config['created_by'],
+    subject: body_subject,
+    text: body_text,
+    bcc: configLoader.JAZZ.STACK_ADMIN,
+    html: body_html
+  ])
+
+  try {
+    def sendMail = sh(script: "curl -X POST \
+            ${g_base_url}/jazz/email \
+            -k -v -H \"Authorization: $auth_token\" \
+            -H \"Content-Type: application/json\" \
+            -d \'${body}\'", returnStdout: true).trim()
+      def responseJSON = parseJson(sendMail)
+      if (responseJSON.data) {
+        echo "successfully sent e-mail to ${config['created_by']}"
+      } else {
+        echo "exception occured while sending e-mail: $responseJSON"
+      }
+    } catch (e) {
+      echo "Failed while sending build status notification: " + e.toString()
+    }
+  }
 
 
 /**
@@ -1278,41 +1279,41 @@ def getBuildModuleUrl() {
 def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId, accountDetails, config) {
   def rollbackErrorMessage = "ROLLBACK_COMPLETE state and can not be updated"
   def logGroupErrorMessage = "CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"
-	if(deployOutput.contains(rollbackErrorMessage)){
-		deleteAndRedeployService(env, envBucketKey, accountDetails, config)
-	}
-	else if (deployOutput.contains(logGroupErrorMessage))
-	{
-		def lambda = "/aws/lambda/${envBucketKey}-${env}"
-		if (isExistingLogGroup(lambda, credsId)){
-			removeLogGroup(lambda, credsId)
-			deleteAndRedeployService(env, envBucketKey, accountDetails, config);
-		} else {
-			error "Unable to find existing log groups"
-		}
-	}
-	else {
-			error "Exception occured while serverless deployment to ${env} environment"
-	}
+  if(deployOutput.contains(rollbackErrorMessage)){
+    deleteAndRedeployService(env, envBucketKey, accountDetails, config)
+  }
+  else if (deployOutput.contains(logGroupErrorMessage))
+  {
+    def lambda = "/aws/lambda/${envBucketKey}-${env}"
+    if (isExistingLogGroup(lambda, credsId)){
+      removeLogGroup(lambda, credsId)
+      deleteAndRedeployService(env, envBucketKey, accountDetails, config);
+    } else {
+      error "Unable to find existing log groups"
+    }
+  }
+  else {
+      error "Exception occured while serverless deployment to ${env} environment"
+  }
 }
 
 def isExistingLogGroup (groupName, credsId){
-	def isExistingLogGrp = false
-	def filterLogs = sh (
-		script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile ${credsId}",
-		returnStdout: true
-	).trim()
-	def toJSON = new groovy.json.JsonSlurper()
-	def filterLogsJSON = toJSON.parseText(filterLogs)
-	def logGroups = filterLogsJSON.logGroups
-	if(logGroups.size() > 0  && logGroups[0].logGroupName == groupName){
-		isExistingLogGrp = true
+  def isExistingLogGrp = false
+  def filterLogs = sh (
+    script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile ${credsId}",
+    returnStdout: true
+  ).trim()
+  def toJSON = new groovy.json.JsonSlurper()
+  def filterLogsJSON = toJSON.parseText(filterLogs)
+  def logGroups = filterLogsJSON.logGroups
+  if(logGroups.size() > 0  && logGroups[0].logGroupName == groupName){
+    isExistingLogGrp = true
   }
-	return isExistingLogGrp
+  return isExistingLogGrp
 }
 
 def removeLogGroup(groupName, credsId) {
-	echo "Removing log group $groupName"
-	sh "aws logs delete-log-group --log-group-name $groupName --profile ${credsId}"
-	echo "successfully removed log group $groupName"
+  echo "Removing log group $groupName"
+  sh "aws logs delete-log-group --log-group-name $groupName --profile ${credsId}"
+  echo "successfully removed log group $groupName"
 }

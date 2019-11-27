@@ -30,22 +30,25 @@ def updateCustomServicesSafeDetails(safeName, lambdaArns, credsId) {
 def updateSafeDetails(safeName, lambdaARN, credsId) {
 	def iamRoleArn	
 	def safeDetails = getSafeDetails(safeName)
+	def isRoleAdded = false
 
 	if (safeDetails) {
 		iamRoleArn = getRoleDetails(lambdaARN, credsId)
 		if(safeDetails.data.roles && safeDetails.data.roles.length != 0) {
 			def isRoleArnExists = safeDetails.data.roles.find{it -> it.value.arn == iamRoleArn}
 			if(!isRoleArnExists) {
+				isRoleAdded = true
 				addRoleToSafe(iamRoleArn, safeName)
 			} else echo "Role already exists"			
 		} else {
+			isRoleAdded = true
 			addRoleToSafe(iamRoleArn, safeName)
 		}
 	} else {
 		echo "Safe not configured yet."
 	}
-
-	return iamRoleArn 
+	def updateSafeDetails = ["isRoleAdded" : isRoleAdded, "iamRoleArn": iamRoleArn]
+	return updateSafeDetails
 }
 
 def addRoleToSafe(iamRoleArn, safeName) {
