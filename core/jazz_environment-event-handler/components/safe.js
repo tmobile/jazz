@@ -87,11 +87,11 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
         const safeDetails = { "name": safeName, "timestamp": timestamp };
         const vaultLink = `${configData.TVAULT.HOSTNAME}/#!/admin`;
         if (environmentPayload.metadata) {
-          environmentPayload.metadata['safe_details'] = safeDetails;
+          environmentPayload.metadata['safe'] = safeDetails;
           environmentPayload.metadata['vault_link'] = vaultLink;
         } else {
           environmentPayload.metadata = {
-            'safe_details': safeDetails,
+            'safe': safeDetails,
             'vault_link': vaultLink
           };
         }
@@ -117,8 +117,8 @@ function deleteSafe(environmentPayload, configData, authToken, envDetails) {
     let safeName;
     if (envDetails.data && envDetails.data.count > 0 && envDetails.data.environment && envDetails.data.environment.length) {
       const envResponse = envDetails.data.environment.filter(ele => ele.logical_id === environmentPayload.logical_id);
-      if (envResponse.length && envResponse[0].metadata && envResponse[0].metadata.safe_details) {
-        safeName = envResponse[0].metadata.safe_details.name;
+      if (envResponse.length && envResponse[0].metadata && envResponse[0].metadata.safe) {
+        safeName = envResponse[0].metadata.safe.name;
       } else {
         return resolve({
           "error": environmentPayload.logical_id + ": environment safe details is not found",

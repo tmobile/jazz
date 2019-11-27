@@ -99,7 +99,7 @@ var envDetailsResponse = {
                     "created":"2019-11-11T15:55:50:020",
                     "id":"76e2e72a-ec44-adb3-4cdc-39e79c23d000",
                     "metadata":{
-                        "safe_details":
+                        "safe":
                             {
                                 "name":"test-vault-user_jazztest",
                                 "link":"https://vault/#!/admin",

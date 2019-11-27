@@ -594,7 +594,7 @@ describe('jazz environment handler tests: ', () => {
   it("get environment details of safe", () => {
     let environmentPayload = testPayloads.environmentPayload;
     environmentPayload["metadata"] = {
-      "safe_details":
+      "safe":
           {
               "name":"test-vault-user_jazztest",
               "link":"https://vault/#!/admin",
@@ -608,14 +608,14 @@ describe('jazz environment handler tests: ', () => {
       .then((res) => {
         sinon.assert.calledOnce(requestStub);
         requestStub.restore();
-        expect(res.data.environment[0].metadata.safe_details.name).to.eq(environmentPayload["metadata"].safe_details.name);
+        expect(res.data.environment[0].metadata.safe.name).to.eq(environmentPayload["metadata"].safe.name);
       });
   });
 
   it("delete safe successfully", () => {
     let environmentPayload = testPayloads.environmentPayload;
     environmentPayload["metadata"] = {
-      "safe_details":
+      "safe":
           {
               "name":"test-vault-user_jazztest",
               "link":"https://vault/#!/admin",
@@ -637,7 +637,7 @@ describe('jazz environment handler tests: ', () => {
   it("safe details not found for deleting safe", () => {
     let environmentPayload = testPayloads.environmentPayload;
     environmentPayload["metadata"] = {
-      "safe_details":
+      "safe":
           {
               "name":"test-vault-user_jazztest",
               "link":"https://vault/#!/admin",
