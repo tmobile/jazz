@@ -24,6 +24,7 @@ import {SharedModule} from '../shared-module/shared.module';
 import {FormsModule} from '@angular/forms';
 import {EnvironmentModule } from '../environment-module/environment.module';
 import {JazzMobHeaderModule} from '../secondary-components/jazz-mob-header/jazz-mob-header.module';
+import { ConfirmModalComponent } from '../secondary-components/confirm-modal/confirm-modal.component';
 
 @NgModule({
   imports: [
@@ -54,6 +55,7 @@ import {JazzMobHeaderModule} from '../secondary-components/jazz-mob-header/jazz-
     ServiceDetailComponent,
     ServiceOverviewMultienvComponent,
     ServiceOverviewNonMultienvComponent,
+    ConfirmModalComponent
   ],
   exports: [
     CreateServiceComponent,
@@ -68,6 +70,7 @@ import {JazzMobHeaderModule} from '../secondary-components/jazz-mob-header/jazz-
     ServiceDetailComponent,
     ServiceOverviewMultienvComponent,
     ServiceOverviewNonMultienvComponent,
+    ConfirmModalComponent
   ]
 })
 export class ServiceModule {

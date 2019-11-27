@@ -1,6 +1,7 @@
 import {Component, OnInit, ViewChild} from '@angular/core';
 import {RequestService, DataCacheService, MessageService, AuthenticationService} from '../../core/services/index';
 import {ToasterService} from 'angular2-toaster';
+import * as moment from 'moment';
 import {Router, ActivatedRoute} from '@angular/router';
 import {EnvOverviewSectionComponent} from './../environment-overview/env-overview-section.component';
 import {DataService} from "../data-service/data.service";
@@ -35,6 +36,7 @@ export class EnvironmentDetailComponent implements OnInit {
   isLoadingService: boolean = true;
   status_inactive: boolean = false;
   swagger_error: boolean = false;
+  dateValue: string = "";
 
   tabData = ['overview', 'deployments', 'code quality', 'assets', 'logs', 'metrics'];
   envSelected: string = '';
@@ -123,6 +125,15 @@ export class EnvironmentDetailComponent implements OnInit {
     if (service === undefined) {
       return {};
     } else {
+      let timeStampValue = service.timestamp.split(':').slice(0, -1).join(':')
+      var projectedDate =  moment(new Date(timeStampValue)).add('days', 5).format('MMMM D YYYY h:m A');
+      let dateData, dateContent;
+      dateData = projectedDate.split(' ');
+      dateContent = dateData[1];
+      dateData = this.ordinal_suffix_of(dateData[1]);
+      dateData = dateData + ',';
+      projectedDate = projectedDate.replace(dateContent, dateData);
+      this.dateValue = projectedDate;
       return {
         id: service.id,
         name: service.service,
@@ -136,6 +147,21 @@ export class EnvironmentDetailComponent implements OnInit {
       }
     }
   };
+
+  ordinal_suffix_of(i) {
+    var j = i % 10,
+        k = i % 100;
+    if (j == 1 && k != 11) {
+        return i + "st";
+    }
+    if (j == 2 && k != 12) {
+        return i + "nd";
+    }
+    if (j == 3 && k != 13) {
+        return i + "rd";
+    }
+    return i + "th";
+  }
 
   onDataFetched(service) {
 

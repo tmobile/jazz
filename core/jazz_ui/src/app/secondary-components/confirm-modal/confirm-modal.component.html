@@ -1,0 +1,25 @@
+<div class="jz-modal-overlay popup centered" [class.jz-hidden]="!visible">
+  <div class="jz-modal small content container">
+    <div class="jz-modal-header" *ngIf="title">
+      <span class="icon-icon-info"></span>
+      <h4>
+        {{title}}
+      </h4>
+    </div>
+    <div class="jz-modal-content" *ngIf="content">
+      {{content}} <b>{{dateValue}}</b>
+    </div>
+    <div class="jz-modal-footer">
+      <btn-jazz-secondary
+        text="NO"
+        newclass="jz-btn-minimal"
+        (click)="handleConfirm(false)" *ngIf="secondaryBtn">
+      </btn-jazz-secondary>
+      <btn-jazz-primary
+        text={{primaryBtnContent}}
+        newclass="jz-btn-small"
+        (click)="handleConfirm(true)">
+      </btn-jazz-primary>
+    </div>
+  </div>
+</div>

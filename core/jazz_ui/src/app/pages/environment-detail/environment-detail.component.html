@@ -8,6 +8,7 @@
 <jazz-mob-header [icon]="'notification'" [headText]="service.name" [status]="'green'"></jazz-mob-header>
 <section class="page-container flex-col">
     <navigation-bar *ngIf='!isError403' [links]="breadcrumbs" [data]="friendly_name"></navigation-bar>
+    <div class="reminder-content" *ngIf="dateValue !== ''">Your service will be active until <b>{{dateValue}}</b></div>
     <div *ngIf='!isError403' class="content flex-col flex-grow">
         <div class="page-title-wrap hide-for-mobile">
             <div class="servie-details-container">

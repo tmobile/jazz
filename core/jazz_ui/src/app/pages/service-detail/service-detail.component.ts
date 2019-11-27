@@ -10,6 +10,7 @@ import { SharedService } from "../../SharedService.service";
 import { AfterViewInit, ViewChild } from '@angular/core';
 
 import { ToasterService } from 'angular2-toaster';
+import * as moment from 'moment';
 import { BarGraphComponent } from '../../secondary-components/bar-graph/bar-graph.component';
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from '../../core/services/index';
 import { ServiceMetricsComponent } from '../service-metrics/service-metrics.component';
@@ -76,6 +77,7 @@ export class ServiceDetailComponent implements OnInit {
   isAdminAccess: boolean = false;
   currentUser: any = {}
   isError403: boolean = false;
+  dateValue: string = "";
 
 
   private sub: any;
@@ -125,6 +127,15 @@ export class ServiceDetailComponent implements OnInit {
         region: service.deployment_accounts[0].region,
         provider: service.deployment_accounts[0].provider
       }
+      let timeStampValue = service.timestamp.split(':').slice(0, -1).join(':')
+      var projectedDate =  moment(new Date(timeStampValue)).add('days', 5).format('MMMM D YYYY h:m A');
+      let dateData, dateContent;
+      dateData = projectedDate.split(' ');
+      dateContent = dateData[1];
+      dateData = this.ordinal_suffix_of(dateData[1]);
+      dateData = dateData + ',';
+      projectedDate = projectedDate.replace(dateContent, dateData);
+      this.dateValue = projectedDate;
       if(service.type === 'sls-app'){
         service.type = 'custom'
       }
@@ -168,6 +179,21 @@ export class ServiceDetailComponent implements OnInit {
 
     }
   };
+
+  ordinal_suffix_of(i) {
+    var j = i % 10,
+        k = i % 100;
+    if (j == 1 && k != 11) {
+        return i + "st";
+    }
+    if (j == 2 && k != 12) {
+        return i + "nd";
+    }
+    if (j == 3 && k != 13) {
+        return i + "rd";
+    }
+    return i + "th";
+  }
 
   addEventSource(obj){
     let keysList = Object.keys(obj);

@@ -291,7 +291,7 @@
                 <div class="inner three"></div>
             </div>
         </div>
-        <form (ngSubmit)="onSubmit(); serviceForm.reset()" #serviceForm="ngForm" class='mob-form-pad'>
+        <form (ngSubmit)="onSubmit();" #serviceForm="ngForm" class='mob-form-pad'>
             <div class="sec-heading flex" (click)="additionalOpen()">
                 <div class="sec-heading-text">
                     additional details
@@ -967,8 +967,9 @@
                 </div>
             </section>
             <p class="requiredInfo"><span>*</span>Indicates required fields</p>
+            <section class="custom-message" *ngIf="typeOfService == 'sls-app'">Custom service not available in trial environment</section>
             <section class="submit-form">
-                <button type="submit" [disabled]="!serviceForm.valid || (disableForm()) || disableFunction" class="btn btn-primary">SUBMIT</button>
+                <button type="submit" [disabled]="!serviceForm.valid || (disableForm()) || disableFunction || typeOfService == 'sls-app'" class="btn btn-primary">SUBMIT</button>
             </section>
         </form>
     </div>
@@ -999,4 +1000,12 @@
             </section>
         </section>
     </div>
+    <confirm-modal
+        [content]="'Your service will be active until'"
+        [visible]="reminderModalVisible"
+        (onConfirm)="handleReminderModalConfirm($event)"
+        [secondaryBtn]="false"
+        [primaryBtnContent]="'OK'"
+        [dateValue]="dateValue">
+    </confirm-modal>
 </div>

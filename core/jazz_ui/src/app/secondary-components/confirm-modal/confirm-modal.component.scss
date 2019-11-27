@@ -1,0 +1,54 @@
+.icon-icon-info {
+    padding: 1.1em;
+  
+    &:before {
+      color: black;
+      font-size: 1.5em;
+    }
+}
+
+.jz-modal.content{
+  min-height: 10.75em;
+}
+
+.jz-modal.content.container{
+  min-width: 14em;
+  max-width: 30em;
+  width: 75%;
+  border-radius: 0.8em;
+  border: 1px solid #cfcfcf;
+  box-shadow: 0 20px 15px rgba(102,102,102,.26);
+  flex-direction: column;
+  min-height: 7.75em;
+}
+
+.jz-modal{
+
+  .jz-modal-content{
+    margin: 0;
+    padding: 1em 2em;
+  }
+
+  .jz-modal-footer{
+    margin: 1em 0;
+    text-align: right;
+  }
+}
+
+.jz-modal-overlay.popup{
+  width: 100%;
+  height: 100%;
+  background-color: rgba(255,255,255,.56);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+
+  .jz-modal-footer{
+    margin: 1em auto;
+  }
+
+  button.btn-primary{
+    padding: .3em 2.5em !important;
+  }
+}
+  

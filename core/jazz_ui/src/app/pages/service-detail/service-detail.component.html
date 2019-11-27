@@ -6,6 +6,7 @@
                         <span  class="reduxC" *ngIf='service.status == "deletion completed"'></span>
                         <span  class="reduxS" *ngIf='service.status == "deletion started"'></span>
 
+        <div class="reminder-content" *ngIf="dateValue !== ''">Your service will be active until <b>{{dateValue}}</b></div>
         <div *ngIf='!isError403' class="page-title-wrap hide-for-mobile">
             <div class="title-platform">
             <h1 class="page-hdr bold-title">{{service.name}}</h1>

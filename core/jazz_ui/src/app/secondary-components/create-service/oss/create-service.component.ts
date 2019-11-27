@@ -10,6 +10,7 @@ import { ServiceFormData, RateExpression, CronObject, EventExpression, EventLabe
 import { FocusDirective } from '../focus.directive';
 import { CronParserService } from '../../../core/helpers';
 import { ToasterService} from 'angular2-toaster';
+import * as moment from 'moment';
 import { RequestService, DataCacheService, MessageService, AuthenticationService } from "../../../core/services";
 import 'rxjs/Rx';
 import { Observable } from 'rxjs/Rx';
@@ -159,6 +160,8 @@ export class CreateServiceComponent implements OnInit {
   isstartNew: boolean = false;
   deploymentTargetSelected: any;
   awsOnly: boolean = true;
+  reminderModalVisible: boolean = false;
+  dateValue: string;
   public lineNumberCounting: any = new Array(5);
 
   public buildEnvironment:any = environment;
@@ -704,11 +707,21 @@ export class CreateServiceComponent implements OnInit {
         }
       }
       if(this.rateExpression.type !== 'none'){
-        this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
-        if (this.rateExpression.cronStr == 'invalid') {
+        if (this.rateExpression.type === 'cron' && this.rateExpression.cronStr !== undefined) {
+          this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
+          if (this.rateExpression.cronStr == 'invalid') {
+              return;
+          } else if (this.rateExpression.cronStr !== undefined) {
+              payload["rateExpression"] = this.rateExpression.cronStr;
+          }
+        }
+        if (this.rateExpression.type === 'rate' && this.rateExpression.rateStr !== undefined) {
+          this.rateExpression.rateStr = `${this.rateExpression.duration} ${this.rateExpression.interval}`
+          if (this.rateExpression.rateStr == 'invalid') {
             return;
-        } else if (this.rateExpression.cronStr !== undefined) {
-            payload["rateExpression"] = this.rateExpression.cronStr;
+          } else if (this.rateExpression.rateStr !== undefined) {
+            payload["rateExpression"] =  this.rateExpression.rateStr;
+          }
         }
       }
       if(this.typeOfPlatform === 'aws') {
@@ -872,14 +885,22 @@ export class CreateServiceComponent implements OnInit {
 
  // function to create a service
   onSubmit() {
+    this.reminderModalVisible = true;
+  }
+
+  handleReminderModalConfirm(){
+    this.reminderModalVisible = false;
     this.submitted = true;
     this.getData();
     this.createService();
     this.typeOfService = 'api';
     this.typeOfPlatform = 'aws';
+    var serviceName = (<HTMLInputElement>document.getElementById("serviceName"));
+    serviceName.value = "";
+    var domainName = (<HTMLInputElement>document.getElementById("domainName"));
+    domainName.value = "";
     this.selectedApprovers = [];
   }
-
 
   // function to hide approver list when input field is empty
   onApproverChange(newVal) {
@@ -1167,7 +1188,30 @@ export class CreateServiceComponent implements OnInit {
     }
   }
 
+  ordinal_suffix_of(i) {
+    var j = i % 10,
+        k = i % 100;
+    if (j == 1 && k != 11) {
+        return i + "st";
+    }
+    if (j == 2 && k != 12) {
+        return i + "nd";
+    }
+    if (j == 3 && k != 13) {
+        return i + "rd";
+    }
+    return i + "th";
+  }
+
   ngOnInit() {
+    var projectedDate =  moment().add('days', 5).format('MMMM D YYYY hh:mm A');
+    let dateData, dateContent;
+    dateData = projectedDate.split(' ');
+    dateContent = dateData[1];
+    dateData = this.ordinal_suffix_of(dateData[1]);
+    dateData = dateData + ',';
+    projectedDate = projectedDate.replace(dateContent, dateData);
+    this.dateValue = projectedDate;
     if(typeof env_oss.azure.azure_enabled === "boolean" && env_oss.azure.azure_enabled === true){
       this.azureEnabled = true;
     }
