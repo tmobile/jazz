@@ -12,13 +12,17 @@ echo "Vault utility module loaded successfully"
 @Field def serviceConfig
 @Field def authToken
 @Field def environmentLogicalId
+@Field def events
+@Field def utilModule
 
-def initialize(config_loader,service_config, base_url, auth_token, env) {
+def initialize(config_loader,service_config, base_url, auth_token, env, event_module, util_module) {
 	configLoader = config_loader
 	serviceConfig = service_config
 	baseUrl = base_url
 	authToken = auth_token
 	environmentLogicalId = env
+	events = event_module
+	utilModule = util_module
 }
 
 def updateCustomServicesSafeDetails(safeName, lambdaArns, credsId) {
@@ -30,25 +34,21 @@ def updateCustomServicesSafeDetails(safeName, lambdaArns, credsId) {
 def updateSafeDetails(safeName, lambdaARN, credsId) {
 	def iamRoleArn	
 	def safeDetails = getSafeDetails(safeName)
-	def isRoleAdded = false
 
 	if (safeDetails) {
 		iamRoleArn = getRoleDetails(lambdaARN, credsId)
 		if(safeDetails.data.roles && safeDetails.data.roles.length != 0) {
 			def isRoleArnExists = safeDetails.data.roles.find{it -> it.value.arn == iamRoleArn}
 			if(!isRoleArnExists) {
-				isRoleAdded = true
 				addRoleToSafe(iamRoleArn, safeName)
-			} else echo "Role already exists"			
+				events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceConfig['provider'], iamRoleArn, "iam_role", serviceConfig), environmentLogicalId);
+			} else echo "Role already exists"
 		} else {
-			isRoleAdded = true
 			addRoleToSafe(iamRoleArn, safeName)
 		}
 	} else {
 		echo "Safe not configured yet."
 	}
-	def updateSafeDetails = ["isRoleAdded" : isRoleAdded, "iamRoleArn": iamRoleArn]
-	return updateSafeDetails
 }
 
 def addRoleToSafe(iamRoleArn, safeName) {
