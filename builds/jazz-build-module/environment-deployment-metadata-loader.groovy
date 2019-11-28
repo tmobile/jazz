@@ -70,7 +70,7 @@ def getEnvironmentLogicalId() {
 	return g_environment_logical_id
 }
 
-def getEnvironmentInfo(currentEnvironment) {
+def getEnvironmentInfo() {
 	if (g_service_config['domain'] != "jazz") {
 		def getEnvironments = sh(script: "curl -H \"Content-type: application/json\" \
 		-H \"Jazz-Service-ID: ${g_service_config['service_id']}\" \
@@ -86,7 +86,7 @@ def getEnvironmentInfo(currentEnvironment) {
 			}
 			if (environmentOutput != null && environmentOutput.data != null && environmentOutput.data.environment != null) {
 				for (environment in environmentOutput.data.environment) {
-					if (environment.logical_id.equals(currentEnvironment)) {
+					if (environment.logical_id.equals(g_environment_logical_id)) {
 						return environment;
 					}
 				}
