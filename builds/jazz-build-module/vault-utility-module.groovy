@@ -106,6 +106,10 @@ def getRoleDetails(lambdaARN, credsId) {
 	return iamRoleArn
 }
 
+def setEnvironmentLogicalId (env) {
+	environmentLogicalId = env
+}
+
 @NonCPS
 def parseJson(jsonString) {
   def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
