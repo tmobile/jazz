@@ -409,7 +409,7 @@ node() {
               sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
               sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
           
-              def environment = environmentDeploymentMetadata.getEnvironmentInfo(environment_logical_id)
+              def environment = environmentDeploymentMetadata.getEnvironmentInfo()
               if (environment && environment.metadata && environment.metadata.safe) {
                 def safeName = environment.metadata.safe.name
                 vaultUtilityModule.updateCustomServicesSafeDetails(safeName, lambdaArns, credsId)                
