@@ -149,6 +149,10 @@ node {
 			echo "$repo_name doesn't contain any active environment logical id in environment catalog!"
 		}
 
+		if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+			vaultUtilityModule.initialize(configLoader, service_config, g_base_url, auth_token, environment_logical_id, events, utilModule)      
+		}
+
 
 		dir(repo_name){
 			if (fileExists('build.api')) {

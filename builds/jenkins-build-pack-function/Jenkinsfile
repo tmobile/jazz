@@ -129,8 +129,10 @@ node() {
       } else {
         current_environment = 'dev'
         environment_logical_id = environmentDeploymentMetadata.getEnvironmentLogicalId();
-      }
+      }      
 
+      environmentDeploymentMetadata.setEnvironmentLogicalId(environment_logical_id)
+      
       if (!environment_logical_id && config['domain'] != 'jazz') {
         error "The environment has not been created yet and its missing the environment id"
       }
