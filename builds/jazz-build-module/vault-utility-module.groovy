@@ -96,7 +96,6 @@ def getRoleDetails(lambdaARN, credsId) {
 	try {
 		def getFunctionOutput = sh(returnStdout: true, script: "aws lambda get-function --function-name ${lambdaARN} --output json  --profile ${credsId} --region ${serviceConfig.region}")
 		if (getFunctionOutput) functionDetails = parseJson(getFunctionOutput)
-		echo "Function Details : $functionDetails"
 		if (functionDetails && functionDetails.Configuration) {
 			iamRoleArn = functionDetails.Configuration.Role
 		}
