@@ -484,7 +484,7 @@ node() {
               def environment = environmentDeploymentMetadata.getEnvironmentInfo()
               if (environment && environment.metadata && environment.metadata.safe) {
                 def safeName = environment.metadata.safe.name
-                vaultUtilityModule.updateSafeDetails(safeName, lambdaARN, credsId)
+                vaultUtilityModule.updateSafeDetails(safeName, lambdaARN.arn, credsId)
               }
               events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
             } catch (ex) {
