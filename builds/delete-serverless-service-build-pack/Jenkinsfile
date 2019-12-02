@@ -206,176 +206,192 @@ node {
 			}
 		} else {
 			dir(repo_name){
-					switch (flowType) {
-						case "API":
-							stage('Undeploy Service') {
-								updateServiceNameConfig()
-								def path = getResourcePath()
-								def apiPlatform = service_config.deployment_targets.api;
-								for (_envId in environmentIds) {
-									current_environment_id = _envId
-									environmentMetadataLoader.setEnvironmentLogicalId(_envId)
-									try {
-										def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
-										if (branch && branch != 'NA') {
-											environmentMetadataLoader.setBranch(branch)
-											events.setBranch(branch)
-											sonarModule.setBranch(branch)
-											branch = 'NA'
+				switch (flowType) {
+					case "API":
+						stage('Undeploy Service') {
+							updateServiceNameConfig()
+							def path = getResourcePath()
+							def apiPlatform = service_config.deployment_targets.api;
+							for (_envId in environmentIds) {
+								current_environment_id = _envId
+								environmentMetadataLoader.setEnvironmentLogicalId(_envId)
+								try {
+									def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+									if (branch && branch != 'NA') {
+										environmentMetadataLoader.setBranch(branch)
+										events.setBranch(branch)
+										sonarModule.setBranch(branch)
+										branch = 'NA'
+									}
+									events.setEnvironment(_envId)
+									events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+									echo 'undeploying service for environment: ' + _envId
+									
+									vaultUtilityModule.setEnvironmentLogicalId(_envId)
+									
+									switch(apiPlatform) {
+										case 'aws_apigateway':
+											cleanUpApiGatewayResources(_envId, path)
+											break
+										case 'gcp_apigee':
+											def env_key = _envId.endsWith("-dev") ? "DEV" : "PROD"
+											apigeeModule.delete("swagger/swagger.json", env_key, _envId, service_config)
+											break
+										default:
+											error "Deployment platform not recognized."
+									}
+									
+									cleanUpApiDocs(_envId)
+									unDeployService(_envId)
+									if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
+										cleanupCodeQualityReports()
+									}
+									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+										def environmentInfo = environmentDeploymentMetadata.getEnvironmentInfo()
+										if (environmentInfo && environmentInfo.metadata && environmentInfo.metadata.safe) {
+											def safeName = environmentInfo.metadata.safe.name
+											vaultUtilityModule.deleteSafe(safeName)
 										}
-										events.setEnvironment(_envId)
-										events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-										echo 'undeploying service for environment: ' + _envId
-										
-										vaultUtilityModule.setEnvironmentLogicalId(_envId)
-										
-										switch(apiPlatform) {
-											case 'aws_apigateway':
-												cleanUpApiGatewayResources(_envId, path)
-												break
-											case 'gcp_apigee':
-												def env_key = _envId.endsWith("-dev") ? "DEV" : "PROD"
-												apigeeModule.delete("swagger/swagger.json", env_key, _envId, service_config)
-												break
-											default:
-												error "Deployment platform not recognized."
+									}
+									archiveAssetDetails(_envId)
+									events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
+								} catch (ex) {
+									echo "Environment Deletion failed for envId: $_envId . Error Details:" + ex
+									events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+									error "Environment Deletion failed for envId: $_envId . Error Details:" + ex
+								}
+							}
+						}
+						break
+
+					case "FUNCTION":
+						stage('Undeploy Service') {
+							updateServiceNameConfig()
+
+							for (_envId in environmentIds) {
+								current_environment_id = _envId
+								environmentMetadataLoader.setEnvironmentLogicalId(_envId)
+								try {
+									def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+									if (branch && branch != 'NA') {
+										events.setBranch(branch)
+										sonarModule.setBranch(branch)
+										branch = 'NA'
+									}
+									events.setEnvironment(_envId)
+									events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+									
+									vaultUtilityModule.setEnvironmentLogicalId(_envId)
+
+									if (service_config['event_source_s3']) { // check service for S3 Bucket and make empty if not. //
+										checkBucket(current_environment_id);
+									}
+									echo 'undeploying function for environment: ' + _envId
+
+									cleanupEventSourceMapping(_envId)
+									unDeployService(_envId)
+
+									if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
+										cleanupCodeQualityReports()
+									}
+
+									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+										def environmentInfo = environmentDeploymentMetadata.getEnvironmentInfo()
+										if (environmentInfo && environmentInfo.metadata && environmentInfo.metadata.safe) {
+											def safeName = environmentInfo.metadata.safe.name
+											vaultUtilityModule.deleteSafe(safeName)
 										}
-										
-										cleanUpApiDocs(_envId)
+									}
+									archiveAssetDetails(_envId)
+									events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
+								} catch (ex) {
+									events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+									error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
+								}
+							}
+						}
+						break
+
+					case "WEBSITE":
+						stage('Undeploy Website') {
+							for (_envId in environmentIds) {
+								current_environment_id = _envId
+								environmentMetadataLoader.setEnvironmentLogicalId(_envId)
+								try {
+									def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+									echo "Branch ::: $branch"
+									echo "ENVIRONMENT ::: $_envId"
+									if (branch && branch != 'NA') {
+										events.setBranch(branch)
+										sonarModule.setBranch(branch)
+										branch = 'NA'
+									}
+									events.setEnvironment(_envId)
+									events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+									cloudfrontEnabled = "true"  //TODO: Remove when non-cloudFront websites feature is introduced.
+									if (cloudfrontEnabled == "true") {
+										cleanupCloudFrontDistribution(_envId)
+									}
+									unDeployWebsite(_envId)
+									archiveAssetDetails(_envId)
+									events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
+								} catch (ex) {
+									echo "error occured when deleting environment: " + ex
+									events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+									error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
+								}
+							}
+						}
+						break
+
+					case "SLSAPP":
+						stage('Undeploy Service') {
+							for (_envId in environmentIds) {
+								current_environment_id = _envId
+								environmentMetadataLoader.setEnvironmentLogicalId(_envId)
+								def has_serverless_yml = loadServerlessYml(service_config, _envId)
+								try {
+									def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+									if (branch && branch != 'NA') {
+										events.setBranch(branch)
+										sonarModule.setBranch(branch)
+										branch = 'NA'
+									}
+									events.setEnvironment(_envId)
+									events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+									echo 'undeploying sls service for environment: ' + _envId
+
+									vaultUtilityModule.setEnvironmentLogicalId(_envId)
+
+									cleanupEventSourceMapping(_envId)
+									if (has_serverless_yml) {
+										// for sls install plugins
+										installServerlessPlugins()								
 										unDeployService(_envId)
-										if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
-											cleanupCodeQualityReports()
-										}
-										if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
-											def environmentInfo = environmentDeploymentMetadata.getEnvironmentInfo()
-											if (environmentInfo && environmentInfo.metadata && environmentInfo.metadata.safe) {
-												def safeName = environmentInfo.metadata.safe.name
-												vaultUtilityModule.deleteSafe(safeName)
-											}
-										}
-										archiveAssetDetails(_envId)
-										events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
-									} catch (ex) {
-										echo "Environment Deletion failed for envId: $_envId . Error Details:" + ex
-										events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
-										error "Environment Deletion failed for envId: $_envId . Error Details:" + ex
 									}
+									else {
+										unDeployCloudformationStack(_envId)
+									}
+
+									if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
+										cleanupCodeQualityReports()
+									}
+									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+										def environmentInfo = environmentDeploymentMetadata.getEnvironmentInfo()
+										if (environmentInfo && environmentInfo.metadata && environmentInfo.metadata.safe) {
+											def safeName = environmentInfo.metadata.safe.name
+											vaultUtilityModule.deleteSafe(safeName)
+										}
+									}
+									archiveAssetDetails(_envId)
+									events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
+								} catch (ex) {
+									events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+									error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
 								}
 							}
-							break
-
-						case "FUNCTION":
-							stage('Undeploy Service') {
-								updateServiceNameConfig()
-
-								for (_envId in environmentIds) {
-									current_environment_id = _envId
-									environmentMetadataLoader.setEnvironmentLogicalId(_envId)
-									try {
-										def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
-										if (branch && branch != 'NA') {
-											events.setBranch(branch)
-											sonarModule.setBranch(branch)
-											branch = 'NA'
-										}
-										events.setEnvironment(_envId)
-										events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-										
-										vaultUtilityModule.setEnvironmentLogicalId(_envId)
-
-										if (service_config['event_source_s3']) { // check service for S3 Bucket and make empty if not. //
-											checkBucket(current_environment_id);
-										}
-										echo 'undeploying function for environment: ' + _envId
-
-										cleanupEventSourceMapping(_envId)
-										unDeployService(_envId)
-
-										if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
-											cleanupCodeQualityReports()
-										}
-										archiveAssetDetails(_envId)
-										events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
-									} catch (ex) {
-										events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
-										error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
-									}
-								}
-							}
-							break
-
-						case "WEBSITE":
-							stage('Undeploy Website') {
-								for (_envId in environmentIds) {
-									current_environment_id = _envId
-									try {
-										def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
-										echo "Branch ::: $branch"
-										echo "ENVIRONMENT ::: $_envId"
-										if (branch && branch != 'NA') {
-											events.setBranch(branch)
-											sonarModule.setBranch(branch)
-											branch = 'NA'
-										}
-										events.setEnvironment(_envId)
-										events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-										cloudfrontEnabled = "true"  //TODO: Remove when non-cloudFront websites feature is introduced.
-										if (cloudfrontEnabled == "true") {
-											cleanupCloudFrontDistribution(_envId)
-										}
-										unDeployWebsite(_envId)
-										archiveAssetDetails(_envId)
-										events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
-									} catch (ex) {
-										echo "error occured when deleting environment: " + ex
-										events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
-										error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
-									}
-								}
-							}
-							break
-
-						case "SLSAPP":
-							stage('Undeploy Service') {
-								for (_envId in environmentIds) {
-									current_environment_id = _envId
-									environmentMetadataLoader.setEnvironmentLogicalId(_envId)
-									def has_serverless_yml = loadServerlessYml(service_config, _envId)
-									try {
-										def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
-										if (branch && branch != 'NA') {
-											events.setBranch(branch)
-											sonarModule.setBranch(branch)
-											branch = 'NA'
-										}
-										events.setEnvironment(_envId)
-										events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-										echo 'undeploying sls service for environment: ' + _envId
-
-										vaultUtilityModule.setEnvironmentLogicalId(_envId)
-
-										cleanupEventSourceMapping(_envId)
-										if (has_serverless_yml) {
-											// for sls install plugins
-											installServerlessPlugins()								
-											unDeployService(_envId)
-										}
-										else {
-											unDeployCloudformationStack(_envId)
-										}
-
-										if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
-											cleanupCodeQualityReports()
-										}
-										archiveAssetDetails(_envId)
-										events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
-									} catch (ex) {
-										events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
-										error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
-									}
-								}
-							}
-							break
+						}
+						break
 				}
 			}
 		}
@@ -416,9 +432,9 @@ def cleanupEventSourceMapping(env) {
 			sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-		def lambda_arn = "arn:aws:lambda:${service_config['region']}:${service_config.accountId}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env}"
-		def assets_api = g_base_url + "/jazz/assets"
-		lambdaEvents.deleteEventSourceMapping(lambda_arn, assets_api, auth_token,service_config, env,credsId)
+			def lambda_arn = "arn:aws:lambda:${service_config['region']}:${service_config.accountId}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env}"
+			def assets_api = g_base_url + "/jazz/assets"
+			lambdaEvents.deleteEventSourceMapping(lambda_arn, assets_api, auth_token,service_config, env,credsId)
 		} catch(ex) {
 			handleFailureEvent(ex.getMessage())
 		} finally {
@@ -515,8 +531,9 @@ def unDeployService(stage) {
 			}
 			def envBucketKey = "${env_key}${configLoader.JAZZ.PLATFORM.AWS.S3.BUCKET_NAME_SUFFIX}"
 			def bucketObject = utilModule.getAccountBucketName(service_config);
+			sh "cat ./serverless.yml"
 
-		sh "serverless remove --stage ${stage} --verbose  --bucket ${bucketObject[env_key]} --profile ${credsId}"
+			sh "serverless remove --stage ${stage} --verbose  --bucket ${bucketObject[env_key]} --profile ${credsId}"
 
 			echo "Service undeployed"
 		} catch (ex) {
@@ -614,29 +631,40 @@ def writeServerlessFile(){
 	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${service_config['securityGroupIds']}/g' serverless.yml"
 	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${service_config['subnetIds']}/g' serverless.yml"
 
-	if (service_config['artifact']) {
-		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${service_config['artifact']}/g' serverless.yml"
+	
+	if (config['artifact']) {
+		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
 	}
 
-	if (service_config['mainClass']) {
-		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${service_config['mainClass']}/g' serverless.yml"
+	if (config['mainClass']) {
+		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
 	}
 
-	if (service_config['event_source_s3']) {
-	sh "sed -i -- 's/{event_source_s3}/${service_config['event_source_s3']}/g' ./serverless.yml"
-	sh "sed -i -- 's/{event_action_s3}/${service_config['event_action_s3']}/g' ./serverless.yml"
+	if (config['event_source_s3']) {
+		def event_source_s3 =  lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_s3'], env, "-")
+		def event_s3_arn = "arn:aws:s3:::${event_source_s3}"
+		sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
+		sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
+		sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' policyFile.yml"
 	}
 
-	if (service_config['event_source_stream']) {
-	sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
-	sh "sed -i -- 's/{event_source_stream}/${service_config['event_source_stream']}/g' ./serverless.yml"
+	if (config['event_source_sqs']) {
+		def event_source_sqs = lambdaEvents.getSqsQueueName(config['event_source_sqs'], env)
+		def event_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_sqs'], env, "_")
+		sh "sed -i -- 's/{event_source_sqs}/${event_source_sqs}/g' ./serverless.yml"
+		sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' ./serverless.yml"
+		sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' policyFile.yml"
 	}
 
-	if (service_config['event_source_dynamodb']) {
-	sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
-	sh "sed -i -- 's|{event_source_dynamodb}|${service_config['event_source_dynamodb']}|g' serverless.yml"
-	sh "sed -i -- 's|{event_source_dynamodb}|${service_config['event_source_dynamodb']}|g' policyFile.yml"
+	if (config['event_source_kinesis']) {
+		def event_source_kinesis = lambdaEvents.splitAndGetResourceName(config['event_source_kinesis'], env)
+		sh "sed -i -- 's|{event_source_kinesis}|${event_source_kinesis}|g' ./serverless.yml"
 	}
+
+	if (config['event_source_dynamodb']) {
+		def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(config['event_source_dynamodb'], env)
+		sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
+	} 
 
 	if (service_config['domain'] != 'jazz' && (service_config['event_source_dynamodb'] || service_config['event_source_sqs'] 
 	|| service_config['event_source_kinesis'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ))) {
@@ -645,6 +673,46 @@ def writeServerlessFile(){
 	} else {        
 		sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${service_config['iamRoleARN']}|g' serverless.yml"
 	}
+
+	removeEventResources ()
+}
+
+def removeEventResources () {
+	if (!service_config['event_source_dynamodb'] && !service_config['event_source_sqs'] && !service_config['event_source_s3'] && !service_config['event_source_kinesis'] && ( configLoader.TVAULT && !configLoader.TVAULT.IS_ENABLED )) {
+		sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
+		sh "sed -i -- '/#Start:events/,/#End:events/d' ./serverless.yml"
+	}
+
+	def sedCommand = "s/eventsDisabled/events/g";
+	if (!service_config['eventScheduleRate']) {
+		sedCommand = sedCommand + "; /#Start:isScheduleEnabled/,/#End:isScheduleEnabled/d"
+	}
+	if (!service_config['event_source_ec2']) {
+		sedCommand = sedCommand + "; /#Start:isEc2EventEnabled/,/#End:isEc2EventEnabled/d"
+	}
+	if (!service_config['event_source_s3']) {
+		sedCommand = sedCommand + "; /#Start:isS3EventEnabled/,/#End:isS3EventEnabled/d"
+		sedCommand = sedCommand + "; /#Start:isS3EventRoleEnabled/,/#End:isS3EventRoleEnabled/d"
+	}
+	if (!service_config['event_source_sqs']) {
+		sedCommand = sedCommand + "; /#Start:isSQSEventEnabled/,/#End:isSQSEventEnabled/d"
+	}
+	if (!service_config['event_source_kinesis']) {
+		sedCommand = sedCommand + "; /#Start:isStreamEnabled/,/#End:isStreamEnabled/d"
+	}
+	if (!service_config['event_source_dynamodb']) {
+		sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
+	}
+
+	if (service_config['eventScheduleRate'] && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED && config['domain'] != 'jazz') {
+		// scheduled event does not have custome role so we need the vault custom role
+		if (config['require_internal_access']) sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultEnabled/d" 
+		else sedCommand = sedCommand + "; /#Start:isVaultAndVpcEnabled/,/#End:isVaultAndVpcEnabled/d" 
+	} else sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultAndVpcEnabled/d"  // Removing vault role since all other events has custom role
+
+
+	sh "sed -i -- '$sedCommand' ./serverless.yml"
+	echo "------------------------DONE--------------"	
 }
 
 /**
@@ -1245,19 +1313,9 @@ def loadServerlessConfig() {
 
 	if (service_config['event_source_dynamodb'] || service_config['event_source_sqs'] || service_config['event_source_dynamodb'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED && config['domain'] != 'jazz')) {
 		sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
-	}
-
-	if (!service_config['event_source_dynamodb'] && !service_config['event_source_sqs'] && !service_config['event_source_s3'] && !service_config['event_source_kinesis'] && ( configLoader.TVAULT && !configLoader.TVAULT.IS_ENABLED )) {
-		removeEventResources ()
-	}
+	}	
 
 }
-
-def removeEventResources() {
-	sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
-	sh "sed -i -- '/#Start:events/,/#End:events/d' ./serverless.yml"
-}
-
 
 
 /**
