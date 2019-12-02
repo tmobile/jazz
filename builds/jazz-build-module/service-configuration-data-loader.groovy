@@ -199,6 +199,8 @@ def loadServiceConfigurationData() {
       updateConfigValue("{conf-region}", region)
       updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
       updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
+      updateConfigValue("{tvault-enabled}", config_loader.TVAULT.IS_ENABLED)
+      updateConfigValue("{tvault-host-name}", config_loader.TVAULT.HOSTNAME)
     }
 
     if (service_name.trim() == "jazz_asset-event-handler") {
