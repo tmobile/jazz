@@ -279,6 +279,12 @@ def loadServiceConfigurationData() {
 
     if ((service_name.trim() == "jazz_es-kinesis-log-streamer")) {
       sh "sed -i -- 's|{stack_prefix}|${config_loader.INSTANCE_PREFIX}|g' ./config/global_config.json"
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
+
+      sh "sed -i -- 's/{conf-apikey}/${getApigatewayInfoCore('jazz','DEV')}/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{conf-apikey}/${getApigatewayInfoCore('jazz','STG')}/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{conf-apikey}/${getApigatewayInfoCore('jazz','PROD')}/g' ./config/prod-config.json"
     }
 
     if (service_name.trim() == "jazz_splunk-kinesis-log-streamer") {
