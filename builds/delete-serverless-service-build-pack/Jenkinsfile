@@ -1342,7 +1342,7 @@ def loadBuildModules(buildModuleUrl){
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
 				[credentialsId: repo_credential_id, url: buildModuleUrl]
-			]])
+		]])
 
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
@@ -1353,7 +1353,7 @@ def loadBuildModules(buildModuleUrl){
 		echo "SCM module loaded successfully."
 
 		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
-    awsAPIGatewayModule.initialize()
+		awsAPIGatewayModule.initialize()
 
 		events = load "events-module.groovy"
 		echo "Event module loaded successfully."
@@ -1378,30 +1378,35 @@ def loadBuildModules(buildModuleUrl){
 			echo "Apigee module loaded successfully."
 		}
 
-    lambdaEvents = load "aws-lambda-events-module.groovy"
-    lambdaEvents.initialize(configLoader, utilModule)
-    echo "Lambda event module loaded successfully."
+		lambdaEvents = load "aws-lambda-events-module.groovy"
+		lambdaEvents.initialize(configLoader, utilModule)
+		echo "Lambda event module loaded successfully."
 
 		aclModule = load "acl-module.groovy"
 		echo "ACL module loaded successfully."
-    def resourceUtility = load "resource-utility.groovy"
-    resourceUtility.initialize(configLoader)
-    echo "resource util init successfully."
+		def resourceUtility = load "resource-utility.groovy"
+		resourceUtility.initialize(configLoader)
+		echo "resource util init successfully."
 
-    def azureUtil = load "azure-utility.groovy"
-    azureUtil.initialize(configLoader, resourceUtility, utilModule)
-    echo "Azure util init successfully."
-    azureDeployer = load "azure-function-deploy-module.groovy"
-    azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtil)
-    echo "Azure deploy module init successfully."
+		def azureUtil = load "azure-utility.groovy"
+		azureUtil.initialize(configLoader, resourceUtility, utilModule)
+		echo "Azure util init successfully."
+		azureDeployer = load "azure-function-deploy-module.groovy"
+		azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtil)
+		echo "Azure deploy module init successfully."
 
 		whiteListModule = load "sls-app/whitelist-validator-module.groovy"
-    whiteListModule.initialize()
-    echo "whitelist-validator-module module loaded successfully"
+		whiteListModule.initialize()
+		echo "whitelist-validator-module module loaded successfully"
 
 		slsBuildRules = load "sls-app/sbr.groovy"
 		slsBuildRules.initialize(steps,whiteListModule)
 		echo "sls-app/sbr.groovy has been loaded"
+
+		if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+			vaultUtilityModule = load "vault-utility-module.groovy"      
+			echo "Vault utility module loaded successfully."
+		}
 	}
 }
 
