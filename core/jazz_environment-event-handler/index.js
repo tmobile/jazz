@@ -275,7 +275,6 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
 
       // Update with DELETE status
       exportable.processEventUpdateEnvironment(environmentApiPayload, serviceDetails.id, configData, authToken)
-        .then((result) => { return safe.removeSafe(environmentApiPayload, configData, authToken) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventUpdateEnvironment Failed" + err);
@@ -285,7 +284,6 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
     } else if (eventPayload.EVENT_NAME.S === configData.EVENTS.DELETE_BRANCH) {
       environmentApiPayload.physical_id = svcContext.branch;
       exportable.processEventDeleteBranch(environmentApiPayload, serviceDetails.id, configData, authToken)
-        .then((result) => { return safe.removeSafe(environmentApiPayload, configData, authToken) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("processEventDeleteBranch Failed" + err);

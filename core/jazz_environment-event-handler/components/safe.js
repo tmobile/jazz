@@ -40,28 +40,6 @@ function addSafe(environmentApiPayload, serviceId, configData, authToken) {
   });
 }
 
-function removeSafe(environmentApiPayload, configData, authToken) {
-  return new Promise((resolve, reject) => {
-    try {
-      if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
-        return resolve({
-          "error": "T-vault is not enabled",
-        });
-      }
-      safeExportable.getEnvDetails(environmentApiPayload, configData, authToken)
-        .then((result) => { return safeExportable.deleteSafe(environmentApiPayload, configData, authToken, result) })
-        .then((result) => { return resolve(result); })
-        .catch((err) => {
-          logger.error("removing safe details failed: " + err);
-          return reject(err);
-        })
-    } catch (err) {
-      logger.error("removing safe details failed: " + err);
-      return reject(err);
-    }
-  });
-}
-
 function createSafe(environmentPayload, service_id, configData, authToken) {
   return new Promise((resolve, reject) => {
     var updatePayload = {};
@@ -100,51 +78,6 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
         logger.error("Error creating safe: " + JSON.stringify(response));
         return reject({
           "error": "Error creating safe",
-          "details": response.body.message
-        });
-      }
-    });
-  });
-}
-
-function deleteSafe(environmentPayload, configData, authToken, envDetails) {
-  return new Promise((resolve, reject) => {
-    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
-      return resolve({
-        "error": "T-vault is not enabled",
-      });
-    }
-    let safeName;
-    if (envDetails.data && envDetails.data.count > 0 && envDetails.data.environment && envDetails.data.environment.length) {
-      const envResponse = envDetails.data.environment.filter(ele => ele.logical_id === environmentPayload.logical_id);
-      if (envResponse.length && envResponse[0].metadata && envResponse[0].metadata.safe) {
-        safeName = envResponse[0].metadata.safe.name;
-      } else {
-        return resolve({
-          "error": environmentPayload.logical_id + ": environment safe details is not found",
-        });
-      }
-    } else {
-      return resolve({
-        "error": environmentPayload.logical_id + ": environment safe details is not found",
-      });
-    }
-    var svcPayload = {
-      uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}`,
-      method: "DELETE",
-      headers: {
-        "Authorization": authToken,
-        "Content-Type": "application/json",
-      },
-      rejectUnauthorized: false
-    };
-    request(svcPayload, function (error, response, body) {
-      if (response.statusCode && response.statusCode === 200) {
-        return resolve(body);
-      } else {
-        logger.error("Error deleting safe: " + JSON.stringify(response));
-        return reject({
-          "error": "Error deleting safe",
           "details": response.body.message
         });
       }
@@ -242,8 +175,6 @@ function addAdminsToSafe(environmentPayload, configData, authToken, res) {
   });
 }
 
-
-
 function getEnvDetails(environmentPayload, configData, authToken) {
   return new Promise((resolve, reject) => {
     if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
@@ -276,9 +207,7 @@ function getEnvDetails(environmentPayload, configData, authToken) {
 
 const safeExportable = {
   addSafe,
-  removeSafe,
   createSafe,
-  deleteSafe,
   getAdmins,
   addAdminsToSafe,
   getEnvDetails

@@ -278,7 +278,7 @@ describe('jazz environment handler tests: ', () => {
     const processServiceDetailsStub = sinon.stub(index, "processServiceDetails").resolves({ id: 1, type: "api", service: "test", domain: "tst" });
     index.processEachEvent(kinesisPayload.Records[0], configData, authToken)
       .then((res) => {
-        sinon.assert.calledThrice(requestPromiseStub);
+        sinon.assert.calledOnce(requestPromiseStub);
         requestPromiseStub.restore();
         sinon.assert.calledOnce(serviceStub);
         sinon.assert.calledOnce(processServiceDetailsStub);
@@ -303,7 +303,7 @@ describe('jazz environment handler tests: ', () => {
 
     index.manageProcessItem(event.Item, service, configData, authToken)
       .then((res) => {
-        sinon.assert.calledThrice(requestPromiseStub);
+        sinon.assert.calledOnce(requestPromiseStub);
         requestPromiseStub.restore();
         expect(res.data.message).to.include('Successfully Updated environment for service');
       });
@@ -324,7 +324,7 @@ describe('jazz environment handler tests: ', () => {
 
     index.manageProcessItem(event.Item, service, configData, authToken)
       .then((res) => {
-        sinon.assert.calledThrice(requestPromiseStub);
+        sinon.assert.calledOnce(requestPromiseStub);
         requestPromiseStub.restore();
         expect(res.data.message).to.include('Successfully Updated environment for service');
       });
@@ -334,14 +334,11 @@ describe('jazz environment handler tests: ', () => {
     let event = require('./DELETE_BRANCH');
     testPayloads.apiResponse.body.data.environment = [{ 'physical_id': 'master' }];
     let processEventDeleteBranchStub = sinon.stub(index, "processEventDeleteBranch").resolves(testPayloads.apiResponse.body);
-    let removeSafeStub = sinon.stub(safe, "removeSafe").resolves(testPayloads.apiResponse.body);
     const service = { id: 1, type: "api", service: "test", domain: "tst" }
 
     index.manageProcessItem(event.Item, service, configData, authToken)
       .then((res) => {
-        sinon.assert.calledOnce(removeSafeStub);
         sinon.assert.calledOnce(processEventDeleteBranchStub);
-        removeSafeStub.restore();
         processEventDeleteBranchStub.restore();
         expect(res.data.message).to.include('Successfully Updated environment for service');
       });
@@ -551,20 +548,6 @@ describe('jazz environment handler tests: ', () => {
       });
   });
 
-  it("remove safe details successfully", () => {
-    let environmentPayload = testPayloads.environmentPayload;
-    let getEnvDetailStub = sinon.stub(safe, "getEnvDetails").resolves(testPayloads.envDetailsResponse.body);
-    let deleteStub = sinon.stub(safe, "deleteSafe").resolves(testPayloads.apiResponse.body);
-    safe.removeSafe(environmentPayload, configData, authToken)
-      .then((res) => {
-        sinon.assert.calledOnce(getEnvDetailStub);
-        sinon.assert.calledOnce(deleteStub);
-        getEnvDetailStub.restore();
-        deleteStub.restore();
-        expect(res.data.message).to.include('Success');
-      });
-  });
-
   it("safe added successfully with valid response", () => {
     let event = require('./COMMIT_TEMPLATE');
     let environmentPayload = testPayloads.environmentPayload;
@@ -609,49 +592,6 @@ describe('jazz environment handler tests: ', () => {
         sinon.assert.calledOnce(requestStub);
         requestStub.restore();
         expect(res.data.environment[0].metadata.safe.name).to.eq(environmentPayload["metadata"].safe.name);
-      });
-  });
-
-  it("delete safe successfully", () => {
-    let environmentPayload = testPayloads.environmentPayload;
-    environmentPayload["metadata"] = {
-      "safe":
-          {
-              "name":"test-vault-user_jazztest",
-              "link":"https://vault/#!/admin",
-              "ts":"2019-11-11T15:56:02.290Z"
-          }
-    };
-    environmentPayload.logical_id = 'ehrswzx36b-dev';
-    let requestPromisesStub = sinon.stub(request, "Request").callsFake((obj) => {
-        return obj.callback(null, testPayloads.apiResponse, testPayloads.apiResponse.body);
-    });
-    safe.deleteSafe(environmentPayload, configData, authToken, testPayloads.envDetailsResponse.body)
-      .then((res) => {
-        sinon.assert.calledOnce(requestPromisesStub);
-        requestPromisesStub.restore();
-        expect(res.data.message).to.include('Success');
-      });
-  });
-
-  it("safe details not found for deleting safe", () => {
-    let environmentPayload = testPayloads.environmentPayload;
-    environmentPayload["metadata"] = {
-      "safe":
-          {
-              "name":"test-vault-user_jazztest",
-              "link":"https://vault/#!/admin",
-              "ts":"2019-11-11T15:56:02.290Z"
-          }
-    };
-    environmentPayload.logical_id = 'ehrswzx36b-dev';
-    
-    let envDetails = testPayloads.envDetailsResponse.body.data.environment;
-    testPayloads.envDetailsResponse.body.data.environment = [];
-    safe.deleteSafe(environmentPayload, configData, authToken, testPayloads.envDetailsResponse.body)
-      .then((res) => {
-        expect(res.error).to.include("environment safe details is not found");
-        testPayloads.envDetailsResponse.body.data.environment = envDetails;
       });
   });
 
