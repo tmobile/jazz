@@ -6,6 +6,8 @@
   "SERVICE_API_RESOURCE": "/prod/jazz/services",
   "SERVICE_USER": "{jazz_admin}",
   "TOKEN_CREDS": "{jazz_admin_creds}",
+  "LIST_USERS": "/prod/jazz/acl/policies",
+  "ENV_DETAILS": "/prod/jazz/environments",
   "EVENTS": {
     "EVENT_TYPE": [
       "SERVICE_DEPLOYMENT",
@@ -54,5 +56,12 @@
     "website": "build-pack-website",
     "sls-app": "build-pack-sls-app",
     "ui": "jazz_ui"
+  },
+  "TVAULT": {
+    "IS_ENABLED": "{tvault-enabled}",
+    "API": "/prod/jazz/t-vault/safes",
+    "HOSTNAME": "{tvault-host-name}",
+    "ADD_ADMINS": "/user",
+    "ADD_ROLE": "/role"
   }
 }
