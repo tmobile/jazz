@@ -30,8 +30,9 @@ import groovy.json.JsonSlurperClassic
 @Field def aclModule
 @Field def azureDeployer
 @Field def whiteListModule
-@Field def env_deployment_descriptor
+@Field def vaultUtilityModule
 
+@Field def env_deployment_descriptor
 @Field def g_base_url = ''
 @Field def g_svc_admin_cred_ID = 'SVC_ADMIN'
 @Field def auth_token = ''
@@ -148,6 +149,10 @@ node {
 			echo "$repo_name doesn't contain any active environment logical id in environment catalog!"
 		}
 
+		if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+			vaultUtilityModule.initialize(configLoader, service_config, g_base_url, auth_token, null, events, utilModule)      
+		}
+
 
 		dir(repo_name){
 			if (fileExists('build.api')) {
@@ -223,6 +228,8 @@ node {
 								events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
 								echo 'undeploying service for environment: ' + _envId
 
+								vaultUtilityModule.setEnvironmentLogicalId(_envId)
+								
 								switch(apiPlatform) {
 									case 'aws_apigateway':
 										cleanUpApiGatewayResources(_envId, path)
@@ -267,6 +274,8 @@ node {
 								}
 								events.setEnvironment(_envId)
 								events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+								
+								vaultUtilityModule.setEnvironmentLogicalId(_envId)
 
 								if (service_config['event_source_s3']) { // check service for S3 Bucket and make empty if not. //
 									checkBucket(current_environment_id);
@@ -335,6 +344,8 @@ node {
 							events.setEnvironment(_envId)
 							events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
 							echo 'undeploying sls service for environment: ' + _envId
+
+							vaultUtilityModule.setEnvironmentLogicalId(_envId)
 
 							cleanupEventSourceMapping(_envId)
 							if (has_serverless_yml) {
@@ -620,7 +631,7 @@ def writeServerlessFile(){
   }
 
   if ( service_config['event_source_dynamodb'] || service_config['event_source_sqs']){
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customEventRole|g' serverless.yml"
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
   }else{
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${service_config['iamRoleARN']}|g' serverless.yml"
   }
@@ -1331,7 +1342,7 @@ def loadBuildModules(buildModuleUrl){
 			[name: '*/master']
 		], doGenerateSubmoduleConfigurations: false, extensions: [], submoduleCfg: [], userRemoteConfigs: [
 				[credentialsId: repo_credential_id, url: buildModuleUrl]
-			]])
+		]])
 
 		configModule = load "config-loader.groovy"
 		configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
@@ -1342,7 +1353,7 @@ def loadBuildModules(buildModuleUrl){
 		echo "SCM module loaded successfully."
 
 		awsAPIGatewayModule = load "aws-apigateway-module.groovy"
-    awsAPIGatewayModule.initialize()
+		awsAPIGatewayModule.initialize()
 
 		events = load "events-module.groovy"
 		echo "Event module loaded successfully."
@@ -1367,30 +1378,35 @@ def loadBuildModules(buildModuleUrl){
 			echo "Apigee module loaded successfully."
 		}
 
-    lambdaEvents = load "aws-lambda-events-module.groovy"
-    lambdaEvents.initialize(configLoader, utilModule)
-    echo "Lambda event module loaded successfully."
+		lambdaEvents = load "aws-lambda-events-module.groovy"
+		lambdaEvents.initialize(configLoader, utilModule)
+		echo "Lambda event module loaded successfully."
 
 		aclModule = load "acl-module.groovy"
 		echo "ACL module loaded successfully."
-    def resourceUtility = load "resource-utility.groovy"
-    resourceUtility.initialize(configLoader)
-    echo "resource util init successfully."
+		def resourceUtility = load "resource-utility.groovy"
+		resourceUtility.initialize(configLoader)
+		echo "resource util init successfully."
 
-    def azureUtil = load "azure-utility.groovy"
-    azureUtil.initialize(configLoader, resourceUtility, utilModule)
-    echo "Azure util init successfully."
-    azureDeployer = load "azure-function-deploy-module.groovy"
-    azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtil)
-    echo "Azure deploy module init successfully."
+		def azureUtil = load "azure-utility.groovy"
+		azureUtil.initialize(configLoader, resourceUtility, utilModule)
+		echo "Azure util init successfully."
+		azureDeployer = load "azure-function-deploy-module.groovy"
+		azureDeployer.initialize(configLoader, utilModule, scmModule, events, azureUtil)
+		echo "Azure deploy module init successfully."
 
 		whiteListModule = load "sls-app/whitelist-validator-module.groovy"
-    whiteListModule.initialize()
-    echo "whitelist-validator-module module loaded successfully"
+		whiteListModule.initialize()
+		echo "whitelist-validator-module module loaded successfully"
 
 		slsBuildRules = load "sls-app/sbr.groovy"
 		slsBuildRules.initialize(steps,whiteListModule)
 		echo "sls-app/sbr.groovy has been loaded"
+
+		if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+			vaultUtilityModule = load "vault-utility-module.groovy"      
+			echo "Vault utility module loaded successfully."
+		}
 	}
 }
 
