@@ -214,6 +214,7 @@ node {
 								def apiPlatform = service_config.deployment_targets.api;
 								for (_envId in environmentIds) {
 									current_environment_id = _envId
+									environmentMetadataLoader.setEnvironmentLogicalId(_envId)
 									try {
 										def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 										if (branch && branch != 'NA') {
@@ -225,7 +226,7 @@ node {
 										events.setEnvironment(_envId)
 										events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
 										echo 'undeploying service for environment: ' + _envId
-
+										
 										vaultUtilityModule.setEnvironmentLogicalId(_envId)
 										
 										switch(apiPlatform) {
@@ -239,11 +240,18 @@ node {
 											default:
 												error "Deployment platform not recognized."
 										}
-
+										
 										cleanUpApiDocs(_envId)
 										unDeployService(_envId)
 										if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 											cleanupCodeQualityReports()
+										}
+										if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+											def environmentInfo = environmentDeploymentMetadata.getEnvironmentInfo()
+											if (environmentInfo && environmentInfo.metadata && environmentInfo.metadata.safe) {
+												def safeName = environmentInfo.metadata.safe.name
+												vaultUtilityModule.deleteSafe(safeName)
+											}
 										}
 										archiveAssetDetails(_envId)
 										events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
@@ -262,7 +270,7 @@ node {
 
 								for (_envId in environmentIds) {
 									current_environment_id = _envId
-
+									environmentMetadataLoader.setEnvironmentLogicalId(_envId)
 									try {
 										def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 										if (branch && branch != 'NA') {
@@ -327,46 +335,47 @@ node {
 							}
 							break
 
-					case "SLSAPP":
-						stage('Undeploy Service') {
-							for (_envId in environmentIds) {
-								current_environment_id = _envId
-								def has_serverless_yml = 	loadServerlessYml(service_config, _envId)
-								try {
-									def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
-									if (branch && branch != 'NA') {
-										events.setBranch(branch)
-										sonarModule.setBranch(branch)
-										branch = 'NA'
-									}
-									events.setEnvironment(_envId)
-									events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-									echo 'undeploying sls service for environment: ' + _envId
+						case "SLSAPP":
+							stage('Undeploy Service') {
+								for (_envId in environmentIds) {
+									current_environment_id = _envId
+									environmentMetadataLoader.setEnvironmentLogicalId(_envId)
+									def has_serverless_yml = loadServerlessYml(service_config, _envId)
+									try {
+										def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
+										if (branch && branch != 'NA') {
+											events.setBranch(branch)
+											sonarModule.setBranch(branch)
+											branch = 'NA'
+										}
+										events.setEnvironment(_envId)
+										events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
+										echo 'undeploying sls service for environment: ' + _envId
 
-									vaultUtilityModule.setEnvironmentLogicalId(_envId)
+										vaultUtilityModule.setEnvironmentLogicalId(_envId)
 
-									cleanupEventSourceMapping(_envId)
-									if (has_serverless_yml) {
-										// for sls install plugins
-										installServerlessPlugins()								
-										unDeployService(_envId)
-									}
-									else {
-										unDeployCloudformationStack(_envId)
-									}
+										cleanupEventSourceMapping(_envId)
+										if (has_serverless_yml) {
+											// for sls install plugins
+											installServerlessPlugins()								
+											unDeployService(_envId)
+										}
+										else {
+											unDeployCloudformationStack(_envId)
+										}
 
-									if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
-										cleanupCodeQualityReports()
+										if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
+											cleanupCodeQualityReports()
+										}
+										archiveAssetDetails(_envId)
+										events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
+									} catch (ex) {
+										events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
+										error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
 									}
-									archiveAssetDetails(_envId)
-									events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
-								} catch (ex) {
-									events.sendFailureEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " failed! " + ex.getMessage(), null, _envId)
-									error "Environment cleanup for " + _envId + " failed! " + ex.getMessage()
 								}
 							}
-						}
-						break
+							break
 				}
 			}
 		}
