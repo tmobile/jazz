@@ -130,6 +130,7 @@ function processEachEvent(record, configData, authToken) {
 function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
   return new Promise((resolve, reject) => {
     var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
+    logger.debug("kinesisPayload : " + JSON.stringify(kinesisPayload));
     if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
       if (config.EVENTS.EVENT_TYPE.indexOf(kinesisPayload.Item.EVENT_TYPE.S) > -1 &&
         config.EVENTS.EVENT_NAME.indexOf(kinesisPayload.Item.EVENT_NAME.S) > -1) {
@@ -187,7 +188,7 @@ function processServiceDetails(result) {
 function manageProcessItem(eventPayload, serviceDetails, configData, authToken) {
   return new Promise((resolve, reject) => {
     var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
-
+    logger.debug("svcContext : " + JSON.stringify(svcContext));
     var environmentApiPayload = {};
     environmentApiPayload.service = eventPayload.SERVICE_NAME.S;
     environmentApiPayload.created_by = eventPayload.USERNAME.S;
