@@ -216,7 +216,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
       let nano_id = nanoid(configData.RANDOM_CHARACTERS, configData.RANDOM_ID_CHARACTER_COUNT);
       environmentApiPayload.logical_id = nano_id + "-dev";
 
-      safe.addSafe(environmentApiPayload, serviceDetails, configData, authToken)
+      safe.addSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
         .then((result) => { return exportable.processEventCreateBranch(environmentApiPayload, serviceDetails.id, configData, authToken) })
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
