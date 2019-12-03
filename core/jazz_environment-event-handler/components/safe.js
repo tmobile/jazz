@@ -27,8 +27,8 @@ function addSafe(environmentApiPayload, serviceId, configData, authToken) {
         });
       }
       safeExportable.createSafe(environmentApiPayload, serviceId, configData, authToken)
-        .then((safeName) => { return safeExportable.getAdmins(environmentApiPayload, serviceId, configData, authToken, safeName) })
-        .then((result) => { return safeExportable.addAdminsToSafe(environmentApiPayload, configData, authToken, result) })
+        .then((safeName) => { return safeExportable.getAdmins(serviceId, configData, authToken, safeName) })
+        .then((result) => { return safeExportable.addAdminsToSafe(serviceId, configData, authToken, result) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("add safe details failed: " + err);
@@ -119,7 +119,7 @@ function getAdmins(serviceId, configData, authToken, safeName) {
   });
 }
 
-function addAdminsToSafe(environmentPayload, configData, authToken, res) {
+function addAdminsToSafe(serviceId, configData, authToken, res) {
   function processAdmins(user) {
     return new Promise((resolve, reject) => {
       var updatePayload = {
@@ -133,7 +133,8 @@ function addAdminsToSafe(environmentPayload, configData, authToken, res) {
         method: "POST",
         headers: {
           "Authorization": authToken,
-          "Content-Type": "application/json"
+          "Content-Type": "application/json",
+          "Jazz-Service-ID": serviceId
         },
         json: updatePayload
       };
