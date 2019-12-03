@@ -126,7 +126,7 @@ function addAdminsToSafe(serviceId, configData, authToken, res) {
         'username': user.userId,
         'permission': user.permission === "admin" ? 'write' : 'read'
       };
-      
+
       const safeName = res.safeName;
       var payload = {
         uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}${configData.TVAULT.ADD_ADMINS}`,
@@ -139,9 +139,9 @@ function addAdminsToSafe(serviceId, configData, authToken, res) {
         json: updatePayload
       };
 
-     logger.debug("addAdminsToSafe payload: " + JSON.stringify(payload));
+      logger.debug("addAdminsToSafe payload: " + JSON.stringify(payload));
       request(payload, function (error, response, body) {
-      logger.debug("addAdminsToSafe response: " + JSON.stringify(response));
+        logger.debug("addAdminsToSafe response: " + JSON.stringify(response));
         if (response.statusCode && response.statusCode === 200) {
           return resolve(body);
         } else {
