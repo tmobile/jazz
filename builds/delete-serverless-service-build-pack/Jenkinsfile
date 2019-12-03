@@ -247,7 +247,7 @@ node {
 										cleanupCodeQualityReports()
 									}
 									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
-										def environmentInfo = environmentDeploymentMetadata.getEnvironmentInfo()
+										def environmentInfo = environmentMetadataLoader.getEnvironmentInfo()
 										if (environmentInfo && environmentInfo.metadata && environmentInfo.metadata.safe) {
 											def safeName = environmentInfo.metadata.safe.name
 											vaultUtilityModule.deleteSafe(safeName)
@@ -296,7 +296,7 @@ node {
 									}
 
 									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
-										def environmentInfo = environmentDeploymentMetadata.getEnvironmentInfo()
+										def environmentInfo = environmentMetadataLoader.getEnvironmentInfo()
 										if (environmentInfo && environmentInfo.metadata && environmentInfo.metadata.safe) {
 											def safeName = environmentInfo.metadata.safe.name
 											vaultUtilityModule.deleteSafe(safeName)
@@ -377,7 +377,7 @@ node {
 										cleanupCodeQualityReports()
 									}
 									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
-										def environmentInfo = environmentDeploymentMetadata.getEnvironmentInfo()
+										def environmentInfo = environmentMetadataLoader.getEnvironmentInfo()
 										if (environmentInfo && environmentInfo.metadata && environmentInfo.metadata.safe) {
 											def safeName = environmentInfo.metadata.safe.name
 											vaultUtilityModule.deleteSafe(safeName)
@@ -632,42 +632,42 @@ def writeServerlessFile(){
 	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${service_config['subnetIds']}/g' serverless.yml"
 
 	
-	if (config['artifact']) {
-		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${config['artifact']}/g' serverless.yml"
+	if (service_config['artifact']) {
+		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${service_config['artifact']}/g' serverless.yml"
 	}
 
-	if (config['mainClass']) {
-		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
+	if (service_config['mainClass']) {
+		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${service_config['mainClass']}/g' serverless.yml"
 	}
 
-	if (config['event_source_s3']) {
-		def event_source_s3 =  lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_s3'], env, "-")
+	if (service_config['event_source_s3']) {
+		def event_source_s3 =  lambdaEvents.getEventResourceNamePerEnvironment(service_config['event_source_s3'], env, "-")
 		def event_s3_arn = "arn:aws:s3:::${event_source_s3}"
 		sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
-		sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
+		sh "sed -i -- 's/{event_action_s3}/${service_config['event_action_s3']}/g' ./serverless.yml"
 		sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' policyFile.yml"
 	}
 
-	if (config['event_source_sqs']) {
-		def event_source_sqs = lambdaEvents.getSqsQueueName(config['event_source_sqs'], env)
-		def event_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_sqs'], env, "_")
+	if (service_config['event_source_sqs']) {
+		def event_source_sqs = lambdaEvents.getSqsQueueName(service_config['event_source_sqs'], env)
+		def event_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(service_config['event_source_sqs'], env, "_")
 		sh "sed -i -- 's/{event_source_sqs}/${event_source_sqs}/g' ./serverless.yml"
 		sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' ./serverless.yml"
 		sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' policyFile.yml"
 	}
 
-	if (config['event_source_kinesis']) {
-		def event_source_kinesis = lambdaEvents.splitAndGetResourceName(config['event_source_kinesis'], env)
+	if (service_config['event_source_kinesis']) {
+		def event_source_kinesis = lambdaEvents.splitAndGetResourceName(service_config['event_source_kinesis'], env)
 		sh "sed -i -- 's|{event_source_kinesis}|${event_source_kinesis}|g' ./serverless.yml"
 	}
 
-	if (config['event_source_dynamodb']) {
-		def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(config['event_source_dynamodb'], env)
+	if (service_config['event_source_dynamodb']) {
+		def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(service_config['event_source_dynamodb'], env)
 		sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
 	} 
 
-	if (service_config['domain'] != 'jazz' && (service_config['event_source_dynamodb'] || service_config['event_source_sqs'] 
-	|| service_config['event_source_kinesis'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ))) {
+	if (service_config['event_source_dynamodb'] || service_config['event_source_sqs'] 
+	|| service_config['event_source_kinesis'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED )) {
 		sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
 		sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
 	} else {        
@@ -704,9 +704,9 @@ def removeEventResources () {
 		sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
 	}
 
-	if (service_config['eventScheduleRate'] && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED && config['domain'] != 'jazz') {
+	if (service_config['eventScheduleRate'] && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
 		// scheduled event does not have custome role so we need the vault custom role
-		if (config['require_internal_access']) sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultEnabled/d" 
+		if (service_config['require_internal_access']) sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultEnabled/d" 
 		else sedCommand = sedCommand + "; /#Start:isVaultAndVpcEnabled/,/#End:isVaultAndVpcEnabled/d" 
 	} else sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultAndVpcEnabled/d"  // Removing vault role since all other events has custom role
 
@@ -1311,7 +1311,7 @@ def loadServerlessConfig() {
 		sh "cp _config/serverless-go.yml ./serverless.yml"
 	}
 
-	if (service_config['event_source_dynamodb'] || service_config['event_source_sqs'] || service_config['event_source_dynamodb'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED && config['domain'] != 'jazz')) {
+	if (service_config['event_source_dynamodb'] || service_config['event_source_sqs'] || service_config['event_source_dynamodb'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED )) {
 		sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
 	}	
 
