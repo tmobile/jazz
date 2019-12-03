@@ -59,7 +59,10 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
       json: updatePayload,
       rejectUnauthorized: false
     };
+
+    logger.debug("Create safe payload: " + JSON.stringify(svcPayload));
     request(svcPayload, function (error, response, body) {
+      logger.debug("Create safe response: " + JSON.stringify(response));
       if (response.statusCode && response.statusCode === 200) {
         const timestamp = new Date().toISOString();
         const safeDetails = { "name": safeName, "timestamp": timestamp };
@@ -85,7 +88,7 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
   });
 }
 
-function getAdmins(environmentPayload, serviceId, configData, authToken, safeName) {
+function getAdmins(serviceId, configData, authToken, safeName) {
   return new Promise((resolve, reject) => {
     var payload = {
       uri: `${configData.BASE_API_URL}${configData.LIST_USERS}?serviceId=${serviceId}`,
@@ -95,7 +98,10 @@ function getAdmins(environmentPayload, serviceId, configData, authToken, safeNam
         "Content-Type": "application/json"
       }
     };
+
+    logger.debug("getAdmins payload: " + JSON.stringify(payload));
     request(payload, function (error, response, body) {
+      logger.debug("getAdmins response: " + JSON.stringify(response));
       if (response.statusCode && response.statusCode === 200) {
         const resultData = {
           'admins': JSON.parse(body),
@@ -117,13 +123,10 @@ function addAdminsToSafe(environmentPayload, configData, authToken, res) {
   function processAdmins(user) {
     return new Promise((resolve, reject) => {
       var updatePayload = {
-        'username': user.userId
+        'username': user.userId,
+        'permission': user.permission === "admin" ? 'write' : 'read'
       };
-      if (user.permission === "admin") {
-        updatePayload['permission'] = "write";
-      } else {
-        updatePayload['permission'] = "read";
-      }
+      
       const safeName = res.safeName;
       var payload = {
         uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}${configData.TVAULT.ADD_ADMINS}`,
@@ -134,7 +137,10 @@ function addAdminsToSafe(environmentPayload, configData, authToken, res) {
         },
         json: updatePayload
       };
+
+     logger.debug("addAdminsToSafe payload: " + JSON.stringify(payload));
       request(payload, function (error, response, body) {
+      logger.debug("addAdminsToSafe response: " + JSON.stringify(response));
         if (response.statusCode && response.statusCode === 200) {
           return resolve(body);
         } else {
@@ -145,13 +151,13 @@ function addAdminsToSafe(environmentPayload, configData, authToken, res) {
           });
         }
       });
-
     });
   }
+
   return new Promise((resolve, reject) => {
     var adminsList = res.admins && res.admins.data && res.admins.data.policies;
-    var safeAdmins = adminsList.filter(ele => (ele.permission === "admin" || ele.permission === "read") && ele.category === "manage");
-    if ((!adminsList || adminsList.length === 0) || (safeAdmins.length === 0)) {
+    var safeAdmins = adminsList.filter(ele => ele.category === "manage");
+    if (safeAdmins.length === 0) {
       return resolve({
         "error": "No admins found for safe",
       });
@@ -191,7 +197,10 @@ function getEnvDetails(environmentPayload, configData, authToken) {
         "Content-Type": "application/json"
       }
     };
+
+    logger.debug("getEnvDetails payload: " + JSON.stringify(payload));
     request(payload, function (error, response, body) {
+      logger.debug("getEnvDetails response: " + JSON.stringify(response));
       if (response.statusCode && response.statusCode === 200) {
         return resolve(body);
       } else {

@@ -52,7 +52,6 @@ function handler(event, context, cb) {
       logger.error("Error processing events: " + JSON.stringify(err));
       return cb(null, records);
     });
-
 }
 
 function getTokenRequest(configData) {
