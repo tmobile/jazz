@@ -158,11 +158,11 @@ provider:
   timeout: # in seconds 1 sec to 15 mins
     sbr-type: int
     sbr-render: user-wins
+    sbr-mandatory: true
     sbr-constraint:
       sbr-from: 1
       sbr-to: 900
     sbr-value:
-      sbr-formula: ${config.providerTimeout}
       sbr-example: 30
       
   logRetentionInDays:  # Set the default RetentionInDays for a CloudWatch LogGroup
@@ -590,11 +590,11 @@ function:
     timeout: # in seconds 1 sec to 15 mins
       sbr-type: int
       sbr-render: user-wins
+      sbr-mandatory: true
       sbr-constraint:
         sbr-from: 1
         sbr-to: 900
       sbr-value:
-        sbr-formula: ${config.providerTimeout}
         sbr-example: 30
 
     role: # none provided in config, serverless creates if not user provided
