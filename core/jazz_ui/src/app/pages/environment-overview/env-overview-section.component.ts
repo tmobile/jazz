@@ -109,6 +109,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   tvaultSafeName: any = '';
   firstSafeRole: any = '';
   tvaultEnabled: boolean = false;
+  inputVal: any = ''
 
   @Input() service: any = {};
   @Input() isAdminAccess:boolean = false;
@@ -177,7 +178,7 @@ popup(state){
       this.lineNumberCount = new Array(line_numbers);
     }
   }
-
+ 
   onSaveClick(){
     this.showCancel=false;
     this.saveBtn=false;
@@ -307,6 +308,7 @@ popup(state){
 
   addRoleInSafe() {
     this.isSecretLoading = true;
+    this.inputVal = "";
     let payload = {
       "arn": this.roleValue,
       "permission": "read"
@@ -383,7 +385,7 @@ popup(state){
   }
 
   onInputCancelClick() {
-    this.access.splice(1);
+    this.inputVal = "";
     this.showDisplay = false;
     this.inValidArn = false;
   }

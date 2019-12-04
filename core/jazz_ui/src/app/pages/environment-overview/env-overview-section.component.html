@@ -272,7 +272,7 @@
 			</div>
 		</div>
 		<div class="secret-container__details">
-			<div class="secret-container__details--list">
+			<div class="secret-container__details--list" (mouseover)="myFunction()">
 				<div class="no-data" *ngIf="noData">No roles found</div>
 				<div class="arn-value__each" (click)='copyRoleClipboard(firstSafeRole)' *ngIf="!noData">
 					<div class="arn-value__each--arn">{{firstSafeRole}}</div>
@@ -309,10 +309,10 @@
 				<div>
 					<div class="secret__edit" *ngIf="showDisplay">
 						<div class="secret__edit--input">
-							<input name="role" autocomplete="off" type="text" #role='ngModel' id="inputrole"
+							<input name="role" autocomplete="off" type="text" #role="ngModel" id="inputrole" 
 								pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{3,4}$" class="inputClass textForm"
-								placeholder="Role" [(ngModel)]="list" (ngModelChange)="onRoleNameChange($event)"
-								[ngClass]="inValidArn?'errorClass':''">
+								placeholder="Role" [(ngModel)]="inputVal" (ngModelChange)="onRoleNameChange(inputVal)"
+								[ngClass]="inValidArn?'errorClass':''"/>
 						</div>
 						<div class="delete-group margin30" (click)="onInputCancelClick()">
 							<span class="icon-icon-close"></span>
