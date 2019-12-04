@@ -848,7 +848,7 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
   }
 
-  if(!isEventSchdld) {
+  if((!isEventSchdld && ( configLoader.TVAULT && !configLoader.TVAULT.IS_ENABLED )) || config['domain'] == 'jazz' )) {
     removeEventResources()
   }
 

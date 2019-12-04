@@ -90,6 +90,18 @@ def getSafeDetails(safeName) {
 	return safeDetails
 }
 
+def deleteSafe(safeName) {
+	def vaultApi = "${baseUrl}/jazz/t-vault/safes/${safeName}"
+	def statusCode = sh(script: "curl -H \"Content-type: application/json\" \
+		-H \"Jazz-Service-ID: ${serviceConfig['service_id']}\" \
+		-H \"Authorization: $authToken \" \
+		--write-out '%{http_code}\n' --silent --output /dev/null \
+		-X DELETE \"${vaultApi}\" ", returnStdout: true).trim()
+
+	if(statusCode == '200') echo "Successfully deleted safe ${safeName}" 
+	else echo "Error in deleting safe ${safeName}"
+}
+
 def getRoleDetails(lambdaARN, credsId) {
 	def iamRoleArn
 	def functionDetails

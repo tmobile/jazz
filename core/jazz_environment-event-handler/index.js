@@ -52,7 +52,6 @@ function handler(event, context, cb) {
       logger.error("Error processing events: " + JSON.stringify(err));
       return cb(null, records);
     });
-
 }
 
 function getTokenRequest(configData) {
@@ -131,6 +130,7 @@ function processEachEvent(record, configData, authToken) {
 function checkForInterestedEvents(encodedPayload, sequenceNumber, config) {
   return new Promise((resolve, reject) => {
     var kinesisPayload = JSON.parse(new Buffer(encodedPayload, 'base64').toString('ascii'));
+    logger.debug("kinesisPayload : " + JSON.stringify(kinesisPayload));
     if (kinesisPayload.Item.EVENT_TYPE && kinesisPayload.Item.EVENT_TYPE.S) {
       if (config.EVENTS.EVENT_TYPE.indexOf(kinesisPayload.Item.EVENT_TYPE.S) > -1 &&
         config.EVENTS.EVENT_NAME.indexOf(kinesisPayload.Item.EVENT_NAME.S) > -1) {
@@ -188,7 +188,7 @@ function processServiceDetails(result) {
 function manageProcessItem(eventPayload, serviceDetails, configData, authToken) {
   return new Promise((resolve, reject) => {
     var svcContext = JSON.parse(eventPayload.SERVICE_CONTEXT.S);
-
+    logger.debug("svcContext : " + JSON.stringify(svcContext));
     var environmentApiPayload = {};
     environmentApiPayload.service = eventPayload.SERVICE_NAME.S;
     environmentApiPayload.created_by = eventPayload.USERNAME.S;
@@ -200,7 +200,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
         environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
       }
 
-      exportable.processEventInitialCommit(environmentApiPayload, serviceDetails.id, configData, authToken)
+      exportable.processEventInitialCommit(environmentApiPayload, serviceDetails, configData, authToken)
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
         .catch((err) => {
@@ -300,13 +300,13 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
   });
 }
 
-function processEventInitialCommit(environmentPayload, serviceId, configData, authToken) {
+function processEventInitialCommit(environmentPayload, serviceDetails, configData, authToken) {
   function processEnv(env) {
     return new Promise((resolve, reject) => {
       let payload = JSON.parse(JSON.stringify(environmentPayload))
       payload.logical_id = env;
 
-      safe.addSafe(payload, serviceId, configData, authToken)
+      safe.addSafe(payload, serviceDetails, configData, authToken)
         .then((result) => { return processCreateEnv(payload, env) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
@@ -327,7 +327,7 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
         method: "POST",
         headers: {
           "Authorization": authToken,
-          "Jazz-Service-ID": serviceId
+          "Jazz-Service-ID": serviceDetails.id
         },
         json: payload,
         rejectUnauthorized: false
@@ -344,7 +344,6 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
           });
         }
       });
-
     });
   }
 
