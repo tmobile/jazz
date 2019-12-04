@@ -165,7 +165,7 @@ export class RequestService {
 
     }
     delete(url: string, body: any, serviceId?): Observable<any> {
-        // Make a PUT request to url
+        // Make a Delete request to url
 
         // Construct url
         url = this.constructUrl(url);
@@ -185,7 +185,7 @@ export class RequestService {
         }
 
         let headers = new Headers(headerObj);
-        let options = new RequestOptions({ headers: headers,body:JSON.stringify(body) });
+        let options = new RequestOptions({ headers: headers, body: JSON.stringify(body) });
         let router = this.router;
 
         return this.http.delete(url, options)
@@ -193,7 +193,6 @@ export class RequestService {
                 let responseBody;
                 responseBody = response.json();
                 if (responseBody) {
-
                     return responseBody;
                 } else {
                     // return error responseBody

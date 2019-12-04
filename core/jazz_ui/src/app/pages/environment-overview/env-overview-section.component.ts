@@ -106,7 +106,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   confirmationText:string = "";
   arnToBeDeleted:any = '';
   isNotWebsite: boolean = false;
-  safeName: any = '';
+  tvaultSafeName: any = '';
   firstSafeRole: any = '';
 
   @Input() service: any = {};
@@ -274,76 +274,75 @@ popup(state){
     this.reqArnArray = [];
     this.noData = false;
     this.rolesList = [];
-    this.http.get(`/jazz/t-vault/safes/${this.safeName}`).subscribe(
+    this.http.get(`/jazz/t-vault/safes/${this.tvaultSafeName}`).subscribe(
       (res) => {
-        if(Object.keys(res.data.roles).length === 0){
+        if (Object.keys(res.data.roles).length === 0) {
           this.noData = true;
           this.isSecretLoading = false;
         }
         else {
-        this.rolesObj = res.data.roles;
-        this.isSecretLoading = false;
-        this.rolesList.push(Object.keys(this.rolesObj))
-        this.rolesList[0].map((item)=>{
-            this.reqArnArray.push(this.rolesObj[item].arn)
-        })
-        if(this.reqArnArray.length > 1){
-          this.firstSafeRole = this.reqArnArray.splice(0,1)
-        } else  if(this.reqArnArray.length === 1){
-          this.firstSafeRole = this.reqArnArray[0];
-          this.reqArnArray = []
+          this.rolesObj = res.data.roles;
+          this.isSecretLoading = false;
+          this.rolesList.push(Object.keys(this.rolesObj))
+          this.rolesList[0].map((item) => {
+            this.reqArnArray.push(this.rolesObj[item].arn);
+          })
+          if (this.reqArnArray.length > 1) {
+            this.firstSafeRole = this.reqArnArray.splice(0, 1);
+          } else if (this.reqArnArray.length === 1) {
+            this.firstSafeRole = this.reqArnArray[0];
+            this.reqArnArray = [];
+          }
         }
-       }
       },
       (error) => {
         this.isError = true;
         this.isSecretLoading = false;
-        let errMessage = this.toastmessage.errorMessage(error, 'updateSecret');
-        this.toast_pop('error', 'Oops!', errMessage);
+        let errMessage = this.toastmessage.errorMessage(error, "updateSecret");
+        this.toast_pop("error", "Oops!", errMessage);
       }
     )
   }
- 
+
   addRoleInSafe() {
     this.isSecretLoading = true;
     let payload = {
       "arn": this.roleValue,
       "permission": "read"
     }
-    this.http.post(`/jazz/t-vault/safes/${this.safeName}/role`, payload).subscribe(
+    this.http.post(`/jazz/t-vault/safes/${this.tvaultSafeName}/role`, payload).subscribe(
       res => {
         this.isAddOrDelete = false;
-        let successMessage = this.toastmessage.successMessage(res,"updateSecret");
-        this.toast_pop('success',"",successMessage);
+        let successMessage = this.toastmessage.successMessage(res, "updateSecret");
+        this.toast_pop("success", "", successMessage);
         this.getSafeDetails();
       },
       (error) => {
         this.getSafeDetails();
         this.isAddOrDelete = false;
-        let errMessage = this.toastmessage.errorMessage(error, 'updateSecret');
-        this.toast_pop('error', 'Oops!', errMessage);
+        let errMessage = this.toastmessage.errorMessage(error, "updateSecret");
+        this.toast_pop("error", "Oops!", errMessage);
       }
     )
   }
 
-  onCompleteClick () {
-    let payload = {  "arn":this.arnToBeDeleted }
+  onCompleteClick() {
+    let payload = { "arn": this.arnToBeDeleted };
     this.isSecretLoading = true;
     this.deleteRole = false;
     this.showDisplay = false;
     this.editEvents = true;
-    this.http.delete(`/jazz/t-vault/safes/${this.safeName}/role`, payload).subscribe(
+    this.http.delete(`/jazz/t-vault/safes/${this.tvaultSafeName}/role`, payload).subscribe(
       res => {
-        let successMessage = this.toastmessage.successMessage(res,"updateSecret");
-        this.toast_pop('success',"",successMessage);
+        let successMessage = this.toastmessage.successMessage(res, "updateSecret");
+        this.toast_pop("success", "", successMessage);
         this.isSecretLoading = false;
         this.getSafeDetails();
-
       },
       (err) => {
         this.isSecretLoading = false;
-        let errMessage = this.toastmessage.errorMessage(err, 'updateSecret');
-        this.toast_pop('error', 'Oops!', errMessage);
+        let errMessage = this.toastmessage.errorMessage(err, "updateSecret");
+        this.toast_pop("error", "Oops!", errMessage);
       }
     )
   }
@@ -353,60 +352,60 @@ popup(state){
   }
 
   onDeleteClick(val) {
-    this.deleteRole = true
-    this.arnToBeDeleted = '';
-    this.arnToBeDeleted = val
+    this.deleteRole = true;
+    this.arnToBeDeleted = "";
+    this.arnToBeDeleted = val;
     this.confirmationHeader = this.toastmessage.customMessage("acknowledgementHeader", "secretConfirmation");
-    this.confirmationText = this.toastmessage.customMessage( "deleteRole", "secretConfirmation");
+    this.confirmationText = this.toastmessage.customMessage("deleteRole", "secretConfirmation");
   }
 
-  ongrpNameChange(val) {
+  onRoleNameChange(val) {
     this.roleValue = val;
     if (this.reqArnArray.length > 0) {
       let subStr = this.reqArnArray[0].substr(0, this.reqArnArray[0].indexOf('/'));
-      if (this.roleValue.startsWith(subStr + "/") && this.roleValue.indexOf(' ') < 0 && 
-      (!this.reqArnArray.includes(this.roleValue) && this.firstSafeRole[0] !== this.roleValue)) {
+      if (this.roleValue.startsWith(subStr + "/") && this.roleValue.indexOf(' ') < 0 &&
+        (!this.reqArnArray.includes(this.roleValue) && this.firstSafeRole[0] !== this.roleValue)) {
         this.isAddOrDelete = true;
         this.inValidArn = false;
       } else {
         this.isAddOrDelete = false;
-        this.inValidArn = true
+        this.inValidArn = true;
       }
-    } else if(this.firstSafeRole === this.roleValue) {
+    } else if (this.firstSafeRole === this.roleValue) {
       this.isAddOrDelete = false;
       this.inValidArn = true;
     }
-    else{
+    else {
       this.isAddOrDelete = true;
       this.inValidArn = false;
     }
   }
 
-    onInputCancelClick () {
-     this.access.splice(1);
-     this.showDisplay = false;
-     this.inValidArn = false;
-   } 
+  onInputCancelClick() {
+    this.access.splice(1);
+    this.showDisplay = false;
+    this.inValidArn = false;
+  }
 
   addSecret() {
     this.showDisplay = true;
-    this.roleValue = '';
-    this.access = []
-    let emptyInputAvalable = this.access.filter(each => (!each.arnVal))
+    this.roleValue = "";
+    this.access = [];
+    let emptyInputAvalable = this.access.filter(each => (!each.arnVal));
     if (!emptyInputAvalable.length) {
-      this.access.push({ 'arnVal': '' });
+      this.access.push({ "arnVal": "" });
     }
   }
-  copyRoleClipboard(x){
-    var element = null; // Should be <textarea> or <input>
+  copyRoleClipboard(x) {
+    let element = null; // Should be <textarea> or <input>
     element = document.getElementById(x);
     element.select();
     try {
-        document.execCommand("copy");
-        this.copylinkmsg = "LINK COPIED";
+      document.execCommand("copy");
+      this.copylinkmsg = "LINK COPIED";
     }
     finally {
-       document.getSelection().removeAllRanges;
+      document.getSelection().removeAllRanges;
     }
   }
 
@@ -418,7 +417,7 @@ popup(state){
     this.showDisplay = false;
     this.addRoleInSafe();
   }
-  onSecretCancelClick(){
+  onSecretCancelClick() {
     this.editEvents = true;
     this.showDisplay = false;
     this.isAddOrDelete = false;
@@ -439,11 +438,13 @@ popup(state){
             this.isLoading = false;
           }
           else {
-            this.safeName = response.data.environment[0].metadata.safe.name
-            let ser = this.service.serviceType
-            if(ser !== undefined && ser !== 'website'){
-              this.isNotWebsite = true;
-              this.getSafeDetails();
+            if (response.data.environment[0].metadata && response.data.environment[0].metadata.safe) {
+              this.tvaultSafeName = response.data.environment[0].metadata.safe.name;
+              let ser = this.service.serviceType;
+              if (ser !== undefined && ser !== "website") {
+                this.isNotWebsite = true;
+                this.getSafeDetails();
+              }
             }
             this.onload.emit(response.data.environment[0].endpoint);
             this.envLoad.emit(response.data);
