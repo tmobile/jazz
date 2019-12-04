@@ -18,7 +18,7 @@
 const request = require("request");
 const logger = require("./logger.js");
 
-function addSafe(environmentApiPayload, serviceId, configData, authToken) {
+function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
   return new Promise((resolve, reject) => {
     try {
       if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
@@ -26,9 +26,16 @@ function addSafe(environmentApiPayload, serviceId, configData, authToken) {
           "error": "T-vault is not enabled",
         });
       }
-      safeExportable.createSafe(environmentApiPayload, serviceId, configData, authToken)
-        .then((safeName) => { return safeExportable.getAdmins(serviceId, configData, authToken, safeName) })
-        .then((result) => { return safeExportable.addAdminsToSafe(serviceId, configData, authToken, result) })
+
+      if (serviceDetails.type === 'website') {
+        return resolve({
+          "error": "Not creating safe for website",
+        });
+      }
+      
+      safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
+        .then((safeName) => { return safeExportable.getAdmins(serviceDetails.id, configData, authToken, safeName) })
+        .then((result) => { return safeExportable.addAdminsToSafe(serviceDetails.id, configData, authToken, result) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
           logger.error("add safe details failed: " + err);

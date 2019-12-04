@@ -200,7 +200,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
         environmentApiPayload.deployment_descriptor = serviceDetails.deployment_descriptor
       }
 
-      exportable.processEventInitialCommit(environmentApiPayload, serviceDetails.id, configData, authToken)
+      exportable.processEventInitialCommit(environmentApiPayload, serviceDetails, configData, authToken)
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
         .catch((err) => {
@@ -216,7 +216,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
       let nano_id = nanoid(configData.RANDOM_CHARACTERS, configData.RANDOM_ID_CHARACTER_COUNT);
       environmentApiPayload.logical_id = nano_id + "-dev";
 
-      safe.addSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
+      safe.addSafe(environmentApiPayload, serviceDetails, configData, authToken)
         .then((result) => { return exportable.processEventCreateBranch(environmentApiPayload, serviceDetails.id, configData, authToken) })
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
@@ -300,13 +300,13 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
   });
 }
 
-function processEventInitialCommit(environmentPayload, serviceId, configData, authToken) {
+function processEventInitialCommit(environmentPayload, serviceDetails, configData, authToken) {
   function processEnv(env) {
     return new Promise((resolve, reject) => {
       let payload = JSON.parse(JSON.stringify(environmentPayload))
       payload.logical_id = env;
 
-      safe.addSafe(payload, serviceId, configData, authToken)
+      safe.addSafe(payload, serviceDetails, configData, authToken)
         .then((result) => { return processCreateEnv(payload, env) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
@@ -327,7 +327,7 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
         method: "POST",
         headers: {
           "Authorization": authToken,
-          "Jazz-Service-ID": serviceId
+          "Jazz-Service-ID": serviceDetails.id
         },
         json: payload,
         rejectUnauthorized: false
@@ -344,7 +344,6 @@ function processEventInitialCommit(environmentPayload, serviceId, configData, au
           });
         }
       });
-
     });
   }
 
