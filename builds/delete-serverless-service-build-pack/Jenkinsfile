@@ -531,7 +531,6 @@ def unDeployService(stage) {
 			}
 			def envBucketKey = "${env_key}${configLoader.JAZZ.PLATFORM.AWS.S3.BUCKET_NAME_SUFFIX}"
 			def bucketObject = utilModule.getAccountBucketName(service_config);
-			sh "cat ./serverless.yml"
 
 			sh "serverless remove --stage ${stage} --verbose  --bucket ${bucketObject[env_key]} --profile ${credsId}"
 
