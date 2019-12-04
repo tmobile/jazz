@@ -255,7 +255,7 @@
 	</div>
 </div>
 </div>
-<div class="secret-container relative col-detail" *ngIf="isNotWebsite">
+<div class="secret-container relative col-detail" *ngIf="isNotWebsite && tvaultEnabled">
 	<div *ngIf="!isSecretLoading && !isError">
 		<div class="secret-container__edit" [ngClass]="!editEvents? 'editMode':'nonEditMode'">
 			<div class="secret-container__edit--def"> Secret Management <img class="icons-style"

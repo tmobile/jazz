@@ -108,6 +108,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   isNotWebsite: boolean = false;
   tvaultSafeName: any = '';
   firstSafeRole: any = '';
+  tvaultEnabled: boolean = false;
 
   @Input() service: any = {};
   @Input() isAdminAccess:boolean = false;
@@ -424,6 +425,19 @@ popup(state){
     this.inValidArn = false;
   }
 
+  checkTvaultAvailability(response) {
+    if (this.tvaultEnabled) {
+      if (response.data.environment[0].metadata && response.data.environment[0].metadata.safe) {
+        this.tvaultSafeName = response.data.environment[0].metadata.safe.name;
+        let ser = this.service.serviceType;
+        if (ser !== undefined && ser !== "website") {
+          this.isNotWebsite = true;
+          this.getSafeDetails();
+        }
+      }
+    }
+  }
+
   callServiceEnv(shouldUpdateYaml = true) {
     if ( this.subscription ) {
       this.subscription.unsubscribe();
@@ -438,14 +452,7 @@ popup(state){
             this.isLoading = false;
           }
           else {
-            if (response.data.environment[0].metadata && response.data.environment[0].metadata.safe) {
-              this.tvaultSafeName = response.data.environment[0].metadata.safe.name;
-              let ser = this.service.serviceType;
-              if (ser !== undefined && ser !== "website") {
-                this.isNotWebsite = true;
-                this.getSafeDetails();
-              }
-            }
+            this.checkTvaultAvailability(response);
             this.onload.emit(response.data.environment[0].endpoint);
             this.envLoad.emit(response.data);
             this.environmnt=response.data.environment[0];
@@ -630,7 +637,10 @@ form_endplist(){
 }
   ngOnInit() {
     this.form_endplist();
-    this.isError = false
+    this.isError = false;
+    if (typeof env_oss.tvault.tvault_enabled === "boolean" && env_oss.tvault.tvault_enabled === true) {
+      this.tvaultEnabled = true;
+    }
     if(env_oss.envName=='oss')this.isOSS=true;
     if(this.service.domain != undefined)
       this.callServiceEnv();
