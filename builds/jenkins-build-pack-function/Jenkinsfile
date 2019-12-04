@@ -461,7 +461,7 @@ def handleSqsError(deployOutput, service_config, environment_logical_id, envBuck
   if (deployOutput.contains(sqsErrString)) {
     def event_source_sqs = lambdaEvents.getSqsQueueName(event_source_sqs_arn, environment_logical_id)
     event_source_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_sqs_arn, environment_logical_id, "_")
-    def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+    def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}_${service_config['domain']}_${service_config['service']}_${environment_logical_id}"
     if (lambdaEvents.checkSqsQueueExists(event_source_sqs, credsId)) {
       if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn, credsId)) {
         error "Queue contains a different function trigger already. Please remove the existing function trigger and try again."
@@ -481,7 +481,7 @@ def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, envi
   def kinesisStreamErrString = "CloudFormation - CREATE_FAILED - AWS::Kinesis::Stream - "
   def event_source_kinesis = lambdaEvents.splitAndGetResourceName(event_source_kinesis_stream_arn, environment_logical_id)
   event_source_kinesis_stream_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_kinesis_stream_arn, environment_logical_id, "_")
-  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}_${service_config['domain']}_${service_config['service']}_${environment_logical_id}"
   if (deployOutput.contains(kinesisStreamErrString)) {
     if (lambdaEvents.checkKinesisStreamExists(event_source_kinesis, credsId)) {
       if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_kinesis_stream_arn, lambda_arn, credsId)) {
@@ -503,7 +503,7 @@ def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_
   def event_source_dynamodb_table_arn = service_config['event_source_dynamodb']
   def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(event_source_dynamodb_table_arn, environment_logical_id)
   event_source_dynamodb_table_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_dynamodb_table_arn, environment_logical_id, "_")
-  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}_${service_config['domain']}_${service_config['service']}_${environment_logical_id}"
   if (deployOutput.contains(dynamodbTableErrString)) {
     if (lambdaEvents.checkDynamoDbTableExists(event_source_dynamodb)) {
       def stream_details = lambdaEvents.getDynamoDbStreamDetails(event_source_dynamodb)
