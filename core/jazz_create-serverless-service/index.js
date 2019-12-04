@@ -353,7 +353,7 @@ var getServiceData = (service_creation_data, authToken, configData, deploymentTa
     }
     
     //Adding providerTimeout key in service catalog
-    if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function" || service_creation_data.service_type === "sls-app") {
+    if (service_creation_data.service_type === "api" || service_creation_data.service_type === "function") {
         // default to 30 seconds
         serviceMetadataObj.providerTimeout = configData.DEFAULT_PROVIDER_TIMEOUT;
     }
