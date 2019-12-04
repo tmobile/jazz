@@ -418,7 +418,7 @@ def attachTagstoLogGroup(config, environment_logical_id, credsId){
       sh "aws logs tag-log-group --log-group-name ${logGroupName} --tags '{\"service\":\"${serviceName}\", \"namespace\":\"${namespace}\", \"environment\":\"${environment}\", \"functionName\":\"${lambdaName}\"}' --profile ${credsId}"
     }
   } catch (Exception ex) {
-    echo "Error occured while attaching tags to logGroup ${logGroupName}"
+    echo "Error occured while attaching tags to logGroup: ${ex.message}"
   } 
 }
 
