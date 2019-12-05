@@ -418,7 +418,7 @@ def attachTagstoLogGroup(config, environment_logical_id, credsId){
       sh "aws logs tag-log-group --log-group-name ${logGroupName} --tags '{\"service\":\"${serviceName}\", \"namespace\":\"${namespace}\", \"environment\":\"${environment}\", \"functionName\":\"${lambdaName}\"}' --profile ${credsId}"
     }
   } catch (Exception ex) {
-    echo "Error occured while attaching tags to logGroup ${logGroupName}"
+    echo "Error occured while attaching tags to logGroup: ${ex.message}"
   } 
 }
 
@@ -670,15 +670,6 @@ def validateDeploymentConfigurations(def prop) {
 		}
 	} else {
 		error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
-	}
-	if (prop.containsKey("providerTimeout")) {
-		if (prop['providerTimeout'] == "") {
-			error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
-		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
-			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
-		}
-	} else {
-		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
 	}
 
 }
