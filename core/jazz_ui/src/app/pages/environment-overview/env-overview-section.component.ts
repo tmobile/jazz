@@ -361,26 +361,30 @@ popup(state){
     this.confirmationHeader = this.toastmessage.customMessage("acknowledgementHeader", "secretConfirmation");
     this.confirmationText = this.toastmessage.customMessage("deleteRole", "secretConfirmation");
   }
+  ValidURL(str) {
+    const status = /arn:aws:iam::\d{12}:role\/\/?[a-zA-Z_0-9+=,.@\-_/]+/.test(str)
+    return status;
+  }
 
   onRoleNameChange(val) {
     this.roleValue = val;
+    let isValid = this.ValidURL(this.roleValue)
     if (this.reqArnArray.length > 0) {
-      let subStr = this.reqArnArray[0].substr(0, this.reqArnArray[0].indexOf('/'));
-      if (this.roleValue.startsWith(subStr + "/") && this.roleValue.indexOf(' ') < 0 &&
-        (!this.reqArnArray.includes(this.roleValue) && this.firstSafeRole[0] !== this.roleValue)) {
+      if (isValid && (!this.reqArnArray.includes(this.roleValue) && this.firstSafeRole[0] !== this.roleValue)) {
         this.isAddOrDelete = true;
         this.inValidArn = false;
       } else {
         this.isAddOrDelete = false;
         this.inValidArn = true;
       }
-    } else if (this.firstSafeRole === this.roleValue) {
-      this.isAddOrDelete = false;
-      this.inValidArn = true;
-    }
-    else {
-      this.isAddOrDelete = true;
-      this.inValidArn = false;
+    } else {
+      if(isValid && this.firstSafeRole !== this.roleValue){
+        this.isAddOrDelete = true;
+        this.inValidArn = false;
+      } else {
+        this.isAddOrDelete = false;
+        this.inValidArn = true;
+      }
     }
   }
 
@@ -425,6 +429,7 @@ popup(state){
     this.showDisplay = false;
     this.isAddOrDelete = false;
     this.inValidArn = false;
+    this.inputVal = "";
   }
 
   checkTvaultAvailability(response) {

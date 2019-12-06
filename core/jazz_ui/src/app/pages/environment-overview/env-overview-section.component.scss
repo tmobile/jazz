@@ -466,7 +466,7 @@ transform: rotateY(-50%)
     &--list{
         overflow-y: auto;
         overflow-x: hidden;
-        height: 100px;  
+        max-height: 130px;
        .arn-value__each{
         margin: 5px 0px;
         display: flex;
