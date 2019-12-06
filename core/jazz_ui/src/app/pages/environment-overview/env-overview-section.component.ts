@@ -361,14 +361,14 @@ popup(state){
     this.confirmationHeader = this.toastmessage.customMessage("acknowledgementHeader", "secretConfirmation");
     this.confirmationText = this.toastmessage.customMessage("deleteRole", "secretConfirmation");
   }
-  ValidURL(str) {
+  validRole(str) {
     const status = /arn:aws:iam::\d{12}:role\/\/?[a-zA-Z_0-9+=,.@\-_/]+/.test(str)
     return status;
   }
 
   onRoleNameChange(val) {
     this.roleValue = val;
-    let isValid = this.ValidURL(this.roleValue)
+    let isValid = this.validRole(this.roleValue)
     if (this.reqArnArray.length > 0) {
       if (isValid && (!this.reqArnArray.includes(this.roleValue) && this.firstSafeRole[0] !== this.roleValue)) {
         this.isAddOrDelete = true;
