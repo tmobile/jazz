@@ -28,7 +28,6 @@ var _create = require('./create.js');
 var _delete = require('./delete.js');
 var _update = require('./update.js');
 
-
 module.exports = () => {
     return {
         get: _get,

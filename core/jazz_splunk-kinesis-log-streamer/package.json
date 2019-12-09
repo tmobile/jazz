@@ -13,7 +13,8 @@
   "dependencies": {
     "request": "*",
     "splunk-logging": "^0.9.3",
-    "unicode-byte-truncate": "*"
+    "unicode-byte-truncate": "*",
+    "uuid": "*"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.1.1",

@@ -21,11 +21,81 @@
 	@version: 1.0
 **/
 
+const AWS = require('aws-sdk');
+const Uuid = require("uuid/v4");
+const request = require('request');
 const logger = require("../components/logger.js");
 const global_config = require("../config/global-config.json");
 const truncate = require('unicode-byte-truncate');
 
 // Helper functions
+
+function assumeRole(configData, serviceData){
+  var isPrimary, roleArn;
+  if(serviceData){
+  	isPrimary = checkIsPrimary(serviceData.deployment_accounts[0].accountId, configData);
+  	roleArn = getRolePlatformService(serviceData.deployment_accounts[0].accountId, configData);
+  } 
+  var accessparams;
+  return new Promise((resolve, reject) => {
+    if(serviceData){
+      if (isPrimary) {
+        accessparams = {};
+        resolve(accessparams)
+      } else {
+        const sts = new AWS.STS({ region: process.env.REGION });
+        const roleSessionName = Uuid();
+        const params = {
+          RoleArn: roleArn,
+          RoleSessionName: roleSessionName,
+          DurationSeconds: 3600,
+        };
+        sts.assumeRole(params, (err, data) => {
+          if (err) {
+            reject({
+              "result": "serverError",
+              "message": "Unknown internal error occurred"
+            })
+          } else {
+            accessparams = {
+              accessKeyId: data.Credentials.AccessKeyId,
+              secretAccessKey: data.Credentials.SecretAccessKey,
+              sessionToken: data.Credentials.SessionToken,
+            };
+            resolve(accessparams)
+          }
+        })
+      }
+    } else {
+      // if serviceData is undefined or null
+      logger.error('Service Metadata is undefined or null');
+      reject('Service Metadata is undefined or null');
+    }
+  })
+}
+
+function getLogsGroupsTags(logGroupName, tempCreds, serviceData) {
+  if(serviceData){
+  	tempCreds.region = serviceData.deployment_accounts[0].region;
+  }
+  var cloudwatchlogs = new AWS.CloudWatchLogs(tempCreds);
+  var params = {
+    logGroupName: logGroupName /* required */
+  };
+  return new Promise((resolve, reject) => {
+    cloudwatchlogs.listTagsLogGroup(params, function(err, data) {
+      if (err) {
+        logger.error("something went wrong while fetching tags..: " + JSON.stringify(err));
+        reject(err)
+      } else {
+        logger.debug(`tags for log group - ${logGroupName}: ` + JSON.stringify(data))
+        resolve(data)
+      } 
+    });
+  });
+  // return cloudwatchlogs;
+}
+
 var getInfo = function (messages, patternStr) {
   let pattern = new RegExp(patternStr);
   let result = "";
@@ -55,47 +125,201 @@ var getSubInfo = function (message, patternStr, index) {
   return result;
 }
 
-var getCommonData = function (payload) {
+var getCommonData = function (payload, config) {
+  // first get token for calling respective APIs
+  getToken(config)
+  .then((creds) => {
+    // get configDB data for getting roleArn specific to account
+    getConfigJson(config, creds)
+    .then((configData) => {
+      // get accountId and region through service Data
+      getServiceMetaData(config, payload.logGroup, creds)
+      .then((serviceData) => {
+        // execute sts:assumeRole
+        assumeRole(configData, serviceData)
+        .then((tempCreds) => {
+          // configure cloudwatch and retrieve tags from logGroup
+          getLogsGroupsTags(payload.logGroup, tempCreds, serviceData)
+          .then((tagsResult) => {
+            return new Promise((resolve, reject) => {
+              let data = {};
+              data.metadata = {};
+              data.asset_type = "lambda"
+              data.request_id = getInfo(payload.logEvents, global_config.PATTERNS.lambda_request_id);
+              if (data.request_id) {
+                data.provider = "aws";
+                let domainAndservice, serviceInfo, dev_environment, serviceInfoArr, namespace;
+                data.asset_identifier = payload.logGroup.split(global_config.PATTERNS.asset_identifier_key)[1];
+                // if tags present, then it is for sls-app, otherwise for other services
+                if(tagsResult != 'error' && tagsResult.tags.environment && tagsResult.tags.namespace && tagsResult.tags.service){
+                  data.environment = tagsResult.tags.environment;
+                  data.namespace = tagsResult.tags.namespace;
+                  data.service = tagsResult.tags.service;
+                } else {
+                  data.environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment, 2);
+                  if (data.environment === "dev") {
+                    dev_environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 2);
+                    serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 1);
+                    data.environment = dev_environment;
+                  } else {
+                    serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_domain_service, 1);
+                  }
+                  domainAndservice = serviceInfo;
+                  logger.debug("domainAndservice: " + domainAndservice)
+          
+                  namespace = domainAndservice.substring(0, domainAndservice.indexOf("_"));
+                  if (namespace) {
+                    data.namespace = namespace;
+                    data.service = domainAndservice.substring(namespace.length + 1);
+                  } else {
+                    data.namespace = "";
+                    data.service = domainAndservice;
+                  }
+                }
+                data.metadata.platform_log_group = payload.logGroup;
+                data.metadata.platform_log_stream = payload.logStream;
+                resolve(data);
+              } else {
+                resolve(data);
+              }
+            });
+          })
+          .catch(error => {
+            logger.error('Error in retreiving tags from logGroup:' + JSON.stringify(error));
+            return callback(null);
+          });
+        })
+        .catch(error => {
+          logger.error('Error in executing sts:assumeRole:' + JSON.stringify(error));
+          return callback(null);
+        });
+      })
+      .catch(error => {
+        logger.error('Error in retrieving service details:' + JSON.stringify(error));
+        return callback(null);
+      });
+    })
+    .catch(error => {
+      logger.error('Error in retreiving admin config from DB:' + JSON.stringify(error));
+      return callback(null);
+    });
+  })
+  .catch(error => {
+    logger.error('Error in retrieving token:' + JSON.stringify(error));
+    return callback(null);
+  });
+}
+
+// Function to get service metadata using service API
+function getServiceMetaData(config, logGroup, authToken) {
+  var serviceParts = logGroup.split('_');
   return new Promise((resolve, reject) => {
-    let data = {};
-    data.metadata = {};
-    data.asset_type = "lambda"
-    data.request_id = getInfo(payload.logEvents, global_config.PATTERNS.lambda_request_id);
-    if (data.request_id) {
-      data.provider = "aws_lambda";
-      let domainAndservice, serviceInfo;
-      data.asset_identifier = payload.logGroup.split(global_config.PATTERNS.asset_identifier_key)[1];
-      data.environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment, 2);
-      if (data.environment === "dev") {
-        let dev_environment = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 2);
-        serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_environment_dev, 1);
-        data.environment = dev_environment;
+    var service_api_options = {
+      url: `${config.SERVICE_API_URL}${config.SERVICE_URL}?domain=${serviceParts[1]}&service=${serviceParts[2]}&environment=${serviceParts[serviceParts.length - 1]}`,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": authToken
+      },
+      method: "GET",
+      rejectUnauthorized: false
+    };
+
+    request(service_api_options, (error, response, body) => {
+      if (error) {
+        reject(error);
       } else {
-        serviceInfo = getSubInfo(payload.logGroup, global_config.PATTERNS.Lambda_domain_service, 1);
+        if (response.statusCode && response.statusCode === 200) {
+          var responseBody = JSON.parse(body);
+          logger.debug("Response Body of Service Metadata is: " + JSON.stringify(responseBody));
+          resolve(responseBody.data.services[0])
+        } else {
+          logger.error("Service not found for this service, domain, environment: ", JSON.stringify(service_api_options));
+          reject('Service not found for this service, domain, environment');
+        }
       }
+    })
+  });
+}
 
-      domainAndservice = serviceInfo;
-      if (serviceInfo.indexOf(global_config.PATTERNS.sls_app_function) !== -1) { // if yes then sls-app function
-        let serviceInfoArr = serviceInfo.split(global_config.PATTERNS.sls_app_function);
-        domainAndservice = serviceInfoArr[0];
-      }
+// Function to check if account is primary or not
+function checkIsPrimary(accountId, jsonConfig) {
+  var data = jsonConfig.config.AWS.ACCOUNTS;
+  var index = data.findIndex(x => x.ACCOUNTID == accountId);
+  if (data[index].PRIMARY) {
+    return data[index].PRIMARY;
+  } else {
+    return false;
+  }
+}
 
-      logger.debug("domainAndservice: " + domainAndservice)
+// Function to get roleArn for specific accountId
+function getRolePlatformService(accountId, jsonConfig) {
+  var data = jsonConfig.config.AWS.ACCOUNTS;
+  var index = data.findIndex(x => x.ACCOUNTID == accountId);
+  return data[index].IAM.PLATFORMSERVICES_ROLEID;
+}
 
-      let namespace = domainAndservice.substring(0, domainAndservice.indexOf("_"));
-      if (namespace) {
-        data.namespace = namespace;
-        data.service = domainAndservice.substring(namespace.length + 1);
+// Function to get configDB data
+function getConfigJson(config, token) {
+  return new Promise((resolve, reject) => {
+    var config_json_api_options = {
+      url: `${config.SERVICE_API_URL}${config.CONFIG_URL}`,
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": token
+      },
+      method: "GET",
+      rejectUnauthorized: false
+    };
+
+    request(config_json_api_options, (error, response, body) => {
+      if (error) {
+        reject(error)
       } else {
-        data.namespace = "";
-        data.service = domainAndservice;
+        if (response.statusCode && response.statusCode === 200) {
+          var responseBody = JSON.parse(body);
+          logger.debug("Response body of Config Json is: " +  JSON.stringify(responseBody));
+          resolve(responseBody.data)
+        } else {
+          logger.error("Error in retreiving admin config from DB");
+          reject('Error in retreiving admin config from DB');
+        }
       }
-      data.metadata.platform_log_group = payload.logGroup;
-      data.metadata.platform_log_stream = payload.logStream;
-      resolve(data);
-    } else {
-      resolve(data);
-    }
+    })
+  })
+}
+
+// Function to get accessToken
+function getToken(config) {
+  logger.debug("Inside getToken");
+  return new Promise((resolve, reject) => {
+    var svcPayload = {
+      uri: config.SERVICE_API_URL + config.TOKEN_URL,
+      method: 'post',
+      json: {
+        "username": config.SERVICE_USER,
+        "password": config.TOKEN_CREDS
+      },
+      rejectUnauthorized: false
+    };
+    request(svcPayload, (error, response, body) => {
+      if (response && response.statusCode === 200 && body && body.data) {
+        var authToken = body.data.token;
+        resolve(authToken);
+      } else {
+        var message = "";
+        if (error) {
+          message = error.message;
+        } else {
+          message = response.body.message
+        }
+        logger.error(message);
+        reject({
+          "error": "Failed while getting authentication token",
+          "message": message
+        });
+      }
+    });
   });
 }
 

@@ -53,7 +53,7 @@ function handler(event, context, cb) {
 
             // transform the input to Elasticsearch documents
             logger.debug("logs raw data..: " + JSON.stringify(awslogsData));
-            utils.transform(awslogsData)
+            utils.transform(awslogsData, config)
               .then(elasticsearchBulkData => {
                 if (elasticsearchBulkData) {
                   // post documents to the Amazon Elasticsearch Service
