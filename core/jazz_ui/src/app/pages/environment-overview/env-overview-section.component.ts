@@ -50,6 +50,8 @@ export class EnvOverviewSectionComponent implements OnInit {
   saveButton:boolean=false;
   isCancel:boolean=false;
   version: string = ">=1.0.0 <2.0.0";
+  showDisplay:boolean = false;
+  rolesList: any = []
   isValid:boolean=false;
   startNew: boolean = true;
   showCancel:boolean = false;
@@ -60,6 +62,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   envResponseTrue:boolean = false;
   envResponseError:boolean = false;
   isLoading: boolean = true;
+  isSecretLoading: boolean = true;
   dayscommit: boolean = false;
   hourscommit: boolean = false;
   seccommit: boolean = false;
@@ -86,10 +89,27 @@ export class EnvOverviewSectionComponent implements OnInit {
   public lineNumberCount: any = new Array(7);
   copyLink:string="Copy Link";
   disableSave:boolean = true;
-
+  editEvents: boolean = true;
+  access:any = []
+  isAddOrDelete: boolean = false;
   errMessage: string = "Something went wrong while fetching your data";
   message:string="lalalala"
   private subscription:any;
+  rolesObj:any = {};
+  reqArnArray:any = [];
+  roleValue: any = '';
+  inValidArn: boolean = false;
+  isError: boolean = false;
+  noData: boolean = false;
+  deleteRole: boolean = false;
+  confirmationHeader:string = "";
+  confirmationText:string = "";
+  arnToBeDeleted:any = '';
+  isNotWebsite: boolean = false;
+  tvaultSafeName: any = '';
+  firstSafeRole: any = '';
+  tvaultEnabled: boolean = false;
+  inputVal: any = ''
 
   @Input() service: any = {};
   @Input() isAdminAccess:boolean = false;
@@ -120,7 +140,6 @@ export class EnvOverviewSectionComponent implements OnInit {
     this.toastmessage = messageservice;
 
    }
-
   refresh() {
     this.envResponseEmpty = false;
     this.envResponseTrue = false;
@@ -159,7 +178,7 @@ popup(state){
       this.lineNumberCount = new Array(line_numbers);
     }
   }
-
+ 
   onSaveClick(){
     this.showCancel=false;
     this.saveBtn=false;
@@ -251,8 +270,180 @@ popup(state){
   }
   openSidebar(){
     this.open_sidebar.emit(true);
-
 }
+
+  getSafeDetails() {
+    this.reqArnArray = [];
+    this.noData = false;
+    this.rolesList = [];
+    this.http.get(`/jazz/t-vault/safes/${this.tvaultSafeName}`).subscribe(
+      (res) => {
+        if (Object.keys(res.data.roles).length === 0) {
+          this.noData = true;
+          this.isSecretLoading = false;
+        }
+        else {
+          this.rolesObj = res.data.roles;
+          this.isSecretLoading = false;
+          this.rolesList.push(Object.keys(this.rolesObj))
+          this.rolesList[0].map((item) => {
+            this.reqArnArray.push(this.rolesObj[item].arn);
+          })
+          if (this.reqArnArray.length > 1) {
+            this.firstSafeRole = this.reqArnArray.splice(0, 1);
+          } else if (this.reqArnArray.length === 1) {
+            this.firstSafeRole = this.reqArnArray[0];
+            this.reqArnArray = [];
+          }
+        }
+      },
+      (error) => {
+        this.isError = true;
+        this.isSecretLoading = false;
+        let errMessage = this.toastmessage.errorMessage(error, "updateSecret");
+        this.toast_pop("error", "Oops!", errMessage);
+      }
+    )
+  }
+
+  addRoleInSafe() {
+    this.isSecretLoading = true;
+    this.inputVal = "";
+    let payload = {
+      "arn": this.roleValue,
+      "permission": "read"
+    }
+    this.http.post(`/jazz/t-vault/safes/${this.tvaultSafeName}/role`, payload).subscribe(
+      res => {
+        this.isAddOrDelete = false;
+        let successMessage = this.toastmessage.successMessage(res, "updateSecret");
+        this.toast_pop("success", "", successMessage);
+        this.getSafeDetails();
+      },
+      (error) => {
+        this.getSafeDetails();
+        this.isAddOrDelete = false;
+        let errMessage = this.toastmessage.errorMessage(error, "updateSecret");
+        this.toast_pop("error", "Oops!", errMessage);
+      }
+    )
+  }
+
+  onCompleteClick() {
+    let payload = { "arn": this.arnToBeDeleted };
+    this.isSecretLoading = true;
+    this.deleteRole = false;
+    this.showDisplay = false;
+    this.editEvents = true;
+    this.http.delete(`/jazz/t-vault/safes/${this.tvaultSafeName}/role`, payload).subscribe(
+      res => {
+        let successMessage = this.toastmessage.successMessage(res, "updateSecret");
+        this.toast_pop("success", "", successMessage);
+        this.isSecretLoading = false;
+        this.getSafeDetails();
+      },
+      (err) => {
+        this.isSecretLoading = false;
+        let errMessage = this.toastmessage.errorMessage(err, "updateSecret");
+        this.toast_pop("error", "Oops!", errMessage);
+      }
+    )
+  }
+
+  outSidePopup() {
+    this.deleteRole = false;
+  }
+
+  onDeleteClick(val) {
+    this.deleteRole = true;
+    this.arnToBeDeleted = "";
+    this.arnToBeDeleted = val;
+    this.confirmationHeader = this.toastmessage.customMessage("acknowledgementHeader", "secretConfirmation");
+    this.confirmationText = this.toastmessage.customMessage("deleteRole", "secretConfirmation");
+  }
+  validRole(str) {
+    const status = /arn:aws:iam::\d{12}:role\/\/?[a-zA-Z_0-9+=,.@\-_/]+/.test(str)
+    return status;
+  }
+
+  onRoleNameChange(val) {
+    this.roleValue = val;
+    let isValid = this.validRole(this.roleValue)
+    if (this.reqArnArray.length > 0) {
+      if (isValid && (!this.reqArnArray.includes(this.roleValue) && this.firstSafeRole[0] !== this.roleValue)) {
+        this.isAddOrDelete = true;
+        this.inValidArn = false;
+      } else {
+        this.isAddOrDelete = false;
+        this.inValidArn = true;
+      }
+    } else {
+      if(isValid && this.firstSafeRole !== this.roleValue){
+        this.isAddOrDelete = true;
+        this.inValidArn = false;
+      } else {
+        this.isAddOrDelete = false;
+        this.inValidArn = true;
+      }
+    }
+  }
+
+  onInputCancelClick() {
+    this.inputVal = "";
+    this.showDisplay = false;
+    this.inValidArn = false;
+  }
+
+  addSecret() {
+    this.showDisplay = true;
+    this.roleValue = "";
+    this.access = [];
+    let emptyInputAvalable = this.access.filter(each => (!each.arnVal));
+    if (!emptyInputAvalable.length) {
+      this.access.push({ "arnVal": "" });
+    }
+  }
+  copyRoleClipboard(x) {
+    let element = null; // Should be <textarea> or <input>
+    element = document.getElementById(x);
+    element.select();
+    try {
+      document.execCommand("copy");
+      this.copylinkmsg = "LINK COPIED";
+    }
+    finally {
+      document.getSelection().removeAllRanges;
+    }
+  }
+
+  secretEdiClick() {
+    this.editEvents = false;
+  }
+  secretSaveClick() {
+    this.editEvents = true;
+    this.showDisplay = false;
+    this.addRoleInSafe();
+  }
+  onSecretCancelClick() {
+    this.editEvents = true;
+    this.showDisplay = false;
+    this.isAddOrDelete = false;
+    this.inValidArn = false;
+    this.inputVal = "";
+  }
+
+  checkTvaultAvailability(response) {
+    if (this.tvaultEnabled) {
+      if (response.data.environment[0].metadata && response.data.environment[0].metadata.safe) {
+        this.tvaultSafeName = response.data.environment[0].metadata.safe.name;
+        let ser = this.service.serviceType;
+        if (ser !== undefined && ser !== "website") {
+          this.isNotWebsite = true;
+          this.getSafeDetails();
+        }
+      }
+    }
+  }
 
   callServiceEnv(shouldUpdateYaml = true) {
     if ( this.subscription ) {
@@ -268,6 +459,7 @@ popup(state){
             this.isLoading = false;
           }
           else {
+            this.checkTvaultAvailability(response);
             this.onload.emit(response.data.environment[0].endpoint);
             this.envLoad.emit(response.data);
             this.environmnt=response.data.environment[0];
@@ -452,6 +644,10 @@ form_endplist(){
 }
   ngOnInit() {
     this.form_endplist();
+    this.isError = false;
+    if (typeof env_oss.tvault.tvault_enabled === "boolean" && env_oss.tvault.tvault_enabled === true) {
+      this.tvaultEnabled = true;
+    }
     if(env_oss.envName=='oss')this.isOSS=true;
     if(this.service.domain != undefined)
       this.callServiceEnv();

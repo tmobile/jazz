@@ -108,7 +108,7 @@
 <section class= "service-metadata-wrap relative" [class.extra-bottom-padding]='!disp_show2' hide>
   <div>
     <div class='metadata-body metadata-body-border'>
-      <div [class]="service.serviceType != 'function' ? 'metadata-column ' : 'metadata-column'" [ngClass]="{'column-style':service.serviceType != 'api' && service.serviceType != 'function'}">
+      <div [class]="service.serviceType != 'function' ? 'metadata-column ' : 'metadata-column'" [ngClass]="service.serviceType != 'function'?'column-style':''">
         <div class="metadata-heading-wrap">
          <div class="metadata-heading" [ngClass]="showGeneralField ? 'update-color' : ''">
             General
@@ -202,33 +202,6 @@
             <div class="det-value repository-link" [ngClass]="{'link':islink, 'PlaceHolder':repository_empty}" (click)="openLink(repositorylink)">{{bitbucketRepo || 'Stay organized with a repository'}}</div>
           </li>
         </ul>
-      </div>
-      <div class="metadata-column general-block" *ngIf="service.serviceType == 'api'">
-          <div class="metadata-heading-wrap">
-        <div class="metadata-heading secret-heading">
-          <div>Secret</div>
-          <div class="tooltip-content">secret management</div>
-        </div>
-          </div>
-        <div class="secret-container toggled-ul">
-          <div class="secret-label secretList">IAM Roles</div>
-          <div class="secretList" *ngFor="let secret of secretList">
-            <div class="popupcopy" (click)='copyClipboard(secret.secretName)'>
-              <div class="secret-label">
-                {{secret.secretName}}
-                </div>
-                <div class='relative'>
-                  <img src="./../../../assets/images/icons/icon-link.png" />
-                  <div class="tooltip-content">
-                    <span id="copyPopup">{{copylinkmsg}}</span>
-                  </div>
-                </div>
-              <textarea id="{{secret.secretName}}" class="copyapilinkdev">{{secret.secretName}}</textarea>
-            </div>
-          </div>
-          <a class="link">Manage Role</a>
-          <btn-jazz-primary class="save-btn-wrap btn-holder" text="VISIT SAFE"></btn-jazz-primary>
-        </div>
       </div>
       <div class='metadata-column'  *ngIf="service.serviceType == 'function' ">
 

@@ -26,21 +26,6 @@ export class ServiceAccessControlComponent implements OnInit {
  i: number = 0;
  private http: any;
  private toastmessage: any = '';
- secretSaveClicked: boolean = false;
- showSecretDisplay: boolean = true;
- isSecret: boolean = false;
- secretList: any = [
-  {
-     secretName: 'emrf access',
-     secretPermission: 'read',
-     category: 'secret'
-  },
-  {
-     secretName: 'lopz access',
-     secretPermission: 'read',
-     category: 'secret'
-  }
-]
  isLoading: boolean = false;
  isAddOrDelete: boolean = false;
  isDataNotAvailable: boolean = false;
@@ -153,19 +138,7 @@ export class ServiceAccessControlComponent implements OnInit {
      this.groupList[category].push(user);
    }
  }
- onSecretChange(i, value){
-  if(value.length > 0){
-     this.iSelected = i;
-     this.isSecret = true;
-     this.showSecretDisplay = true;
-  }
-}
-onSecretEditClick() {
-  this.showSecretDisplay = false; 
-}
-onSecretCancelClick() {
-  this.showSecretDisplay = true;
-}
+ 
  //function for deleting group
  deletegroup(i,category){
    this.toDelete = {};

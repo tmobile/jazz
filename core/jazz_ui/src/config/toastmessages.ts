@@ -151,6 +151,13 @@ export const toastMessage = {
         "error404":"Something went wrong while updating the environment details. Please try again!",
         "error500":"Something went wrong while updating the environment details. Please try again!"
     },
+    "updateSecret":{
+        "success":"Success! Changes have been saved.",
+        "error0": "Looks like we are having trouble reaching our servers. Please try later!",
+        "error400":"Something went wrong while updating the role details. Please try again!",
+        "error404":"Something went wrong while updating the role details. Please try again!",
+        "error500":"Something went wrong while updating the role details. Please try again!"
+    },
     "updatePwd":{
         "success":"Password updated successfully.",
         "error400":"Invalid verification code provided, please try again.",
@@ -187,6 +194,10 @@ export const toastMessage = {
         "errorIndicationMsg": "There must be at least one user delegated under each category. To add additional users, select \"Add User\" from the options below.",
         "removeAdminRule": "When saved, user will lose all kinds of access to this service. Do you want to proceed?",
         "addAdminRule": "When saved, user will be an administrator to this service. Do you want to proceed?"
+    },
+    "secretConfirmation":{
+        "acknowledgementHeader": "ACKNOWLEDGE",
+        "deleteRole": "This role will be deleted. Do you want to proceed?"
     },
     "metricsResponse": {
         "dataNull":"Something went wrong while we were fetching service metrics data!",

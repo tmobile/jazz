@@ -1,6 +1,15 @@
 @import './../../../main-styles';
 @import './../service-detail/service-detail.component.scss';
 @import './../../secondary-components/create-service/create-service.component.scss';
+@import './../../pages/service-access-control/service-access-control.component.scss';
+
+//Variables Declaration
+$color-white:#ffffff;
+$color-dark-gray: #aeb2bb;
+$color-dark-magenta: #ed008c;
+
+$env-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
+
 .left-item {
   margin-right: 1rem;
   @media (max-width: $screen-sm) {
@@ -149,6 +158,10 @@
 .overview-view{
   display: flex;
   flex-direction: column;
+  padding: 15px 0;
+}
+.secret-loading-circle {
+  top:calc(50% - 1.5rem) !important
 }
 
 .overview-value {
@@ -288,15 +301,7 @@
   background: #D5D7D9;
   padding: 3px 7px;
   border-radius: 3px;
-  margin-top: 1rem; // &:after{
-  //     position: absolute;
-  //     top: -64%;
-  //     left: 29%;
-  //     border-width: 8px;
-  //     transform: rotate(180deg);
-  //     border-style: solid;
-  //     border-color: #D5D7D9 transparent transparent transparent;
-  // }
+  margin-top: 1rem;
 }
 
 .det-value .popup-endp::after {
@@ -327,7 +332,7 @@
 
 .bottom-10 {
   margin-bottom: 1.5rem !important;
-  padding: 1.6rem 1.6rem 0.8rem 1.6rem;
+  padding: 1.6rem 1.6rem 1.6rem 1.6rem;
 }
 
 .det-wrp {
@@ -383,6 +388,8 @@ transform: rotateY(-50%)
 }
 .row-detail{
   display: flex;
+  justify-content: space-between;
+  min-height: 230px;
 }
 .imp-label{
   display: flex;
@@ -408,8 +415,158 @@ transform: rotateY(-50%)
 }
 .col-detail{
   flex-grow: 1;
+  width: calc((100% - 2rem)/2);
+  background-color: $color-white;
+  box-shadow: $env-box-shadow;
   flex-basis: 0;
+  border-radius: 5px;
+  overflow: hidden;
 }
+.secret-container{
+  margin-left: 25px;
+  position: relative;
+  &__edit{
+    display: flex;
+    color: white;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    height: 45px;
+    &--def{
+      margin-left: 5px;
+      font-weight: 600
+    }
+    &--icon{
+      margin-right: 5px;
+      .cancel-button{
+        background-color: transparent;
+        border: none;
+        color: $color-white;
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+      .save-button{ 
+        background-color: $color-dark-magenta;
+        border-radius: 22.5px;
+        border: 1px solid #fff;
+        width: 62px;
+      }
+    .enable-save-button{
+     cursor: pointer;
+    }
+     .disable-save-button{
+      cursor: not-allowed;
+      opacity: 0.8;
+     }
+    }
+  }
+  &__details{
+    padding: 10px 16px;
+    &--list{
+        overflow-y: auto;
+        overflow-x: hidden;
+        max-height: 130px;
+       .arn-value__each{
+        margin: 5px 0px;
+        display: flex;
+        justify-content: space-between;
+        width: 82%;
+        .copy-icon{
+         margin-right: 50px;
+         cursor: pointer;
+        }
+        .delete-group{
+          color: $color-dark-magenta;
+          cursor: pointer;
+          span {
+            bottom: 2.6rem;
+            font-size: 1rem;
+            cursor: pointer;
+          }
+        }
+      }
+      .secret__edit{
+        display: flex;
+        align-items: center;
+        background-color: #eeee;
+        height: 52px;
+        padding: 7px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+        width: 85%;
+        &--input{
+          width: 90%;
+          .inputClass{
+            height: 35px;
+            border-radius: 5px;
+            margin: 0px;
+            font-weight: unset;
+          }
+          .errorClass{
+            color: #d0021b ;
+            border: 1px solid #d0021b ;
+          }
+        }
+        .margin30{
+          margin-left: 30px;
+          color: $color-dark-magenta;
+          cursor: pointer;
+        }
+      }
+      .error-msg{
+        color:#d0021b;
+        font-size: 12px;
+        margin-top: 10px;
+      }
+    }
+    &--addrole{
+      margin: 10px 0px;
+      color: $color-dark-magenta;
+      cursor: pointer;
+    }
+    &--desc{
+      position: absolute;
+      bottom: 5px;
+    }
+  }
+}
+.error-padding {
+  padding: 20px;
+}
+.secret-container__details--list::-webkit-scrollbar-thumb {
+  background-color: darkgrey;
+  border-radius: 5px;
+  }
+.secret-container__details--list::-webkit-scrollbar {
+    width: 0.5em;
+  }
+.lock-icon{
+  height: 16px;
+  cursor: not-allowed;
+}
+.icons-style {
+  height: 15px;
+  margin-left: 3px;
+  cursor: pointer;
+}
+.edit-icon{
+  cursor: pointer;
+}
+
+.no-data {
+  text-align: center;
+  color: #aaaaaa;
+  padding: 10px;
+}
+
+.editMode {
+  background-color: $color-dark-magenta;
+}
+.nonEditMode {
+  background-color: $color-dark-gray;
+}
+
 .line-numbers,
 .text-area
 {
@@ -440,8 +597,7 @@ transform: rotateY(-50%)
 }
 .service-details-application{
     border-radius: 3px;
-    margin: 0;
-    margin: 0 .8em 0 1.7em;
+    margin-top: 25px;
     flex-grow: 1;
     flex-basis: 0;
     background-color: #ffffff;
@@ -468,6 +624,11 @@ transform: rotateY(-50%)
 #copyapi,
 #copyapilinkdev,
 #copyapilinkprod {
+  opacity: 0;
+  position: absolute;
+  z-index: -100000;
+}
+.copyrolelinkdev {
   opacity: 0;
   position: absolute;
   z-index: -100000;
@@ -679,6 +840,9 @@ transform: rotateY(-50%)
       height: 3rem;
   }
 }
+.loader{
+  top:calc(50% - 7rem) !important
+}
 .valid{
   font-size: .8em;
   margin-bottom: 5px;
@@ -712,6 +876,37 @@ transform: rotateY(-50%)
     box-shadow: 0px 1px 2px 0px rgba(0, 0, 0, 0.1);
 }
 
+.secret-container__edit {
+  position: relative;
+}
+.arn-value__each .tooltip-content {
+  visibility: hidden;
+  width: 200px;
+  background-color: #D5D7D9;
+  color: #4a4a4a;
+  text-align: center;
+  border-radius: 6px;
+  padding: 8px;
+  position: absolute;
+  z-index: 1;
+  left: 16%;
+  margin-left: -75px;
+}
+.arn-value__each .tooltip-content::after {
+  content: "";
+  position: absolute;
+  bottom: 100%;
+  left: 41%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: transparent transparent #D5D7D9 transparent;
+}
+.arn-value__each:hover .tooltip-content{
+  visibility: visible;
+  -webkit-animation: fadeIn 2s;
+  animation: fadeIn 2s;
+}
 .line-numbers {
   background: #f8f8f8;
   color: #c4c4c7;
@@ -835,7 +1030,14 @@ textarea[type="text"] {
 
 .env-details {
   margin: 0;
-  min-height: 60px;
+  li {
+    list-style: none;
+    padding-bottom: 0.8rem;
+    display: flex;
+    &:last-child {
+      padding: 0;
+    }}
+
 }
 
 .parent-div:hover .tooltip {
