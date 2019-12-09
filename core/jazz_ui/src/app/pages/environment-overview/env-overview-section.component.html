@@ -28,13 +28,9 @@
 		</div>
 	</div>
 </div>
-<div class='relative flex-col flex-grow'>
- <div class="row-detail">
-  <div class="col-detail">
-   <div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined && !isLoading && !envResponseError' >
+<div class='service-details row env-details bottom-10' *ngIf='environmnt.endpoint != undefined && !isLoading && !envResponseError' >
 	<ul class=" col-md-12 col-sm-12">
 		<li class='det-wrp'>
-			<!-- *ngIf='service.endpoints.dev != undefined' -->
 			<div class=' det-label align-slf'>
                  <span class='caps'>Endpoint </span>
             </div>
@@ -56,15 +52,14 @@
     </ul>
 </div>
 
-
-<div class="service-details row env-details relative">
+<div class='relative flex-col flex-grow'>
+ <div class="row-detail">
+  <div class="col-detail env-detail-col">
+<div class="row env-details relative">
 	<div *ngIf='envResponseTrue'>
-		<div   class='edit-service-overview-btn'>
-			<!-- <btn-jazz-secondary class='btn-edit-overview' *ngIf='showCancel'  text='CANCEL' (click)='onCancelClick()' ></btn-jazz-secondary> -->
-			<a  *ngIf='showCancel'  (click)='onCancelClick()'>CANCEL</a>
-			<btn-jazz-secondary  class='btn-edit-overview' *ngIf='saveBtn' text='SAVE' [ngClass]="service.status === 'creation started' ? 'non-clickable':''" (click)='onSaveClick()' [disablebtn]='disableEditBtn()'></btn-jazz-secondary>
-			<!-- [style.borders]="edit_save=='SAVE'? 'none':'1px solid'"  -->
-		</div>
+		<div class="secret-container__edit nonEditMode">
+			<div class="secret-container__edit--def"> General</div>
+		 </div>
 		<!-- <br> -->
 		<div class='overview-view' *ngIf="editBtn">
 			<ul class="section-left col-md-6 col-sm-12">
@@ -109,7 +104,7 @@
 					</div>
 				</li>
 			</ul>
-      <ul class="section-right">
+      <ul class="section-left col-md-6 col-sm-12">
         <li class="first-list">
 					<div class="det-label">Branch Name</div>
 					<div class="det-value">{{branchname}}</div>
@@ -255,93 +250,106 @@
 		<div class="icon-icon-nodata"></div>
 		<div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
 	</div>
-	<div class="loading-row" [class.show]="isLoading">
-		<div class="loading-circle"></div>
+	<div class="loading-outer-div" [class.show]="isLoading">
+		<div class="loading-circle loader"></div>
 	</div>
 </div>
 </div>
-<div class="service-details-application relative" *ngIf= "slsapp">
-  <div id="definition-container">
-    <span class="app-label">Application Definition</span>
-    <span class ="parent-div">
-        <span  class="icon-icon-info icon-info-wrap information"></span>
-        <div class="absolute tooltip"><div class='question'>What is this?</div><div>This Application Definition reflects the actual state of your environment. This will get updated whenever there is a successful deployment to this environment with the latest changes to the serverless.yml in your code!</div></div>
-    </span>
+<div class="secret-container relative col-detail" *ngIf="isNotWebsite && tvaultEnabled">
+	<div *ngIf="!isSecretLoading && !isError">
+		<div class="secret-container__edit" [ngClass]="!editEvents? 'editMode':'nonEditMode'">
+			<div class="secret-container__edit--def"> Secret Management <img class="icons-style"
+					src="../../../assets/images/icons/iconmonstr-info-2.svg" /></div>
+			<div class="secret-container__edit--icon">
+				<div *ngIf="editEvents" class="edit-icon">
+					<img class="pre-image" src="/assets/erser/icon-edit.svg" (click)="secretEdiClick()" />
+				</div>
+				<div *ngIf="!editEvents">
+					<button class="cancel-button" (click)="onSecretCancelClick()">CANCEL</button>
+					<button class="save-button" [ngClass]="!isAddOrDelete?'disable-save-button':'enable-save-button'"
+						[disabled]="!isAddOrDelete" (click)='secretSaveClick()'>Save</button>
+				</div>
+			</div>
+		</div>
+		<div class="secret-container__details">
+			<div class="secret-container__details--list" (mouseover)="myFunction()">
+				<div class="no-data" *ngIf="noData">No roles found</div>
+				<div class="arn-value__each" (click)='copyRoleClipboard(firstSafeRole)' *ngIf="!noData">
+					<div class="arn-value__each--arn">{{firstSafeRole}}</div>
+					<div *ngIf="editEvents" class="copy-icon">
+						<span class='relative'>
+							<a><i class="fa fa-clone" [style.fontSize]="iconSize"></i></a>
+							<div class="tooltip-content">
+								<span id="copyPopup">{{copylinkmsg}}</span>
+							</div>
+						</span>
+					</div>
+					<div *ngIf="!editEvents" class="">
+						<img alt="lock" src="../../../assets/images/icons/iconmonstr-lock-4.svg" class="lock-icon" />
+					</div>
+				</div>
+				<textarea id={{firstSafeRole}} class="copyrolelinkdev">{{firstSafeRole}}</textarea>
+				<div class="arn-value" *ngFor="let list of reqArnArray;let i = index">
+					<div class="arn-value__each" (click)='copyRoleClipboard(list)'>
+						<div class="arn-value__each--arn">{{list}}</div>
+						<div *ngIf="editEvents" class="copy-icon">
+							<span class='relative'>
+								<a><i class="fa fa-clone" [style.fontSize]="iconSize"></i></a>
+								<div class="tooltip-content">
+									<span id="copyPopup">{{copylinkmsg}}</span>
+								</div>
+							</span>
+						</div>
+						<div *ngIf="!editEvents" class="delete-group" (click)="onDeleteClick(list,i)">
+							<span class="icon-icon-close"></span>
+						</div>
+					</div>
+					<textarea id={{list}} class="copyrolelinkdev">{{list}}</textarea>
+				</div>
+				<div>
+					<div class="secret__edit" *ngIf="showDisplay">
+						<div class="secret__edit--input">
+							<input name="role" autocomplete="off" type="text" #role="ngModel" id="inputrole" 
+								pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{3,4}$" class="inputClass textForm"
+								placeholder="Role" [(ngModel)]="inputVal" (ngModelChange)="onRoleNameChange(inputVal)"
+								[ngClass]="inValidArn?'errorClass':''"/>
+						</div>
+						<div class="delete-group margin30" (click)="onInputCancelClick()">
+							<span class="icon-icon-close"></span>
+						</div>
+					</div>
+					<div *ngIf="inValidArn" class="error-msg">
+						ARN is invalid
+					</div>
+					<div class="secret-container__details--addrole" *ngIf="!editEvents" (click)="addSecret()">
+						+ Add Role
+					</div>
+				</div>
+			</div>
+			<div class="secret-container__details--desc">These roles will have read access to the secrets. To view or
+				edit secrets in safe: {{tvaultSafeName}} on T-Vault,
+				<a target="_blank" href="http://gitlab191202-tvault-alb-290631268.us-east-1.elb.amazonaws.com">click
+					here.</a>
+			</div>
+		</div>
+	</div>
+	<div class="loading-row" [class.show]="isSecretLoading">
+		<div class="loading-circle secret-loading-circle"></div>
+	</div>
+	<div class="loading-row-cost error-padding" *ngIf="isError && !isSecretLoading">
+		<div class="empty-row with-refresh relative">
+			<div class="icon-icon-server-error">
+				<span class="path1"></span><span class="path2"></span><span class="path3"></span><span
+					class="path4"></span><span class="path5"></span><span class="path6"></span><span
+					class="path7"></span><span class="path8"></span><span class="path9"></span><span
+					class="path10"></span>
+			</div>
+			<div class='oops'>Oops!</div>
+			<div>{{errMessage}}<br><a (click)="refresh()">REFRESH</a> to give it another try.</div>
+		</div>
+	</div>
+</div>
 
-    <div class='edit-service-overview-btn'>
-      <btn-jazz-secondary class='btn-edit-overview' text='VIEW' (click)='showAppDetail = true;'></btn-jazz-secondary>
-    </div>
-    <div>
-      <div class="valid" *ngIf="isCancel">
-        <p class="validation" *ngIf="isvalid">YAML is valid.</p>
-        <p class="invalidation" *ngIf="!isvalid">Oops! Incorrect YAML syntax.</p>
-      </div>
-    </div>
-    <div class="text-area-div"  *ngIf="yaml && !isLoading" >
-      <div class="textbox relative">
-        <div class="line-numbers">
-          <div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
-        </div>
-        <textarea
-          class="text-area"
-          id="yaml"
-          spellcheck="false"
-          [disabled]="true"
-          [ngClass]="{'large': lineNumberCount > 15}"
-          (ngModelChange)="lineNumbers()"
-          [(ngModel)]="yaml"
-          name="yaml">
-          <!-- TODO: Consider debouncing -->
-        </textarea>
-        <div class='copy-element' *ngIf='yaml'>
-          <app-copy-element class="copy-icon" [CopyElement]="yaml" [iconSize]="'15px'"></app-copy-element>
-        </div>
-      </div>
-    </div>
-    <div *ngIf="is_function === true" class ="input-wrapper">
-      <div class="main-div">
-        <div class="div-line">
-          <div class="myservice opac">
-            <p class="parameter">service:</p>
-            <div class="services-name">
-              <p class="service">name:</p>
-              <p class="magenta">{{serviceName}}</p>
-            </div>
-            <div class="services-name">
-              <p class="parameter">frameworkVersion:</p>
-              <p class="magenta">{{version}}</p>
-            </div>
-            <p class="parameter">provider:</p>
-              <div class="services-name">
-                <p class="service">name:</p>
-                <p class="magenta">{{provider}}</p>
-              </div>
-              <div class="services-name">
-                <p class="service">runtime:</p>
-                <p class="magenta">{{runtime}}</p>
-              </div>
-            </div>
-        </div>
-        <div class= "text-line">
-          <div class="text-box">
-            <textarea
-              class="textChange"
-              [disabled]="textarea"
-              (ngModelChange)="textChanged"
-              [(ngModel)]="yaml"
-              id="field"
-              name="yaml"
-              (keyup)='checkYaml()'>
-            </textarea>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <div class="loading-outer-div" *ngIf="isLoading">
-    <div class="loading-circle circle"></div>
-  </div>
-  </div>
 </div>
 
 <div class="separator-row hide"></div>
@@ -428,7 +436,6 @@
 				</li>
 				<li class="overview-item bottom-right">
 					<div class="overview-value">
-						<!-- <img src='assets\images\icons\icon-good@2x.png' height='30px' title='Success' > -->
 						NA
 					</div>
 					<div class="overview-label">
@@ -444,31 +451,118 @@
 		</div>
 	</div>
  </div>
- <div class='app-definition-detail' [class.active]='showAppDetail'>
-	 <div class='app-definition-wrapper flex flex-col height-100'>
-		 <div class='flex flex-between flex-align-center app-heading-wrapper relative'>
-			 <div class='app-heading'>Application Definition</div>
-			 <div class='cross-icon icon-icon-close' (click)='showAppDetail = false;'></div>
-		 </div>
-		 <div class='app-description'>This Application Definition reflects the actual state of your environment. This will get updated whenever there is a successful deployment to this environment with the latest changes to the serverless.yml in your code!
+<div class="service-details-application relative" *ngIf="slsapp">
+	<div id="definition-container">
+		<span class="app-label">Application Definition</span>
+		<span class="parent-div">
+			<span class="icon-icon-info icon-info-wrap information"></span>
+			<div class="absolute tooltip">
+				<div class='question'>What is this?</div>
+				<div>This Application Definition reflects the actual state of your environment. This will get updated
+					whenever there is a successful deployment to this environment with the latest changes to the
+					serverless.yml in your code!</div>
+			</div>
+		</span>
+
+		<div class='edit-service-overview-btn'>
+			<btn-jazz-secondary class='btn-edit-overview' text='VIEW' (click)='showAppDetail = true;'>
+			</btn-jazz-secondary>
 		</div>
-		 <div class='app-definition-content flex-grow height-100'>
-			<div class="main-div height-100 flex-col flex-grow relative">
-					<div class= "text-line flex-col flex-grow">
-						<div class="text-box flex-grow">
-							<div class="line-num radius">
-						<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
-					</div>
-					<textarea class="textChange" spellcheck="false" [disabled]="true"  (ngModelChange)="lineNumbers()"
-					[(ngModel)]="yaml" id="field" name="yaml"></textarea>
+		<div>
+			<div class="valid" *ngIf="isCancel">
+				<p class="validation" *ngIf="isvalid">YAML is valid.</p>
+				<p class="invalidation" *ngIf="!isvalid">Oops! Incorrect YAML syntax.</p>
+			</div>
+		</div>
+		<div class="text-area-div" *ngIf="yaml && !isLoading">
+			<div class="textbox relative">
+				<div class="line-numbers">
+					<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
 				</div>
+				<textarea class="text-area" id="yaml" spellcheck="false" [disabled]="true"
+					[ngClass]="{'large': lineNumberCount > 15}" (ngModelChange)="lineNumbers()" [(ngModel)]="yaml"
+					name="yaml">
+			<!-- TODO: Consider debouncing -->
+		  </textarea>
+				<div class='copy-element' *ngIf='yaml'>
+					<app-copy-element class="copy-icon" [CopyElement]="yaml" [iconSize]="'15px'"></app-copy-element>
+				</div>
+			</div>
+		</div>
+		<div *ngIf="is_function === true" class="input-wrapper">
+			<div class="main-div">
+				<div class="div-line">
+					<div class="myservice opac">
+						<p class="parameter">service:</p>
+						<div class="services-name">
+							<p class="service">name:</p>
+							<p class="magenta">{{serviceName}}</p>
+						</div>
+						<div class="services-name">
+							<p class="parameter">frameworkVersion:</p>
+							<p class="magenta">{{version}}</p>
+						</div>
+						<p class="parameter">provider:</p>
+						<div class="services-name">
+							<p class="service">name:</p>
+							<p class="magenta">{{provider}}</p>
+						</div>
+						<div class="services-name">
+							<p class="service">runtime:</p>
+							<p class="magenta">{{runtime}}</p>
+						</div>
+					</div>
+				</div>
+				<div class="text-line">
+					<div class="text-box">
+						<textarea class="textChange" [disabled]="textarea" (ngModelChange)="textChanged"
+							[(ngModel)]="yaml" id="field" name="yaml" (keyup)='checkYaml()'>
+			  </textarea>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="loading-outer-div" *ngIf="isLoading">
+		<div class="loading-circle circle"></div>
+	</div>
+</div>
+<div class='app-definition-detail' [class.active]='showAppDetail'>
+	<div class='app-definition-wrapper flex flex-col height-100'>
+		<div class='flex flex-between flex-align-center app-heading-wrapper relative'>
+			<div class='app-heading'>Application Definition</div>
+			<div class='cross-icon icon-icon-close' (click)='showAppDetail = false;'></div>
+		</div>
+		<div class='app-description'>This Application Definition reflects the actual state of your environment. This
+			will get updated whenever there is a successful deployment to this environment with the latest changes to
+			the serverless.yml in your code!
+		</div>
+		<div class='app-definition-content flex-grow height-100'>
+			<div class="main-div height-100 flex-col flex-grow relative">
+				<div class="text-line flex-col flex-grow">
+					<div class="text-box flex-grow">
+						<div class="line-num radius">
+							<div *ngFor="let value of lineNumberCount; let i = index">{{i + 1}}</div>
+						</div>
+						<textarea class="textChange" spellcheck="false" [disabled]="true"
+							(ngModelChange)="lineNumbers()" [(ngModel)]="yaml" id="field" name="yaml"></textarea>
+					</div>
 				</div>
 				<div class='copy-element' *ngIf='yaml'>
 					<app-copy-element class="copy-icon" [CopyElement]="yaml" [iconSize]="'15px'"></app-copy-element>
 				</div>
 			</div>
-		 </div>
-	 </div>
- </div>
-<div>
+		</div>
+	</div>
+</div>
+<div class='confirm-overlay' *ngIf='deleteRole' (click)="outSidePopup()">
+	<div class='confirm-overlay-inner-wrap' (click)="$event.stopPropagation()">
+		<a class="icon-icon-close" (click)='outSidePopup()'></a>
+		<div class='overlay-header'>{{confirmationHeader}}</div>
+		<div *ngIf="!isPUTLoading" class='overlay-body'>{{confirmationText}} </div>
+		<div class='overlay-btns'>
+			<btn-jazz-primary text="OK" (click)='onCompleteClick()'></btn-jazz-primary>
+		</div>
+	</div>
+</div>
 <div class='sidebar-overlay' *ngIf='showAppDetail' [class.active]='showAppDetail'></div>

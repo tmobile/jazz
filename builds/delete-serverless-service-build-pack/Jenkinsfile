@@ -3,7 +3,6 @@ import groovy.json.JsonOutput
 import groovy.transform.Field
 import groovy.json.JsonSlurperClassic
 
-// To be replaced as @Field def repo_credential_id = "value" for repo_credential_id, repo_base and repo_core
 @Field def repo_credential_id
 @Field def aws_credential_id
 @Field def region
@@ -13,7 +12,7 @@ import groovy.json.JsonSlurperClassic
 @Field def scm_type
 
 /**
- * The Service delete workflow for service types: API, function & website
+ * Service cleanup workflow
 */
 
 @Field def configModule
@@ -44,7 +43,7 @@ import groovy.json.JsonSlurperClassic
 
 node {
   try {
-		echo "Starting delete service job with params: $params"
+		echo "Starting delete service workflow with params: $params"
 
 		jazzBuildModuleURL = getBuildModuleUrl()
 		loadBuildModules(jazzBuildModuleURL)
@@ -52,7 +51,6 @@ node {
 		def version
 		def repo_name
 		def tracking_id
-		def cloudfrontEnabled
 		def flowType
 		def service_id = params.db_service_id
 		def environmentIds = []
@@ -80,9 +78,7 @@ node {
 		auth_token = getAuthToken()
 
 		stage("Initialization") {
-			if (params.domain && params.domain != "") {
-				repo_name = params.domain + "_" + params.service_name
-			}
+			repo_name = params.domain + "_" + params.service_name
 			sh 'rm -rf ' + repo_name
 			sh 'mkdir ' + repo_name
 
@@ -120,9 +116,7 @@ node {
 
 			if(service_config['provider'] == 'aws'){
 				service_config.credentialId = accountInfo.CREDENTIAL_ID
-			}
-			if(service_config['provider'] == 'aws'){
-				lambdaEvents.setServiceConfig(service_config)
+        lambdaEvents.setServiceConfig(service_config)
 			}
 			environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 			def environmentList = environmentMetadataLoader.getEnvironmentLogicalIds()
@@ -152,26 +146,20 @@ node {
 				vaultUtilityModule.initialize(configLoader, service_config, g_base_url, auth_token, null, events, utilModule)      
 			}
 
-
 			dir(repo_name){
 				if (fileExists('build.api')) {
 					flowType = "API"
 					loadServerlessConfig()
 					updateSwaggerConfig()
-				} else if (fileExists('build.lambda') || fileExists('build.function')) {
+				} else if (fileExists('build.function')) {
 					flowType = "FUNCTION"
 					loadServerlessConfig()
 				} else if (fileExists('build.website')) {
 					flowType = "WEBSITE"
-					if (service_config['create_cloudfront_url']) {
-						cloudfrontEnabled = service_config['create_cloudfront_url'].trim()
-					} else {
-						cloudfrontEnabled = "false"
-					}
 				} else if(fileExists('build.slsapp')) {
 					flowType = "SLSAPP"
 				} else {
-					error "Invalid project configuration"
+					error "Invalid project configuration, no marker file found in the repository"
 				}
 			}
 		}
@@ -328,10 +316,7 @@ node {
 									}
 									events.setEnvironment(_envId)
 									events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-									cloudfrontEnabled = "true"  //TODO: Remove when non-cloudFront websites feature is introduced.
-									if (cloudfrontEnabled == "true") {
-										cleanupCloudFrontDistribution(_envId)
-									}
+                                    cleanupCloudFrontDistribution(_envId)
 									unDeployWebsite(_envId)
 									archiveAssetDetails(_envId)
 									events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)

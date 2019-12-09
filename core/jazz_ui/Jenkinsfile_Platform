@@ -169,7 +169,12 @@ node ()  {
         else sh "sed -i 's/{slack_support}/false/g' ./src/environments/environment.oss.ts";
 
         sh "sed -i s!{swagger_editor}!${config_loader.JAZZ.SWAGGER.EDITOR_URL}!g ./src/environments/environment.oss.ts"
-
+        /* If tvault extension is present, then UI will support tvault related components*/
+        if(config_loader.TVAULT && config_loader.TVAULT.IS_ENABLED instanceof Boolean && config_loader.TVAULT.IS_ENABLED){
+          sh "sed -i s!{tvault_enabled}!${config_loader.TVAULT.IS_ENABLED}!g ./src/environments/environment.oss.ts"
+        } else {
+           sh "sed -i 's/{tvault_enabled}/false/g' ./src/environments/environment.oss.ts"
+        }
         /* If Azure extension is present, then UI will support azure related components*/
         if(config_loader.AZURE && config_loader.AZURE.IS_ENABLED instanceof Boolean && config_loader.AZURE.IS_ENABLED){
           sh "sed -i 's/{azure_enabled}/${config_loader.AZURE.IS_ENABLED}/g' ./src/environments/environment.oss.ts"
