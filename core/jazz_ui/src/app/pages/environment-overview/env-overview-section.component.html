@@ -258,8 +258,15 @@
 <div class="secret-container relative col-detail" *ngIf="isNotWebsite && tvaultEnabled">
 	<div *ngIf="!isSecretLoading && !isError">
 		<div class="secret-container__edit" [ngClass]="!editEvents? 'editMode':'nonEditMode'">
-			<div class="secret-container__edit--def"> Secret Management <img class="icons-style"
-					src="../../../assets/images/icons/iconmonstr-info-2.svg" /></div>
+			<div class="secret-container__edit--def"> Secret Management 
+				<div class="info-tooltip">
+					<img class="icons-style"
+						 src="../../../assets/images/icons/iconmonstr-info-2.svg" />
+						<div class="tooltip-content">
+							<span id="copyPopup">User can manage access to safe through these roles. Click <a><i class="fa fa-clone" [style.fontSize]="iconSize"></i></a> to copy role</span>
+						</div>
+				</div>
+			</div>
 			<div class="secret-container__edit--icon">
 				<div *ngIf="editEvents" class="edit-icon">
 					<img class="pre-image" src="/assets/erser/icon-edit.svg" (click)="secretEdiClick()" />
