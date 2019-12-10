@@ -156,7 +156,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.sectionStatus = 'loading';
-
     if (!this.activatedRoute.snapshot.params['env']) {
       return (this.getEnvironments() && this.getAssetType())
         .then(() => {
@@ -189,6 +188,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     }
     this.setPeriodFilters();
   }
+
   setPeriodFilters() {
     if (this.service.deployment_targets === 'gcp_apigee') {
       const periodFilterIndex = this.formFields.findIndex(formField => formField.label === 'PERIOD');
@@ -557,6 +557,12 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         this.assetSelected = changedFilter.selected.replace(/ /g, "_");
         if (this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1) {
         this.setAssetName(this.assetsNameArray,this.assetSelected);
+        } else {
+          let index = this.findIndexOfObjectWithKey(this.formFields, 'label', 'ASSET NAME');
+          if (index > -1) {
+            this.formFields.splice(index, 1);
+            this.filters.setFields(this.formFields);
+          }
         }
       }
       if (changedFilter.label === 'ASSET NAME') {
@@ -579,31 +585,30 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
 
     }
-
     if (changedFilter && (changedFilter.label === 'ASSET' ||
       changedFilter.label === 'METHOD' ||
       changedFilter.label === 'PATH' || changedFilter.label === 'ASSET NAME')) {
       this.setAsset();
-    } else {
+    } else if(changedFilter && changedFilter.label !== 'TIME RANGE' || changedFilter === undefined) {
       return this.queryMetricsData();
-    }
-
+    } 
   }
 
   massageDateTime(){
     let endTimeValue;
+    let endTimeMins:any;
     let startTime = this.filters.getFieldValueOfLabel('TIME RANGE').range;
     let endTime = moment().toISOString();
     let startTimeMins = startTime.split('.');
     startTimeMins = startTimeMins[0];
-    let endTimeString = endTime.split('.');
-    endTime = endTimeString[0];
     startTimeMins = new Date(startTimeMins).getMinutes();
-    let endTimeMins = new Date(endTime).getMinutes();
+    endTimeMins = endTime.split('.');
+    endTimeMins = endTimeMins[0];
+    endTimeMins = new Date(endTimeMins).getMinutes();
     if((endTimeMins - startTimeMins) > 0){
       endTimeValue = endTime.split('T');
       endTimeValue = endTimeValue[0] + 'T';
-      let startTimeMoment = startTime.split('T');
+      let startTimeMoment = endTime.split('T');
       endTimeValue = endTimeValue + startTimeMoment[1];
     } else {
       endTimeValue = moment().toISOString();
