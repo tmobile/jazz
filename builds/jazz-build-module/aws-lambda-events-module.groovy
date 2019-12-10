@@ -55,24 +55,6 @@ def updateKinesisResourceServerless(event_stream_arn){
   sh  "sed -i -- 's/#ResourceKinesisDisabled/Resource/g' ./policyFile.yml"
 }
 
-def getRoleArn(role_name, credsId) {
-  def role_arn
-  try {
-    def response = sh(
-      script: "aws iam get-role --role-name ${role_name} --profile ${credsId} --output json",
-      returnStdout: true
-    ).trim()
-    def mappings = parseJson(response)
-    echo "role details : $mappings "
-    if(mappings.Role){
-      role_arn = mappings.Role.Arn
-    }
-    return role_arn
-  } catch (ex) {
-    echo "Error occured while describing the role details: " + ex.getMessage()
-  }
-}
-
 def checkSqsQueueExists(queueName, credsId) {
   try {
     sh "aws sqs get-queue-url --queue-name $queueName --profile ${credsId} --output json"
