@@ -10,12 +10,14 @@
   "scripts": {
     "test": "mocha"
   },
-  "dependencies": {    
+  "dependencies": {
     "unicode-byte-truncate": "*",
-    "request": "*"
+    "request": "*",
+    "uuid": "*"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.2.1",
+    "aws-sdk": "*",
     "sinon": "^6.3.4",
     "chai": "^3.5.0",
     "mocha": "^v3.0.0"
