@@ -22,7 +22,7 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
   return new Promise((resolve, reject) => {
     try {
       if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
-        logger.info("T-valt is not enabled. So not creating safe.");
+        logger.info("T-vault is not enabled. So not creating safe.");
         return resolve({
           "error": "T-vault is not enabled",
         });

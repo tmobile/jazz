@@ -176,6 +176,7 @@ node() {
         }
         events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
       }
+
       stage('Install Plugins') {
         events.sendStartedEvent('INSTALL_PLUGINS', 'Plugin Installation started', context_map, environment_logical_id)
         try {
@@ -190,7 +191,7 @@ node() {
 
       }
 
-      if (config['domain'] && config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
+      if (config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
         stage('Code Quality Check') {
           events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
           try {
@@ -330,106 +331,134 @@ node() {
         withCredentials([
           [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
         ]) {
-          try {
-            // initialize aws credentials
-            def randomString = utilModule.generateRequestId();
-            credsId = "jazz-${randomString}";
-            sh "aws configure set profile.${credsId}.region ${config.region}"
-            sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-            sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-
-            // Generate serverless yml file with domain added in function name
-            echo "Generate deployment env with domain"
-
-            def envBucketKey = "${env_key}"
-            echoServerlessFile()
-            def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
-            // After stack Deployment
-
-            createAssetForHttpEvents(deployOutput)
-
-            def describeResources = getStackResources(environment_logical_id, credsId)
-            def resources = describeResources['StackResources']
-            if( resources != null ) {
-              def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
-              for( resource in resources ) {
-                def resourceType = resource['ResourceType']
-                if( whiteListModule.checkAssetType(resourceType)){
-                  def arn = constructArn(resource['PhysicalResourceId'], resourceType)
-                  if(arn.startsWith('arn')) {
-                    def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
-                    if(arnAsArray.size() > 2) { // Making sure that the third element exists
-                      def artifactType = arnAsArray[2]
-                      if (assetCatalogTypes[artifactType] == 'lambda') lambdaArns.add(arn)
-                      events.sendCompletedEvent('CREATE_ASSET',
-                                                null,
-                                                utilModule.generateAssetMap("aws",
-                                                                            arn,
-                                                                            assetCatalogTypes[artifactType],
-                                                                            config),
-                                                environment_logical_id)
-                    }
-                  }
-                }
-              }
-            }
-            //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
-            send_status_email('COMPLETED', '')
-          } catch (ex) {
-            send_status_email('FAILED', '')
-            events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
-            events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-            events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
-            error ex.getMessage()
-          } finally {
-            // reset Credentials
-            resetCredentials(credsId)
-          }
-
-          def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
-          def deployment_descriptor = readFile("./serverless.yml")
-          events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null, deployment_descriptor), environment_logical_id)
-          events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion Event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
-          events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)
-
-        } //end of withCredentials
-      } //end of deployment to an environment
-
-      //Udating safe details
-      if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
-        stage('Update Safe') {
-          events.sendStartedEvent('UPDATE_SAFE', 'safe updation started', context_map, environment_logical_id)
-          withCredentials([
-          [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
             try {
               // initialize aws credentials
               def randomString = utilModule.generateRequestId();
               credsId = "jazz-${randomString}";
-              sh "aws configure set profile.${credsId}.region ${service_config.region}"
+              sh "aws configure set profile.${credsId}.region ${config.region}"
               sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
               sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-          
-              def environment = environmentDeploymentMetadata.getEnvironmentInfo()
-              if (environment && environment.metadata && environment.metadata.safe) {
-                def safeName = environment.metadata.safe.name
-                vaultUtilityModule.updateCustomServicesSafeDetails(safeName, lambdaArns, credsId)                
+
+              // Generate serverless yml file with domain added in function name
+              echo "Generate deployment env with domain"
+
+              def envBucketKey = "${env_key}"
+              echoServerlessFile()
+              def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
+              // After stack Deployment
+
+              createAssetForHttpEvents(deployOutput)
+              attachTagstoLogGroup(config, environment_logical_id, credsId)
+
+              def describeResources = getStackResources(environment_logical_id, credsId)
+              def resources = describeResources['StackResources']
+              if( resources != null ) {
+                def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
+                for( resource in resources ) {
+                  def resourceType = resource['ResourceType']
+                  if( whiteListModule.checkAssetType(resourceType)){
+                    def arn = constructArn(resource['PhysicalResourceId'], resourceType)
+                    if(arn.startsWith('arn')) {
+                      def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
+                      if(arnAsArray.size() > 2) { // Making sure that the third element exists
+                        def artifactType = arnAsArray[2]
+                        if (assetCatalogTypes[artifactType] == 'lambda') lambdaArns.add(arn)
+                        events.sendCompletedEvent('CREATE_ASSET',
+                                                  null,
+                                                  utilModule.generateAssetMap("aws",
+                                                                              arn,
+                                                                              assetCatalogTypes[artifactType],
+                                                                              config),
+                                                  environment_logical_id)
+                      }
+                    }
+                  }
+                }
               }
-              events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
+              //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
+              send_status_email('COMPLETED', '')
             } catch (ex) {
-              events.sendFailureEvent('UPDATE_SAFE', ex.getMessage(), context_map, environment_logical_id)
+              send_status_email('FAILED', '')
+              events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
+              events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+              events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
               error ex.getMessage()
             } finally {
+              // reset Credentials
               resetCredentials(credsId)
-            }              
-          }
-        } //End of stage
-      } // End of if
-    }
+            }
+
+            def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
+            def deployment_descriptor = readFile("./serverless.yml")
+            events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null, deployment_descriptor), environment_logical_id)
+            events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion Event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
+            events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)
+
+          } //end of withCredentials
+        } //end of deployment to an environment
+
+        //Udating safe details
+        if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+          stage('Update Safe') {
+            events.sendStartedEvent('UPDATE_SAFE', 'safe updation started', context_map, environment_logical_id)
+            withCredentials([
+            [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+              try {
+                // initialize aws credentials
+                def randomString = utilModule.generateRequestId();
+                credsId = "jazz-${randomString}";
+                sh "aws configure set profile.${credsId}.region ${config.region}"
+                sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+                sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+            
+                def environment = environmentDeploymentMetadata.getEnvironmentInfo()
+                if (environment && environment.metadata && environment.metadata.safe) {
+                  def safeName = environment.metadata.safe.name
+                  vaultUtilityModule.updateCustomServicesSafeDetails(safeName, lambdaArns, credsId)                
+                }
+                events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
+              } catch (ex) {
+                events.sendFailureEvent('UPDATE_SAFE', ex.getMessage(), context_map, environment_logical_id)
+                error ex.getMessage()
+              } finally {
+                resetCredentials(credsId)
+              }              
+            }
+          } //End of stage
+        } // End of if
+      }
   } catch (err) {
     throw err
   } finally {
     deleteDir()
   }
+}
+
+def attachTagstoLogGroup(config, environment_logical_id, credsId){
+  try {
+    def deploymentDescriptor = null
+    if( env_deployment_descriptor != null ){
+      deploymentDescriptor = env_deployment_descriptor
+    } else {
+      deploymentDescriptor = config['deployment_descriptor']
+    }
+    // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harmful as Map not String is expected below
+    def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:]
+    def functionsElem = doc['functions']
+
+    // changing variable names appropriately
+    def serviceDomain = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}"
+    functionsElem.each{functionName, funcConfig ->
+      def lambdaName = funcConfig['name'] ? funcConfig['name'] : "${serviceDomain}_${functionName}_${environment_logical_id}"
+      def logGroupName = "/aws/lambda/${lambdaName}"
+      def serviceName = config['service']
+      def namespace = config['domain']
+      def environment = environment_logical_id
+      sh "aws logs tag-log-group --log-group-name ${logGroupName} --tags '{\"service\":\"${serviceName}\", \"namespace\":\"${namespace}\", \"environment\":\"${environment}\", \"functionName\":\"${lambdaName}\"}' --profile ${credsId}"
+    }
+  } catch (Exception ex) {
+    echo "Error occured while attaching tags to logGroup: ${ex.message}"
+  } 
 }
 
 def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, config, credsId){
@@ -589,16 +618,16 @@ def LoadConfiguration() {
 def buildSlsApp(String runtime, String repo_name) {
   echo "installing dependencies for $runtime"
   if (runtime.indexOf("nodejs") > -1) {
-		sh "npm install --save"
-	} else if (runtime.indexOf("java") > -1) {
-		sh "mvn package"
-	} else if (runtime.indexOf("python") > -1) {
-		// install requirements.txt in library folder, these python modules will be a part of deployment package
-		sh "rm -rf library"
-		sh "mkdir library"
+    sh "npm install --save"
+  } else if (runtime.indexOf("java") > -1) {
+    sh "mvn package"
+  } else if (runtime.indexOf("python") > -1) {
+    // install requirements.txt in library folder, these python modules will be a part of deployment package
+    sh "rm -rf library"
+    sh "mkdir library"
     //Installing dependencies
-		sh "pip install -r requirements.txt -t library"
-		sh "touch library/__init__.py"
+    sh "pip install -r requirements.txt -t library"
+    sh "touch library/__init__.py"
     if (runtime == 'python3.6') {
       // create virtual environment and install pytest
       sh """
@@ -617,7 +646,7 @@ def buildSlsApp(String runtime, String repo_name) {
       pytest --pyargs functions/*
       """
     }
-	} else if (runtime.indexOf("go") > -1 ) {
+  } else if (runtime.indexOf("go") > -1 ) {
     // Installing dependencies using dep ensure
     // golang build scripts
    	withEnv(["GOPATH=${env.WORKSPACE}"]) {
@@ -652,45 +681,35 @@ def resetCredentials(credsId) {
 	missing.
 */
 def validateDeploymentConfigurations(def prop) {
-	if (prop.containsKey("service")) {
-		if (prop['service'] == "") {
-			error "Wrong configuration. Value for Key 'service' is missing in the configuration"
-		}
-	} else {
-		error "Wrong configuration. Key 'service' is missing in the configuration"
-	}
-	if (prop.containsKey("providerRuntime")) {
-		def _runtime = prop['providerRuntime']
-		if (_runtime == "") {
-			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
-		} else {
-			def validRuntimes = ["nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x"]
-			def flag = false
+  if (prop.containsKey("service")) {
+    if (prop['service'] == "") {
+      error "Wrong configuration. Value for Key 'service' is missing in the configuration"
+    }
+  } else {
+    error "Wrong configuration. Key 'service' is missing in the configuration"
+  }
+  if (prop.containsKey("providerRuntime")) {
+    def _runtime = prop['providerRuntime']
+    if (_runtime == "") {
+      error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
+    } else {
+      def validRuntimes = ["nodejs8.10", "nodejs10.x", "python3.6", "java8", "go1.x"]
+      def flag = false
 
-			for (int i = 0; i < validRuntimes.size(); i++) {
-				if (_runtime == validRuntimes[i]) {
-					flag = true
-				}
-			}
+      for (int i = 0; i < validRuntimes.size(); i++) {
+        if (_runtime == validRuntimes[i]) {
+          flag = true
+        }
+      }
 
-			if (!flag) {
-				echo "$flag"
-				error "Runtime given in the configuration is not valid."
-			}
-		}
-	} else {
-		error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
-	}
-	if (prop.containsKey("providerTimeout")) {
-		if (prop['providerTimeout'] == "") {
-			error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
-		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
-			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
-		}
-	} else {
-		error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
-	}
-
+      if (!flag) {
+        echo "$flag"
+        error "Runtime given in the configuration is not valid."
+      }
+    }
+  } else {
+    error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
+  }
 }
 
 def installServerlessPlugins(){
@@ -748,102 +767,6 @@ def echoServiceInfo(String env, String envBucketKey) {
 }
 
 /**
-	Create the subscription filters and loggroup if not existing
-**/
-
-def createSubscriptionFilters(config, accountDetails, env_key, credsId) {
-  def deploymentDescriptor = null
-  if( env_deployment_descriptor != null ){
-    deploymentDescriptor = env_deployment_descriptor
-  } else {
-    deploymentDescriptor = config['deployment_descriptor']
-  }
-   // If no descriptor present then simply making an empty one. The readYaml default behavior is to return empty string back that is harmful as Map not String is expected below
-  def doc = deploymentDescriptor ? readYaml(text: deploymentDescriptor) : [:]
-  def functionsElem = doc['functions']
-  // changing variable names appropriately
-  def serviceDomain = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}"
-  functionsElem.each{functionName, funcConfig ->
-    def lambdaName = funcConfig['name'] ? funcConfig['name'] : "${serviceDomain}-FN_${functionName}-${environment_logical_id}"
-    def logGroupName = "/aws/lambda/${lambdaName}"
-    def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
-
-    try {
-      sh "aws logs create-log-group --log-group-name ${logGroupName} --region ${config.region} --profile ${credsId}"
-    } catch (Exception ex) { } // ignore if already existing
-
-    try {
-      filter_json = sh(
-        script: "aws logs describe-subscription-filters --output json --log-group-name \"${logGroupName}\" --profile ${credsId} --region ${config.region}",
-        returnStdout: true
-      ).trim()
-      echo "${filter_json}"
-      def resultJson = parseJson(filter_json)
-      filtername = resultJson.subscriptionFilters[0].filterName
-      echo "removing existing filter... $filtername"
-      if (filtername != "" && !filtername.equals(logGroupName)) {
-        sh "aws logs delete-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${filtername}\"  --profile ${credsId} --region ${config.region}"
-      }
-    } catch (Exception ex) { } // ignore error if not created yet
-    try {
-      def destLogStreamArn = configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == config.accountId}.PRIMARY ? logStreamer : 
-                            accountDetails.REGIONS.find{it.REGION == config.region}.LOGS.PROD
-      def isPrimaryAccount = configLoader.AWS.ACCOUNTS.find{ it.ACCOUNTID == config.accountId}.PRIMARY ? true : false
-
-       if(!isPrimaryAccount){
-          updatePolicy(env_key, destLogStreamArn);
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${destLogStreamArn}\"  --profile ${credsId} --region ${config.region}"
-        } else {
-          sh "aws logs put-subscription-filter --output json --log-group-name \"${logGroupName}\" --filter-name \"${logGroupName}\" --filter-pattern \"\" --destination-arn \"${destLogStreamArn}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId} --region ${config.region}"
-        }
-
-    } catch (Exception ex) {
-      echo "error occured: " + ex.getMessage()
-    }
-  }
-}
-
-def updatePolicy(env, destARN){
-  def primaryData = utilModule.getAccountInfoPrimary();
-  def primaryRegion
-  for (item in primaryData.REGIONS) {
-		if(item.PRIMARY){
-			primaryRegion = item.REGION
-		}
-	}
-  def primaryCredsId = null
-
-	withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'PRIMARY_AWS_ACCESS_KEY_ID', credentialsId: primaryData.CREDENTIAL_ID, secretKeyVariable: 'PRIMARY_AWS_SECRET_ACCESS_KEY']])  {
-		try {
-			 // initialize aws credentials
-			 def randomStringPrimary = utilModule.generateRequestId();
-			 primaryCredsId = "jazzprimary-${randomStringPrimary}";
-
-			 sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
-			 sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
-			 sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
-
-			 def destinationName = destARN;
-			 def destArnArray = [];
-			 destArnArray = destinationName.tokenize(":").last();
-
-			 def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
-			 sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${config['region']} --profile ${primaryCredsId}"
-		} catch(ex){
-			send_status_email('FAILED', '')
-			events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
-			events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-			events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
-			error ex.getMessage()
-		} finally {
-			// reset Credentials
-			resetCredentials(primaryCredsId)
-		}
-  }
-}
-
-
-/**
  * For getting token to access catalog APIs.
  * Must be a service account which has access to all services
  */
@@ -867,9 +790,9 @@ def setCredentials() {
 
     try {
       token = sh(script: "curl --silent -X POST -k -v \
-				-H \"Content-Type: application/json\" \
-					$loginUrl \
-				-d \'${payload}\'", returnStdout: true).trim()
+        -H \"Content-Type: application/json\" \
+          $loginUrl \
+        -d \'${payload}\'", returnStdout: true).trim()
 
       def tokenJson = parseJson(token)
       tokenJson_token = tokenJson.data.token
@@ -889,35 +812,35 @@ def setCredentials() {
  */
 def send_status_email (build_status, email_content) {
   echo "Sending build notification to ${config['created_by']}"
-	// TODO: Use this to make the notification look better?
-	def body_html = ''
-	def body_subject = "[Jazz Build Notification] Deployment ${build_status} for your service: ${config['service']}"
-	def body_text =  'View the complete build log here: ' + env.BUILD_URL + 'console'
-  	if (email_content != '') {
-    	body_text = email_content + '\n\n' + body_text
-	}
-	body = JsonOutput.toJson([
-		from: 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>',
-		to: config['created_by'],
-		subject: body_subject,
-		text: body_text,
-		bcc: configLoader.JAZZ.STACK_ADMIN,
-		html: body_html
-	])
+  // TODO: Use this to make the notification look better?
+  def body_html = ''
+  def body_subject = "[Jazz Build Notification] Deployment ${build_status} for your service: ${config['service']}"
+  def body_text =  'View the complete build log here: ' + env.BUILD_URL + 'console'
+  if (email_content != '') {
+    body_text = email_content + '\n\n' + body_text
+  }
+  body = JsonOutput.toJson([
+    from: 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>',
+    to: config['created_by'],
+    subject: body_subject,
+    text: body_text,
+    bcc: configLoader.JAZZ.STACK_ADMIN,
+    html: body_html
+  ])
 
-	try {
-		def sendMail = sh(script: "curl -X POST \
-						${g_base_url}/jazz/email \
-						-k -v -H \"Authorization: $auth_token\" \
-						-H \"Content-Type: application/json\" \
-						-d \'${body}\'", returnStdout: true).trim()
-    	def responseJSON = parseJson(sendMail)
-		if (responseJSON.data) {
-			echo "successfully sent e-mail to ${config['created_by']}"
-		} else {
-			echo "exception occured while sending e-mail: $responseJSON"
-		}
-	} catch (e) {
+  try {
+    def sendMail = sh(script: "curl -X POST \
+            ${g_base_url}/jazz/email \
+            -k -v -H \"Authorization: $auth_token\" \
+            -H \"Content-Type: application/json\" \
+            -d \'${body}\'", returnStdout: true).trim()
+      def responseJSON = parseJson(sendMail)
+    if (responseJSON.data) {
+      echo "successfully sent e-mail to ${config['created_by']}"
+    } else {
+      echo "exception occured while sending e-mail: $responseJSON"
+    }
+  } catch (e) {
     echo "Failed while sending build status notification  " + e.toString()
   }
 }
@@ -930,7 +853,7 @@ def send_status_email (build_status, email_content) {
 def getEventsArn(config, env) {
   def eventsArn = []
   try {
-    def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}"
+    def lambdaFnName = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${env}"
     def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${config['region']} --function-name $lambdaFnName --output json --profile ${credsId}", returnStdout: true)
 
     def policyLists = null
@@ -1012,8 +935,8 @@ def loadBuildModules(buildModuleUrl) {
       ]])
 
     configModule = load "config-loader.groovy"
-		configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
-		echo "config loader loaded successfully."
+    configLoader = configModule.loadConfigData(aws_credential_id, region, instance_prefix)
+    echo "config loader loaded successfully."
 
     scmModule = load "scm-module.groovy"
     scmModule.initialize(configLoader)

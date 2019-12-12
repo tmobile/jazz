@@ -31,7 +31,7 @@ custom:
 
 functions:
   handler:
-    name: ${self:service}-${self:custom.myStage}
+    name: ${functionName}
     handler: index.handler
     role: ${file(deployment-env.yml):iamRoleARN}
     description: ${self:service} Lambda Function

@@ -42,7 +42,7 @@ import groovy.json.JsonSlurperClassic
 @Field def accountInfo;
 
 node {
-  try {
+	try {
 		echo "Starting delete service workflow with params: $params"
 
 		jazzBuildModuleURL = getBuildModuleUrl()
@@ -116,7 +116,7 @@ node {
 
 			if(service_config['provider'] == 'aws'){
 				service_config.credentialId = accountInfo.CREDENTIAL_ID
-        lambdaEvents.setServiceConfig(service_config)
+				lambdaEvents.setServiceConfig(service_config)
 			}
 			environmentMetadataLoader.initialize(service_config, configLoader, scmModule, null, env.BUILD_URL, env.BUILD_ID, g_base_url + "/jazz/environments", auth_token)
 			def environmentList = environmentMetadataLoader.getEnvironmentLogicalIds()
@@ -316,7 +316,7 @@ node {
 									}
 									events.setEnvironment(_envId)
 									events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
-                                    cleanupCloudFrontDistribution(_envId)
+									cleanupCloudFrontDistribution(_envId)
 									unDeployWebsite(_envId)
 									archiveAssetDetails(_envId)
 									events.sendCompletedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " completed", null, _envId)
@@ -417,7 +417,7 @@ def cleanupEventSourceMapping(env) {
 			sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
 			sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
 
-			def lambda_arn = "arn:aws:lambda:${service_config['region']}:${service_config.accountId}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${env}"
+			def lambda_arn = "arn:aws:lambda:${service_config['region']}:${service_config.accountId}:function:${configLoader.INSTANCE_PREFIX}_${service_config['domain']}_${service_config['service']}_${env}"
 			def assets_api = g_base_url + "/jazz/assets"
 			lambdaEvents.deleteEventSourceMapping(lambda_arn, assets_api, auth_token,service_config, env,credsId)
 		} catch(ex) {
@@ -719,7 +719,7 @@ def updateSwaggerConfig() {
 			def accountObject = utilModule.getAccountInfo(service_config)
 			def roleARN = accountObject.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
 
-		// TODO: the below couple of statements will be replaced with regular expression in very near future;
+			// TODO: the below couple of statements will be replaced with regular expression in very near future;
 			def roleId = roleARN.substring(roleARN.indexOf("::") + 2, roleARN.lastIndexOf(":"))
 
 			sh "sed -i -- 's/{conf-role}/${roleARN}/g' ./swagger/swagger.json"
@@ -1055,10 +1055,10 @@ def cleanupS3BucketPolicy(stage, assetInfo) {
  */
 def resetCredentials(credsId) {
 	echo "resetting AWS credentials"
-  def credPath = System.getenv().HOME + "/.aws/credentials"
-  def confPath = System.getenv().HOME + "/.aws/config"
-  sh "sed -i '/${credsId}/,+2d' ${credPath}"
-  sh "sed -i '/${credsId}/,+1d' ${confPath}"
+	def credPath = System.getenv().HOME + "/.aws/credentials"
+	def confPath = System.getenv().HOME + "/.aws/config"
+	sh "sed -i '/${credsId}/,+2d' ${credPath}"
+	sh "sed -i '/${credsId}/,+1d' ${confPath}"
 }
 @NonCPS
 def updateBucketPolicy(policy_json, bucketName){
@@ -1157,7 +1157,6 @@ def getDistributionConfig(distributionID) {
 	} catch (ex) {
 		handleFailureEvent(ex.getMessage())
 	}
-
 }
 
 /**

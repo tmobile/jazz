@@ -74,10 +74,14 @@ module.exports = (query, servicesList, onComplete) => {
           };
         });
       } else if (query[key]) {
-        filter = filter + `contains(${key_name}, :${key_name})` + insertAnd;
-        attributeValues[(":" + key_name)] = {
-          'S': query[key]
-        };
+          if (query['isSearch']) {
+            filter = filter + `contains(${key_name}, :${key_name})` + insertAnd;
+          } else {
+            filter = filter + `${key_name} = :${key_name}` + insertAnd;
+          }
+          attributeValues[(":" + key_name)] = {
+            'S': query[key]
+          };
       }
     });
   }

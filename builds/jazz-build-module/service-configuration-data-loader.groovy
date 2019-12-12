@@ -199,8 +199,10 @@ def loadServiceConfigurationData() {
       updateConfigValue("{conf-region}", region)
       updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
       updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
-      updateConfigValue("{tvault-enabled}", config_loader.TVAULT.IS_ENABLED)
       updateConfigValue("{tvault-host-name}", config_loader.TVAULT.HOSTNAME)
+      sh "sed -i -- 's#\"{tvault-enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/dev-config.json"
+      sh "sed -i -- 's#\"{tvault-enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/stg-config.json"
+      sh "sed -i -- 's#\"{tvault-enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/prod-config.json"
     }
 
     if (service_name.trim() == "jazz_asset-event-handler") {
@@ -292,6 +294,13 @@ def loadServiceConfigurationData() {
 
     if ((service_name.trim() == "jazz_es-kinesis-log-streamer")) {
       sh "sed -i -- 's|{stack_prefix}|${config_loader.INSTANCE_PREFIX}|g' ./config/global_config.json"
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
+      updateConfigValue("{conf-region}", region)
+
+      sh "sed -i -- 's/{conf-apikey}/${getApigatewayInfoCore('jazz','DEV')}/g' ./config/dev-config.json"
+      sh "sed -i -- 's/{conf-apikey}/${getApigatewayInfoCore('jazz','STG')}/g' ./config/stg-config.json"
+      sh "sed -i -- 's/{conf-apikey}/${getApigatewayInfoCore('jazz','PROD')}/g' ./config/prod-config.json"
     }
 
     if (service_name.trim() == "jazz_splunk-kinesis-log-streamer") {
@@ -475,7 +484,7 @@ def setKinesisStream(config){
 }
 
 def setEventSourceMapping(eventSourceArn, config) {
-  def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
+  def function_name = "${config_loader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${current_environment}"
   def event_source_list = sh(
     script: "aws lambda list-event-source-mappings --query \"EventSourceMappings[?contains(FunctionArn, '$function_name')]\" --region \"$region\"",
     returnStdout: true
@@ -488,7 +497,7 @@ def setEventSourceMapping(eventSourceArn, config) {
 
 def setLogStreamPermission(config){
   if (config['service'] == "cloud-logs-streamer") {
-    def function_name = "${config_loader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${current_environment}"
+    def function_name = "${config_loader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${current_environment}"
     echo "set permission for cloud-logs-streamer"
     try {
       def rd = sh(script: "openssl rand -hex 4", returnStdout: true).trim()

@@ -33,6 +33,8 @@ var processedEvents = [];
 var failedEvents = [];
 
 function handler(event, context, cb) {
+  logger.init(event, context);
+  
   var configData = config(context);
 
   rp(exportable.getTokenRequest(configData))

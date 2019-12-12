@@ -13,10 +13,12 @@
   },
   "dependencies": {
     "unicode-byte-truncate": "*",
-    "request": "*"
+    "request": "*",
+    "uuid": "*"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.2.1",
+    "aws-sdk": "*",
     "sinon": "^6.3.4",
     "chai": "^3.5.0",
     "nyc": "^13.3.0",
