@@ -157,8 +157,8 @@ export class EnvAssetsSectionComponent {
         this.envResponseEmpty = false;
         this.isLoading = false;
 
-        this.envResponseTrue = true;
-        this.length = response.data.assets.length;
+		this.envResponseTrue = true;
+		this.length = res.length;
         for(var i=0; i < this.length ; i++){
 			this.type[i] = {
 				'key': res[i].asset_type,
@@ -348,6 +348,20 @@ export class EnvAssetsSectionComponent {
 	}
 
 	sortTablebyKey(event) {
+		if (event.key === 'last_updated' && event.reverse === false) {
+			this.assetListbyType[this.currentType.key].sort(function compare(a, b) {
+				return (a.timestamp < b.timestamp) ? -1 : ((a.timestamp > b.timestamp) ? 1 : 0);
+			});
+		} else if (event.key === 'last_updated' && event.reverse === true) {
+			this.assetListbyType[this.currentType.key].reverse();
+		}
+		if (event.key === "provider_id" && event.reverse === true) {
+			this.assetListbyType[this.currentType.key].reverse();
+		} else if (event.key === "provider_id" && event.reverse === false) {
+			this.assetListbyType[this.currentType.key].sort(function compare(a, b) {
+				return (a.provider_id < b.provider_id) ? -1 : ((a.provider_id > b.provider_id) ? 1 : 0);
+			});
+		}
 		this.sortkey = event.key;
 		this.direction = event.reverse ? 1 : -1;
 	}
