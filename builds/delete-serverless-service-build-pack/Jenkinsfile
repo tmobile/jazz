@@ -42,7 +42,7 @@ import groovy.json.JsonSlurperClassic
 @Field def accountInfo;
 
 node {
-  try {
+	try {
 		echo "Starting delete service workflow with params: $params"
 
 		jazzBuildModuleURL = getBuildModuleUrl()
