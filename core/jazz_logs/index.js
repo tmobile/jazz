@@ -83,8 +83,6 @@ module.exports.handler = (event, context, cb) => {
         size = event.body.size ? event.body.size : config.DEFAULT_SIZE,
         querys = [];
 
-      //Appending service name with Domain, Env and Jazz_type
-      service = domain + "-" + service
       if (event.body.asset_identifier) {
         querys.push(utils.setQuery("asset_identifier", event.body.asset_identifier));
       }
@@ -93,9 +91,10 @@ module.exports.handler = (event, context, cb) => {
         querys.push(utils.setQuery("asset_type", event.body.asset_type));
       }
 
-      logger.info("Service name to fetch logs: " + service);
+      logger.info("Service:Domain to fetch logs: " + service + ":" + domain);
 
       querys.push(utils.setQuery("servicename", service));
+      querys.push(utils.setQuery("domain", domain));
       querys.push(utils.setQuery("environment", env));
 
       //Query to filter Control messages
