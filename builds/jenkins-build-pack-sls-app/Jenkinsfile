@@ -176,6 +176,7 @@ node() {
         }
         events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
       }
+
       stage('Install Plugins') {
         events.sendStartedEvent('INSTALL_PLUGINS', 'Plugin Installation started', context_map, environment_logical_id)
         try {
@@ -321,111 +322,111 @@ node() {
         }
       }
 
-    stage("Deployment to ${env_key} environment") {
-      events.sendStartedEvent('DEPLOY_TO_AWS', 'Deployment started to staging AWS environment', context_map, environment_logical_id)
+      stage("Deployment to ${env_key} environment") {
+        events.sendStartedEvent('DEPLOY_TO_AWS', 'Deployment started to staging AWS environment', context_map, environment_logical_id)
 
-      echo "starts Deployment to ${env_key} Env"
-      events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
-      def credsId = null
-      withCredentials([
-        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
-      ]) {
-          try {
-            // initialize aws credentials
-            def randomString = utilModule.generateRequestId();
-            credsId = "jazz-${randomString}";
-            sh "aws configure set profile.${credsId}.region ${config.region}"
-            sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
-            sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-
-            // Generate serverless yml file with domain added in function name
-            echo "Generate deployment env with domain"
-
-            def envBucketKey = "${env_key}"
-            echoServerlessFile()
-            def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
-            // After stack Deployment
-
-            createAssetForHttpEvents(deployOutput)
-            attachTagstoLogGroup(config, environment_logical_id, credsId)
-
-            def describeResources = getStackResources(environment_logical_id, credsId)
-            def resources = describeResources['StackResources']
-            if( resources != null ) {
-              def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
-              for( resource in resources ) {
-                def resourceType = resource['ResourceType']
-                if( whiteListModule.checkAssetType(resourceType)){
-                  def arn = constructArn(resource['PhysicalResourceId'], resourceType)
-                  if(arn.startsWith('arn')) {
-                    def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
-                    if(arnAsArray.size() > 2) { // Making sure that the third element exists
-                      def artifactType = arnAsArray[2]
-                      if (assetCatalogTypes[artifactType] == 'lambda') lambdaArns.add(arn)
-                      events.sendCompletedEvent('CREATE_ASSET',
-                                                null,
-                                                utilModule.generateAssetMap("aws",
-                                                                            arn,
-                                                                            assetCatalogTypes[artifactType],
-                                                                            config),
-                                                environment_logical_id)
-                    }
-                  }
-                }
-              }
-            }
-            //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
-            send_status_email('COMPLETED', '')
-          } catch (ex) {
-            send_status_email('FAILED', '')
-            events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
-            events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-            events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
-            error ex.getMessage()
-          } finally {
-            // reset Credentials
-            resetCredentials(credsId)
-          }
-
-          def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
-          def deployment_descriptor = readFile("./serverless.yml")
-          events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null, deployment_descriptor), environment_logical_id)
-          events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion Event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
-          events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)
-
-        } //end of withCredentials
-      } //end of deployment to an environment
-
-      //Udating safe details
-      if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
-        stage('Update Safe') {
-          events.sendStartedEvent('UPDATE_SAFE', 'safe updation started', context_map, environment_logical_id)
-          withCredentials([
-          [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+        echo "starts Deployment to ${env_key} Env"
+        events.sendStartedEvent('UPDATE_ENVIRONMENT', "Environment status update event for ${env_key} deployment", environmentDeploymentMetadata.generateEnvironmentMap("deployment_started", environment_logical_id, null), environment_logical_id)
+        def credsId = null
+        withCredentials([
+          [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']
+        ]) {
             try {
               // initialize aws credentials
               def randomString = utilModule.generateRequestId();
               credsId = "jazz-${randomString}";
-              sh "aws configure set profile.${credsId}.region ${service_config.region}"
+              sh "aws configure set profile.${credsId}.region ${config.region}"
               sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
               sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
-          
-              def environment = environmentDeploymentMetadata.getEnvironmentInfo()
-              if (environment && environment.metadata && environment.metadata.safe) {
-                def safeName = environment.metadata.safe.name
-                vaultUtilityModule.updateCustomServicesSafeDetails(safeName, lambdaArns, credsId)                
+
+              // Generate serverless yml file with domain added in function name
+              echo "Generate deployment env with domain"
+
+              def envBucketKey = "${env_key}"
+              echoServerlessFile()
+              def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
+              // After stack Deployment
+
+              createAssetForHttpEvents(deployOutput)
+              attachTagstoLogGroup(config, environment_logical_id, credsId)
+
+              def describeResources = getStackResources(environment_logical_id, credsId)
+              def resources = describeResources['StackResources']
+              if( resources != null ) {
+                def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
+                for( resource in resources ) {
+                  def resourceType = resource['ResourceType']
+                  if( whiteListModule.checkAssetType(resourceType)){
+                    def arn = constructArn(resource['PhysicalResourceId'], resourceType)
+                    if(arn.startsWith('arn')) {
+                      def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
+                      if(arnAsArray.size() > 2) { // Making sure that the third element exists
+                        def artifactType = arnAsArray[2]
+                        if (assetCatalogTypes[artifactType] == 'lambda') lambdaArns.add(arn)
+                        events.sendCompletedEvent('CREATE_ASSET',
+                                                  null,
+                                                  utilModule.generateAssetMap("aws",
+                                                                              arn,
+                                                                              assetCatalogTypes[artifactType],
+                                                                              config),
+                                                  environment_logical_id)
+                      }
+                    }
+                  }
+                }
               }
-              events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
+              //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
+              send_status_email('COMPLETED', '')
             } catch (ex) {
-              events.sendFailureEvent('UPDATE_SAFE', ex.getMessage(), context_map, environment_logical_id)
+              send_status_email('FAILED', '')
+              events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
+              events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+              events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
               error ex.getMessage()
             } finally {
+              // reset Credentials
               resetCredentials(credsId)
-            }              
-          }
-        } //End of stage
-      } // End of if
-    }
+            }
+
+            def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
+            def deployment_descriptor = readFile("./serverless.yml")
+            events.sendCompletedEvent('UPDATE_ENVIRONMENT', 'Environment update event for deployment completion', environmentDeploymentMetadata.generateEnvironmentMap("deployment_completed", environment_logical_id, null, deployment_descriptor), environment_logical_id)
+            events.sendCompletedEvent('UPDATE_DEPLOYMENT', "Deployment completion Event for ${env_key} deployment", environmentDeploymentMetadata.generateDeploymentMap("successful", environment_logical_id, gitCommitHash), environment_logical_id)
+            events.sendCompletedEvent('DEPLOY_TO_AWS', 'Successfully deployed services to AWS', serviceContext, environment_logical_id)
+
+          } //end of withCredentials
+        } //end of deployment to an environment
+
+        //Udating safe details
+        if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+          stage('Update Safe') {
+            events.sendStartedEvent('UPDATE_SAFE', 'safe updation started', context_map, environment_logical_id)
+            withCredentials([
+            [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'AWS_ACCESS_KEY_ID', credentialsId: accountDetails.CREDENTIAL_ID, secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]) {
+              try {
+                // initialize aws credentials
+                def randomString = utilModule.generateRequestId();
+                credsId = "jazz-${randomString}";
+                sh "aws configure set profile.${credsId}.region ${service_config.region}"
+                sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
+                sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
+            
+                def environment = environmentDeploymentMetadata.getEnvironmentInfo()
+                if (environment && environment.metadata && environment.metadata.safe) {
+                  def safeName = environment.metadata.safe.name
+                  vaultUtilityModule.updateCustomServicesSafeDetails(safeName, lambdaArns, credsId)                
+                }
+                events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
+              } catch (ex) {
+                events.sendFailureEvent('UPDATE_SAFE', ex.getMessage(), context_map, environment_logical_id)
+                error ex.getMessage()
+              } finally {
+                resetCredentials(credsId)
+              }              
+            }
+          } //End of stage
+        } // End of if
+      }
   } catch (err) {
     throw err
   } finally {
