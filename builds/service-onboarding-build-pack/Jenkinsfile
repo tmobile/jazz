@@ -265,7 +265,8 @@ node  {
                 sendStatusEmailNotification("FAILED")
                 error ex.getMessage()
             }
-
+            //Adding 1m a sleep before calling the /acl api inorder to complete the environment creation
+            sleep(60)
             try {
                 events.sendStartedEvent("ADD_POLICIES_AND_REPO_PERMISSIONS", 'Started adding acl policies for the service', context_map)
                 aclModule.updateServiceACL(service_id, auth_token, "${g_base_url}/jazz/acl/policies", service_config['created_by'])
