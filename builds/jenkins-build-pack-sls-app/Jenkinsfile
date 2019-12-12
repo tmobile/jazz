@@ -407,7 +407,7 @@ node() {
                 // initialize aws credentials
                 def randomString = utilModule.generateRequestId();
                 credsId = "jazz-${randomString}";
-                sh "aws configure set profile.${credsId}.region ${service_config.region}"
+                sh "aws configure set profile.${credsId}.region ${config.region}"
                 sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
                 sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
             
