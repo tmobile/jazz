@@ -189,18 +189,19 @@ node() {
       events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
     }
 
-  dir(repo_name) {
-    if (servicePlatform == "aws") {
-      loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
-    }
+    dir(repo_name) {
+      if (servicePlatform == "aws") {
+        loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
+      }
 
-    if (domain == "jazz") {
-      stage('Update Service Template') {
-        echo "Inside Update service template"
-        try {
-          updatePlatformServiceTemplate(config, roleARN, current_environment, repo_name)
-        } catch (error) {
-          error "Error occured while updating service template."
+      if (domain == "jazz") {
+        stage('Update Service Template') {
+          echo "Inside Update service template"
+          try {
+            updatePlatformServiceTemplate(config, roleARN, current_environment, repo_name)
+          } catch (error) {
+            error "Error occured while updating service template."
+          }
         }
       }
 
@@ -436,7 +437,7 @@ node() {
       } // End of if
     } // End of dir
   } catch (err) {
-      throw err
+    throw err
   } finally {
     deleteDir()
   }
