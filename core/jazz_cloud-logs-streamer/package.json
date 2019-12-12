@@ -12,7 +12,10 @@
         "unicode-byte-truncate": "*"
     },
     "devDependencies": {
+        "aws-lambda-mock-context": "^3.2.1",
         "chai": "^3.5.0",
-        "mocha": "^v3.0.0"		
+        "mocha": "^v3.0.0",
+        "rewire": "^4.0.1",
+        "sinon": "^7.5.0"
     }
 }
