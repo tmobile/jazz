@@ -203,7 +203,6 @@ $env-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
 .good-value {
   color: #5dae02;
 }
-
 .overview-value span {
   font-size: 1rem;
   margin-top: 1rem;
@@ -368,6 +367,9 @@ transform: rotateY(-50%)
 }
 .last-update{
   padding-bottom: 0.8rem;
+}
+.overview-view .section-left li:nth-child(3){
+  padding: 0 !important;
 }
 .loading{
   display: none;
