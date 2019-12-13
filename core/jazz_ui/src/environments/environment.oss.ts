@@ -47,7 +47,8 @@ export const environment = {
   urls: {
     docs_link: "https://github.com/tmobile/jazz/wiki",
     swagger_editor: "{swagger_editor}",
-    content_base: "https://github.com/tmobile/jazz-content/blob/master"
+    content_base: "https://github.com/tmobile/jazz-content/blob/master",
+    tvault_url: "{tvault_url}"
   },
   userJourney: {
     registrationMessage: 'Please contact your Jazz Admin(s) to get a registration code.'

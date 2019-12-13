@@ -110,6 +110,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   firstSafeRole: any = '';
   tvaultEnabled: boolean = false;
   inputVal: any = ''
+  tvault_link: any ='';
 
   @Input() service: any = {};
   @Input() isAdminAccess:boolean = false;
@@ -300,8 +301,6 @@ popup(state){
       (error) => {
         this.isError = true;
         this.isSecretLoading = false;
-        let errMessage = this.toastmessage.errorMessage(error, "updateSecret");
-        this.toast_pop("error", "Oops!", errMessage);
       }
     )
   }
@@ -391,6 +390,7 @@ popup(state){
   onInputCancelClick() {
     this.inputVal = "";
     this.showDisplay = false;
+    this.isAddOrDelete = false;
     this.inValidArn = false;
   }
 
@@ -401,18 +401,6 @@ popup(state){
     let emptyInputAvalable = this.access.filter(each => (!each.arnVal));
     if (!emptyInputAvalable.length) {
       this.access.push({ "arnVal": "" });
-    }
-  }
-  copyRoleClipboard(x) {
-    let element = null; // Should be <textarea> or <input>
-    element = document.getElementById(x);
-    element.select();
-    try {
-      document.execCommand("copy");
-      this.copylinkmsg = "LINK COPIED";
-    }
-    finally {
-      document.getSelection().removeAllRanges;
     }
   }
 
@@ -644,9 +632,9 @@ form_endplist(){
 }
   ngOnInit() {
     this.form_endplist();
-    this.isError = false;
     if (typeof env_oss.tvault.tvault_enabled === "boolean" && env_oss.tvault.tvault_enabled === true) {
       this.tvaultEnabled = true;
+      this.tvault_link = env_oss.urls.tvault_url;
     }
     if(env_oss.envName=='oss')this.isOSS=true;
     if(this.service.domain != undefined)
