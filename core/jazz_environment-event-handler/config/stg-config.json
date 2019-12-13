@@ -64,9 +64,21 @@
     "ADD_ADMINS": "/user",
     "ADD_ROLE": "/role"
   },
-  "CATEGORY_LIST": [
-    "manage",
-    "code",
-    "deploy"
+  "ADMIN_POLICY": [
+    {
+      "userId": "",
+      "permission": "write",
+      "category": "code"
+    },
+    {
+      "userId": "",
+      "permission": "admin",
+      "category": "manage"
+    },
+    {
+      "userId": "",
+      "permission": "write",
+      "category": "deploy"
+    }
   ]
 }
