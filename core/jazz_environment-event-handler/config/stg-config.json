@@ -1,5 +1,5 @@
 {
-  "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod/jazz",
+  "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/stg/jazz",
   "ENVIRONMENT_API_RESOURCE": "/environments",
   "DELETE_ENVIRONMENT_API_RESOURCE": "/delete-serverless-service",
   "TOKEN_URL": "/login",
