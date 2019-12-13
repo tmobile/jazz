@@ -111,7 +111,7 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
 function getAdmins(serviceId, configData, authToken, safeName) {
   return new Promise((resolve, reject) => {
     var payload = {
-      uri: `${configData.BASE_API_URL}${configData.LIST_USERS}?serviceId=${serviceId}`,
+      uri: `${configData.BASE_API_URL}${configData.POLICIES}?serviceId=${serviceId}`,
       method: "GET",
       headers: {
         "Authorization": authToken,

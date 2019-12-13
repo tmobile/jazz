@@ -6,7 +6,7 @@
   "SERVICE_API_RESOURCE": "/dev/jazz/services",
   "SERVICE_USER": "{jazz_admin}",
   "TOKEN_CREDS": "{jazz_admin_creds}",
-  "LIST_USERS": "/dev/jazz/acl/policies",
+  "POLICIES": "/dev/jazz/acl/policies",
   "ENV_DETAILS": "/dev/jazz/environments",
   "EVENTS": {
     "EVENT_TYPE": [
