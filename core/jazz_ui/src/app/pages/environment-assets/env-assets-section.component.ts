@@ -152,8 +152,7 @@ export class EnvAssetsSectionComponent {
           this.envResponseEmpty = true;
           this.isLoading = false;
         }
-        else
-        {
+        else {
 		this.envResponseEmpty = false;
 		this.isLoading = false;
 		this.envResponseTrue = true;
