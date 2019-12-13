@@ -153,11 +153,11 @@ export class EnvAssetsSectionComponent {
           this.isLoading = false;
         }
 		    else
-		{
-		this.envResponseEmpty = false;
-		this.isLoading = false;
-		this.envResponseTrue = true;
-		this.length = res.length;
+		    {
+		    this.envResponseEmpty = false;
+		    this.isLoading = false;
+		    this.envResponseTrue = true;
+		    this.length = res.length;
         for(var i=0; i < this.length ; i++){
 			this.type[i] = {
 				'key': res[i].asset_type,
