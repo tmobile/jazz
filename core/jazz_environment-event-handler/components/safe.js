@@ -35,9 +35,10 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken, i
         });
       }
 
+      let safeName;
       if (isInitialCommit) {
         safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
-          .then((safeName) => { return safeExportable.updatePolicies(serviceDetails, configData, authToken) })
+          .then((res) => { safeName = res; return safeExportable.updatePolicies(serviceDetails, configData, authToken) })
           .then(() => { return safeExportable.addUserToSafe(serviceDetails.created_by, safeName, serviceId, configData, authToken) })
           .then((result) => { return resolve(result); })
           .catch((err) => {
