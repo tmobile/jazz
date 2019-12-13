@@ -18,7 +18,7 @@
 const request = require("request");
 const logger = require("./logger.js");
 
-function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
+function addSafe(environmentApiPayload, serviceDetails, configData, authToken, isInitialCommit) {
   return new Promise((resolve, reject) => {
     try {
       if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
@@ -34,15 +34,19 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
           "error": "Not creating safe for website",
         });
       }
-      
-      safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
-        .then((safeName) => { return safeExportable.getAdmins(serviceDetails.id, configData, authToken, safeName) })
-        .then((result) => { return safeExportable.addAdminsToSafe(serviceDetails.id, configData, authToken, result) })
-        .then((result) => { return resolve(result); })
-        .catch((err) => {
-          logger.error("add safe details failed: " + err);
-          return reject(err);
-        })
+
+      if (isInitialCommit) {
+
+      } else {
+        safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
+          .then((safeName) => { return safeExportable.getAdmins(serviceDetails.id, configData, authToken, safeName) })
+          .then((result) => { return safeExportable.addAdminsToSafe(serviceDetails.id, configData, authToken, result) })
+          .then((result) => { return resolve(result); })
+          .catch((err) => {
+            logger.error("add safe details failed: " + err);
+            return reject(err);
+          })
+      }
     } catch (err) {
       logger.error("add safe details failed: " + err);
     }
@@ -191,45 +195,11 @@ function addAdminsToSafe(serviceId, configData, authToken, res) {
   });
 }
 
-function getEnvDetails(environmentPayload, configData, authToken) {
-  return new Promise((resolve, reject) => {
-    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
-      return resolve({
-        "error": "T-vault is not enabled",
-      });
-    }
-
-    var payload = {
-      uri: `${configData.BASE_API_URL}${configData.ENV_DETAILS}?service=${environmentPayload.service}&domain=${environmentPayload.domain}`,
-      method: "GET",
-      headers: {
-        "Authorization": authToken,
-        "Content-Type": "application/json"
-      }
-    };
-
-    logger.debug("getEnvDetails payload: " + JSON.stringify(payload));
-    request(payload, function (error, response, body) {
-      logger.debug("getEnvDetails response: " + JSON.stringify(response));
-      if (response.statusCode && response.statusCode === 200) {
-        return resolve(body);
-      } else {
-        logger.error("Error getting environment details: " + JSON.stringify(response));
-        return reject({
-          "error": "Error getting environment details",
-          "details": response.body.message
-        });
-      }
-    });
-  });
-}
-
 const safeExportable = {
   addSafe,
   createSafe,
   getAdmins,
   addAdminsToSafe,
-  getEnvDetails
 };
 
 module.exports = safeExportable;

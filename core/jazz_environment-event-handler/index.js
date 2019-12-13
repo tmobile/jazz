@@ -218,7 +218,7 @@ function manageProcessItem(eventPayload, serviceDetails, configData, authToken) 
       let nano_id = nanoid(configData.RANDOM_CHARACTERS, configData.RANDOM_ID_CHARACTER_COUNT);
       environmentApiPayload.logical_id = nano_id + "-dev";
 
-      safe.addSafe(environmentApiPayload, serviceDetails, configData, authToken)
+      safe.addSafe(environmentApiPayload, serviceDetails, configData, authToken, false)
         .then((result) => { return exportable.processEventCreateBranch(environmentApiPayload, serviceDetails.id, configData, authToken) })
         .then((result) => { return exportable.processBuild(environmentApiPayload, serviceDetails, configData, authToken); })
         .then((result) => { return resolve(result); })
@@ -308,7 +308,7 @@ function processEventInitialCommit(environmentPayload, serviceDetails, configDat
       let payload = JSON.parse(JSON.stringify(environmentPayload))
       payload.logical_id = env;
 
-      safe.addSafe(payload, serviceDetails, configData, authToken)
+      safe.addSafe(payload, serviceDetails, configData, authToken, true)
         .then((result) => { return processCreateEnv(payload, env) })
         .then((result) => { return resolve(result); })
         .catch((err) => {
