@@ -63,29 +63,20 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken, i
 function updatePolicies(serviceDetails, configData, authToken) {
   return new Promise((resolve, reject) => {
     let policiesList = []
-
-    for (let key in configData.CATEGORY_LIST) {
-      const category = configData.CATEGORY_LIST[key];
-      let permission = "write";
-      if (category == "manage") permission = "admin"
-      let policy = {
-        "userId": serviceDetails.created_by,
-        "permission": permission,
-        "category": category
-      }
-      policiesList.push(policy)
-    }
+    let adminPolicy = configData.ADMIN_POLICY;
+    adminPolicy = adminPolicy.map(policy => { return { permission: policy.permission, category: policy.category, userId: serviceDetails.created_by } });
 
     let payload = {
       uri: `${configData.BASE_API_URL}${configData.POLICIES}`,
       method: "POST",
       headers: {
         "Authorization": authToken,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "Jazz-Service-ID": serviceDetails.id
       },
       json: {
         "serviceId": serviceDetails.id,
-			"policies": policiesList
+        "policies": adminPolicy
       }
     };
 
