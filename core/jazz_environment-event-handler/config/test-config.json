@@ -64,5 +64,9 @@
     "ADD_ADMINS": "/user",
     "ADD_ROLE": "/role"
   },
-  "CATEGORY_LIST": ["manage", "code", "deploy"]
+  "CATEGORY_LIST": [
+    "manage",
+    "code",
+    "deploy"
+  ]
 }
