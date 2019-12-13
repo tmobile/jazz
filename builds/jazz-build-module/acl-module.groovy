@@ -26,7 +26,7 @@ def updateServiceACL(serviceId, auth_token, aclUrl, user) {
 		def updatePermission = sh(script: "curl POST \
 					${aclUrl} \
 					-k -v -H \"Authorization: $auth_token\" \
-          -H \"Jazz-Service-ID: ${serviceId}\" \
+					-H \"Jazz-Service-ID: ${serviceId}\" \
 					-H \"Content-Type: application/json\" \
 					-d \'${body}\'", returnStdout: true).trim()
 		def responseJSON = parseJson(updatePermission)
@@ -38,9 +38,9 @@ def updateServiceACL(serviceId, auth_token, aclUrl, user) {
 			error responseJSON.data
 		}
 	} catch (ex) {
-    echo "ex: $ex"
-    error ex.getMessage()
-  }
+		echo "ex: $ex"
+		error ex.getMessage()
+	}
 }
 
 
