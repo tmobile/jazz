@@ -174,7 +174,7 @@ function getAdmins(serviceId, configData, authToken, safeName) {
   });
 }
 
-function addUserToSafe(user, safeName) {
+function addUserToSafe(user, safeName, serviceId, configData, authToken) {
   return new Promise((resolve, reject) => {
     let updatePayload = {
       'username': user.userId,
@@ -220,7 +220,7 @@ function addAdminsToSafe(serviceId, configData, authToken, res) {
     let processPromises = [];
     if (safeAdmins.length > 0) {
       for (let i = 0; i < safeAdmins.length; i++) {
-        processPromises.push(addUserToSafe(safeAdmins[i], res.safeName));
+        processPromises.push(safeExportable.addUserToSafe(safeAdmins[i], res.safeName, serviceId, configData, authToken ));
       }
     }
 
@@ -241,7 +241,8 @@ const safeExportable = {
   createSafe,
   getAdmins,
   addAdminsToSafe,
-  updatePolicies
+  updatePolicies,
+  addUserToSafe
 };
 
 module.exports = safeExportable;
