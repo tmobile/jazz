@@ -37,8 +37,8 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken, i
 
       if (isInitialCommit) {
         safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
-          .then(() => { return safeExportable.updatePolicies(serviceDetails, configData, authToken) })
-          .then(() => { return safeExportable.addAdminsToSafe(serviceDetails.id, configData, authToken, result) })
+          .then((safeName) => { return safeExportable.updatePolicies(serviceDetails, configData, authToken) })
+          .then(() => { return safeExportable.addUserToSafe(serviceDetails.created_by, safeName, serviceId, configData, authToken) })
           .then((result) => { return resolve(result); })
           .catch((err) => {
             logger.error("add safe details failed: " + err);
