@@ -53,7 +53,7 @@ def deletePolicies(serviceId, auth_token, aclUrl) {
 		def updatePermission = sh(script: "curl POST \
 				${aclUrl} \
 				-k -v -H \"Authorization: $auth_token\" \
-        -H \"Jazz-Service-ID: ${serviceId}\" \
+				-H \"Jazz-Service-ID: ${serviceId}\" \
 				-H \"Content-Type: application/json\" \
 				-d \'${body}\'", returnStdout: true).trim()
 		def responseJSON = parseJson(updatePermission)
