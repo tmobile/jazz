@@ -281,7 +281,7 @@
 		<div class="secret-container__details">
 			<div class="secret-container__details--list" (mouseover)="myFunction()">
 				<div class="no-data" *ngIf="noData">No role found</div>
-				<div class="arn-value__each" (click)='copyRoleClipboard(firstSafeRole)' *ngIf="!noData">
+				<div class="arn-value__each" *ngIf="!noData">
 					<div class="arn-value__each--arn">{{firstSafeRole}}</div>
 					<div *ngIf="editEvents" class="copy-icon">
 						<span class="copy-safe">

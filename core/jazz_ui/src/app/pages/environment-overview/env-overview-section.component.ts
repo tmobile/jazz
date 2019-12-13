@@ -634,7 +634,7 @@ form_endplist(){
     this.form_endplist();
     if (typeof env_oss.tvault.tvault_enabled === "boolean" && env_oss.tvault.tvault_enabled === true) {
       this.tvaultEnabled = true;
-      this.tvault_link = env_oss.urls.tvault_url;
+      this.tvault_link = env_oss.tvault.tvault_url;
     }
     if(env_oss.envName=='oss')this.isOSS=true;
     if(this.service.domain != undefined)
