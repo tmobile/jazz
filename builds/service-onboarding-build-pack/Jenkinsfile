@@ -260,17 +260,6 @@ node  {
 					sendStatusEmailNotification("FAILED")
 					error ex.getMessage()
 				}
-				//Adding 1m a sleep before calling the /acl api inorder to complete the environment creation
-				sleep(60)
-				try {
-					events.sendStartedEvent("ADD_POLICIES_AND_REPO_PERMISSIONS", 'Started adding acl policies for the service', context_map)
-					aclModule.updateServiceACL(service_id, auth_token, "${g_base_url}/jazz/acl/policies", service_config['created_by'])
-					events.sendCompletedEvent('ADD_POLICIES_AND_REPO_PERMISSIONS', 'Completed adding acl policies for the service', context_map)
-				} catch (ex) {
-					events.sendFailureEvent('ADD_POLICIES_AND_REPO_PERMISSIONS', 'Failed while adding acl policies, error: '+ ex.getMessage(), context_map)
-					sendStatusEmailNotification("FAILED")
-					error ex.getMessage()
-				}
 
 				try {
 					events.sendStartedEvent("LOCK_MASTER_BRANCH", 'set branch permission to repo started', context_map)

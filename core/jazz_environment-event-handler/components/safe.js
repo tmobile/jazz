@@ -61,18 +61,59 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken, i
 }
 
 function updatePolicies(serviceDetails, configData, authToken) {
+  return new Promise((resolve, reject) => {
+    let policiesList = []
 
+    for (let key in configData.CATEGORY_LIST) {
+      const category = configData.CATEGORY_LIST[key];
+      let permission = "write";
+      if (category == "manage") permission = "admin"
+      let policy = {
+        "userId": serviceDetails.created_by,
+        "permission": permission,
+        "category": category
+      }
+      policiesList.push(policy)
+    }
+
+    let payload = {
+      uri: `${configData.BASE_API_URL}${configData.POLICIES}?serviceId=${serviceId}`,
+      method: "GET",
+      headers: {
+        "Authorization": authToken,
+        "Content-Type": "application/json"
+      }
+    };
+
+    logger.debug("getAdmins payload: " + JSON.stringify(payload));
+    request(payload, function (error, response, body) {
+      logger.debug("getAdmins response: " + JSON.stringify(response));
+      if (response.statusCode && response.statusCode === 200) {
+        const resultData = {
+          'admins': JSON.parse(body),
+          'safeName': safeName
+        };
+        return resolve(resultData);
+      } else {
+        logger.error("Error getting admins: " + JSON.stringify(response));
+        return reject({
+          "error": "Error getting admins",
+          "details": response.body.message
+        });
+      }
+    });
+  });
 }
 
 function createSafe(environmentPayload, service_id, configData, authToken) {
   return new Promise((resolve, reject) => {
-    var updatePayload = {};
+    let updatePayload = {};
     const safeName = `${environmentPayload.domain}_${environmentPayload.service}_${environmentPayload.logical_id}`;
     updatePayload.name = safeName;
     updatePayload.owner = configData.SERVICE_USER;
     updatePayload.description = "create safe for jazz tvault service: " + safeName;
 
-    var svcPayload = {
+    let svcPayload = {
       uri: `${configData.BASE_API_URL}${configData.TVAULT.API}`,
       method: "POST",
       headers: {
@@ -114,7 +155,7 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
 
 function getAdmins(serviceId, configData, authToken, safeName) {
   return new Promise((resolve, reject) => {
-    var payload = {
+    let payload = {
       uri: `${configData.BASE_API_URL}${configData.POLICIES}?serviceId=${serviceId}`,
       method: "GET",
       headers: {
@@ -146,13 +187,13 @@ function getAdmins(serviceId, configData, authToken, safeName) {
 function addAdminsToSafe(serviceId, configData, authToken, res) {
   function processAdmins(user) {
     return new Promise((resolve, reject) => {
-      var updatePayload = {
+      let updatePayload = {
         'username': user.userId,
         'permission': user.permission === "admin" ? 'write' : 'read'
       };
 
       const safeName = res.safeName;
-      var payload = {
+      let payload = {
         uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}${configData.TVAULT.ADD_ADMINS}`,
         method: "POST",
         headers: {
@@ -180,16 +221,16 @@ function addAdminsToSafe(serviceId, configData, authToken, res) {
   }
 
   return new Promise((resolve, reject) => {
-    var adminsList = res.admins && res.admins.data && res.admins.data.policies;
-    var safeAdmins = adminsList.filter(ele => ele.category === "manage");
+    let adminsList = res.admins && res.admins.data && res.admins.data.policies;
+    let safeAdmins = adminsList.filter(ele => ele.category === "manage");
     if (safeAdmins.length === 0) {
       return resolve({
         "error": "No admins found for safe",
       });
     }
-    var processPromises = [];
+    let processPromises = [];
     if (safeAdmins.length > 0) {
-      for (var i = 0; i < safeAdmins.length; i++) {
+      for (let i = 0; i < safeAdmins.length; i++) {
         processPromises.push(processAdmins(safeAdmins[i]));
       }
     }
