@@ -154,7 +154,7 @@ export class EnvAssetsSectionComponent {
         }
         else
         {
-        this.envResponseEmpty = false;
+		this.envResponseEmpty = false;
 		this.isLoading = false;
 		this.envResponseTrue = true;
 		this.length = res.length;
