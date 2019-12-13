@@ -77,11 +77,15 @@ function updatePolicies(serviceDetails, configData, authToken) {
     }
 
     let payload = {
-      uri: `${configData.BASE_API_URL}${configData.POLICIES}?serviceId=${serviceId}`,
-      method: "GET",
+      uri: `${configData.BASE_API_URL}${configData.POLICIES}`,
+      method: "POST",
       headers: {
         "Authorization": authToken,
         "Content-Type": "application/json"
+      },
+      json: {
+        "serviceId": serviceDetails.id,
+			"policies": policiesList
       }
     };
 
