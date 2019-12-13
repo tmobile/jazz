@@ -584,7 +584,6 @@ describe('jazz environment handler tests: ', () => {
         configData.TVAULT.IS_ENABLED = true;
       });
   });
-
 });
 
 describe("getServiceDetails", () => {
