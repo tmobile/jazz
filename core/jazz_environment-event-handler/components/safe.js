@@ -38,7 +38,7 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken, i
       if (isInitialCommit) {
         safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
           .then(() => { return safeExportable.updatePolicies(serviceDetails, configData, authToken) })
-          .then((result) => { return safeExportable.addAdminsToSafe(serviceDetails.id, configData, authToken, result) })
+          .then(() => { return safeExportable.addAdminsToSafe(serviceDetails.id, configData, authToken, result) })
           .then((result) => { return resolve(result); })
           .catch((err) => {
             logger.error("add safe details failed: " + err);
@@ -62,7 +62,6 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken, i
 
 function updatePolicies(serviceDetails, configData, authToken) {
   return new Promise((resolve, reject) => {
-    let policiesList = []
     let adminPolicy = configData.ADMIN_POLICY;
     adminPolicy = adminPolicy.map(policy => { return { permission: policy.permission, category: policy.category, userId: serviceDetails.created_by } });
 
@@ -80,19 +79,15 @@ function updatePolicies(serviceDetails, configData, authToken) {
       }
     };
 
-    logger.debug("getAdmins payload: " + JSON.stringify(payload));
+    logger.debug("updatePolicies payload: " + JSON.stringify(payload));
     request(payload, function (error, response, body) {
-      logger.debug("getAdmins response: " + JSON.stringify(response));
-      if (response.statusCode && response.statusCode === 200) {
-        const resultData = {
-          'admins': JSON.parse(body),
-          'safeName': safeName
-        };
-        return resolve(resultData);
+      logger.debug("updatePolicies response: " + JSON.stringify(response));
+      if (response.statusCode && response.statusCode === 200) {        
+        return resolve();
       } else {
-        logger.error("Error getting admins: " + JSON.stringify(response));
+        logger.error("Error adding policies: " + JSON.stringify(response));
         return reject({
-          "error": "Error getting admins",
+          "error": "Error adding policies",
           "details": response.body.message
         });
       }
@@ -179,42 +174,41 @@ function getAdmins(serviceId, configData, authToken, safeName) {
   });
 }
 
-function addAdminsToSafe(serviceId, configData, authToken, res) {
-  function processAdmins(user) {
-    return new Promise((resolve, reject) => {
-      let updatePayload = {
-        'username': user.userId,
-        'permission': user.permission === "admin" ? 'write' : 'read'
-      };
+function addUserToSafe(user, safeName) {
+  return new Promise((resolve, reject) => {
+    let updatePayload = {
+      'username': user.userId,
+      'permission': user.permission === "admin" ? 'write' : 'read'
+    };
 
-      const safeName = res.safeName;
-      let payload = {
-        uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}${configData.TVAULT.ADD_ADMINS}`,
-        method: "POST",
-        headers: {
-          "Authorization": authToken,
-          "Content-Type": "application/json",
-          "Jazz-Service-ID": serviceId
-        },
-        json: updatePayload
-      };
+    let payload = {
+      uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}${configData.TVAULT.ADD_ADMINS}`,
+      method: "POST",
+      headers: {
+        "Authorization": authToken,
+        "Content-Type": "application/json",
+        "Jazz-Service-ID": serviceId
+      },
+      json: updatePayload
+    };
 
-      logger.debug("addAdminsToSafe payload: " + JSON.stringify(payload));
-      request(payload, function (error, response, body) {
-        logger.debug("addAdminsToSafe response: " + JSON.stringify(response));
-        if (response.statusCode && response.statusCode === 200) {
-          return resolve(body);
-        } else {
-          logger.error("Error adding admins to safe: " + JSON.stringify(response));
-          return reject({
-            "error": "Error adding admins to safe",
-            "details": response.body.message
-          });
-        }
-      });
+    logger.debug("addUserToSafe payload: " + JSON.stringify(payload));
+    request(payload, function (error, response, body) {
+      logger.debug("addUserToSafe response: " + JSON.stringify(response));
+      if (response.statusCode && response.statusCode === 200) {
+        return resolve(body);
+      } else {
+        logger.error("Error adding users to safe: " + JSON.stringify(response));
+        return reject({
+          "error": "Error adding users to safe",
+          "details": response.body.message
+        });
+      }
     });
-  }
+  });
+}
 
+function addAdminsToSafe(serviceId, configData, authToken, res) {
   return new Promise((resolve, reject) => {
     let adminsList = res.admins && res.admins.data && res.admins.data.policies;
     let safeAdmins = adminsList.filter(ele => ele.category === "manage");
@@ -226,7 +220,7 @@ function addAdminsToSafe(serviceId, configData, authToken, res) {
     let processPromises = [];
     if (safeAdmins.length > 0) {
       for (let i = 0; i < safeAdmins.length; i++) {
-        processPromises.push(processAdmins(safeAdmins[i]));
+        processPromises.push(addUserToSafe(safeAdmins[i], res.safeName));
       }
     }
 
