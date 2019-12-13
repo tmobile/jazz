@@ -60,6 +60,10 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken, i
   });
 }
 
+function updatePolicies(serviceDetails, configData, authToken) {
+
+}
+
 function createSafe(environmentPayload, service_id, configData, authToken) {
   return new Promise((resolve, reject) => {
     var updatePayload = {};
@@ -207,6 +211,7 @@ const safeExportable = {
   createSafe,
   getAdmins,
   addAdminsToSafe,
+  updatePolicies
 };
 
 module.exports = safeExportable;
