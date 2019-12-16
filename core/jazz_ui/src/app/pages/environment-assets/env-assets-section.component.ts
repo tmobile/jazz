@@ -347,19 +347,18 @@ export class EnvAssetsSectionComponent {
 	}
 
 	sortTablebyKey(event) {
-		if (event.key === 'last_updated' && event.reverse === false) {
-			this.assetListbyType[this.currentType.key].sort(function compare(a, b) {
-				return (a.timestamp < b.timestamp) ? -1 : ((a.timestamp > b.timestamp) ? 1 : 0);
-			});
-		} else if (event.key === 'last_updated' && event.reverse === true) {
-			this.assetListbyType[this.currentType.key].reverse();
+		let sortType = "";
+		if(event.key === 'last_updated'){
+		   sortType = "timestamp"
+		} else if(event.key === 'provider_id'){
+			sortType = "provider_id"
 		}
-		if (event.key === "provider_id" && event.reverse === true) {
-			this.assetListbyType[this.currentType.key].reverse();
-		} else if (event.key === "provider_id" && event.reverse === false) {
+		if (event.reverse === false) {
 			this.assetListbyType[this.currentType.key].sort(function compare(a, b) {
-				return (a.provider_id < b.provider_id) ? -1 : ((a.provider_id > b.provider_id) ? 1 : 0);
+				return (a.sortType < b.sortType) ? -1 : ((a.sortType > b.sortType) ? 1 : 0);
 			});
+		} else {
+			this.assetListbyType[this.currentType.key].reverse();
 		}
 		this.sortkey = event.key;
 		this.direction = event.reverse ? 1 : -1;
