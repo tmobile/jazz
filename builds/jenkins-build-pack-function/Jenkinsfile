@@ -583,7 +583,7 @@ def echoServerlessFile() {
   echo "serverless file data $serverlessyml"
 }
 
-def servelessDeploy(env, envBucketKey, credsId, env_key, accountDetails){
+def servelessDeploy(env, credsId, env_key, accountDetails){
   def s3BucketNameValue;
   for (item in accountDetails.REGIONS) {
     if(item.REGION == service_config.region){
