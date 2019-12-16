@@ -426,7 +426,7 @@ transform: rotateY(-50%)
   width: calc((100% - 2rem)/2);
   background-color: $color-white;
   box-shadow: $env-box-shadow;
-  border-radius: 10px 10px 0px 0px;
+  border-radius: 10px 10px 10px 10px;
   flex-basis: 0;
 }
 .secret-container{
