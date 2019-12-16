@@ -197,13 +197,13 @@ node {
 				switch (flowType) {
 					case "API":
 						stage('Undeploy Service') {
-							updateServiceNameConfig()
 							def path = getResourcePath()
 							def apiPlatform = service_config.deployment_targets.api;
 							for (_envId in environmentIds) {
 								current_environment_id = _envId
 								environmentMetadataLoader.setEnvironmentLogicalId(_envId)
 								try {
+									writeServerlessFile(_envId)
 									def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 									if (branch && branch != 'NA') {
 										environmentMetadataLoader.setBranch(branch)
@@ -254,12 +254,11 @@ node {
 
 					case "FUNCTION":
 						stage('Undeploy Service') {
-							updateServiceNameConfig()
-
 							for (_envId in environmentIds) {
 								current_environment_id = _envId
 								environmentMetadataLoader.setEnvironmentLogicalId(_envId)
 								try {
+									writeServerlessFile(_envId)
 									def branch = environmentMetadataLoader.getEnvironmentBranchName(_envId)
 									if (branch && branch != 'NA') {
 										events.setBranch(branch)
@@ -351,7 +350,7 @@ node {
 									cleanupEventSourceMapping(_envId)
 									if (has_serverless_yml) {
 										// for sls install plugins
-										installServerlessPlugins()								
+										installServerlessPlugins()
 										unDeployService(_envId)
 									}
 									else {
@@ -591,74 +590,73 @@ def checkoutSCM(repo_name) {
  * @param  serviceName
  * @return
  */
-def updateServiceNameConfig() {
-	try {
+
+def writeServerlessFile(env){
+
+	try {	
+		sh "pwd"
 		sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}/g' serverless.yml"
+		sh "sed -i -- 's/\${functionName}/${configLoader.INSTANCE_PREFIX}_${service_config['domain']}_${service_config['service']}_${env}/g' serverless.yml"
 		sh "sed -i -- 's/name: \${self:service}/name: ${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}/g' serverless.yml"
-		writeServerlessFile()
+		sh "sed -i -- 's/\${file(deployment-env.yml):region}/${service_config['region']}/g' serverless.yml"
+		sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${service_config['domain']}/g' serverless.yml"
+		sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${service_config['created_by']}/g' serverless.yml"
+		sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${service_config['iamRoleARN']}|g' serverless.yml"
+		sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${service_config['providerRuntime']}/g' serverless.yml"
+		sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${service_config['providerMemorySize']}/g' serverless.yml"
+		sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${service_config['providerTimeout']}/g' serverless.yml"
+		sh "sed -i -- 's|\${file(deployment-env.yml):eventScheduleRate}|${service_config['eventScheduleRate']}|g' serverless.yml"
+		sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${service_config['eventScheduleEnable']}/g' serverless.yml"
+		sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${service_config['securityGroupIds']}/g' serverless.yml"
+		sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${service_config['subnetIds']}/g' serverless.yml"
+
+	
+		if (service_config['artifact']) {
+			sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${service_config['artifact']}/g' serverless.yml"
+		}
+
+		if (service_config['mainClass']) {
+			sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${service_config['mainClass']}/g' serverless.yml"
+		}
+
+		if (service_config['event_source_s3']) {
+			def event_source_s3 =  lambdaEvents.getEventResourceNamePerEnvironment(service_config['event_source_s3'], env, "-")
+			def event_s3_arn = "arn:aws:s3:::${event_source_s3}"
+			sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
+			sh "sed -i -- 's/{event_action_s3}/${service_config['event_action_s3']}/g' ./serverless.yml"
+			sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' policyFile.yml"
+		}
+
+		if (service_config['event_source_sqs']) {
+			def event_source_sqs = lambdaEvents.getSqsQueueName(service_config['event_source_sqs'], env)
+			def event_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(service_config['event_source_sqs'], env, "_")
+			sh "sed -i -- 's/{event_source_sqs}/${event_source_sqs}/g' ./serverless.yml"
+			sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' ./serverless.yml"
+			sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' policyFile.yml"
+		}
+
+		if (service_config['event_source_kinesis']) {
+			def event_source_kinesis = lambdaEvents.splitAndGetResourceName(service_config['event_source_kinesis'], env)
+			sh "sed -i -- 's|{event_source_kinesis}|${event_source_kinesis}|g' ./serverless.yml"
+		}
+
+		if (service_config['event_source_dynamodb']) {
+			def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(service_config['event_source_dynamodb'], env)
+			sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
+		} 
+
+		if (service_config['event_source_dynamodb'] || service_config['event_source_sqs'] 
+		|| service_config['event_source_kinesis'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED )) {
+			sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
+			sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
+		} else {        
+			sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${service_config['iamRoleARN']}|g' serverless.yml"
+		}
+
+		removeEventResources ()
 	} catch (ex) {
 		handleFailureEvent(ex.getMessage())
 	}
-}
-
-def writeServerlessFile(){
-	sh "pwd"
-	sh "sed -i -- 's/\${file(deployment-env.yml):region}/${service_config['region']}/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):domain, self:provider.domain}/${service_config['domain']}/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):owner, self:provider.owner}/${service_config['created_by']}/g' serverless.yml"
-	sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${service_config['iamRoleARN']}|g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):providerRuntime}/${service_config['providerRuntime']}/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):providerMemorySize}/${service_config['providerMemorySize']}/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):providerTimeout}/${service_config['providerTimeout']}/g' serverless.yml"
-	sh "sed -i -- 's|\${file(deployment-env.yml):eventScheduleRate}|${service_config['eventScheduleRate']}|g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):eventScheduleEnable}/${service_config['eventScheduleEnable']}/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):securityGroupIds}/${service_config['securityGroupIds']}/g' serverless.yml"
-	sh "sed -i -- 's/\${file(deployment-env.yml):subnetIds}/${service_config['subnetIds']}/g' serverless.yml"
-
-	
-	if (service_config['artifact']) {
-		sh "sed -i -- 's/\${file(deployment-env.yml):artifact}/${service_config['artifact']}/g' serverless.yml"
-	}
-
-	if (service_config['mainClass']) {
-		sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${service_config['mainClass']}/g' serverless.yml"
-	}
-
-	if (service_config['event_source_s3']) {
-		def event_source_s3 =  lambdaEvents.getEventResourceNamePerEnvironment(service_config['event_source_s3'], env, "-")
-		def event_s3_arn = "arn:aws:s3:::${event_source_s3}"
-		sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
-		sh "sed -i -- 's/{event_action_s3}/${service_config['event_action_s3']}/g' ./serverless.yml"
-		sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' policyFile.yml"
-	}
-
-	if (service_config['event_source_sqs']) {
-		def event_source_sqs = lambdaEvents.getSqsQueueName(service_config['event_source_sqs'], env)
-		def event_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(service_config['event_source_sqs'], env, "_")
-		sh "sed -i -- 's/{event_source_sqs}/${event_source_sqs}/g' ./serverless.yml"
-		sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' ./serverless.yml"
-		sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' policyFile.yml"
-	}
-
-	if (service_config['event_source_kinesis']) {
-		def event_source_kinesis = lambdaEvents.splitAndGetResourceName(service_config['event_source_kinesis'], env)
-		sh "sed -i -- 's|{event_source_kinesis}|${event_source_kinesis}|g' ./serverless.yml"
-	}
-
-	if (service_config['event_source_dynamodb']) {
-		def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(service_config['event_source_dynamodb'], env)
-		sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
-	} 
-
-	if (service_config['event_source_dynamodb'] || service_config['event_source_sqs'] 
-	|| service_config['event_source_kinesis'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED )) {
-		sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
-		sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
-	} else {        
-		sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${service_config['iamRoleARN']}|g' serverless.yml"
-	}
-
-	removeEventResources ()
 }
 
 def removeEventResources () {
