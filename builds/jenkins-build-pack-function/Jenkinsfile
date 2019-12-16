@@ -480,7 +480,7 @@ def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, env_
     if (lambdaEvents.checkS3BucketExists(s3BucketName, credsId)) {
       isLambdaUpdateRequired = true
       lambdaEvents.removeS3EventsFromServerless(isEventSchdld)
-      deleteAndRedeployService(environment_logical_id, env_key, accountDetails, config)
+      deleteAndRedeployService(environment_logical_id, env_key, accountDetails, config, credsId)
     } else {
       error "Error occured while accessing the s3 bucket"
     }
@@ -502,7 +502,7 @@ def handleSqsError(deployOutput, service_config, environment_logical_id, env_key
         error "Queue contains a different function trigger already. Please remove the existing function trigger and try again."
       }
       lambdaEvents.updateSqsResourceServerless()
-      deleteAndRedeployService(environment_logical_id, env_key, accountDetails, service_config)
+      deleteAndRedeployService(environment_logical_id, env_key, accountDetails, service_config, credsId)
     } else {
       error "Error occured while accessing the SQS queue"
     }
@@ -523,7 +523,7 @@ def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, envi
         error "Kinesis stream contains a different function trigger already. Please remove the existing function trigger and try again."
       }
       lambdaEvents.updateKinesisResourceServerless(event_source_kinesis_stream_arn)
-      deleteAndRedeployService(environment_logical_id, env_key, accountDetails, service_config)
+      deleteAndRedeployService(environment_logical_id, env_key, accountDetails, service_config, credsId)
     } else {
       error "Error occured while accessing the Kinesis stream"
     }
@@ -550,7 +550,7 @@ def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_
         events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], stream_details.StreamArn, "dynamodb_stream", service_config), environment_logical_id);
       }
       lambdaEvents.updateDynamoDbResourceServerless(stream_details.StreamArn)
-      deleteAndRedeployService(environment_logical_id, env_key, accountDetails, service_config)
+      deleteAndRedeployService(environment_logical_id, env_key, accountDetails, service_config, credsId)
     } else {
       error "Error occured while accessing the dynamodb stream"
     }
@@ -1237,14 +1237,14 @@ def handleDeploymentErrors(deployOutput, env_key, env, credsId, accountDetails, 
   def rollbackErrorMessage = "ROLLBACK_COMPLETE state and can not be updated"
   def logGroupErrorMessage = "CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"
   if(deployOutput.contains(rollbackErrorMessage)){
-    deleteAndRedeployService(env, env_key, accountDetails, config)
+    deleteAndRedeployService(env, env_key, accountDetails, config, credsId)
   }
   else if (deployOutput.contains(logGroupErrorMessage))
   {
     def lambda = "/aws/lambda/${env_key}-${env}"
     if (isExistingLogGroup(lambda, credsId)){
       removeLogGroup(lambda, credsId)
-      deleteAndRedeployService(env, env_key, accountDetails, config);
+      deleteAndRedeployService(env, env_key, accountDetails, config, credsId);
     } else {
       error "Unable to find existing log groups"
     }
