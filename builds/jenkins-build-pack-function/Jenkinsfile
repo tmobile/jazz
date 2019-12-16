@@ -568,7 +568,7 @@ def deleteAndRedeployService(environment_logical_id, env_key, accountDetails, co
       s3BucketNameValue = item.S3[env_key]
     }
   }
-  sh "serverless remove --stage $environment_logical_id -v --bucket ${s3bucketvalue} --profile ${credsId}"
+  sh "serverless remove --stage $environment_logical_id -v --bucket ${s3BucketNameValue} --profile ${credsId}"
   def redeployOutput = servelessDeploy(environment_logical_id, credsId, env_key, accountDetails)
   if (redeployOutput != 'success') {
     echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
