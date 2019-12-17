@@ -626,15 +626,6 @@ transform: rotateY(-50%)
   bottom: 77%;
   font-size: 12px;
 }
-.info-tooltip .tooltip-content::after {
-position: absolute;
-top: 100%;
-left: 50%;
-margin-left: -5px;
-border-width: 5px;
-border-style: solid;
-border-color: #D5D7D9 transparent transparent transparent;
-}
 .info-tooltip:hover .tooltip-content{
 visibility: visible;
 -webkit-animation: fadeIn 2s;
