@@ -111,6 +111,7 @@ export class EnvOverviewSectionComponent implements OnInit {
   tvaultEnabled: boolean = false;
   inputVal: any = ''
   tvault_link: any ='';
+  arnInvalidMsg:string = '';
 
   @Input() service: any = {};
   @Input() isAdminAccess:boolean = false;
@@ -375,6 +376,11 @@ popup(state){
       } else {
         this.isAddOrDelete = false;
         this.inValidArn = true;
+        if((this.reqArnArray.includes(this.roleValue) || this.firstSafeRole[0] === this.roleValue)){
+          this.arnInvalidMsg = "ARN is already added.";
+        } else {
+          this.arnInvalidMsg = "Role ARN not in correct format.";
+        }
       }
     } else {
       if(isValid && this.firstSafeRole !== this.roleValue){
@@ -383,6 +389,11 @@ popup(state){
       } else {
         this.isAddOrDelete = false;
         this.inValidArn = true;
+        if(this.firstSafeRole === this.roleValue){
+          this.arnInvalidMsg = "ARN is already added.";
+        } else {
+          this.arnInvalidMsg = "Role ARN not in correct format.";
+        }
       }
     }
   }

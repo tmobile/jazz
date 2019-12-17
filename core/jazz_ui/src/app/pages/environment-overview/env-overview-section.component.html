@@ -319,7 +319,7 @@
 						</div>
 					</div>
 					<div *ngIf="inValidArn" class="error-msg">
-						ARN is invalid
+						{{arnInvalidMsg}}
 					</div>
 					<div class="secret-container__details--addrole" *ngIf="!editEvents" (click)="addSecret()">
 						+ Add Role
