@@ -160,13 +160,11 @@ node() {
         vaultUtilityModule.initialize(configLoader,config, g_base_url, auth_token, environment_logical_id, events, utilModule)      
       }
 
+      sonarModule.initialize(configLoader, config, branch)
+
       def roleId
       if(config['provider'] == 'aws'){
         roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
-      }
-
-      sonarModule.initialize(configLoader, config, branch)
-      if (servicePlatform != 'azure') {
         loadServerlessConfig(config)
       }
 
@@ -181,6 +179,7 @@ node() {
           }
         }
       }
+      
       echo "requestId: $requestId"
       if (requestId != "none" && requestId != null && !utilModule.isReplayedBuild()) {
         echo "Setting up requestId"
@@ -198,7 +197,7 @@ node() {
         try {
           events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation started', context_map, environment_logical_id)
           send_status_email('STARTED', '')
-          if (servicePlatform != 'azure') {
+          if (servicePlatform == 'aws') {
             validateDeploymentConfigurations(config)
             validateSwaggerSpec()
           }
@@ -210,7 +209,7 @@ node() {
         events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
       }
 
-      if (config['domain'] && config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
+      if (config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
         stage('Code Quality Check'){
           events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
           try {
@@ -245,6 +244,7 @@ node() {
       } else {
         env_key = "DEV"
       }
+      
       stage("Deployment to ${env_key} environment") {
         def env_info = environmentDeploymentMetadata.getEnvironmentInfo()
 
@@ -517,28 +517,28 @@ def updateSwagger(){
     withCredentials([
             [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'PRIMARY_AWS_ACCESS_KEY_ID', credentialsId: primaryData.CREDENTIAL_ID, secretKeyVariable: 'PRIMARY_AWS_SECRET_ACCESS_KEY']
         ])  {
-                try {
-                // initialize aws credentials
-                def randomStringPrimary = utilModule.generateRequestId();
-                primaryCredsId = "jazzprimary-${randomStringPrimary}";
+        try {
+        // initialize aws credentials
+        def randomStringPrimary = utilModule.generateRequestId();
+        primaryCredsId = "jazzprimary-${randomStringPrimary}";
 
-                sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
-                sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
-                sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
+        sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
+        sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
+        sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
 
-                sh "aws s3 cp swagger/ s3://${configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --profile ${primaryCredsId} --region ${config.region} --recursive "
+        sh "aws s3 cp swagger/ s3://${configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC}/${domain}/${config['service']}/${environment_logical_id} --profile ${primaryCredsId} --region ${config.region} --recursive "
 
-                } catch(ex){
-                send_status_email('FAILED', '')
-                events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
-                events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-                events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
-                error ex.getMessage()
-                } finally {
-                  // reset Credentials
-                  resetCredentials(primaryCredsId)
-                }
-            }
+        } catch(ex){
+        send_status_email('FAILED', '')
+        events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
+        events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+        events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
+        error ex.getMessage()
+        } finally {
+          // reset Credentials
+          resetCredentials(primaryCredsId)
+        }
+    }
 }
 
 def getLambdaARN(stackName, credsId) {
@@ -797,7 +797,7 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config, accountDetails)
         regionValue = config.region
   }
 
-  sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}/g' swagger/swagger.json"
+  sh "sed -i -- 's/{lambda_function_name}/${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${env}/g' swagger/swagger.json"
   sh "sed -i -- 's/{api_deployment_node_title}/${deploymentNode}/g' swagger/swagger.json" // {api_deployment_node_title}
   sh "sed -i -- 's/{service_name}/${config['service']}/g' swagger/swagger.json" // {service_name}
   sh "sed -i -- 's/{api_host_name}/${apiHostName}/g' swagger/swagger.json" // {api_host_name}
@@ -866,6 +866,7 @@ def writeServerlessFile(config, environment_logical_id, accountDetails){
   else iamRoleArnValue = accountDetails.IAM.USERSERVICES_ROLEID;  
 
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
+  sh "sed -i -- 's/\${functionName}/${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}/g' serverless.yml"
   sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
   sh "sed -i -- 's/{env-stage}/${environment_logical_id}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
@@ -935,7 +936,7 @@ def validateDeploymentConfigurations(def prop) {
       error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 
     } else {
-      def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x"]
+      def validRuntimes = ["nodejs8.10", "nodejs10.x", "python3.6", "java8", "go1.x"]
       def flag = false
       for (int i = 0; i < validRuntimes.size(); i++) {
         if (_runtime == validRuntimes[i]) {
@@ -1064,7 +1065,7 @@ def updateApiDocUrl(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(config, region, roleId, accountDetails, env_key, credsId) {
-  def logGroupName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+  def logGroupName = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}"
   def lambda = "/aws/lambda/${logGroupName}"
   def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
@@ -1096,7 +1097,6 @@ def createSubscriptionFilters(config, region, roleId, accountDetails, env_key, c
                     destARN = data.LOGS.PROD
                     }
                 }
-                updatePolicy(env_key, destARN);
                 sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\"  --profile ${credsId}"
             } else {
                 sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
@@ -1106,49 +1106,6 @@ def createSubscriptionFilters(config, region, roleId, accountDetails, env_key, c
   } catch (Exception ex) {
     echo "error occured: " + ex.getMessage()
   }
-}
-
-def updatePolicy(env, destARN){
-
-  def primaryDataValue = utilModule.getAccountInfoPrimary();
-  def primaryRegionValue
-  for (item in primaryDataValue.REGIONS) {
-		if(item.PRIMARY){
-			primaryRegionValue = item.REGION
-		}
-	}
-  def primaryCredsId = null;
-
-  withCredentials([
-        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'PRIMARY_AWS_ACCESS_KEY_ID', credentialsId: primaryDataValue.CREDENTIAL_ID, secretKeyVariable: 'PRIMARY_AWS_SECRET_ACCESS_KEY']
-      ])  {
-            try {
-              // initialize aws credentials
-              def randomStringPrimary = utilModule.generateRequestId();
-              primaryCredsId = "jazzprimary-${randomStringPrimary}";
-
-              sh "aws configure set profile.${primaryCredsId}.region ${primaryRegionValue}"
-              sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
-              sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
-
-              def destinationName = destARN;
-              def destArnArray = [];
-              destArnArray = destinationName.tokenize(":").last();
-
-              def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${service_config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
-              sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
-
-            } catch(ex){
-              send_status_email('FAILED', '')
-              events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
-              events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-              events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
-              error ex.getMessage()
-            } finally {
-              // reset Credentials
-              resetCredentials(primaryCredsId)
-            }
-          }
 }
 
 /**
@@ -1340,6 +1297,7 @@ def servelessDeploy(env, envBucketKey, s3BucketNameValue, credsId){
     return "success"
   } catch (ex) {
     echo "Serverless deployment failed due to $ex"
+    sh "cat output.log"
   }
 
   def outputLog = readFile('output.log').trim()

@@ -189,11 +189,11 @@ node() {
       events.sendStartedEvent('CREATE_DEPLOYMENT', 'Function deployment started', environmentDeploymentMetadata.generateDeploymentMap("started", environment_logical_id, gitCommitHash), environment_logical_id)
     }
 
-
     dir(repo_name) {
-      if (servicePlatform == null || servicePlatform != "azure") {
+      if (servicePlatform == "aws") {
         loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
       }
+
       if (domain == "jazz") {
         stage('Update Service Template') {
           echo "Inside Update service template"
@@ -204,6 +204,7 @@ node() {
           }
         }
       }
+
       stage('Pre-Build Validation') {
         events.sendStartedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation started', context_map, environment_logical_id)
         try {
@@ -218,7 +219,7 @@ node() {
         events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
       }
 
-      if (config['domain'] && config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
+      if (config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
         stage('Code Quality Check') {
           events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
           try {
@@ -321,22 +322,20 @@ node() {
               }
 
               writeServerlessFile(config, environment_logical_id, accountDetails)
-
-              def envBucketKey = "${env_key}${configLoader.JAZZ.PLATFORM.AWS.S3.BUCKET_NAME_SUFFIX}"
               echoServerlessFile()
-              def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId, env_key, accountDetails)
+              def deployOutput = servelessDeploy(environment_logical_id, credsId, env_key, accountDetails)
 
               if (deployOutput != 'success') {
                 if (config['event_source_s3']) {
-                  handleS3BucketError(deployOutput, config['event_source_s3'], environment_logical_id, envBucketKey, isEventSchdld, credsId, accountDetails, config)
+                  handleS3BucketError(deployOutput, config['event_source_s3'], environment_logical_id, env_key, isEventSchdld, credsId, accountDetails, config)
                 } else if (config['event_source_sqs']) {
-                  handleSqsError(deployOutput, config, environment_logical_id, envBucketKey, credsId, accountDetails)
+                  handleSqsError(deployOutput, config, environment_logical_id, env_key, credsId, accountDetails)
                 } else if (config['event_source_kinesis']) {
-                  handleKinesisStreamError(deployOutput, config['event_source_kinesis'], environment_logical_id, envBucketKey, credsId, accountDetails, config)
+                  handleKinesisStreamError(deployOutput, config['event_source_kinesis'], environment_logical_id, env_key, credsId, accountDetails, config)
                 } else if (config['event_source_dynamodb']) {
-                  handleDynamoDbStreamError(deployOutput, config, environment_logical_id, envBucketKey, credsId, accountDetails)
+                  handleDynamoDbStreamError(deployOutput, config, environment_logical_id, env_key, credsId, accountDetails)
                 } else {
-                  handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId, accountDetails, config)
+                  handleDeploymentErrors(deployOutput, env_key, environment_logical_id, credsId, accountDetails, config)
                 }
               } else {
                 if (config['event_source_s3']) {
@@ -382,7 +381,7 @@ node() {
               if(!accountDetails.PRIMARY){
                 def primaryAccountData = utilModule.getAccountInfoPrimary();
                 def primaryAccountValue = primaryAccountData.ACCOUNTID;
-                def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+                def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}"
 
                 addPermission(lambdaFnNameValue, primaryAccountValue, credsId, config);
               }
@@ -436,7 +435,7 @@ node() {
       } // End of if
     } // End of dir
   } catch (err) {
-      throw err
+    throw err
   } finally {
     deleteDir()
   }
@@ -474,14 +473,14 @@ def addPermission(functionName, primaryAccountValue, credsId, service_config){
   sh "aws lambda add-permission --function-name ${functionName} --region ${service_config.region} --statement-id ${functionName}_invoke --action 'lambda:InvokeFunction' --principal ${primaryAccountValue} --profile ${credsId}"
 }
 
-def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envBucketKey, isEventSchdld, credsId, accountDetails, config) {
+def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, env_key, isEventSchdld, credsId, accountDetails, config) {
   def s3BucketErrString = "CloudFormation - CREATE_FAILED - AWS::S3::Bucket - "
   s3BucketName = lambdaEvents.getEventResourceNamePerEnvironment(s3BucketName, environment_logical_id, "-")
   if (deployOutput.contains(s3BucketErrString)) {
     if (lambdaEvents.checkS3BucketExists(s3BucketName, credsId)) {
       isLambdaUpdateRequired = true
       lambdaEvents.removeS3EventsFromServerless(isEventSchdld)
-      deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, config)
+      deleteAndRedeployService(environment_logical_id, env_key, accountDetails, config, credsId)
     } else {
       error "Error occured while accessing the s3 bucket"
     }
@@ -491,19 +490,19 @@ def handleS3BucketError(deployOutput, s3BucketName, environment_logical_id, envB
   }
 }
 
-def handleSqsError(deployOutput, service_config, environment_logical_id, envBucketKey, credsId, accountDetails) {
+def handleSqsError(deployOutput, service_config, environment_logical_id, env_key, credsId, accountDetails) {
   def event_source_sqs_arn = service_config['event_source_sqs']
   def sqsErrString = "CloudFormation - CREATE_FAILED - AWS::SQS::Queue - "
   if (deployOutput.contains(sqsErrString)) {
     def event_source_sqs = lambdaEvents.getSqsQueueName(event_source_sqs_arn, environment_logical_id)
     event_source_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_sqs_arn, environment_logical_id, "_")
-    def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+    def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}_${service_config['domain']}_${service_config['service']}_${environment_logical_id}"
     if (lambdaEvents.checkSqsQueueExists(event_source_sqs, credsId)) {
       if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn, credsId)) {
         error "Queue contains a different function trigger already. Please remove the existing function trigger and try again."
       }
       lambdaEvents.updateSqsResourceServerless()
-      deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, service_config)
+      deleteAndRedeployService(environment_logical_id, env_key, accountDetails, service_config, credsId)
     } else {
       error "Error occured while accessing the SQS queue"
     }
@@ -513,18 +512,18 @@ def handleSqsError(deployOutput, service_config, environment_logical_id, envBuck
   }
 }
 
-def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, environment_logical_id, envBucketKey, credsId, accountDetails, service_config) {
+def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, environment_logical_id, env_key, credsId, accountDetails, service_config) {
   def kinesisStreamErrString = "CloudFormation - CREATE_FAILED - AWS::Kinesis::Stream - "
   def event_source_kinesis = lambdaEvents.splitAndGetResourceName(event_source_kinesis_stream_arn, environment_logical_id)
   event_source_kinesis_stream_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_kinesis_stream_arn, environment_logical_id, "_")
-  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}_${service_config['domain']}_${service_config['service']}_${environment_logical_id}"
   if (deployOutput.contains(kinesisStreamErrString)) {
     if (lambdaEvents.checkKinesisStreamExists(event_source_kinesis, credsId)) {
       if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_kinesis_stream_arn, lambda_arn, credsId)) {
         error "Kinesis stream contains a different function trigger already. Please remove the existing function trigger and try again."
       }
       lambdaEvents.updateKinesisResourceServerless(event_source_kinesis_stream_arn)
-      deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, service_config)
+      deleteAndRedeployService(environment_logical_id, env_key, accountDetails, service_config, credsId)
     } else {
       error "Error occured while accessing the Kinesis stream"
     }
@@ -534,12 +533,12 @@ def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, envi
   }
 }
 
-def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_id, envBucketKey, credsId, accountDetails) {
+def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_id, env_key, credsId, accountDetails) {
   def dynamodbTableErrString = "CloudFormation - CREATE_FAILED - AWS::DynamoDB::Table - "
   def event_source_dynamodb_table_arn = service_config['event_source_dynamodb']
   def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(event_source_dynamodb_table_arn, environment_logical_id)
   event_source_dynamodb_table_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_dynamodb_table_arn, environment_logical_id, "_")
-  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}_${service_config['domain']}_${service_config['service']}_${environment_logical_id}"
   if (deployOutput.contains(dynamodbTableErrString)) {
     if (lambdaEvents.checkDynamoDbTableExists(event_source_dynamodb)) {
       def stream_details = lambdaEvents.getDynamoDbStreamDetails(event_source_dynamodb)
@@ -551,7 +550,7 @@ def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_
         events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], stream_details.StreamArn, "dynamodb_stream", service_config), environment_logical_id);
       }
       lambdaEvents.updateDynamoDbResourceServerless(stream_details.StreamArn)
-      deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, service_config)
+      deleteAndRedeployService(environment_logical_id, env_key, accountDetails, service_config, credsId)
     } else {
       error "Error occured while accessing the dynamodb stream"
     }
@@ -561,16 +560,16 @@ def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_
   }
 }
 
-def deleteAndRedeployService(environment_logical_id, envBucketKey, accountDetails, config){
+def deleteAndRedeployService(environment_logical_id, env_key, accountDetails, config, credsId){
   echoServerlessFile()
-  def s3bucketvalue
+  def s3BucketNameValue;
   for (item in accountDetails.REGIONS) {
-      if(item.REGION == config.region){
-        s3bucketvalue = item.S3[envBucketKey]
-      }
+    if(item.REGION == service_config.region){
+      s3BucketNameValue = item.S3[env_key]
+    }
   }
-  sh "serverless remove --stage $environment_logical_id -v --bucket ${s3bucketvalue}"
-  def redeployOutput = servelessDeploy(environment_logical_id, envBucketKey)
+  sh "serverless remove --stage $environment_logical_id -v --bucket ${s3BucketNameValue} --profile ${credsId}"
+  def redeployOutput = servelessDeploy(environment_logical_id, credsId, env_key, accountDetails)
   if (redeployOutput != 'success') {
     echo "Exception occured while serverless deployment to ${environment_logical_id} environment : $redeployOutput"
     error "Exception occured while serverless deployment to ${environment_logical_id} environment"
@@ -582,7 +581,7 @@ def echoServerlessFile() {
   echo "serverless file data $serverlessyml"
 }
 
-def servelessDeploy(env, envBucketKey, credsId, env_key, accountDetails){
+def servelessDeploy(env, credsId, env_key, accountDetails){
   def s3BucketNameValue;
   for (item in accountDetails.REGIONS) {
     if(item.REGION == service_config.region){
@@ -594,6 +593,7 @@ def servelessDeploy(env, envBucketKey, credsId, env_key, accountDetails){
     return "success"
   } catch (ex) {
     echo "Serverless deployment failed due to $ex"
+    sh "cat output.log"
   }
 
   def outputLog = readFile('output.log').trim()
@@ -758,7 +758,7 @@ def validateDeploymentConfigurations(def prop) {
     if (_runtime == "") {
       error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
     } else {
-      def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x", "c#"]
+      def validRuntimes = ["nodejs8.10", "nodejs10.x", "python3.6", "java8", "go1.x", "c#"]
       def flag = false
 
       for (int i = 0; i < validRuntimes.size(); i++) {
@@ -848,7 +848,7 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
   }
 
-  if((!isEventSchdld && ( configLoader.TVAULT && !configLoader.TVAULT.IS_ENABLED )) || config['domain'] == 'jazz' )) {
+  if((!isEventSchdld && ( configLoader.TVAULT && !configLoader.TVAULT.IS_ENABLED )) || config['domain'] == 'jazz') {
     removeEventResources()
   }
 
@@ -882,7 +882,7 @@ def echoServiceInfo(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(config, env_key, credsId, accountDetails) {
-  def logGroupName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+  def logGroupName = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}"
   def lambda = "/aws/lambda/${logGroupName}"
   def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
@@ -914,7 +914,6 @@ def createSubscriptionFilters(config, env_key, credsId, accountDetails) {
               destARN = data.LOGS.PROD
             }
           }
-          updatePolicy(env_key, destARN);
           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\"  --profile ${credsId}"
         } else {
           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
@@ -926,56 +925,14 @@ def createSubscriptionFilters(config, env_key, credsId, accountDetails) {
   }
 }
 
-def updatePolicy(env, destARN){
+def writeServerlessFile(config, env, accountDetails) {
 
-  def primaryData = utilModule.getAccountInfoPrimary();
-  def primaryRegion
-  for (item in primaryData.REGIONS) {
-    if(item.PRIMARY){
-      primaryRegion = item.REGION
-    }
-  }
-  def primaryCredsId = null
-
-  withCredentials([
-        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'PRIMARY_AWS_ACCESS_KEY_ID', credentialsId: primaryData.CREDENTIAL_ID, secretKeyVariable: 'PRIMARY_AWS_SECRET_ACCESS_KEY']
-      ])  {
-        try {
-          // initialize aws credentials
-          def randomStringPrimary = utilModule.generateRequestId();
-          primaryCredsId = "jazzprimary-${randomStringPrimary}";
-
-          sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
-          sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
-          sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
-
-          def destinationName = destARN;
-          def destArnArray = [];
-          destArnArray = destinationName.tokenize(":").last();
-
-          def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${service_config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
-          sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
-
-        } catch(ex){
-          send_status_email('FAILED', '')
-          events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
-          events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-          events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
-          error ex.getMessage()
-        } finally {
-          // reset Credentials
-          resetCredentials(primaryCredsId)
-        }
-    }
-}
-
-def writeServerlessFile(config, env, accountDetails) {  
-  
   def iamRoleArnValue = accountDetails.IAM.USERSERVICES_ROLEID;
   if(config['iamRoleARN'] != null && !config['iamRoleARN'].equals("")) iamRoleArnValue = config['iamRoleARN']
 
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
+  sh "sed -i -- 's/\${functionName}/${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${env}/g' serverless.yml"
   sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
   sh "sed -i -- 's/{env-stage}/${env}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
@@ -1128,7 +1085,7 @@ def send_status_email (build_status, email_content) {
 def getEventsArn(config, env, credsId) {
   def eventsArn = []
   try {
-    def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}"
+    def lambdaFnName = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${env}"
     def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${config['region']} --function-name $lambdaFnName --output json --profile ${credsId}", returnStdout: true)
 
     def policyLists = null
@@ -1276,18 +1233,18 @@ def getBuildModuleUrl() {
   }
 }
 
-def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId, accountDetails, config) {
+def handleDeploymentErrors(deployOutput, env_key, env, credsId, accountDetails, config) {
   def rollbackErrorMessage = "ROLLBACK_COMPLETE state and can not be updated"
   def logGroupErrorMessage = "CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"
   if(deployOutput.contains(rollbackErrorMessage)){
-    deleteAndRedeployService(env, envBucketKey, accountDetails, config)
+    deleteAndRedeployService(env, env_key, accountDetails, config, credsId)
   }
   else if (deployOutput.contains(logGroupErrorMessage))
   {
-    def lambda = "/aws/lambda/${envBucketKey}-${env}"
+    def lambda = "/aws/lambda/${env_key}-${env}"
     if (isExistingLogGroup(lambda, credsId)){
       removeLogGroup(lambda, credsId)
-      deleteAndRedeployService(env, envBucketKey, accountDetails, config);
+      deleteAndRedeployService(env, env_key, accountDetails, config, credsId);
     } else {
       error "Unable to find existing log groups"
     }

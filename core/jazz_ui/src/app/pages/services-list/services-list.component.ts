@@ -154,7 +154,7 @@ private intervalSubscription: Subscription;
   selectedListData:any;
   prevActivePage: number = 0;
   message;
-  relativeUrl : string = '/jazz/services';
+  relativeUrl : string = '/jazz/services/search';
   limitValue : number = 10;
   tableEmptyMessage: string = '';
 
@@ -328,8 +328,6 @@ private intervalSubscription: Subscription;
 
 
   onFilter(event) {
-
-
 
     this.serviceList = this.backupdata;
 

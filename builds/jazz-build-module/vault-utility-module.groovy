@@ -45,6 +45,7 @@ def updateSafeDetails(safeName, lambdaARN, credsId) {
 			} else echo "Role already exists"
 		} else {
 			addRoleToSafe(iamRoleArn, safeName)
+			events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceConfig['provider'], iamRoleArn, "iam_role", serviceConfig), environmentLogicalId);
 		}
 	} else {
 		echo "Safe not configured yet."

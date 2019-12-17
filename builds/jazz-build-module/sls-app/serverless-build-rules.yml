@@ -70,13 +70,13 @@ provider:
     sbr-constraint:
       sbr-enum:
         - nodejs8.10
+        - nodejs10.x
         - java8
-        - python2.7
         - python3.6
         - go1.x
     sbr-value:
       sbr-formula: ${config.providerRuntime}
-      sbr-example: nodejs8.10
+      sbr-example: nodejs10.x
     sbr-mandatory: true
 
 
@@ -158,11 +158,11 @@ provider:
   timeout: # in seconds 1 sec to 15 mins
     sbr-type: int
     sbr-render: user-wins
+    sbr-mandatory: true
     sbr-constraint:
       sbr-from: 1
       sbr-to: 900
     sbr-value:
-      sbr-formula: ${config.providerTimeout}
       sbr-example: 30
       
   logRetentionInDays:  # Set the default RetentionInDays for a CloudWatch LogGroup
@@ -554,7 +554,7 @@ function:
       sbr-render: config-wins
       sbr-mandatory: true
       sbr-value:
-        sbr-formula: ${context.INSTANCE_PREFIX}-${config.domain}-${config.service}-FN_${asterisk0}-${context.environment_logical_id}
+        sbr-formula: ${context.INSTANCE_PREFIX}_${config.domain}_${config.service}_${asterisk0}_${context.environment_logical_id}
 
     description:
       sbr-type: aws-description
@@ -579,22 +579,22 @@ function:
       sbr-constraint:
         sbr-enum:
           - nodejs8.10
+          - nodejs10.x
           - java8
-          - python2.7
           - python3.6
           - go1.x
       sbr-value:
         sbr-formula: ${config.providerRuntime}
-        sbr-example: nodejs8.10
+        sbr-example: nodejs10.x
 
     timeout: # in seconds 1 sec to 15 mins
       sbr-type: int
       sbr-render: user-wins
+      sbr-mandatory: true
       sbr-constraint:
         sbr-from: 1
         sbr-to: 900
       sbr-value:
-        sbr-formula: ${config.providerTimeout}
         sbr-example: 30
 
     role: # none provided in config, serverless creates if not user provided

@@ -1,13 +1,13 @@
 {
-  "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com",
-  "ENVIRONMENT_API_RESOURCE": "/stg/jazz/environments",
-  "DELETE_ENVIRONMENT_API_RESOURCE": "/stg/jazz/delete-serverless-service",
-  "TOKEN_URL": "/stg/jazz/login",
-  "SERVICE_API_RESOURCE": "/stg/jazz/services",
+  "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/stg/jazz",
+  "ENVIRONMENT_API_RESOURCE": "/environments",
+  "DELETE_ENVIRONMENT_API_RESOURCE": "/delete-serverless-service",
+  "TOKEN_URL": "/login",
+  "SERVICE_API_RESOURCE": "/services",
   "SERVICE_USER": "{jazz_admin}",
   "TOKEN_CREDS": "{jazz_admin_creds}",
-  "LIST_USERS": "/stg/jazz/acl/policies",
-  "ENV_DETAILS": "/stg/jazz/environments",
+  "POLICIES": "/acl/policies",
+  "ENV_DETAILS": "/environments",
   "EVENTS": {
     "EVENT_TYPE": [
       "SERVICE_DEPLOYMENT",
@@ -59,9 +59,26 @@
   },
   "TVAULT": {
     "IS_ENABLED": "{tvault-enabled}",
-    "API": "/stg/jazz/t-vault/safes",
+    "API": "/t-vault/safes",
     "HOSTNAME": "{tvault-host-name}",
     "ADD_ADMINS": "/user",
     "ADD_ROLE": "/role"
-  }
+  },
+  "ADMIN_POLICY": [
+    {
+      "userId": "",
+      "permission": "write",
+      "category": "code"
+    },
+    {
+      "userId": "",
+      "permission": "admin",
+      "category": "manage"
+    },
+    {
+      "userId": "",
+      "permission": "write",
+      "category": "deploy"
+    }
+  ]
 }
