@@ -18,7 +18,7 @@
 const request = require("request");
 const logger = require("./logger.js");
 
-function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
+function addSafe(environmentApiPayload, serviceDetails, configData, authToken, isInitialCommit) {
   return new Promise((resolve, reject) => {
     try {
       if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
@@ -34,30 +34,78 @@ function addSafe(environmentApiPayload, serviceDetails, configData, authToken) {
           "error": "Not creating safe for website",
         });
       }
-      
-      safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
-        .then((safeName) => { return safeExportable.getAdmins(serviceDetails.id, configData, authToken, safeName) })
-        .then((result) => { return safeExportable.addAdminsToSafe(serviceDetails.id, configData, authToken, result) })
-        .then((result) => { return resolve(result); })
-        .catch((err) => {
-          logger.error("add safe details failed: " + err);
-          return reject(err);
-        })
+
+      let safeName;
+      if (isInitialCommit) {
+        let adminUser = {"userId": serviceDetails.created_by, "permission": "admin"}
+        safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
+          .then((res) => { safeName = res; return safeExportable.updatePolicies(serviceDetails, configData, authToken) })
+          .then(() => { return safeExportable.addUserToSafe(adminUser, safeName, serviceDetails.id, configData, authToken) })
+          .then((result) => { return resolve(result); })
+          .catch((err) => {
+            logger.error("add safe details failed: " + err);
+            return reject(err);
+          })
+      } else {
+        safeExportable.createSafe(environmentApiPayload, serviceDetails.id, configData, authToken)
+          .then((safeName) => { return safeExportable.getAdmins(serviceDetails.id, configData, authToken, safeName) })
+          .then((result) => { return safeExportable.addAdminsToSafe(serviceDetails.id, configData, authToken, result) })
+          .then((result) => { return resolve(result); })
+          .catch((err) => {
+            logger.error("add safe details failed: " + err);
+            return reject(err);
+          })
+      }
     } catch (err) {
       logger.error("add safe details failed: " + err);
     }
   });
 }
 
+function updatePolicies(serviceDetails, configData, authToken) {
+  return new Promise((resolve, reject) => {
+    let adminPolicy = configData.ADMIN_POLICY;
+    adminPolicy = adminPolicy.map(policy => { return { permission: policy.permission, category: policy.category, userId: serviceDetails.created_by } });
+
+    let payload = {
+      uri: `${configData.BASE_API_URL}${configData.POLICIES}`,
+      method: "POST",
+      headers: {
+        "Authorization": authToken,
+        "Content-Type": "application/json",
+        "Jazz-Service-ID": serviceDetails.id
+      },
+      json: {
+        "serviceId": serviceDetails.id,
+        "policies": adminPolicy
+      }
+    };
+
+    logger.debug("updatePolicies payload: " + JSON.stringify(payload));
+    request(payload, function (error, response, body) {
+      logger.debug("updatePolicies response: " + JSON.stringify(response));
+      if (response.statusCode && response.statusCode === 200) {        
+        return resolve();
+      } else {
+        logger.error("Error adding policies: " + JSON.stringify(response));
+        return reject({
+          "error": "Error adding policies",
+          "details": response.body.message
+        });
+      }
+    });
+  });
+}
+
 function createSafe(environmentPayload, service_id, configData, authToken) {
   return new Promise((resolve, reject) => {
-    var updatePayload = {};
+    let updatePayload = {};
     const safeName = `${environmentPayload.domain}_${environmentPayload.service}_${environmentPayload.logical_id}`;
     updatePayload.name = safeName;
     updatePayload.owner = configData.SERVICE_USER;
     updatePayload.description = "create safe for jazz tvault service: " + safeName;
 
-    var svcPayload = {
+    let svcPayload = {
       uri: `${configData.BASE_API_URL}${configData.TVAULT.API}`,
       method: "POST",
       headers: {
@@ -99,8 +147,8 @@ function createSafe(environmentPayload, service_id, configData, authToken) {
 
 function getAdmins(serviceId, configData, authToken, safeName) {
   return new Promise((resolve, reject) => {
-    var payload = {
-      uri: `${configData.BASE_API_URL}${configData.LIST_USERS}?serviceId=${serviceId}`,
+    let payload = {
+      uri: `${configData.BASE_API_URL}${configData.POLICIES}?serviceId=${serviceId}`,
       method: "GET",
       headers: {
         "Authorization": authToken,
@@ -128,54 +176,53 @@ function getAdmins(serviceId, configData, authToken, safeName) {
   });
 }
 
-function addAdminsToSafe(serviceId, configData, authToken, res) {
-  function processAdmins(user) {
-    return new Promise((resolve, reject) => {
-      var updatePayload = {
-        'username': user.userId,
-        'permission': user.permission === "admin" ? 'write' : 'read'
-      };
-
-      const safeName = res.safeName;
-      var payload = {
-        uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}${configData.TVAULT.ADD_ADMINS}`,
-        method: "POST",
-        headers: {
-          "Authorization": authToken,
-          "Content-Type": "application/json",
-          "Jazz-Service-ID": serviceId
-        },
-        json: updatePayload
-      };
-
-      logger.debug("addAdminsToSafe payload: " + JSON.stringify(payload));
-      request(payload, function (error, response, body) {
-        logger.debug("addAdminsToSafe response: " + JSON.stringify(response));
-        if (response.statusCode && response.statusCode === 200) {
-          return resolve(body);
-        } else {
-          logger.error("Error adding admins to safe: " + JSON.stringify(response));
-          return reject({
-            "error": "Error adding admins to safe",
-            "details": response.body.message
-          });
-        }
-      });
-    });
-  }
-
+function addUserToSafe(user, safeName, serviceId, configData, authToken) {
   return new Promise((resolve, reject) => {
-    var adminsList = res.admins && res.admins.data && res.admins.data.policies;
-    var safeAdmins = adminsList.filter(ele => ele.category === "manage");
+    let updatePayload = {
+      'username': user.userId,
+      'permission': user.permission === "admin" ? 'write' : 'read'
+    };
+
+    let payload = {
+      uri: `${configData.BASE_API_URL}${configData.TVAULT.API}/${safeName}${configData.TVAULT.ADD_ADMINS}`,
+      method: "POST",
+      headers: {
+        "Authorization": authToken,
+        "Content-Type": "application/json",
+        "Jazz-Service-ID": serviceId
+      },
+      json: updatePayload
+    };
+
+    logger.debug("addUserToSafe payload: " + JSON.stringify(payload));
+    request(payload, function (error, response, body) {
+      logger.debug("addUserToSafe response: " + JSON.stringify(response));
+      if (response.statusCode && response.statusCode === 200) {
+        return resolve(body);
+      } else {
+        logger.error("Error adding users to safe: " + JSON.stringify(response));
+        return reject({
+          "error": "Error adding users to safe",
+          "details": response.body.message
+        });
+      }
+    });
+  });
+}
+
+function addAdminsToSafe(serviceId, configData, authToken, res) {
+  return new Promise((resolve, reject) => {
+    let adminsList = res.admins && res.admins.data && res.admins.data.policies;
+    let safeAdmins = adminsList.filter(ele => ele.category === "manage");
     if (safeAdmins.length === 0) {
       return resolve({
         "error": "No admins found for safe",
       });
     }
-    var processPromises = [];
+    let processPromises = [];
     if (safeAdmins.length > 0) {
-      for (var i = 0; i < safeAdmins.length; i++) {
-        processPromises.push(processAdmins(safeAdmins[i]));
+      for (let i = 0; i < safeAdmins.length; i++) {
+        processPromises.push(safeExportable.addUserToSafe(safeAdmins[i], res.safeName, serviceId, configData, authToken ));
       }
     }
 
@@ -191,45 +238,13 @@ function addAdminsToSafe(serviceId, configData, authToken, res) {
   });
 }
 
-function getEnvDetails(environmentPayload, configData, authToken) {
-  return new Promise((resolve, reject) => {
-    if (!configData.TVAULT || !configData.TVAULT.IS_ENABLED) {
-      return resolve({
-        "error": "T-vault is not enabled",
-      });
-    }
-
-    var payload = {
-      uri: `${configData.BASE_API_URL}${configData.ENV_DETAILS}?service=${environmentPayload.service}&domain=${environmentPayload.domain}`,
-      method: "GET",
-      headers: {
-        "Authorization": authToken,
-        "Content-Type": "application/json"
-      }
-    };
-
-    logger.debug("getEnvDetails payload: " + JSON.stringify(payload));
-    request(payload, function (error, response, body) {
-      logger.debug("getEnvDetails response: " + JSON.stringify(response));
-      if (response.statusCode && response.statusCode === 200) {
-        return resolve(body);
-      } else {
-        logger.error("Error getting environment details: " + JSON.stringify(response));
-        return reject({
-          "error": "Error getting environment details",
-          "details": response.body.message
-        });
-      }
-    });
-  });
-}
-
 const safeExportable = {
   addSafe,
   createSafe,
   getAdmins,
   addAdminsToSafe,
-  getEnvDetails
+  updatePolicies,
+  addUserToSafe
 };
 
 module.exports = safeExportable;

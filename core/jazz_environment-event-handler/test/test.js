@@ -560,7 +560,7 @@ describe('jazz environment handler tests: ', () => {
     let getAdminsStub = sinon.stub(safe, "getAdmins").resolves(resultData);
     let addAdminstoSafeStub = sinon.stub(safe, "addAdminsToSafe").resolves(testPayloads.processEventInitialCommitSuccess.body);
     const service = { id: 1, type: "api", service: "test", domain: "tst" }
-    safe.addSafe(environmentPayload, service, configData, authToken)
+    safe.addSafe(environmentPayload, service, configData, authToken, false)
       .then((res) => {
         sinon.assert.calledOnce(createSafeStub);
         sinon.assert.calledOnce(getAdminsStub);
@@ -572,42 +572,18 @@ describe('jazz environment handler tests: ', () => {
       });
   });
 
-  
-
-  it("get environment details of safe", () => {
-    let environmentPayload = testPayloads.environmentPayload;
-    environmentPayload["metadata"] = {
-      "safe":
-          {
-              "name":"test-vault-user_jazztest",
-              "link":"https://vault/#!/admin",
-              "ts":"2019-11-11T15:56:02.290Z"
-          }
-    };
-    let requestStub = sinon.stub(request, "Request").callsFake((obj) => {
-        return obj.callback(null, testPayloads.envDetailsResponse, testPayloads.envDetailsResponse.body);
-    });
-    safe.getEnvDetails(environmentPayload, configData, authToken)
-      .then((res) => {
-        sinon.assert.calledOnce(requestStub);
-        requestStub.restore();
-        expect(res.data.environment[0].metadata.safe.name).to.eq(environmentPayload["metadata"].safe.name);
-      });
-  });
-
   it("tvault is not configured error", () => {
     let event = require('./COMMIT_TEMPLATE');
     const statusCode = testPayloads.apiResponse.statusCode;
     configData.TVAULT.IS_ENABLED = false;
     const safeName = 'test-safe';
     const service = { id: 1, type: "api", service: "test", domain: "tst" }
-    safe.addSafe(event.Item, service, configData, authToken)
+    safe.addSafe(event.Item, service, configData, authToken, false)
       .catch((err) => {
         expect(res.err).to.include('T-vault is not enabled');
         configData.TVAULT.IS_ENABLED = true;
       });
   });
-
 });
 
 describe("getServiceDetails", () => {
