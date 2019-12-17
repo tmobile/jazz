@@ -250,9 +250,7 @@
 		<div class="icon-icon-nodata"></div>
 		<div><b>Oops, No Data Found</b><br>Doesn't look like there is any data available here.</div>
 	</div>
-	<div class="loading-outer-div" [class.show]="isLoading">
-		<div class="loading-circle loader"></div>
-	</div>
+	
 </div>
 </div>
 <div class="secret-container relative col-detail" *ngIf="isNotWebsite && tvaultEnabled">
@@ -263,7 +261,7 @@
 					<img class="icons-style"
 						 src="../../../assets/images/icons/iconmonstr-info-2.svg" />
 						<div class="tooltip-content">
-							<span id="copyPopup">User can manage access to safe through these roles. Click <a><i class="fa fa-clone" [style.fontSize]="iconSize"></i></a> to copy role</span>
+							<span id="copyPopup">Users can manage access to safe through these secrets. Click <a><i class="fa fa-clone" [style.fontSize]="iconSize"></i></a> to copy role.</span>
 						</div>
 				</div>
 			</div>
@@ -271,72 +269,75 @@
 				<div *ngIf="editEvents" class="edit-icon">
 					<img class="pre-image" src="/assets/erser/icon-edit.svg" (click)="secretEdiClick()" />
 				</div>
-				<div *ngIf="!editEvents">
-					<button class="cancel-button" (click)="onSecretCancelClick()">CANCEL</button>
-					<button class="save-button" [ngClass]="!isAddOrDelete?'disable-save-button':'enable-save-button'"
-						[disabled]="!isAddOrDelete" (click)='secretSaveClick()'>Save</button>
+				<div *ngIf="!editEvents" class="down-btn-wrap">
+					<div class="custom-save-btn-wrap">
+						<btn-jazz-primary class="save-btn-wrap" [disablePrimaryBtn]="!isAddOrDelete" text="SAVE"
+							(click)="secretSaveClick()"></btn-jazz-primary>
+						<a (click)="onSecretCancelClick()">CANCEL</a>
+					</div>
 				</div>
 			</div>
 		</div>
 		<div class="secret-container__details">
 			<div class="secret-container__details--list" (mouseover)="myFunction()">
-				<div class="no-data" *ngIf="noData">No roles found</div>
-				<div class="arn-value__each" (click)='copyRoleClipboard(firstSafeRole)' *ngIf="!noData">
+				<div class="no-data" *ngIf="noData">No role found</div>
+				<div class="arn-value__each" *ngIf="!noData">
 					<div class="arn-value__each--arn">{{firstSafeRole}}</div>
 					<div *ngIf="editEvents" class="copy-icon">
-						<span class='relative'>
-							<a><i class="fa fa-clone" [style.fontSize]="iconSize"></i></a>
-							<div class="tooltip-content">
-								<span id="copyPopup">{{copylinkmsg}}</span>
-							</div>
+						<span class="copy-safe">
+							<app-copy-element class="copy-safe-icon" [CopyElement]="firstSafeRole" [iconSize]="'15px'"
+								[iconColor]="'#e20074'"></app-copy-element>
 						</span>
 					</div>
 					<div *ngIf="!editEvents" class="">
 						<img alt="lock" src="../../../assets/images/icons/iconmonstr-lock-4.svg" class="lock-icon" />
 					</div>
 				</div>
-				<textarea id={{firstSafeRole}} class="copyrolelinkdev">{{firstSafeRole}}</textarea>
 				<div class="arn-value" *ngFor="let list of reqArnArray;let i = index">
-					<div class="arn-value__each" (click)='copyRoleClipboard(list)'>
+					<div class="arn-value__each">
 						<div class="arn-value__each--arn">{{list}}</div>
 						<div *ngIf="editEvents" class="copy-icon">
-							<span class='relative'>
-								<a><i class="fa fa-clone" [style.fontSize]="iconSize"></i></a>
-								<div class="tooltip-content">
-									<span id="copyPopup">{{copylinkmsg}}</span>
-								</div>
+							<span class="copy-safe">
+								<app-copy-element class="copy-safe-icon" [CopyElement]="list" [iconSize]="'15px'"
+									[iconColor]="'#e20074'"></app-copy-element>
 							</span>
 						</div>
 						<div *ngIf="!editEvents" class="delete-group" (click)="onDeleteClick(list,i)">
 							<span class="icon-icon-close"></span>
 						</div>
 					</div>
-					<textarea id={{list}} class="copyrolelinkdev">{{list}}</textarea>
 				</div>
 				<div>
 					<div class="secret__edit" *ngIf="showDisplay">
 						<div class="secret__edit--input">
-							<input name="role" autocomplete="off" type="text" #role="ngModel" id="inputrole" 
-								pattern="[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{3,4}$" class="inputClass textForm"
+							<input name="role" autocomplete="off" type="text" #role="ngModel" id="inputrole" class="inputClass textForm"
 								placeholder="Role" [(ngModel)]="inputVal" (ngModelChange)="onRoleNameChange(inputVal)"
-								[ngClass]="inValidArn?'errorClass':''"/>
+								[ngClass]="inValidArn?'errorClass':''" />
 						</div>
 						<div class="delete-group margin30" (click)="onInputCancelClick()">
 							<span class="icon-icon-close"></span>
 						</div>
 					</div>
 					<div *ngIf="inValidArn" class="error-msg">
-						ARN is invalid
+						{{arnInvalidMsg}}
 					</div>
 					<div class="secret-container__details--addrole" *ngIf="!editEvents" (click)="addSecret()">
 						+ Add Role
 					</div>
 				</div>
 			</div>
-			<div class="secret-container__details--desc">These roles will have read access to the secrets. To view or
-				edit secrets in safe: {{tvaultSafeName}} on T-Vault,
-				<a target="_blank" href="http://gitlab191202-tvault-alb-290631268.us-east-1.elb.amazonaws.com">click
-					here.</a>
+			<div class="secret-container__details--desc">
+				These roles will have read access to the secrets. To view or
+				edit secrets in safe:
+				<span> <span class="safe-name">{{tvaultSafeName}}</span>&nbsp;
+					<span class="copy-safe">
+						<app-copy-element class="copy-safe-icon" [CopyElement]="tvaultSafeName" [iconSize]="'15px'"
+							[iconColor]="'#e20074'"></app-copy-element>
+					</span>
+					on T-Vault,
+					<a target="_blank" href="{{tvault_link}}">click
+						here.</a>
+				</span>
 			</div>
 		</div>
 	</div>
@@ -356,7 +357,9 @@
 		</div>
 	</div>
 </div>
-
+<div class="loading-main" *ngIf="isLoading">
+	<div class="loading-circle main-loading-circle"></div>
+</div>
 </div>
 
 <div class="separator-row hide"></div>

@@ -176,6 +176,12 @@ $env-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
 .bottom-right {
   width: 40%;
 }
+.main-loading-circle{
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(50%, -50%);
+}
 
 .gradeA {
   background-color: #5cae01;
@@ -420,9 +426,8 @@ transform: rotateY(-50%)
   width: calc((100% - 2rem)/2);
   background-color: $color-white;
   box-shadow: $env-box-shadow;
+  border-radius: 10px 10px 10px 10px;
   flex-basis: 0;
-  border-radius: 5px;
-  overflow: hidden;
 }
 .secret-container{
   margin-left: 25px;
@@ -434,6 +439,7 @@ transform: rotateY(-50%)
     align-items: center;
     padding: 10px;
     height: 45px;
+    border-radius: 10px 10px 0px 0px;
     &--def{
       margin-left: 5px;
       font-weight: 600;
@@ -468,15 +474,19 @@ transform: rotateY(-50%)
   }
   &__details{
     padding: 10px 16px;
+    height: 128px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    margin-right: 2px;
     &--list{
-        overflow-y: auto;
-        overflow-x: hidden;
-        max-height: 130px;
        .arn-value__each{
         margin: 5px 0px;
         display: flex;
         justify-content: space-between;
         width: 82%;
+        &--arn{
+          margin-right: 25px;
+        }
         .copy-icon{
          margin-right: 50px;
          cursor: pointer;
@@ -533,17 +543,20 @@ transform: rotateY(-50%)
     &--desc{
       position: absolute;
       bottom: 5px;
+      padding-right: 20px;
     }
   }
 }
 .error-padding {
   padding: 20px;
+  height: auto;
+  display: block;
 }
-.secret-container__details--list::-webkit-scrollbar-thumb {
+.secret-container__details::-webkit-scrollbar-thumb {
   background-color: darkgrey;
   border-radius: 5px;
   }
-.secret-container__details--list::-webkit-scrollbar {
+.secret-container__details::-webkit-scrollbar {
     width: 0.5em;
   }
 .lock-icon{
@@ -560,31 +573,58 @@ transform: rotateY(-50%)
 }
 .info-tooltip {
   margin-left: 5px;
+  position: relative;
 } 
+.safe-name {
+  font-weight: bold;
+}
+.copy-safe-icon {
+  position: relative;
+}
+
+.custom-save-btn-wrap {
+  width: auto;
+  padding: 0;
+  display: flex;
+  flex-direction: row-reverse;
+  /deep/button.btn {
+      border-color: white !important;
+      height: 30px;
+  }
+  /deep/a {
+      color: white !important;
+  }
+}
+.down-btn-wrap {
+  font-size: 13px;
+  btn-jazz-primary,
+  a {
+      cursor: pointer;
+      padding: 0px 5px
+  }
+  a {
+      align-self: center;
+  }
+}
+
+.down-btn-wrap-advanced {
+  bottom: -4rem;
+}
+
 .info-tooltip .tooltip-content {
   visibility: hidden; 
   width: 237px;
   background-color: #fff;
   color: #4a4a4a;
   text-align: center;
-  box-shadow: 0 2px 2px rgba(#000000,.5);
+  box-shadow: 0 2px 5px rgba(#000000,.5);
   border-radius: 6px;
   padding: 8px;
   position: absolute;
   z-index: 1;
-  top: -48%;
   left: 110%;
-  right: -133%;
+  bottom: 77%;
   font-size: 12px;
-}
-.info-tooltip .tooltip-content::after {
-position: absolute;
-top: 100%;
-left: 50%;
-margin-left: -5px;
-border-width: 5px;
-border-style: solid;
-border-color: #D5D7D9 transparent transparent transparent;
 }
 .info-tooltip:hover .tooltip-content{
 visibility: visible;
@@ -863,6 +903,13 @@ animation: fadeIn 2s;
   overflow-y: auto;
   display: flex;
 }
+.loading-main{
+  width: 100%;
+  min-height: 230px;
+  z-index: 2;
+  background: #fff;
+  position: absolute;
+}
 
 .loading-outer-div{
   width: 100%;
@@ -916,35 +963,9 @@ animation: fadeIn 2s;
 
 .secret-container__edit {
   position: relative;
+
 }
-.arn-value__each .tooltip-content {
-  visibility: hidden;
-  width: 200px;
-  background-color: #D5D7D9;
-  color: #4a4a4a;
-  text-align: center;
-  border-radius: 6px;
-  padding: 8px;
-  position: absolute;
-  z-index: 1;
-  left: 16%;
-  margin-left: -75px;
-}
-.arn-value__each .tooltip-content::after {
-  content: "";
-  position: absolute;
-  bottom: 100%;
-  left: 41%;
-  margin-left: -5px;
-  border-width: 5px;
-  border-style: solid;
-  border-color: transparent transparent #D5D7D9 transparent;
-}
-.arn-value__each:hover .tooltip-content{
-  visibility: visible;
-  -webkit-animation: fadeIn 2s;
-  animation: fadeIn 2s;
-}
+
 .line-numbers {
   background: #f8f8f8;
   color: #c4c4c7;
