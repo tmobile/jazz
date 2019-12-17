@@ -36,6 +36,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public assetList: any = [];
   selectedAssetName: any;
   assetSelected;
+  startTime: any;
   public formFields: any = [
     {
       column: 'View By:',
@@ -616,7 +617,30 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     return endTimeValue;
   }
 
+  setStartTime() {
+    this.formFields.map((item) => {
+      if (item.label === "TIME RANGE") {
+        if (item.selected === "Last 24 Hours") {
+          this.startTime = moment().subtract(1, 'day').toISOString();
+        } else if (item.selected === "Last 15 Minutes") {
+          this.startTime = moment().subtract(15, 'minute').toISOString();
+        } else if (item.selected === "Last 1 Hour") {
+          this.startTime = moment().subtract(1, 'hour').toISOString();
+        } else if (item.selected === "Last 7 Days") {
+          this.startTime = moment().subtract(7, 'days').toISOString();
+        } else if (item.selected === "Last 12 Months") {
+          this.startTime = moment().subtract(1, 'year').toISOString();
+        } else if (item.selected === "Last 3 Months") {
+          this.startTime = moment().subtract(3, 'month').toISOString();
+        } else if (item.selected === "Last 30 Days") {
+          this.startTime = moment().subtract(1, 'month').toISOString();
+        }
+      }
+    })
+  }
+
   queryMetricsData() {
+    this.setStartTime()
     if (this.metricSubscription) {
       this.metricSubscription.unsubscribe();
     }
@@ -630,7 +654,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         domain: this.service.domain,
         service: this.service.name,
         environment: this.filters.getFieldValueOfLabel('ENVIRONMENT') || this.activatedRoute.snapshot.params['env'] || 'prod',
-        start_time: this.filters.getFieldValueOfLabel('TIME RANGE').range,
+        start_time: this.startTime,
         end_time: endDateTime,
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
         statistics: this.filters.getFieldValueOfLabel('AGGREGATION')
