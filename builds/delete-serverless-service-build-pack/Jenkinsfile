@@ -624,7 +624,7 @@ def writeServerlessFile(env){
 			def event_s3_arn = "arn:aws:s3:::${event_source_s3}"
 			sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
 			sh "sed -i -- 's/{event_action_s3}/${service_config['event_action_s3']}/g' ./serverless.yml"
-			sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' policyFile.yml"
+			sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' customRoles.yml"
 		}
 
 		if (service_config['event_source_sqs']) {
@@ -632,7 +632,7 @@ def writeServerlessFile(env){
 			def event_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(service_config['event_source_sqs'], env, "_")
 			sh "sed -i -- 's/{event_source_sqs}/${event_source_sqs}/g' ./serverless.yml"
 			sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' ./serverless.yml"
-			sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' policyFile.yml"
+			sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' customRoles.yml"
 		}
 
 		if (service_config['event_source_kinesis']) {
@@ -1293,7 +1293,7 @@ def loadServerlessConfig() {
 	}
 
 	if (service_config['event_source_dynamodb'] || service_config['event_source_sqs'] || service_config['event_source_dynamodb'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED )) {
-		sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
+		sh "cp _config/aws-events-policies/custom-roles.yml ./customRoles.yml"
 	}	
 
 }

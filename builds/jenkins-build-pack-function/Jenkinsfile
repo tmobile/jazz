@@ -844,11 +844,11 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
   }
 
-  if (isS3EventEnabled || isSQSEventEnabled || isDynamoDbEnabled || isStreamEnabled || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED && config['domain'] != 'jazz')) {
-    sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
+  if ( config['domain'] != 'jazz' || config['iamRoleARN']) {
+    sh "cp _config/aws-events-policies/custom-roles.yml ./customRoles.yml"
   }
 
-  if((!isEventSchdld && ( configLoader.TVAULT && !configLoader.TVAULT.IS_ENABLED )) || config['domain'] == 'jazz') {
+  if(!isEventSchdld || config['domain'] == 'jazz' || ) {
     removeEventResources()
   }
 
@@ -926,10 +926,6 @@ def createSubscriptionFilters(config, env_key, credsId, accountDetails) {
 }
 
 def writeServerlessFile(config, env, accountDetails) {
-
-  def iamRoleArnValue = accountDetails.IAM.USERSERVICES_ROLEID;
-  if(config['iamRoleARN'] != null && !config['iamRoleARN'].equals("")) iamRoleArnValue = config['iamRoleARN']
-
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
   sh "sed -i -- 's/\${functionName}/${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${env}/g' serverless.yml"
@@ -961,7 +957,7 @@ def writeServerlessFile(config, env, accountDetails) {
     def event_s3_arn = "arn:aws:s3:::${event_source_s3}"
     sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
     sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
-    sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' policyFile.yml"
+    sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' customRoles.yml"
   }
 
   if (config['event_source_sqs']) {
@@ -969,7 +965,7 @@ def writeServerlessFile(config, env, accountDetails) {
     def event_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_sqs'], env, "_")
     sh "sed -i -- 's/{event_source_sqs}/${event_source_sqs}/g' ./serverless.yml"
     sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' ./serverless.yml"
-    sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' policyFile.yml"
+    sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' customRoles.yml"
   }
 
   if (config['event_source_kinesis']) {
@@ -982,12 +978,11 @@ def writeServerlessFile(config, env, accountDetails) {
     sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
   } 
   
-  if (config['domain'] != 'jazz' && (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3'] 
-  || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ))) {
+  if (config['iamRoleARN'] ) {    
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
+  } else {        
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
-  } else {        
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${iamRoleArnValue}|g' serverless.yml"
   }
 }
 

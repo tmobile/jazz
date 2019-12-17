@@ -103,22 +103,22 @@ functions:
 resourcesDisabled:
   Resources:
     #Start:isVaultEnabled
-    customRole: ${file(policyFile.yml):basicRole}
+    customRole: ${file(customRoles.yml):basicRole}
     #End:isVaultEnabled
     #Start:isVaultAndVpcEnabled
-    customRole: ${file(policyFile.yml):vpcRole}
+    customRole: ${file(customRoles.yml):vpcRole}
     #End:isVaultAndVpcEnabled
     #Start:isS3EventRoleEnabled
-    customRole: ${file(policyFile.yml):s3Role}
+    customRole: ${file(customRoles.yml):s3Role}
     #End:isS3EventRoleEnabled
     #Start:isStreamEnabled
-    customRole: ${file(policyFile.yml):kinesisRole}
+    customRole: ${file(customRoles.yml):kinesisRole}
     #End:isStreamEnabled
     #Start:isDynamoDbEnabled
-    customRole: ${file(policyFile.yml):dynamoDbRole}
+    customRole: ${file(customRoles.yml):dynamoDbRole}
     #End:isDynamoDbEnabled
     #Start:isSQSEventEnabled
-    customRole: ${file(policyFile.yml):sqsRole}
+    customRole: ${file(customRoles.yml):sqsRole}
     #End:isSQSEventEnabled
     #Start:isSQSEventEnabled
     #Start:isSqsResourceNotExist

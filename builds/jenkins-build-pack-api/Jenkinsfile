@@ -1019,7 +1019,7 @@ def loadServerlessConfig(config) {
   }
 
   if (config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ) {
-    sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
+    sh "cp _config/aws-events-policies/custom-roles.yml ./customRoles.yml"
   }
 
   removeEventResources()
