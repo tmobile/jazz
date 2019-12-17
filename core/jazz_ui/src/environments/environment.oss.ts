@@ -68,7 +68,7 @@ export const environment = {
   },
   tvault: {
     tvault_enabled: {tvault_enabled},
-    tvault_url: {tvault_url}
+    tvault_url: '{tvault_url}'
   },
   gcloud: {
     envLists:  {},
