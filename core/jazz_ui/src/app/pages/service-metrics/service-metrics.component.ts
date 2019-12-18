@@ -37,6 +37,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   selectedAssetName: any;
   assetSelected;
   startTime: any;
+  endTime: any;
   public formFields: any = [
     {
       column: 'View By:',
@@ -595,27 +596,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     } 
   }
 
-  massageDateTime(){
-    let endTimeValue;
-    let endTimeMins:any;
-    let startTime = this.filters.getFieldValueOfLabel('TIME RANGE').range;
-    let endTime = moment().toISOString();
-    let startTimeMins = startTime.split('.');
-    startTimeMins = startTimeMins[0];
-    startTimeMins = new Date(startTimeMins).getMinutes();
-    endTimeMins = endTime.split('.');
-    endTimeMins = endTimeMins[0];
-    endTimeMins = new Date(endTimeMins).getMinutes();
-    if((endTimeMins - startTimeMins) > 0){
-      endTimeValue = endTime.split('T');
-      endTimeValue = endTimeValue[0] + 'T';
-      let startTimeMoment = endTime.split('T');
-      endTimeValue = endTimeValue + startTimeMoment[1];
-    } else {
-      endTimeValue = moment().toISOString();
-    }
-    return endTimeValue;
-  }
 
   setStartTime() {
     this.formFields.map((item) => {
@@ -638,14 +618,20 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       }
     })
   }
+  setEndTime() {
+    let str1 = this.startTime.split(":")
+    let currentTime = moment().toISOString();
+    let str2 = currentTime.slice( 0, currentTime.lastIndexOf( ":" ))
+    this.endTime = str2 + ":" + str1[2]
+  }
 
   queryMetricsData() {
-    this.setStartTime()
     if (this.metricSubscription) {
       this.metricSubscription.unsubscribe();
     }
+    this.setStartTime()
+    this.setEndTime()
     this.sectionStatus = 'loading';
-    let endDateTime = this.massageDateTime();
 
     // TODO: Leverage TypeScript interfaces for data contracts at minimum
     let request = {
@@ -655,7 +641,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         service: this.service.name,
         environment: this.filters.getFieldValueOfLabel('ENVIRONMENT') || this.activatedRoute.snapshot.params['env'] || 'prod',
         start_time: this.startTime,
-        end_time: endDateTime,
+        end_time: this.endTime,
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
         statistics: this.filters.getFieldValueOfLabel('AGGREGATION')
       }
