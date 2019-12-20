@@ -597,39 +597,36 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   }
 
 
-  setStartTime() {
+  setStartTime(val) {
     this.formFields.map((item) => {
       if (item.label === "TIME RANGE") {
         if (item.selected === "Last 24 Hours") {
-          this.startTime = moment().subtract(1, 'day').toISOString();
+          this.startTime = moment(val).subtract(1, 'day');
         } else if (item.selected === "Last 15 Minutes") {
-          this.startTime = moment().subtract(15, 'minute').toISOString();
+          this.startTime = moment(val).subtract(15, 'minute');
         } else if (item.selected === "Last 1 Hour") {
-          this.startTime = moment().subtract(1, 'hour').toISOString();
+          this.startTime = moment(val).subtract(1, 'hour');
         } else if (item.selected === "Last 7 Days") {
-          this.startTime = moment().subtract(7, 'days').toISOString();
+          this.startTime = moment(val).subtract(7, 'days');
         } else if (item.selected === "Last 12 Months") {
-          this.startTime = moment().subtract(1, 'year').toISOString();
+          this.startTime = moment(val).subtract(1, 'year');
         } else if (item.selected === "Last 3 Months") {
-          this.startTime = moment().subtract(3, 'month').toISOString();
+          this.startTime = moment(val).subtract(3, 'month');
         } else if (item.selected === "Last 30 Days") {
-          this.startTime = moment().subtract(1, 'month').toISOString();
+          this.startTime = moment(val).subtract(1, 'month');
         }
       }
     })
   }
   setEndTime() {
-    let str1 = this.startTime.split(":")
-    let currentTime = moment().toISOString();
-    let str2 = currentTime.slice( 0, currentTime.lastIndexOf( ":" ))
-    this.endTime = str2 + ":" + str1[2]
+    this.endTime = moment();
+    this.setStartTime(this.endTime)
   }
 
   queryMetricsData() {
     if (this.metricSubscription) {
       this.metricSubscription.unsubscribe();
     }
-    this.setStartTime()
     this.setEndTime()
     this.sectionStatus = 'loading';
 
