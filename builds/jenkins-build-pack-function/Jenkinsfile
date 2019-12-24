@@ -184,8 +184,7 @@ node() {
 
 
   dir(repo_name) {
-    if (servicePlatform == null || servicePlatform != "azure") {
-
+    if (servicePlatform == "aws") {
       loadServerlessConfig(runtime, isEventSchdld, isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
     }
     if (domain == "jazz") {
@@ -212,7 +211,7 @@ node() {
       events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map, environment_logical_id)
     }
 
-    if (config['domain'] && config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
+    if (config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
       stage('Code Quality Check') {
         events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
         try {
@@ -376,7 +375,7 @@ node() {
             if(!accountDetails.PRIMARY){
               def primaryAccountData = utilModule.getAccountInfoPrimary();
               def primaryAccountValue = primaryAccountData.ACCOUNTID;
-              def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+              def lambdaFnNameValue = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}"
 
               addPermission(lambdaFnNameValue, primaryAccountValue, credsId, config);
             }
@@ -462,7 +461,7 @@ def handleSqsError(deployOutput, service_config, environment_logical_id, envBuck
   if (deployOutput.contains(sqsErrString)) {
     def event_source_sqs = lambdaEvents.getSqsQueueName(event_source_sqs_arn, environment_logical_id)
     event_source_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_sqs_arn, environment_logical_id, "_")
-    def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+    def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}_${service_config['domain']}_${service_config['service']}_${environment_logical_id}"
     if (lambdaEvents.checkSqsQueueExists(event_source_sqs, credsId)) {
       if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_sqs_arn, lambda_arn, credsId)) {
         error "Queue contains a different function trigger already. Please remove the existing function trigger and try again."
@@ -482,7 +481,7 @@ def handleKinesisStreamError(deployOutput, event_source_kinesis_stream_arn, envi
   def kinesisStreamErrString = "CloudFormation - CREATE_FAILED - AWS::Kinesis::Stream - "
   def event_source_kinesis = lambdaEvents.splitAndGetResourceName(event_source_kinesis_stream_arn, environment_logical_id)
   event_source_kinesis_stream_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_kinesis_stream_arn, environment_logical_id, "_")
-  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}_${service_config['domain']}_${service_config['service']}_${environment_logical_id}"
   if (deployOutput.contains(kinesisStreamErrString)) {
     if (lambdaEvents.checkKinesisStreamExists(event_source_kinesis, credsId)) {
       if (lambdaEvents.checkIfDifferentFunctionTriggerAttached(event_source_kinesis_stream_arn, lambda_arn, credsId)) {
@@ -504,7 +503,7 @@ def handleDynamoDbStreamError(deployOutput, service_config, environment_logical_
   def event_source_dynamodb_table_arn = service_config['event_source_dynamodb']
   def event_source_dynamodb = lambdaEvents.splitAndGetResourceName(event_source_dynamodb_table_arn, environment_logical_id)
   event_source_dynamodb_table_arn = lambdaEvents.getEventResourceNamePerEnvironment(event_source_dynamodb_table_arn, environment_logical_id, "_")
-  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}-${service_config['domain']}-${service_config['service']}-${environment_logical_id}"
+  def lambda_arn = "arn:aws:lambda:${config['region']}:${config['accountId']}:function:${configLoader.INSTANCE_PREFIX}_${service_config['domain']}_${service_config['service']}_${environment_logical_id}"
   if (deployOutput.contains(dynamodbTableErrString)) {
     if (lambdaEvents.checkDynamoDbTableExists(event_source_dynamodb)) {
       def stream_details = lambdaEvents.getDynamoDbStreamDetails(event_source_dynamodb)
@@ -559,6 +558,7 @@ def servelessDeploy(env, envBucketKey, credsId, env_key, accountDetails){
     return "success"
   } catch (ex) {
     echo "Serverless deployment failed due to $ex"
+    sh "cat output.log"
   }
 
   def outputLog = readFile('output.log').trim()
@@ -716,7 +716,7 @@ def validateDeploymentConfigurations(def prop) {
 		if (_runtime == "") {
 			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
 		} else {
-			def validRuntimes = ["nodejs4.3", "nodejs6.10", "nodejs8.10", "python2.7", "python3.6", "java8", "go1.x", "c#"]
+			def validRuntimes = ["nodejs8.10", "nodejs10.x", "python3.6", "java8", "go1.x", "c#"]
 			def flag = false
 
 			for (int i = 0; i < validRuntimes.size(); i++) {
@@ -840,7 +840,7 @@ def echoServiceInfo(String env) {
 	Create the subscription filters and loggroup if not existing
 **/
 def createSubscriptionFilters(config, env_key, credsId, accountDetails) {
-  def logGroupName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
+  def logGroupName = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}"
   def lambda = "/aws/lambda/${logGroupName}"
   def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
 
@@ -872,7 +872,6 @@ def createSubscriptionFilters(config, env_key, credsId, accountDetails) {
               destARN = data.LOGS.PROD
             }
           }
-          updatePolicy(env_key, destARN);
           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${destARN}\"  --profile ${credsId}"
         } else {
           sh "aws logs put-subscription-filter --output json --log-group-name \"${lambda}\" --filter-name \"${lambda}\" --filter-pattern \"\" --destination-arn \"${logStreamer}\"  --role-arn ${accountDetails.IAM.PLATFORMSERVICES_ROLEID} --profile ${credsId}"
@@ -883,50 +882,6 @@ def createSubscriptionFilters(config, env_key, credsId, accountDetails) {
     echo "error occured: " + ex.getMessage()
   }
 }
-
-def updatePolicy(env, destARN){
-
-  def primaryData = utilModule.getAccountInfoPrimary();
-  def primaryRegion
-  for (item in primaryData.REGIONS) {
-		if(item.PRIMARY){
-			primaryRegion = item.REGION
-		}
-	}
-  def primaryCredsId = null
-
-  withCredentials([
-        [$class: 'AmazonWebServicesCredentialsBinding', accessKeyVariable: 'PRIMARY_AWS_ACCESS_KEY_ID', credentialsId: primaryData.CREDENTIAL_ID, secretKeyVariable: 'PRIMARY_AWS_SECRET_ACCESS_KEY']
-      ])  {
-            try {
-              // initialize aws credentials
-              def randomStringPrimary = utilModule.generateRequestId();
-              primaryCredsId = "jazzprimary-${randomStringPrimary}";
-
-              sh "aws configure set profile.${primaryCredsId}.region ${primaryRegion}"
-              sh "aws configure set profile.${primaryCredsId}.aws_access_key_id $PRIMARY_AWS_ACCESS_KEY_ID"
-              sh "aws configure set profile.${primaryCredsId}.aws_secret_access_key $PRIMARY_AWS_SECRET_ACCESS_KEY"
-
-              def destinationName = destARN;
-              def destArnArray = [];
-              destArnArray = destinationName.tokenize(":").last();
-
-              def policy = JsonOutput.toJson(parseJson("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Sid\":\"sid123\",\"Effect\":\"Allow\",\"Principal\":{\"AWS\":\"${service_config.accountId}\"},\"Action\":\"logs:PutSubscriptionFilter\",\"Resource\":\"${destARN}\"}]}"));
-              sh "aws logs put-destination-policy --destination-name ${destArnArray} --access-policy \'${policy}\' --region ${service_config.region} --profile ${primaryCredsId}"
-
-            } catch(ex){
-              send_status_email('FAILED', '')
-              events.sendFailureEvent('UPDATE_ENVIRONMENT', ex.getMessage(), environmentDeploymentMetadata.generateEnvironmentMap("deployment_failed", environment_logical_id, null), environment_logical_id)
-              events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
-              events.sendFailureEvent('DEPLOY_TO_AWS', ex.getMessage(), context_map, environment_logical_id)
-              error ex.getMessage()
-            } finally {
-              // reset Credentials
-              resetCredentials(primaryCredsId)
-            }
-          }
-}
-
 
 def writeServerlessFile(config, env, accountDetails) {
 
@@ -939,6 +894,7 @@ def writeServerlessFile(config, env, accountDetails) {
 
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
+  sh "sed -i -- 's/\${functionName}/${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${env}/g' serverless.yml"
   sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
   sh "sed -i -- 's/{env-stage}/${env}/g' serverless.yml"
   sh "sed -i -- 's/\${file(deployment-env.yml):region}/${config['region']}/g' serverless.yml"
@@ -1094,7 +1050,7 @@ def send_status_email (build_status, email_content) {
 def getEventsArn(config, env, credsId) {
   def eventsArn = []
   try {
-    def lambdaFnName = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${env}"
+    def lambdaFnName = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${env}"
     def lambdaPolicyTxt = sh(script: "aws lambda get-policy --region ${config['region']} --function-name $lambdaFnName --output json --profile ${credsId}", returnStdout: true)
 
     def policyLists = null
