@@ -152,13 +152,12 @@ export class EnvAssetsSectionComponent {
           this.envResponseEmpty = true;
           this.isLoading = false;
         }
-        else
-        {
-        this.envResponseEmpty = false;
-        this.isLoading = false;
-
-        this.envResponseTrue = true;
-        this.length = response.data.assets.length;
+		    else
+		    {
+		    this.envResponseEmpty = false;
+		    this.isLoading = false;
+		    this.envResponseTrue = true;
+		    this.length = res.length;
         for(var i=0; i < this.length ; i++){
 			this.type[i] = {
 				'key': res[i].asset_type,
@@ -348,7 +347,22 @@ export class EnvAssetsSectionComponent {
 	}
 
 	sortTablebyKey(event) {
-		this.sortkey = event.key;
-		this.direction = event.reverse ? 1 : -1;
+		if (event.key === 'last_updated') {
+			if (event.reverse === false) {
+				this.assetListbyType[this.currentType.key].sort((a, b) => {
+					return new Date(a.timestamp.replace("T", " ")).getTime() - new Date(b.timestamp.replace("T", " ")).getTime();
+				});
+			} else {
+				this.assetListbyType[this.currentType.key].reverse();
+			}
+		} else if (event.key === 'provider_id') {
+			if (event.reverse === false) {
+				this.assetListbyType[this.currentType.key].sort((a, b) => {
+					return (a.provider_id < b.provider_id) ? -1 : ((a.provider_id > b.provider_id) ? 1 : 0);
+				});
+			} else {
+				this.assetListbyType[this.currentType.key].reverse();
+			}
+		}
 	}
 }
