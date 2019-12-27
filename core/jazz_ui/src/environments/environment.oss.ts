@@ -66,6 +66,10 @@ export const environment = {
     azure_enabled: {azure_enabled},
     envLists: {"nodejs8.10": "Nodejs 8.10", "c#": "C#"},
   },
+  tvault: {
+    tvault_enabled: {tvault_enabled},
+    tvault_url: '{tvault_url}'
+  },
   gcloud: {
     envLists:  {},
   }

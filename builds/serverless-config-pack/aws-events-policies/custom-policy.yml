@@ -1,4 +1,4 @@
-#s3 Role
+#S3 Role
 s3Role:
   Type: AWS::IAM::Role
   Properties:
@@ -113,7 +113,7 @@ sqsRole:
                 - "logs:PutLogEvents"
               Resource: "*"
 
-#kinesis Role
+#Kinesis Role
 kinesisRole:
   Type: AWS::IAM::Role
   Properties:
@@ -150,4 +150,65 @@ kinesisRole:
                 - "logs:CreateLogGroup"
                 - "logs:CreateLogStream"
                 - "logs:PutLogEvents"
+              Resource: "*"
+
+#Vault Role
+basicRole:
+  Type: AWS::IAM::Role
+  Properties:
+    RoleName: ${self:service}-${self:custom.myStage}
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        -
+          Effect: "Allow"
+          Principal:
+            Service:
+              - "lambda.amazonaws.com"
+          Action:
+            - "sts:AssumeRole"
+    Path: "/"
+    Policies:
+      -
+        PolicyName: "vault-custom-logs"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "logs:CreateLogGroup"
+                - "logs:CreateLogStream"
+                - "logs:PutLogEvents"
+              Resource: "*"
+
+#Vault VPC Role
+vpcRole:
+  Type: AWS::IAM::Role
+  Properties:
+    RoleName: ${self:service}-${self:custom.myStage}
+    AssumeRolePolicyDocument:
+      Version: "2012-10-17"
+      Statement:
+        -
+          Effect: "Allow"
+          Principal:
+            Service:
+              - "lambda.amazonaws.com"
+          Action:
+            - "sts:AssumeRole"
+    Path: "/"
+    Policies:
+      -
+        PolicyName: "vault-custom-logs"
+        PolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: "Allow"
+              Action:
+                - "logs:CreateLogGroup"
+                - "logs:CreateLogStream"
+                - "logs:PutLogEvents"
+                - "ec2:CreateNetworkInterface"
+                - "ec2:DescribeNetworkInterfaces"
+                - "ec2:DeleteNetworkInterface"
               Resource: "*"

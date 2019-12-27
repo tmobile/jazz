@@ -15,14 +15,14 @@
 // =========================================================================
 
 const AWS = require("aws-sdk");
-const logger = require('./logger.js');
+const logger = require('../logger.js');
 
 /* fetch list of serviceIds from dynamodb */
 var scanResult;
 async function scanExecute(dynamodb, scanparams, items_formatted) {
     let dataDb = await dynamodb.scan(scanparams).promise();
 
-  	logger.debug("dataDb : " + JSON.stringify(dataDb));
+    logger.debug("dataDb : " + JSON.stringify(dataDb));
 
     if ((dataDb && dataDb.Items && dataDb.Items.length) || (dataDb.LastEvaluatedKey && Object.keys(dataDb.LastEvaluatedKey).length > 0)) {
         dataDb.Items.forEach(function (item) {

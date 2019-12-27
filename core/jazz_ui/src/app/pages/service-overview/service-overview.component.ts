@@ -182,6 +182,7 @@ export class ServiceOverviewComponent implements OnInit {
   slackChannel_temp: string;
   slackChannel_link: string = '';
   edit_save: string = 'EDIT';
+  copylinkmsg = "COPY LINK TO CLIPBOARD";
   activeEnv: string = 'dev';
   Environments = [];
   environ_arr = [];
@@ -282,6 +283,7 @@ export class ServiceOverviewComponent implements OnInit {
     }
     return false;
   };
+
 
   validRate(val,int){
     if (val === 1) {

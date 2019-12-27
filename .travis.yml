@@ -28,6 +28,7 @@ env:
  - PLATFORM_SERVICE=core/jazz_slack-channel
  - PLATFORM_SERVICE=core/jazz_slack-event-handler
  - PLATFORM_SERVICE=core/jazz_test-lambda
+ - PLATFORM_SERVICE=core/jazz_t-vault
  - PLATFORM_SERVICE=core/jazz_usermanagement
 
 before_script:

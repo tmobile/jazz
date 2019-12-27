@@ -6,7 +6,8 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "mocha"
+    "test": "nyc mocha",
+    "coverage": "nyc npm run test"
   },
   "dependencies": {
     "amazon-cognito-identity-js": "^1.19.0"
@@ -16,6 +17,7 @@
     "aws-sdk": "*",
     "aws-sdk-mock": "^1.7.0",
     "chai": "^3.5.0",
+    "nyc": "^13.3.0",
     "mocha": "^v3.0.0",
     "sinon": "^1.17.7"
   }
