@@ -71,7 +71,7 @@
 					<div class="det-label">Description</div>
 					<div class="det-value desc" >{{services.description || 'Give me the details for your services'}}</div>
 				</li>
-				<li class="last-update">
+				<li>
 					<div class="det-label">Last Updated</div>
 					<div class="det-value" *ngIf="dayscommit" >{{commitDiff}} days ago</div>
 					<div class="det-value" *ngIf="hourscommit" >{{commitDiff}} hours ago</div>
@@ -104,8 +104,8 @@
 					</div>
 				</li>
 			</ul>
-      <ul class="section-right">
-        <li>
+      <ul class="section-left col-md-6 col-sm-12">
+        <li class="li-padding">
 					<div class="det-label">Branch Name</div>
 					<div class="det-value">{{branchname}}</div>
 				</li>

@@ -371,9 +371,7 @@ $env-box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.11);
 top:50%;
 transform: rotateY(-50%)
 }
-.last-update{
-  padding-bottom: 0.8rem;
-}
+
 .overview-view .section-left li:nth-child(3){
   padding: 0 !important;
 }
@@ -398,6 +396,9 @@ transform: rotateY(-50%)
   display: flex;
   justify-content: space-between;
   min-height: 230px;
+}
+.li-padding {
+  padding-top: 0.8rem;
 }
 .imp-label{
   display: flex;
