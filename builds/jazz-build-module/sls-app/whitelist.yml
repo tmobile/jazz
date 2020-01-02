@@ -483,3 +483,5 @@ assetTypes:
   - AWS::Kinesis::Stream
   - AWS::SQS::Queue
   - AWS::Events::Rule
+
+mandatoryFieldPaths = ["/functions/*/timeout" : "timeout", "/functions/*/memorySize" : "memorySize", "/functions/*/name": "name"]
