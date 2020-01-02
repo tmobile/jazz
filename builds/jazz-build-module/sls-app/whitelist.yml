@@ -484,4 +484,5 @@ assetTypes:
   - AWS::SQS::Queue
   - AWS::Events::Rule
 
-mandatoryFieldPaths = ["/functions/*/timeout" : "timeout", "/functions/*/memorySize" : "memorySize", "/functions/*/name": "name"]
+mandatoryFieldPaths:
+= ["/functions/*/timeout" : "timeout", "/functions/*/memorySize" : "memorySize", "/functions/*/name": "name"]
