@@ -10,7 +10,7 @@ echo "sbr.groovy is being loaded"
 
 def output
 
-def initialize(output,aWhitelistValidator) {
+def initialize(output, aWhitelistValidator) {
   this.output = output
   sbrContent = readFile("./sls-app/serverless-build-rules.yml")
   whitelistValidator = aWhitelistValidator
@@ -40,7 +40,7 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
     Map<String, SBR_Rule> rules =  convertRuleForestIntoLinearMap(rulesYmlFile)
     Map<String, SBR_Rule> resolvedRules = rulePostProcessor(rules)
 
-    Transformer transformer = new Transformer(output, config, context, resolvedRules) // Encapsulating the config, context and rules into the class so that they do not have to be passed as an arguments with every call of recursive function
+    Transformer transformer = new Transformer(output, config, context, resolvedRules, whiteListYml) // Encapsulating the config, context and rules into the class so that they do not have to be passed as an arguments with every call of recursive function
 
     Map<String, Object> transformedYmlTreelet = transformer.transform(origAppYmlFile);
     Map<String, SBR_Rule> path2MandatoryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value instanceof SBR_Rule && item.value.isMandatory) acc.put(item.key, item.value); return acc}
@@ -75,8 +75,9 @@ class Transformer {
   private Map<String, SBR_Rule> path2MandatoryRuleMap;
   private Map<String, List> path2OrigRuleMap = [:];
 
-  public Transformer(output, aConfig, aContext, aPath2RulesMap, whiteListYml) {
-    whiteListYml = whiteListYml
+  public Transformer(output, aConfig, aContext, aPath2RulesMap, aWhiteListYml) {
+    whiteListYml = aWhiteListYml
+     output.echo ("mandatoryFieldPaths: $whiteListYml")
     output = output
     output.echo("In Transformer Constructor! Test for Echo")
     config = aConfig;
@@ -106,6 +107,7 @@ class Transformer {
     if(path2OrigRuleMap[(templatedPath)] ) path2OrigRuleMap[(templatedPath)].add(targetPath)
     else path2OrigRuleMap[(templatedPath)] = new ArrayList(); path2OrigRuleMap[(templatedPath)].add(targetPath)
 
+    output.echo ("mandatoryFieldPaths: $whiteListYml")
     def mandatoryFieldPaths = whiteListYml['mandatoryFieldPaths']
 
     mandatoryFieldPaths.each  { key, value ->
