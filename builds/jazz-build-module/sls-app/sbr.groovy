@@ -104,7 +104,7 @@ class Transformer {
     targetPathSegments.eachWithIndex{seg, idx -> if(templatedPathSegments[idx] == "*") val2Ret.add(targetPathSegments[idx])}
 
     if(path2OrigRuleMap[(templatedPath)] ) path2OrigRuleMap[(templatedPath)].add(targetPath)
-    else path2OrigRuleMap[(templatedPath)] = new ArrayList(); path2OrigRuleMap[(templatedPath)].add(targetPath)
+    else path2OrigRuleMap[(templatedPath)] = new HashSet(); path2OrigRuleMap[(templatedPath)].add(targetPath)
 
     def mandatoryFieldPaths = whiteListYml['mandatoryFieldPaths']
 
