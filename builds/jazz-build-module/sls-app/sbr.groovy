@@ -4,6 +4,7 @@ import org.json.*
 
 @Field def whitelistValidator
 @Field def sbrContent
+@Field def whiteListYml
 
 echo "sbr.groovy is being loaded"
 
