@@ -67,7 +67,7 @@ def Map<String, String> allRules(Map<String, Object> origAppYmlFile,
 class Transformer {
   // output is added here only to facilitate echo for easy debugging
   def output;
-  def whiteListYml
+  def whiteListYml;
   private def config;
   private Map<String, String> context;
   private Map<String, SBR_Rule> path2RulesMap;
@@ -75,7 +75,8 @@ class Transformer {
   private Map<String, SBR_Rule> path2MandatoryRuleMap;
   private Map<String, List> path2OrigRuleMap = [:];
 
-  public Transformer(output, aConfig, aContext, aPath2RulesMap) {
+  public Transformer(output, aConfig, aContext, aPath2RulesMap, whiteListYml) {
+    whiteListYml = whiteListYml
     output = output
     output.echo("In Transformer Constructor! Test for Echo")
     config = aConfig;
