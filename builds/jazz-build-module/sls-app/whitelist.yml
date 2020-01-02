@@ -485,4 +485,5 @@ assetTypes:
   - AWS::Events::Rule
 
 mandatoryFieldPaths:
-  /functions/*/timeout: "timeout", "/functions/*/memorySize" : "memorySize", "/functions/*/name": "name"]
+  /functions/*/timeout: "timeout"
+  /functions/*/memorySize" : "memorySize", "/functions/*/name": "name"]
