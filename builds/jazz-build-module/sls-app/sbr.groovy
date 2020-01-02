@@ -66,7 +66,7 @@ def Map<String, String> allRules(Map<String, Object> origAppYmlFile,
 /* This class encapsulates config, context and rules so that they don't have to be carried over with every call of recursive function */
 class Transformer {
   // output is added here only to facilitate echo for easy debugging
-  public def output;
+  private def output;
   private def config;
   private Map<String, String> whiteListYml;
   private Map<String, String> context;
