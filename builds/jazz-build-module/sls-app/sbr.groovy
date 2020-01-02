@@ -1061,10 +1061,10 @@ def makeList(list) {
 
 def getLeafPath (String templatedPath, Map<String, List> path2OrigRuleMap) {
   def pathKeyArr = makeList(templatedPath.split('/'))
-  def maxList = path2OrigRuleMap.findAll { entry -> entry.key.split('/').size() == pathKeyArr.size() }
-  def maxSize = maxList.max { it -> it.value.size() }
+  def maxSizeMap = path2OrigRuleMap.findAll { entry -> entry.key.split('/').size() == pathKeyArr.size() }
+  def maxList = maxSizeMap.collect{ it.value.size() }
+  def maxSize = maxList.max { it -> it.value }
   def pathTempKeyList = path2OrigRuleMap.find {it -> it.value.size() == maxSize}                                       
-
   return pathTempKeyList ? pathTempKeyList.value: []
 }
 
