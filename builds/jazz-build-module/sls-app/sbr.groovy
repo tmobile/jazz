@@ -104,12 +104,13 @@ class Transformer {
     if(path2OrigRuleMap[(templatedPath)] ) path2OrigRuleMap[(templatedPath)].add(targetPath)
     else path2OrigRuleMap[(templatedPath)] = new ArrayList(); path2OrigRuleMap[(templatedPath)].add(targetPath)
 
-    def mandatoryFieldPaths = ["/functions/*/timeout" : "timeout", "/functions/*/memorySize" : "memorySize", "/functions/*/name": "name"]
+    def mandatoryFieldPaths = = whiteListYml['assetTypes']
 
     mandatoryFieldPaths.each  { key, value ->
       if(path2OrigRuleMap[key] ) path2OrigRuleMap[key].add("/functions/${val2Ret[0]}/${value}")
       else path2OrigRuleMap[key] = new HashSet(); path2OrigRuleMap[key].add("/functions/${val2Ret[0]}/${value}")  
     }
+
     return val2Ret
   }
 
