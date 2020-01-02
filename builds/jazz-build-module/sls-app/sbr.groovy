@@ -41,9 +41,7 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
     Map<String, SBR_Rule> resolvedRules = rulePostProcessor(rules)
 
     Transformer transformer = new Transformer(output, config, context, resolvedRules, whiteListYml) // Encapsulating the config, context and rules into the class so that they do not have to be passed as an arguments with every call of recursive function
-
-    echo "siniiiiiiiiiiiiiiiiiii"
-    echo "whiteListYml: ${transformer.whiteListYml}"
+  
     Map<String, Object> transformedYmlTreelet = transformer.transform(origAppYmlFile);
     Map<String, SBR_Rule> path2MandatoryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value instanceof SBR_Rule && item.value.isMandatory) acc.put(item.key, item.value); return acc}
 
@@ -68,9 +66,9 @@ def Map<String, String> allRules(Map<String, Object> origAppYmlFile,
 /* This class encapsulates config, context and rules so that they don't have to be carried over with every call of recursive function */
 class Transformer {
   // output is added here only to facilitate echo for easy debugging
-  def output;
-  private def whiteListYml;
+  public def output;
   private def config;
+  private Map<String, String> whiteListYml;
   private Map<String, String> context;
   private Map<String, SBR_Rule> path2RulesMap;
   private Map<String, SBR_Rule> templatedPath2RulesMap;
@@ -79,7 +77,6 @@ class Transformer {
 
   public Transformer(output, aConfig, aContext, aPath2RulesMap, aWhiteListYml) {
     whiteListYml = aWhiteListYml
-    output.echo ("mandatoryFieldPaths: $whiteListYml")
     output = output
     output.echo("In Transformer Constructor! Test for Echo")
     config = aConfig;
@@ -109,7 +106,6 @@ class Transformer {
     if(path2OrigRuleMap[(templatedPath)] ) path2OrigRuleMap[(templatedPath)].add(targetPath)
     else path2OrigRuleMap[(templatedPath)] = new ArrayList(); path2OrigRuleMap[(templatedPath)].add(targetPath)
 
-    output.echo ("mandatoryFieldPaths: $whiteListYml")
     def mandatoryFieldPaths = whiteListYml['mandatoryFieldPaths']
 
     mandatoryFieldPaths.each  { key, value ->
