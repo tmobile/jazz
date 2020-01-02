@@ -67,6 +67,7 @@ def Map<String, String> allRules(Map<String, Object> origAppYmlFile,
 class Transformer {
   // output is added here only to facilitate echo for easy debugging
   def output;
+  def whiteListYml
   private def config;
   private Map<String, String> context;
   private Map<String, SBR_Rule> path2RulesMap;
