@@ -1180,16 +1180,19 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor, acc
           smallResourcesElem['Outputs'] = bigOutputsElem
         }
         def resourceKeys = bigResourcesElem.collect{key, val -> key}
+        def outputResources = smallResourcesElem['Resources']
+        def whitelistedAssetTypes = whiteListYml['assetTypes']
         /* Forming a record that extracts the arn from resulting item for each of resource key extracted from resources:
         UsersTableArn:\n
         Value:\n
         \"Fn::GetAtt\": [ usersTable, Arn ]\n
         */
-        resourceKeys.collect{name ->
-        bigOutputsElem[name+'Arn']=["Value":["Fn::GetAtt":[name, "Arn"]]]
+        resourceKeys.collect { name ->
+          def resourceType = outputResources[name]['Type']
+          if ( whitelistedAssetTypes.contains(resourceType)) bigOutputsElem[name +'Arn']=["Value":["Fn::GetAtt":[name, "Arn"]]]
+       }       
       }
     }
-  }
 
   // inject log subscription ALWAYS - TODO implement in SBR
   def logSubscriptionMap = [logSubscription:[enabled:true, destinationArn:context.kinesisStreamArn]]
