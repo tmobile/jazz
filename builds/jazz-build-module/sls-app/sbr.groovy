@@ -40,7 +40,7 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
     Map<String, SBR_Rule> rules =  convertRuleForestIntoLinearMap(rulesYmlFile)
     Map<String, SBR_Rule> resolvedRules = rulePostProcessor(rules)
 
-    Transformer transformer = new Transformer(output, config, context, resolvedRules, whiteListYml) // Encapsulating the config, context and rules into the class so that they do not have to be passed as an arguments with every call of recursive function
+    Transformer transformer = new Transformer(output, config, context, resolvedRules, rulesYmlFile) // Encapsulating the config, context and rules into the class so that they do not have to be passed as an arguments with every call of recursive function
   
     Map<String, Object> transformedYmlTreelet = transformer.transform(origAppYmlFile);
     Map<String, SBR_Rule> path2MandatoryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value instanceof SBR_Rule && item.value.isMandatory) acc.put(item.key, item.value); return acc}
@@ -68,22 +68,26 @@ class Transformer {
   // output is added here only to facilitate echo for easy debugging
   private def output;
   private def config;
-  private Map<String, String> whiteListYml;
+  private Map<String, String> mandatoryFieldPaths;
   private Map<String, String> context;
   private Map<String, SBR_Rule> path2RulesMap;
   private Map<String, SBR_Rule> templatedPath2RulesMap;
   private Map<String, SBR_Rule> path2MandatoryRuleMap;
   private Map<String, List> path2OrigRuleMap = [:];
 
-  public Transformer(output, aConfig, aContext, aPath2RulesMap, aWhiteListYml) {
-    whiteListYml = aWhiteListYml
+  public Transformer(output, aConfig, aContext, aPath2RulesMap, aRulesYmlFile) {
     output = output
     output.echo("In Transformer Constructor! Test for Echo")
     config = aConfig;
     context = aContext;
     path2RulesMap = aPath2RulesMap;
     templatedPath2RulesMap = path2RulesMap.inject([:]){acc, item -> if(item.key.contains("*")) acc.put(item.key, item.value); return acc} // Copying all path-2-rule entries where a path contains '*' thus it is a template
-  }
+    
+    def functionTemplate = aRulesYmlFile['function']['sbr-template']
+    functionTemplate.each { key, value -> 
+      if (value['sbr-mandatory'] && value['sbr-mandatory'] == true) mandatoryFieldPaths ["/functions/*/${key}"] = key 
+    }
+ }
 
   boolean pathMatcher(String templatedPath, String targetPath) {
     String[] templatedPathSegments = templatedPath.split("/")
@@ -105,8 +109,11 @@ class Transformer {
 
     if(path2OrigRuleMap[(templatedPath)] ) path2OrigRuleMap[(templatedPath)].add(targetPath)
     else path2OrigRuleMap[(templatedPath)] = new HashSet(); path2OrigRuleMap[(templatedPath)].add(targetPath)
-
-    def mandatoryFieldPaths = whiteListYml['mandatoryFieldPaths']
+    
+    mandatoryFieldPaths.each  { key, value ->
+      if(path2OrigRuleMap[key] ) path2OrigRuleMap[key].add("/functions/${val2Ret[0]}/${value}")
+      else path2OrigRuleMap[key] = new HashSet(); path2OrigRuleMap[key].add("/functions/${val2Ret[0]}/${value}")  
+    }
 
     mandatoryFieldPaths.each  { key, value ->
       if(path2OrigRuleMap[key] ) path2OrigRuleMap[key].add("/functions/${val2Ret[0]}/${value}")
