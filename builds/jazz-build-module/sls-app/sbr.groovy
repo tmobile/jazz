@@ -68,7 +68,7 @@ class Transformer {
   // output is added here only to facilitate echo for easy debugging
   private def output;
   private def config;
-  private Map<String, String> mandatoryFieldPaths;
+  private Map<String, String> mandatoryFieldPaths = [:];
   private Map<String, String> context;
   private Map<String, SBR_Rule> path2RulesMap;
   private Map<String, SBR_Rule> templatedPath2RulesMap;
