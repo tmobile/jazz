@@ -487,4 +487,4 @@ assetTypes:
 mandatoryFieldPaths:
   /functions/*/timeout: "timeout"
   /functions/*/memorySize: "memorySize"
-  /functions/*/name": "name"
+  /functions/*/name: "name"
