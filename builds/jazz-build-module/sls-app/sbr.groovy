@@ -114,12 +114,7 @@ class Transformer {
       if(path2OrigRuleMap[key] ) path2OrigRuleMap[key].add("/functions/${val2Ret[0]}/${value}")
       else path2OrigRuleMap[key] = new HashSet(); path2OrigRuleMap[key].add("/functions/${val2Ret[0]}/${value}")  
     }
-
-    mandatoryFieldPaths.each  { key, value ->
-      if(path2OrigRuleMap[key] ) path2OrigRuleMap[key].add("/functions/${val2Ret[0]}/${value}")
-      else path2OrigRuleMap[key] = new HashSet(); path2OrigRuleMap[key].add("/functions/${val2Ret[0]}/${value}")  
-    }
-
+    
     return val2Ret
   }
 
