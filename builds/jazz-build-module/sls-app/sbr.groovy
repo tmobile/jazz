@@ -12,7 +12,7 @@ def output
 
 def initialize(output, aWhitelistValidator) {
   this.output = output
-  sbrContent = readFile("./jazz-modules/sls-app/serverless-build-rules.yml")
+  sbrContent = readFile("./sls-app/serverless-build-rules.yml")
   whitelistValidator = aWhitelistValidator
   whiteListYml = whitelistValidator.getWhitListYml ()
 }
