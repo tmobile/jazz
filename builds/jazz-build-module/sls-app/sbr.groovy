@@ -14,7 +14,7 @@ def initialize(output, aWhitelistValidator) {
   this.output = output
   sbrContent = readFile("./sls-app/serverless-build-rules.yml")
   whitelistValidator = aWhitelistValidator
-  whiteListYml = whitelistValidator.getWhitListYml ()
+  whiteListYml = whitelistValidator.getWhiteListYml ()
 }
 
 
