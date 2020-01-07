@@ -87,7 +87,7 @@ class Transformer {
       if (value['sbr-mandatory'] && value['sbr-mandatory'] == true) mandatoryFieldPaths["/functions/*/${key}"] = key 
     }
     def originalFunctionMap = origAppYmlFile['functions']
-    originalFunctionMap. each { k, v -> 
+    originalFunctionMap.each { k, v -> 
       mandatoryFieldPaths.each  { key, value ->        
         if(path2OrigRuleMap[key] ) path2OrigRuleMap[key].add("/functions/${k}/${value}")
         else path2OrigRuleMap[key] = new HashSet(); path2OrigRuleMap[key].add("/functions/${k}/${value}")  
