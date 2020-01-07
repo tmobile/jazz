@@ -172,6 +172,7 @@ node ()  {
         /* If tvault extension is present, then UI will support tvault related components*/
         if(config_loader.TVAULT && config_loader.TVAULT.IS_ENABLED instanceof Boolean && config_loader.TVAULT.IS_ENABLED){
           sh "sed -i s!{tvault_enabled}!${config_loader.TVAULT.IS_ENABLED}!g ./src/environments/environment.oss.ts"
+          sh "sed -i s!{tvault_url}!${config_loader.TVAULT.HOSTNAME}!g ./src/environments/environment.oss.ts"
         } else {
            sh "sed -i 's/{tvault_enabled}/false/g' ./src/environments/environment.oss.ts"
         }

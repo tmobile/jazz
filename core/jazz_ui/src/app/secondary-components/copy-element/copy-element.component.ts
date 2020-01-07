@@ -11,6 +11,7 @@ export class CopyElementComponent {
 
   @Input() CopyElement;
   @Input() iconSize;
+  @Input() iconColor;
   copyLink = 'Copy text to Clipboard';
   displayPopup = false;
   CopyTextToClipboard(text, event) {

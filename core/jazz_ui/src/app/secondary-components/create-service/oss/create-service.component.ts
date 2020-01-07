@@ -73,7 +73,7 @@ export class CreateServiceComponent implements OnInit {
   typeOfService:string = "api";
   typeOfPlatform:string = "aws";
   disablePlatform = false;
-  selected:string = "Minutes";
+  selected:string = "minutes";
   runtime:string = Object.keys(env_oss.envLists)[0];
   webtime:string = Object.keys(env_oss.webLists)[0];
   eventSchedule:string = 'fixedRate';
@@ -486,9 +486,12 @@ export class CreateServiceComponent implements OnInit {
     this.scrollTo('additional');
   }
 
-  // function called on event schedule change(radio)
+  // function called on event schedule change
   onEventScheduleChange(val){
     this.rateExpression.type = val;
+    this.rateExpression.duration = "5";
+    this.rateExpression.error = undefined;
+    this.cronObj = new CronObject('0/5', '*', '*', '*', '?', '*')
     if(val !== `none`){
       if (this.typeOfPlatform === 'aws') {
         this.eventExpression.type = 'awsEventsNone';
@@ -703,14 +706,23 @@ export class CreateServiceComponent implements OnInit {
           "function": "azure_function"
         }
       }
-      if(this.rateExpression.type !== 'none'){
+      if (this.rateExpression.type === 'cron' && this.rateExpression.cronStr !== undefined) {
         this.rateExpression.cronStr = this.cronParserService.getCronExpression(this.cronObj);
         if (this.rateExpression.cronStr == 'invalid') {
-            return;
+          return;
         } else if (this.rateExpression.cronStr !== undefined) {
-            payload["rateExpression"] = this.rateExpression.cronStr;
+          payload["rateExpression"] = this.rateExpression.cronStr;
         }
       }
+      if (this.rateExpression.type === 'rate' && this.rateExpression.rateStr !== undefined) {
+        this.rateExpression.rateStr = `${this.rateExpression.duration} ${this.rateExpression.interval}`
+        if (this.rateExpression.rateStr == 'invalid') {
+          return;
+        } else if (this.rateExpression.rateStr !== undefined) {
+          payload["rateInterval"] =  this.rateExpression.rateStr;
+        }
+      }
+      
       if(this.typeOfPlatform === 'aws') {
       if(this.eventExpression.type !== "awsEventsNone") {
         var event = {};
