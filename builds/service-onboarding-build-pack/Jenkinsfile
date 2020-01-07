@@ -142,15 +142,10 @@ node  {
 					def config = LoadConfiguration()
 					def serviceMetadataJson = [:]
 					if(service_config['provider'] == 'aws'){
-						def roleARN
 						if (service_config['domain'] == "jazz") {
 							// allocate platform roles for platform APIs
-							roleARN = platformPrimaryAWSAccountInfo.IAM.PLATFORMSERVICES_ROLEID
-						} else {
-							accountDetails = utilModule.getAccountInfo(service_config);
-							roleARN = accountDetails.IAM.USERSERVICES_ROLEID
-						}
-						serviceMetadataJson["iamRoleARN"] = roleARN
+							serviceMetadataJson["iamRoleARN"] = platformPrimaryAWSAccountInfo.IAM.PLATFORMSERVICES_ROLEID
+						} 
 					}
 
 					for (item in config) {

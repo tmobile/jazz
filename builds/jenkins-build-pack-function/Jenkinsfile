@@ -82,6 +82,7 @@ node() {
 
       if (configObj.service_id) {
         config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
+        config << configObj
       } else {
         error "Service Id is not available."
       }
@@ -844,7 +845,7 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
   }
 
-  if ( config['domain'] != 'jazz' || config['iamRoleARN']) {
+  if ( config['domain'] != 'jazz' ) {
     sh "cp _config/aws-events-policies/custom-roles.yml ./customRoles.yml"
   }
 

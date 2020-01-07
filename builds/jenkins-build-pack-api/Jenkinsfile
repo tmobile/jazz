@@ -85,6 +85,7 @@ node() {
 
       if (configObj.service_id) {
         config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
+        config << configObj
       } else {
         error "Service id is not available."
       }
@@ -1018,7 +1019,7 @@ def loadServerlessConfig(config) {
     sh "cp _config/serverless-go.yml ./serverless.yml"
   }
 
-  if (config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ) {
+  if (config['domain'] != 'jazz' ) {
     sh "cp _config/aws-events-policies/custom-roles.yml ./customRoles.yml"
   }
 
