@@ -862,10 +862,6 @@ def updateOperationId(swaggerFileContent) {
 
 def writeServerlessFile(config, environment_logical_id, accountDetails){
 
-  def iamRoleArnValue;
-  if(config['domain'] == 'jazz') iamRoleArnValue = config['iamRoleARN']
-  else iamRoleArnValue = accountDetails.IAM.USERSERVICES_ROLEID;  
-
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
   sh "sed -i -- 's/\${functionName}/${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}/g' serverless.yml"
   sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
@@ -890,7 +886,7 @@ def writeServerlessFile(config, environment_logical_id, accountDetails){
     sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
   }
 
-  if (config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ) {
+  if (config['domain'] != 'jazz'  ) {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
     if (config['require_internal_access']) {
@@ -901,7 +897,7 @@ def writeServerlessFile(config, environment_logical_id, accountDetails){
       sh "sed -i -- '/#Start:isVaultAndVpcEnabled/,/#End:resources/d' ./serverless.yml"    
   } else  {
     sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"       
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${iamRoleArnValue}|g' serverless.yml"
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
   }
 }
 
