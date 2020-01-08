@@ -979,7 +979,7 @@ def writeServerlessFile(config, env, accountDetails) {
     sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
   } 
   
-  if (config['domain'] != 'jazz'  ) {
+  if (config['domain'] != 'jazz' && !config['iamRoleARN'] ) {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
     if (config['require_internal_access']) {
