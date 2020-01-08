@@ -36,7 +36,7 @@ def updateSafeDetails(safeName, lambdaARN, credsId) {
 	def safeDetails = getSafeDetails(safeName)
 
 	if (safeDetails) {
-		iamRoleArn = getRoleDetails(lambdaARN, credsId)
+		iamRoleArn = utilModule.getRoleDetails(lambdaARN, credsId)
 		if(safeDetails.data.roles && safeDetails.data.roles.length != 0) {
 			def isRoleArnExists = safeDetails.data.roles.find{it -> it.value.arn == iamRoleArn}
 			if(!isRoleArnExists) {
@@ -101,21 +101,6 @@ def deleteSafe(safeName) {
 
 	if(statusCode == '200') echo "Successfully deleted safe ${safeName}" 
 	else echo "Error in deleting safe ${safeName}"
-}
-
-def getRoleDetails(lambdaARN, credsId) {
-	def iamRoleArn
-	def functionDetails
-	try {
-		def getFunctionOutput = sh(returnStdout: true, script: "aws lambda get-function --function-name ${lambdaARN} --output json  --profile ${credsId} --region ${serviceConfig.region}")
-		if (getFunctionOutput) functionDetails = parseJson(getFunctionOutput)
-		if (functionDetails && functionDetails.Configuration) {
-			iamRoleArn = functionDetails.Configuration.Role
-		}
-	} catch (ex) {
-		echo "Error in getting function details. $ex"
-	}	
-	return iamRoleArn
 }
 
 def setEnvironmentLogicalId (env) {
