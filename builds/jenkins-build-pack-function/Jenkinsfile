@@ -849,7 +849,7 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     sh "cp _config/aws-events-policies/custom-roles.yml ./customRoles.yml"
   }
 
-  if(!isEventSchdld || config['domain'] == 'jazz' || ) {
+  if(!isEventSchdld || config['domain'] == 'jazz') {
     removeEventResources()
   }
 
