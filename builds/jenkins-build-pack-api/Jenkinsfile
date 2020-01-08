@@ -348,6 +348,9 @@ node() {
               lambdaARN = getLambdaARN(stackName, credsId);
               events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN.arn, "lambda", config), environment_logical_id);
 
+              def iamRoleArn = utilModule.getRoleDetails(lambdaARN.arn, credsId)
+              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", iamRoleArn, "iam_role", config), environment_logical_id);
+
               if (fileExists('swagger/swagger.json')) {
                 echo "Generating swagger file for environment: ${env_key}"
 
