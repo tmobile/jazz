@@ -163,9 +163,9 @@ node() {
 
       sonarModule.initialize(configLoader, config, branch)
 
-      def roleId
+      def roleId;
       if(config['provider'] == 'aws'){
-        roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
+        roleId = accountDetails.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
         loadServerlessConfig(config)
       }
 
