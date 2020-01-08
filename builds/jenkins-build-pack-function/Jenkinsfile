@@ -625,7 +625,7 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
     sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
   }
 
-  if (isScheduleEnabled && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED && config['domain'] != 'jazz') {
+  if (isScheduleEnabled && config['domain'] != 'jazz') {
     // scheduled event does not have custome role so we need the vault custom role
     if (config['require_internal_access']) sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultEnabled/d" 
     else sedCommand = sedCommand + "; /#Start:isVaultAndVpcEnabled/,/#End:isVaultAndVpcEnabled/d" 
@@ -979,13 +979,6 @@ def writeServerlessFile(config, env, accountDetails) {
     sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
   } 
   
-  if (config['iamRoleARN'] ) {    
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
-  } else {        
-    sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
-  }
-
   if (config['domain'] != 'jazz'  ) {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
