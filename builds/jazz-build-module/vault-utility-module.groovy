@@ -36,7 +36,7 @@ def updateSafeDetails(safeName, lambdaARN, credsId) {
 	def safeDetails = getSafeDetails(safeName)
 
 	if (safeDetails) {
-		iamRoleArn = utilModule.getRoleDetails(lambdaARN, credsId)
+		iamRoleArn = utilModule.getRoleDetails(lambdaARN, serviceConfig['region'], credsId)
 		if(safeDetails.data.roles && safeDetails.data.roles.length != 0) {
 			def isRoleArnExists = safeDetails.data.roles.find{it -> it.value.arn == iamRoleArn}
 			if(!isRoleArnExists) {
