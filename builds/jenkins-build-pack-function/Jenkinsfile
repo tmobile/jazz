@@ -991,7 +991,7 @@ def writeServerlessFile(config, env, isEventSchdld, accountDetails) {
     }       
   } else  {
     if (isEventSchdld) sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"  
-    sh "sed -i -- '/#Start:isVaultEnabled/,/#End:isVaultEnabled/d' ./serverless.yml"  
+    sh "sed -i -- '/#Start:customRoles/,/#End:customRoles/d' ./serverless.yml"  
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
   }
 }
