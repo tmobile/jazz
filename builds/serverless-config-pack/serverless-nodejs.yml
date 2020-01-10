@@ -103,6 +103,7 @@ functions:
 #Start:resources
 resourcesDisabled:
   Resources:
+    #Start:customRoles
     #Start:isVaultEnabled
     customRole: ${file(customRoles.yml):basicRole}
     #End:isVaultEnabled
@@ -121,6 +122,7 @@ resourcesDisabled:
     #Start:isSQSEventEnabled
     customRole: ${file(customRoles.yml):sqsRole}
     #End:isSQSEventEnabled
+    #End:customRoles
     #Start:isSQSEventEnabled
     #Start:isSqsResourceNotExist
     sourceQueue:
