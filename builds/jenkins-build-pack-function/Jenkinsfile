@@ -982,14 +982,14 @@ def writeServerlessFile(config, env, accountDetails) {
   if (config['domain'] != 'jazz' && !config['iamRoleARN'] ) {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
-    if (config['require_internal_access']) {
-      sh "sed -i -- '/#Start:isVaultEnabled/,/#End:isVaultEnabled/d' ./serverless.yml"  
-      sh "sed -i -- '/#Start:isS3EventRoleEnabled/,/#End:resources/d' ./serverless.yml"
-    }  
-    else 
-      sh "sed -i -- '/#Start:isVaultAndVpcEnabled/,/#End:resources/d' ./serverless.yml"    
-  } else  {
-    sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"       
+    if (!isEventSchdld) {
+      if (config['require_internal_access']) {
+        sh "sed -i -- '/#Start:isVaultEnabled/,/#End:isVaultEnabled/d' ./serverless.yml"  
+        sh "sed -i -- '/#Start:isS3EventRoleEnabled/,/#End:resources/d' ./serverless.yml"
+      }  else 
+        sh "sed -i -- '/#Start:isVaultAndVpcEnabled/,/#End:resources/d' ./serverless.yml"    
+    }       
+  } else  {    
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
   }
 }
