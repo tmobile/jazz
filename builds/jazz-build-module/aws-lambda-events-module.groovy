@@ -52,7 +52,7 @@ def updateKinesisResourceServerless(event_stream_arn){
 
   sh "sed -i -- '/#Start:kinesisStreamGetArn/,/#End:kinesisStreamGetArn/d' ./customRoles.yml"
   sh "sed -i -- 's|{event_kinesis_stream_arn}|${event_stream_arn}|g' ./customRoles.yml"
-  sh  "sed -i -- 's/#ResourceKinesisDisabled/Resource/g' ./customRoles.yml"
+  sh "sed -i -- 's/#ResourceKinesisDisabled/Resource/g' ./customRoles.yml"
 }
 
 def checkSqsQueueExists(queueName, credsId) {
@@ -403,7 +403,7 @@ def updateDynamoDbResourceServerless(event_stream_arn){
 
   sh "sed -i -- '/#Start:dynamoDbstreamGetArn/,/#End:dynamoDbstreamGetArn/d' ./customRoles.yml"
   sh "sed -i -- 's|{event_dynamodb_stream_arn}|${event_stream_arn}|g' ./customRoles.yml"
-  sh  "sed -i -- 's/#ResourceDynamoDbDisabled/Resource/g' ./customRoles.yml"
+  sh "sed -i -- 's/#ResourceDynamoDbDisabled/Resource/g' ./customRoles.yml"
 }
 
 def getDynamoDbStreamDetails(event_source_dynamodb) {
