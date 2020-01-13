@@ -691,8 +691,8 @@ def removeEventResources () {
 	if (service_config['eventScheduleRate'] && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
 		// scheduled event does not have custome role so we need the vault custom role
 		if (service_config['require_internal_access']) sedCommand = sedCommand + "; /#Start:isBasicRole/,/#End:isBasicRole/d" 
-		else sedCommand = sedCommand + "; /#Start:isVaultAndVpcEnabled/,/#End:isVaultAndVpcEnabled/d" 
-	} else sedCommand = sedCommand + "; /#Start:isBasicRole/,/#End:isVaultAndVpcEnabled/d"  // Removing vault role since all other events has custom role
+		else sedCommand = sedCommand + "; /#Start:isVpcEnabled/,/#End:isVpcEnabled/d" 
+	} else sedCommand = sedCommand + "; /#Start:isBasicRole/,/#End:isVpcEnabled/d"  // Removing vault role since all other events has custom role
 
 
 	sh "sed -i -- '$sedCommand' ./serverless.yml"

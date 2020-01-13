@@ -896,7 +896,7 @@ def writeServerlessFile(config, environment_logical_id, accountDetails){
       sh "sed -i -- '/#Start:isS3EventRoleEnabled/,/#End:resources/d' ./serverless.yml"
     }  
     else 
-      sh "sed -i -- '/#Start:isVaultAndVpcEnabled/,/#End:resources/d' ./serverless.yml"    
+      sh "sed -i -- '/#Start:isVpcEnabled/,/#End:resources/d' ./serverless.yml"    
   }
 }
 

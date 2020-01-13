@@ -107,9 +107,9 @@ resourcesDisabled:
     #Start:isBasicRole
     customRole: ${file(customRoles.yml):basicRole}
     #End:isBasicRole
-    #Start:isVaultAndVpcEnabled
+    #Start:isVpcEnabled
     customRole: ${file(customRoles.yml):vpcRole}
-    #End:isVaultAndVpcEnabled
+    #End:isVpcEnabled
     #Start:isS3EventRoleEnabled
     customRole: ${file(customRoles.yml):s3Role}
     #End:isS3EventRoleEnabled
