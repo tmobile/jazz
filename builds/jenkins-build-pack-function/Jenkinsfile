@@ -979,7 +979,13 @@ def writeServerlessFile(config, env, isEventSchdld, accountDetails) {
     sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
   } 
   
-  if (config['domain'] != 'jazz' && !config['iamRoleARN'] ) {
+
+  //Jazz will create roles for services per environments for user services with no user specified roles
+  if (config['domain'] == 'jazz' || config['iamRoleARN'] ) { 
+    if (isEventSchdld) sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"  
+    sh "sed -i -- '/#Start:customRoles/,/#End:customRoles/d' ./serverless.yml"  
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"    
+  } else  {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
     if (!isEventSchdld) {
@@ -988,11 +994,7 @@ def writeServerlessFile(config, env, isEventSchdld, accountDetails) {
         sh "sed -i -- '/#Start:isS3EventRoleEnabled/,/#End:resources/d' ./serverless.yml"
       }  else 
         sh "sed -i -- '/#Start:isVaultAndVpcEnabled/,/#End:resources/d' ./serverless.yml"    
-    }       
-  } else  {
-    if (isEventSchdld) sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"  
-    sh "sed -i -- '/#Start:customRoles/,/#End:customRoles/d' ./serverless.yml"  
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
+    } 
   }
 }
 
