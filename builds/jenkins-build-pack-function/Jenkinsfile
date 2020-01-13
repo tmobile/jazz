@@ -627,9 +627,9 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
 
   if (isScheduleEnabled && config['domain'] != 'jazz') {
     // scheduled event does not have custome role so we need the vault custom role
-    if (config['require_internal_access']) sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultEnabled/d" 
+    if (config['require_internal_access']) sedCommand = sedCommand + "; /#Start:isBasicRole/,/#End:isBasicRole/d" 
     else sedCommand = sedCommand + "; /#Start:isVaultAndVpcEnabled/,/#End:isVaultAndVpcEnabled/d" 
-  } else sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultAndVpcEnabled/d"  // Removing vault role since all other events has custom role
+  } else sedCommand = sedCommand + "; /#Start:isBasicRole/,/#End:isVaultAndVpcEnabled/d"  // Removing vault role since all other events has custom role
   
 
   sh "sed -i -- '$sedCommand' ./serverless.yml"
@@ -990,7 +990,7 @@ def writeServerlessFile(config, env, isEventSchdld, accountDetails) {
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
     if (!isEventSchdld) {
       if (config['require_internal_access']) {
-        sh "sed -i -- '/#Start:isVaultEnabled/,/#End:isVaultEnabled/d' ./serverless.yml"  
+        sh "sed -i -- '/#Start:isBasicRole/,/#End:isBasicRole/d' ./serverless.yml"  
         sh "sed -i -- '/#Start:isS3EventRoleEnabled/,/#End:resources/d' ./serverless.yml"
       }  else 
         sh "sed -i -- '/#Start:isVaultAndVpcEnabled/,/#End:resources/d' ./serverless.yml"    

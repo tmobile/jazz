@@ -104,9 +104,9 @@ functions:
 resourcesDisabled:
   Resources:
     #Start:customRoles
-    #Start:isVaultEnabled
+    #Start:isBasicRole
     customRole: ${file(customRoles.yml):basicRole}
-    #End:isVaultEnabled
+    #End:isBasicRole
     #Start:isVaultAndVpcEnabled
     customRole: ${file(customRoles.yml):vpcRole}
     #End:isVaultAndVpcEnabled
