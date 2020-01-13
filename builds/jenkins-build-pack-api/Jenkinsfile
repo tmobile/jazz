@@ -808,13 +808,9 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config, accountDetails)
   sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
   sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
   sh "sed -i -- 's/{envmnt}/${current_environment}/g' swagger/swagger.json" // {environment}
-
-
-  def accountId = config.accountId
-
   sh "sed -i -- 's|{conf-role}|${platformRoleValue}|g' ./swagger/swagger.json"
   sh "sed -i -- 's/{conf-region}/${regionValue}/g' ./swagger/swagger.json"
-  sh "sed -i -- 's/{conf-accId}/${accountId}/g' ./swagger/swagger.json"
+  sh "sed -i -- 's/{conf-accId}/${config['accountId']}/g' ./swagger/swagger.json"
 }
 
 /* method to read the file and add operation id */
