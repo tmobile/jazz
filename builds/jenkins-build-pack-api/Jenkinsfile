@@ -810,8 +810,7 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config, accountDetails)
   sh "sed -i -- 's/{envmnt}/${current_environment}/g' swagger/swagger.json" // {environment}
 
 
-  // TODO: the below couple of statements will be replaced with regular expression in very near future;
-  def accountId = iamRoleArnData.substring(iamRoleArnData.indexOf("::") + 2, iamRoleArnData.lastIndexOf(":"))
+  def accountId = config.accountId
 
   sh "sed -i -- 's|{conf-role}|${platformRoleValue}|g' ./swagger/swagger.json"
   sh "sed -i -- 's/{conf-region}/${regionValue}/g' ./swagger/swagger.json"
