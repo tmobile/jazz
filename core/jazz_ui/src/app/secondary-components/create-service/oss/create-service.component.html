@@ -177,8 +177,8 @@
                             <section class="pad-left0 service-box-section" *ngIf="typeOfPlatform == 'aws'">
                                 <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': runtime == runtimeKeys[1]}"(keyup.enter)="onSelectionChange(runtimeKeys[1])"  (click)="onSelectionChange(runtimeKeys[1])">
                                     <div>
-                                        <img *ngIf="runtime == runtimeKeys[1]" [class.selected-image]="runtime == runtimeKeys[1]" src="./../../../assets/images/icons/nodejs.svg"/>
-                                        <img *ngIf="runtime != runtimeKeys[1]" [class.selected-image]="runtime == runtimeKeys[1]" src="./../../../../assets/images/icons/greyscale-icons/icon-nodejs.svg"/>
+                                        <img *ngIf="runtime == runtimeKeys[1]" [class.selected-image]="runtime == runtimeKeys[1]" src="./../../../assets/images/icons/python.svg"/>
+                                        <img *ngIf="runtime != runtimeKeys[1]" [class.selected-image]="runtime == runtimeKeys[1]" src="./../../../../assets/images/icons/greyscale-icons/icon-python.svg"/>
                                     </div>
                                 </div>
                                 <div class="icon-name" [ngClass]="{'service-box-selected': runtime == runtimeKeys[1]}">
@@ -188,8 +188,8 @@
                             <section class="pad-left0 service-box-section" *ngIf="typeOfPlatform == 'aws'">
                                 <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': runtime == runtimeKeys[2]}"(keyup.enter)="onSelectionChange(runtimeKeys[2])"  (click)="onSelectionChange(runtimeKeys[2])">
                                     <div class="icon-icon-python">
-                                        <img *ngIf="runtime == runtimeKeys[2]" [class.selected-image]="runtime == runtimeKeys[2]" src="./../../../assets/images/icons/python.svg"/>
-                                        <img *ngIf="runtime != runtimeKeys[2]" [class.selected-image]="runtime == runtimeKeys[2]" src="./../../../../assets/images/icons/greyscale-icons/icon-python.svg"/>
+                                        <img *ngIf="runtime == runtimeKeys[2]" [class.selected-image]="runtime == runtimeKeys[2]" src="./../../../assets/images/icons/Java.svg"/>
+                                        <img *ngIf="runtime != runtimeKeys[2]" [class.selected-image]="runtime == runtimeKeys[2]" src="./../../../../assets/images/icons/greyscale-icons/icon-java.svg"/>
                                     </div>
                                 </div>
                                 <div class="icon-name" [ngClass]="{'service-box-selected': runtime == runtimeKeys[2]}">
@@ -197,12 +197,12 @@
                                 </div>
                             </section>
                         </div>
-                        <div class="runtime-row2 run-type-width space-between">
+                        <div class="runtime-row2 run-type-width space-between contentSpace">
                             <section class="pad-left0 service-box-section" *ngIf="typeOfPlatform == 'aws'">
                                 <div tabindex="0" class="service-box"[ngClass]="{'service-box-selected': runtime == runtimeKeys[3]}"(keyup.enter)="onSelectionChange(runtimeKeys[3])"  (click)="onSelectionChange(runtimeKeys[3])">
                                     <div class="icon-icon-go">
-                                        <img *ngIf="runtime == runtimeKeys[3]" [class.selected-image]="runtime == runtimeKeys[3]" src="./../../../assets/images/icons/Java.svg"/>
-                                        <img *ngIf="runtime != runtimeKeys[3]" [class.selected-image]="runtime == runtimeKeys[3]" src="./../../../../assets/images/icons/greyscale-icons/icon-java.svg"/>
+                                        <img *ngIf="runtime == runtimeKeys[3]" [class.selected-image]="runtime == runtimeKeys[3]" src="./../../../assets/images/icons/Go.svg"/>
+                                        <img *ngIf="runtime != runtimeKeys[3]" [class.selected-image]="runtime == runtimeKeys[3]" src="./../../../../assets/images/icons/greyscale-icons/icon-go.svg"/>
                                     </div>
                                 </div>
                                 <div class="icon-name" [ngClass]="{'service-box-selected': runtime == runtimeKeys[3]}">
@@ -211,28 +211,16 @@
                             </section>
 
 
-                            <section class="pad-left0 service-box-section" *ngIf="typeOfPlatform == 'aws'">
+                            <section class="pad-left0 service-box-section disable-event" *ngIf="typeOfPlatform == 'aws'">
                                     <div tabindex="0" class="service-box" [ngClass]="{'service-box-selected': runtime == runtimeKeys[4]}"(keyup.enter)="onSelectionChange(runtimeKeys[4])"  (click)="onSelectionChange(runtimeKeys[4])">
                                         <div class="icon-icon-go">
-                                            <img *ngIf="runtime == runtimeKeys[4]" [class.selected-image]="runtime == runtimeKeys[4]" src="./../../../assets/images/icons/Go.svg"/>
-                                            <img *ngIf="runtime != runtimeKeys[4]" [class.selected-image]="runtime == runtimeKeys[4]" src="./../../../../assets/images/icons/greyscale-icons/icon-go.svg"/>
+                                            <img *ngIf="runtime == runtimeKeys[4]" [class.selected-image]="runtime == runtimeKeys[4]" src="./../../../assets/images/icons/C.svg"/>
+                                            <img *ngIf="runtime != runtimeKeys[4]" [class.selected-image]="runtime == runtimeKeys[4]" src="./../../../../assets/images/icons/greyscale-icons/icon-c.svg"/>
                                         </div>
                                     </div>
                                     <div class="icon-name" [ngClass]="{'service-box-selected': runtime == runtimeKeys[4]}">
                                         <p class="name-style">{{runtimeKeys[4]}}</p>
                                     </div>
-                            </section>
-
-                            <section class="pad-left0 service-box-section disable-event" *ngIf="typeOfPlatform == 'aws'">
-                                <div tabindex="0" class="service-box disabled-box" [ngClass]="{'service-box-selected': runtime == runtimeKeys[5]}" (keyup.enter)="onSelectionChange(runtimeKeys[5])" (click)="onSelectionChange(runtimeKeys[5])">
-                                    <div class="icon-icon-go">
-                                            <img  *ngIf="runtime == runtimeKeys[5]" [class.selected-image]="runtime == runtimeKeys[5]" src="./../../../assets/images/icons/C.svg"/>
-                                            <img  *ngIf="runtime != runtimeKeys[5]" [class.selected-image]="runtime == runtimeKeys[5]" src="./../../../../assets/images/icons/greyscale-icons/icon-c.svg"/>
-                                    </div>
-                                </div>
-                                <div class="icon-name" [ngClass]="{'service-box-selected': runtime == runtimeKeys[5]}">
-                                    <p class="name-style">C#</p>
-                                </div>
                             </section>
 
                         </div>
