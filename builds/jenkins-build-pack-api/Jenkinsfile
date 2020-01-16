@@ -563,9 +563,10 @@ def getLambdaARN(lambdaArns) {
     }
     return [arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias]
   }
+}
 
-  def getApiIDNameUserService(stage, config, accountDetails) {
-	return awsAPIGatewayModule.getApigatewayInfo(stage, config['domain'], config['service'], accountDetails, config)
+def getApiIDNameUserService(stage, service_config, accountDetails) {
+  return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, service_config)
 }
 
 /**
