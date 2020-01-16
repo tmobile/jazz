@@ -86,9 +86,13 @@ def generateRequestId() {
 /**
  * JSON parser
  */
+
 @NonCPS
-def parseJson(def json) {
-	new groovy.json.JsonSlurperClassic().parseText(json)
+def parseJson(jsonString) {
+	def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+	def m = [:]
+	m.putAll(lazyMap)
+	return m
 }
 
 @NonCPS
