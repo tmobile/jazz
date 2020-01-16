@@ -242,8 +242,7 @@ def constructArn(arn, resourceName, resourceType, config) {
 	return arn
 }
 
-def getStackResources(stackName, region, credsId){
-	def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${env}"
+def getStackResources(stackName, region, credsId) {	
 	def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}", returnStdout: true)
 	echo "Describe Stacks are ${stackResources}"
 	def parsedResources = parseJson(stackResources)
