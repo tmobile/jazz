@@ -358,10 +358,9 @@ node() {
                 }
               }
 
-              def function_arn = getLambdaARN(stackName, credsId);
-              lambdaARN = function_arn.split(":(?!.*:.*)")[0]
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], lambdaARN, "lambda", config), environment_logical_id);
-
+              def stackResources = utilModule.getStackResources(stackName, config['region'], credsId)
+              lambdaARN = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)[0]
+             
               echo "lambdaARN: ${lambdaARN}"
 
               if (isLambdaUpdateRequired) {
