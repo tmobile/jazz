@@ -358,8 +358,9 @@ node() {
                 def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
                 for( resource in resources ) {
                   def resourceType = resource['ResourceType']
-                  if( whiteListModule.checkAssetType(resourceType)){
-                    def arn = constructArn(resource['PhysicalResourceId'], resourceType)
+                  if( whiteListModule.checkAssetType(resourceType)){                    
+                    def arnTemplate = whiteListModule.getarnTemplates(resourceType)
+                    def arn = utilModule.constructArn(arnTemplate, resource['PhysicalResourceId'], resourceType, config)
                     if(arn.startsWith('arn')) {
                       def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
                       if(arnAsArray.size() > 2) { // Making sure that the third element exists

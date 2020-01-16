@@ -221,9 +221,7 @@ def getRoleDetails(lambdaARN, region, credsId) {
 }
 
 def constructArn(arn, resourceName, resourceType, config) {
-	def arn = null
-	try{
-		arn = whiteListModule.getarnTemplates(resourceType)
+	try{		
 		//Get queueName from url
 		if( resourceType == "AWS::SQS::Queue"){
 			resourceName  = resourceName.substring(resourceName.lastIndexOf("/") + 1)
