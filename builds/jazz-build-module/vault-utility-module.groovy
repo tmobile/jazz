@@ -103,11 +103,11 @@ def deleteSafe(safeName) {
 	else echo "Error in deleting safe ${safeName}"
 }
 
-def getRoleDetails (lambdaARN, credsId) {
+def getRoleDetails(lambdaARN, credsId) {
 	def iamRoleArn
 	def functionDetails
 	try {
-		def getFunctionOutput = sh(returnStdout: true, script: "aws lambda get-function --function-name ${lambdaARN} --output json  --profile ${credsId} --region ${serviceConfig['region']}")
+		def getFunctionOutput = sh(returnStdout: true, script: "aws lambda get-function --function-name ${lambdaARN} --output json  --profile ${credsId} --region ${serviceConfig.region}")
 		if (getFunctionOutput) functionDetails = parseJson(getFunctionOutput)
 		if (functionDetails && functionDetails.Configuration) {
 			iamRoleArn = functionDetails.Configuration.Role
