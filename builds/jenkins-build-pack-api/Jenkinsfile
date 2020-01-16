@@ -61,7 +61,6 @@ node() {
     def accountDetails
     def accountDetailsPrimary
     def lambdaArnInfo
-    def lambdaArns = []
 
     stage('Checkout code base') {
       sh 'rm -rf ' + repo_name
@@ -348,8 +347,8 @@ node() {
               }              
 
               def stackResources = utilModule.getStackResources(stackName, config['region'], credsId)
-              lambdaArns = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
-              lambdaArnInfo = getLambdaARN(lambdaArns);
+              def lambdaArns = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
+               lambdaArnInfo = getLambdaARN(lambdaArns);
 
               if (fileExists('swagger/swagger.json')) {
                 echo "Generating swagger file for environment: ${env_key}"
@@ -546,23 +545,10 @@ def updateSwagger(){
 }
 
 def getLambdaARN(lambdaArns) {
-  def ARN = lambdaArns[0];
-  try {
-    def tokens = ARN.split(':')
-    def version
-    def alias
-    if (tokens[7].substring(0, 1).isNumber()) {
-      version = tokens[7]
-      alias = ""
-    } else {
-      version = ""
-      alias = tokens[7]
-    }
-    if (alias || version) {
-      ARN = ARN.substring(0, ARN.lastIndexOf(':'));
-    }
-    return [arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias]
-  }
+  def ARN = lambdaArns[0];  
+  def tokens = ARN.split(':')  
+   
+  return [arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6]]
 }
 
 def getApiIDNameUserService(stage, service_config, accountDetails) {
