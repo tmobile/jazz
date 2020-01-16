@@ -280,14 +280,14 @@ node() {
             ]) {
               def azureRegionInfo
               for (item in azureAccount.REGIONS) {
-                if(item.REGION == service_config.region){
+                if(item.REGION == config.region){
                   azureRegionInfo = item
                 }
               }
               if (environment_logical_id == "prod") {
                 azureRG = azureRegionInfo.RESOURCE_GROUPS["PROD"]
                 azureApim =  azureRegionInfo.APIM["PROD"]
-                logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
+                logicalId = config['service_id'].substring(0, 7) + environment_logical_id
               }
               else if(environment_logical_id.split('-')[1] == "stg"){
                 azureRG = azureRegionInfo.RESOURCE_GROUPS["STG"]
@@ -480,7 +480,7 @@ node() {
               // initialize aws credentials
               def randomString = utilModule.generateRequestId();
               credsId = "jazz-${randomString}";
-              sh "aws configure set profile.${credsId}.region ${service_config.region}"
+              sh "aws configure set profile.${credsId}.region ${config.region}"
               sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
               sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
           
@@ -563,8 +563,8 @@ def getLambdaARN(lambdaArns) {
     return [arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias]
   }
 
-  def getApiIDNameUserService(stage, service_config, accountDetails) {
-	return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, service_config)
+  def getApiIDNameUserService(stage, config, accountDetails) {
+	return awsAPIGatewayModule.getApigatewayInfo(stage, config['domain'], config['service'], accountDetails, config)
 }
 
 /**
