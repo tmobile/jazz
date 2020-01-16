@@ -71,7 +71,7 @@ def getBucket(stage) {
  *
  */
 def jazz_quiet_sh(cmd) {
-    sh('#!/bin/sh -e\n' + cmd)
+	sh('#!/bin/sh -e\n' + cmd)
 }
 
 /**
@@ -88,7 +88,7 @@ def generateRequestId() {
  */
 @NonCPS
 def parseJson(def json) {
-    new groovy.json.JsonSlurperClassic().parseText(json)
+	new groovy.json.JsonSlurperClassic().parseText(json)
 }
 
 @NonCPS
@@ -105,21 +105,21 @@ def generateAssetMap(provider, providerId, type, service_config) {
 }
 
 def getAssets(assets_api, auth_token, service_config, env) {
-  def assets
-  try{
-      assets = sh (
-      script: "curl GET  \
-			-H \"Content-Type: application/json\" \
-      -H \"Jazz-Service-ID: ${service_config['service_id']}\" \
-			-H \"Authorization: $auth_token\" \
-			\"${assets_api}?domain=${service_config['domain']}&service=${service_config['service']}&environment=${env}\"",
-      returnStdout: true
-    ).trim()
-    echo "Asset details for the service: ${service_config['service']} and domain: ${service_config['domain']} : \n $assets"
-  } catch(ex) {
-      echo "Exception occured while getting the assets. $ex"
-  }
-  return assets
+	def assets
+	try{
+		assets = sh (
+			script: "curl GET  \
+				-H \"Content-Type: application/json\" \
+				-H \"Jazz-Service-ID: ${service_config['service_id']}\" \
+				-H \"Authorization: $auth_token\" \
+				\"${assets_api}?domain=${service_config['domain']}&service=${service_config['service']}&environment=${env}\"",
+			returnStdout: true
+		).trim()
+		echo "Asset details for the service: ${service_config['service']} and domain: ${service_config['domain']} : \n $assets"
+	} catch(ex) {
+		echo "Exception occured while getting the assets. $ex"
+	}
+	return assets
 }
 
 /**
@@ -140,8 +140,8 @@ def getApiToken(){
 }
 
 def isReplayedBuild() {
-  def replayClassName = "org.jenkinsci.plugins.workflow.cps.replay.ReplayCause"
-  currentBuild.rawBuild.getCauses().any{ cause -> cause.toString().contains(replayClassName) }
+	def replayClassName = "org.jenkinsci.plugins.workflow.cps.replay.ReplayCause"
+	currentBuild.rawBuild.getCauses().any{ cause -> cause.toString().contains(replayClassName) }
 }
 
 /*
@@ -161,7 +161,7 @@ def getAccountInfo(service_config){
 * Get the primary account
 */
 def getAccountInfoPrimary(){
-  def dataObjPrimary = {};
+	def dataObjPrimary = {};
 	for (item in configLoader.AWS.ACCOUNTS) {
 		if(item.PRIMARY){
 			dataObjPrimary = item
@@ -215,5 +215,36 @@ def getRoleDetails(lambdaARN, region, credsId) {
 	}	
 	return iamRoleArn
 }
+
+def constructArn(arn, resourceName, resourceType, config) {
+	def arn = null
+	try{
+		arn = whiteListModule.getarnTemplates(resourceType)
+		//Get queueName from url
+		if( resourceType == "AWS::SQS::Queue"){
+			resourceName  = resourceName.substring(resourceName.lastIndexOf("/") + 1)
+		}
+		if( arn != null ) {
+			arn = arn.replaceAll("\\{region\\}", "${config['region']}")
+			arn = arn.replaceAll("\\{account-id\\}", "${config['accountId']}")
+			arn = arn.replaceAll("\\{resourceName\\}", "${resourceName}")
+		} else {
+			error "Arn Templates not found for Resource Type : ${resourceType}"
+		}
+	} catch (ex){
+		echo "Exception occured on getting Arn templates for Resource Type : ${resourceType}"
+		error "Exception occured on getting Arn templates for Resource Type : ${resourceType}"
+	}
+	return arn
+}
+
+def getStackResources(stackName, region, credsId){
+	def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${env}"
+	def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}", returnStdout: true)
+	echo "Describe Stacks are ${stackResources}"
+	def parsedResources = parseJson(stackResources)
+	return parsedResources
+}
+
 
 return this
