@@ -352,32 +352,8 @@ node() {
               attachTagstoLogGroup(config, environment_logical_id, credsId)
 
               def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${env}"
-              def describeResources = utilModule.getStackResources(cfStackName, config['region'], credsId)
-              def resources = describeResources['StackResources']
-              if( resources != null ) {
-                def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
-                for( resource in resources ) {
-                  def resourceType = resource['ResourceType']
-                  if( whiteListModule.checkAssetType(resourceType)){                    
-                    def arnTemplate = whiteListModule.getarnTemplates(resourceType)
-                    def arn = utilModule.constructArn(arnTemplate, resource['PhysicalResourceId'], resourceType, config)
-                    if(arn.startsWith('arn')) {
-                      def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
-                      if(arnAsArray.size() > 2) { // Making sure that the third element exists
-                        def artifactType = arnAsArray[2]
-                        if (assetCatalogTypes[artifactType] == 'lambda') lambdaArns.add(arn)
-                        events.sendCompletedEvent('CREATE_ASSET',
-                                                  null,
-                                                  utilModule.generateAssetMap("aws",
-                                                                              arn,
-                                                                              assetCatalogTypes[artifactType],
-                                                                              config),
-                                                  environment_logical_id)
-                      }
-                    }
-                  }
-                }
-              }
+              def stackResources = utilModule.getStackResources(cfStackName, config['region'], credsId)
+              lambdaArns = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
               //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
               send_status_email('COMPLETED', '')
             } catch (ex) {

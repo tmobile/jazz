@@ -205,7 +205,7 @@ def getAzureAccountInfo(service_config){
 	return dataObj;
 }
 
-def getRoleDetails(lambdaARN, region, credsId) {
+def getRoleDetails (lambdaARN, region, credsId) {
 	def iamRoleArn
 	def functionDetails
 	try {
@@ -220,7 +220,7 @@ def getRoleDetails(lambdaARN, region, credsId) {
 	return iamRoleArn
 }
 
-def constructArn(arn, resourceName, resourceType, config) {
+def constructArn (arn, resourceName, resourceType, config) {
 	try{		
 		//Get queueName from url
 		if( resourceType == "AWS::SQS::Queue"){
@@ -240,11 +240,38 @@ def constructArn(arn, resourceName, resourceType, config) {
 	return arn
 }
 
-def getStackResources(stackName, region, credsId) {	
+def getStackResources (stackName, region, credsId) {	
 	def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}", returnStdout: true)
 	echo "Describe Stacks are ${stackResources}"
 	def parsedResources = parseJson(stackResources)
 	return parsedResources
+}
+
+def createAllStackResources (whiteListModule, events, config, stackResources, env) {
+	def lambdaArns = []
+	def resources = stackResources['StackResources']
+	if( resources != null ) {
+		def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
+		for( resource in resources ) {
+			def resourceType = resource['ResourceType']
+			if( whiteListModule.checkAssetType(resourceType)){
+				def arnTemplate = whiteListModule.getarnTemplates(resourceType)
+				def arn = constructArn(arnTemplate, resource['PhysicalResourceId'], resourceType, config)
+				if(arn.startsWith('arn')) {
+					def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
+					if(arnAsArray.size() > 2) { // Making sure that the third element exists
+					def artifactType = arnAsArray[2]
+					if (assetCatalogTypes[artifactType] == 'lambda') lambdaArns.add(arn)
+					events.sendCompletedEvent('CREATE_ASSET',
+												null,
+												generateAssetMap("aws", arn, assetCatalogTypes[artifactType], config),
+												env)
+					}
+				}
+			}
+		}
+	}
+	return lambdaArns
 }
 
 
