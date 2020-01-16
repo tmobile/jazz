@@ -59,7 +59,8 @@ node() {
     def context_map
     def accountDetails
     def accountDetailsPrimary
-    def lambdaARN
+    def lambdaArnInfo
+    def lambdaArns = []
 
     stage('Checkout code base') {
       sh 'rm -rf ' + repo_name
@@ -343,13 +344,11 @@ node() {
               def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, s3BucketNameValue, credsId);
               if(deployOutput != 'success'){
                 handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId, accountDetails, config)
-              }
+              }              
 
-              lambdaARN = getLambdaARN(stackName, credsId);
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN.arn, "lambda", config), environment_logical_id);
-
-              def iamRoleArn = utilModule.getRoleDetails(lambdaARN.arn, config['region'], credsId)
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", iamRoleArn, "iam_role", config), environment_logical_id);
+              def stackResources = utilModule.getStackResources(stackName, config['region'], credsId)
+              lambdaArns = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
+              lambdaArnInfo = getLambdaARN(lambdaArns);
 
               if (fileExists('swagger/swagger.json')) {
                 echo "Generating swagger file for environment: ${env_key}"
@@ -413,7 +412,7 @@ node() {
                     events.sendStartedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment started for APIGEE', context_map, environment_logical_id)
                     apiHostName = "${configLoader.APIGEE.API_ENDPOINTS[env_key].SERVICE_HOSTNAME}"
                     updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config, accountDetails)
-                    endpointUrl = apigeeModule.deploy("swagger/swagger.json", lambdaARN, env_key, environment_logical_id, config, context_map)
+                    endpointUrl = apigeeModule.deploy("swagger/swagger.json", lambdaArnInfo, env_key, environment_logical_id, config, context_map)
                     echo "API Proxy created at: ${endpointUrl}"
                     events.sendCompletedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment complete for APIGEE', context_map, environment_logical_id)
                     //adding svc, domain and environment as the provider id since that is used as apiproxy(resource)
@@ -488,7 +487,7 @@ node() {
               def environment = environmentDeploymentMetadata.getEnvironmentInfo()
               if (environment && environment.metadata && environment.metadata.safe) {
                 def safeName = environment.metadata.safe.name
-                vaultUtilityModule.updateSafeDetails(safeName, lambdaARN.arn, credsId)
+                vaultUtilityModule.updateSafeDetails(safeName, lambdaArnInfo.arn, credsId)
               }
               events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
             } catch (ex) {
@@ -545,42 +544,26 @@ def updateSwagger(){
     }
 }
 
-def getLambdaARN(stackName, credsId) {
-  def ARN = "";
+def getLambdaARN(lambdaArns) {
+  def ARN = lambdaArns[0];
   try {
-    def cloudformation_resources = "";
-    cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation ddescribe-stack-resources --stack-name ${stackName} --output json --profile ${credsId} --region ${config.region}")
-
-    echo "cloudformation_resources: $cloudformation_resources"
-    def parsedObject = parseJson(cloudformation_resources);
-    def outputs = parsedObject.Stacks[0].Outputs;
-
-    for (output in outputs) {
-      if (output.OutputKey == "HandlerLambdaFunctionQualifiedArn") {
-        ARN = output.OutputValue
-      }
+    def tokens = ARN.split(':')
+    def version
+    def alias
+    if (tokens[7].substring(0, 1).isNumber()) {
+      version = tokens[7]
+      alias = ""
+    } else {
+      version = ""
+      alias = tokens[7]
     }
-  } catch (ex) {
-    error ex.getMessage();
+    if (alias || version) {
+      ARN = ARN.substring(0, ARN.lastIndexOf(':'));
+    }
+    return [arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias]
   }
 
-  def tokens = ARN.split(':')
-  def version
-  def alias
-  if (tokens[7].substring(0, 1).isNumber()) {
-    version = tokens[7]
-    alias = ""
-  } else {
-    version = ""
-    alias = tokens[7]
-  }
-  if (alias || version) {
-    ARN = ARN.substring(0, ARN.lastIndexOf(':'));
-  }
-  return [arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias]
-}
-
-def getApiIDNameUserService(stage, service_config, accountDetails) {
+  def getApiIDNameUserService(stage, service_config, accountDetails) {
 	return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, service_config)
 }
 
