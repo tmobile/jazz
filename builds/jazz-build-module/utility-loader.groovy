@@ -205,21 +205,6 @@ def getAzureAccountInfo(service_config){
 	return dataObj;
 }
 
-def getRoleDetails (lambdaARN, region, credsId) {
-	def iamRoleArn
-	def functionDetails
-	try {
-		def getFunctionOutput = sh(returnStdout: true, script: "aws lambda get-function --function-name ${lambdaARN} --output json  --profile ${credsId} --region ${region}")
-		if (getFunctionOutput) functionDetails = parseJson(getFunctionOutput)
-		if (functionDetails && functionDetails.Configuration) {
-			iamRoleArn = functionDetails.Configuration.Role
-		}
-	} catch (ex) {
-		echo "Error in getting function details. $ex"
-	}	
-	return iamRoleArn
-}
-
 def constructArn (arn, resourceName, resourceType, config) {
 	try{		
 		//Get queueName from url
