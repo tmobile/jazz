@@ -98,7 +98,7 @@ def loadServiceConfigurationData() {
       sh "sed -i -- 's/{conf-apikey-prod}/${getApigatewayInfoCore('jazz','PROD')}/g' ./config/global-config.json"
       sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/global-config.json"
 
-      if (configLoader.APIGEE && configLoader.APIGEE.ENABLE_APIGEE instanceof Boolean && configLoader.APIGEE.ENABLE_APIGEE) {
+      if (config_loader.APIGEE && config_loader.APIGEE.ENABLE_APIGEE instanceof Boolean && config_loader.APIGEE.ENABLE_APIGEE) {
         sh "sed -i -- 's|{apigee_mgmt_host}|${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_HOST}|g' ./config/dev-config.json"
         sh "sed -i -- 's|{apigee_mgmt_host}|${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_HOST}|g' ./config/prod-config.json"
 
@@ -149,7 +149,7 @@ def loadServiceConfigurationData() {
       }
     }
 
-    if (service_name.trim() == "jazz_t-vault" && config_loader.TVAULT.IS_ENABLED ) {
+    if (service_name.trim() == "jazz_t-vault" && config_loader.TVAULT && config_loader.TVAULT.IS_ENABLED instanceof Boolean && config_loader.TVAULT.IS_ENABLED ) {
       updateConfigValue("{tvault-host-name}", config_loader.TVAULT.HOSTNAME)      
       withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.TVAULT.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
         updateConfigValue("{tvault-username}", UNAME)

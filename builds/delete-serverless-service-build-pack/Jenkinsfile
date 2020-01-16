@@ -144,7 +144,7 @@ node {
 				echo "$repo_name doesn't contain any active environment logical id in environment catalog!"
 			}
 
-			if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+			if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
 				vaultUtilityModule.initialize(configLoader, service_config, g_base_url, auth_token, null, events, utilModule)      
 			}
 
@@ -236,7 +236,7 @@ node {
 									if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 										cleanupCodeQualityReports()
 									}
-									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
 										def environmentInfo = environmentMetadataLoader.getEnvironmentInfo()
 										if (environmentInfo && environmentInfo.metadata && environmentInfo.metadata.safe) {
 											def safeName = environmentInfo.metadata.safe.name
@@ -284,7 +284,7 @@ node {
 										cleanupCodeQualityReports()
 									}
 
-									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
 										def environmentInfo = environmentMetadataLoader.getEnvironmentInfo()
 										if (environmentInfo && environmentInfo.metadata && environmentInfo.metadata.safe) {
 											def safeName = environmentInfo.metadata.safe.name
@@ -362,7 +362,7 @@ node {
 									if (configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true" && configLoader.CODE_QUALITY.SONAR.CLEANUP == "true") {
 										cleanupCodeQualityReports()
 									}
-									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
 										def environmentInfo = environmentMetadataLoader.getEnvironmentInfo()
 										if (environmentInfo && environmentInfo.metadata && environmentInfo.metadata.safe) {
 											def safeName = environmentInfo.metadata.safe.name
@@ -648,7 +648,7 @@ def writeServerlessFile(env){
 		} 
 
 		if (service_config['event_source_dynamodb'] || service_config['event_source_sqs'] 
-		|| service_config['event_source_kinesis'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED )) {
+		|| service_config['event_source_kinesis'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED )) {
 			sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
 			sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
 		} else {        
@@ -662,7 +662,7 @@ def writeServerlessFile(env){
 }
 
 def removeEventResources () {
-	if (!service_config['event_source_dynamodb'] && !service_config['event_source_sqs'] && !service_config['event_source_s3'] && !service_config['event_source_kinesis'] && ( configLoader.TVAULT && !configLoader.TVAULT.IS_ENABLED )) {
+	if (!service_config['event_source_dynamodb'] && !service_config['event_source_sqs'] && !service_config['event_source_s3'] && !service_config['event_source_kinesis'] && ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && !configLoader.TVAULT.IS_ENABLED )) {
 		sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"
 		sh "sed -i -- '/#Start:events/,/#End:events/d' ./serverless.yml"
 	}
@@ -688,7 +688,7 @@ def removeEventResources () {
 		sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
 	}
 
-	if (service_config['eventScheduleRate'] && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+	if (service_config['eventScheduleRate'] && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
 		// scheduled event does not have custome role so we need the vault custom role
 		if (service_config['require_internal_access']) sedCommand = sedCommand + "; /#Start:isBasicRole/,/#End:isBasicRole/d" 
 		else sedCommand = sedCommand + "; /#Start:isVpcEnabled/,/#End:isVpcEnabled/d" 
@@ -1294,7 +1294,7 @@ def loadServerlessConfig() {
 		sh "cp _config/serverless-go.yml ./serverless.yml"
 	}
 
-	if (service_config['event_source_dynamodb'] || service_config['event_source_sqs'] || service_config['event_source_dynamodb'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED )) {
+	if (service_config['event_source_dynamodb'] || service_config['event_source_sqs'] || service_config['event_source_dynamodb'] || service_config['event_source_s3'] || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED )) {
 		sh "cp _config/aws-events-policies/custom-roles.yml ./customRoles.yml"
 	}	
 
@@ -1454,7 +1454,7 @@ def loadBuildModules(buildModuleUrl){
 		slsBuildRules.initialize(steps,whiteListModule)
 		echo "sls-app/sbr.groovy has been loaded"
 
-		if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+		if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
 			vaultUtilityModule = load "vault-utility-module.groovy"      
 			echo "Vault utility module loaded successfully."
 		}
