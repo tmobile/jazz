@@ -26,6 +26,7 @@ import groovy.transform.Field
 @Field def sonarModule
 @Field def azureDeployer
 @Field def vaultUtilityModule
+@Field def whiteListModule
 
 @Field def azureRG
 @Field def azureApim
@@ -59,7 +60,7 @@ node() {
     def context_map
     def accountDetails
     def accountDetailsPrimary
-    def lambdaARN
+    def lambdaArnInfo
 
     stage('Checkout code base') {
       sh 'rm -rf ' + repo_name
@@ -85,6 +86,7 @@ node() {
 
       if (configObj.service_id) {
         config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
+        config << configObj
       } else {
         error "Service id is not available."
       }
@@ -162,9 +164,9 @@ node() {
 
       sonarModule.initialize(configLoader, config, branch)
 
-      def roleId
+      def accountId;
       if(config['provider'] == 'aws'){
-        roleId = config['iamRoleARN'].substring(config['iamRoleARN'].indexOf("::") + 2, config['iamRoleARN'].lastIndexOf(":"))
+        accountId = config.accountId
         loadServerlessConfig(config)
       }
 
@@ -172,7 +174,7 @@ node() {
         stage('Update Service Template'){
           echo "Inside Update service template"
           try {
-            updatePlatformServiceTemplate(config, config['iamRoleARN'], roleId, current_environment, repo_name)
+            updatePlatformServiceTemplate(config, config['iamRoleARN'], accountId, current_environment, repo_name)
           }
           catch (error) {
             error "Error occured while updating service template."
@@ -278,14 +280,14 @@ node() {
             ]) {
               def azureRegionInfo
               for (item in azureAccount.REGIONS) {
-                if(item.REGION == service_config.region){
+                if(item.REGION == config.region){
                   azureRegionInfo = item
                 }
               }
               if (environment_logical_id == "prod") {
                 azureRG = azureRegionInfo.RESOURCE_GROUPS["PROD"]
                 azureApim =  azureRegionInfo.APIM["PROD"]
-                logicalId = service_config['service_id'].substring(0, 7) + environment_logical_id
+                logicalId = config['service_id'].substring(0, 7) + environment_logical_id
               }
               else if(environment_logical_id.split('-')[1] == "stg"){
                 azureRG = azureRegionInfo.RESOURCE_GROUPS["STG"]
@@ -342,10 +344,11 @@ node() {
               def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, s3BucketNameValue, credsId);
               if(deployOutput != 'success'){
                 handleDeploymentErrors(deployOutput, envBucketKey, environment_logical_id, credsId, accountDetails, config)
-              }
+              }              
 
-              lambdaARN = getLambdaARN(stackName, credsId);
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", lambdaARN.arn, "lambda", config), environment_logical_id);
+              def stackResources = utilModule.getStackResources(stackName, config['region'], credsId)
+              def lambdaArns = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
+               lambdaArnInfo = getLambdaARN(lambdaArns);
 
               if (fileExists('swagger/swagger.json')) {
                 echo "Generating swagger file for environment: ${env_key}"
@@ -392,7 +395,7 @@ node() {
                       endpointUrl = "https://${apiHostName}/${current_environment}/${environment_logical_id}/${config['domain']}/${config['service']}"
                     }
                     if (domain != "jazz") {
-                      createSubscriptionFilters(config, configLoader.AWS.DEFAULTS.REGION, roleId, accountDetails, env_key, credsId);
+                      createSubscriptionFilters(config, configLoader.AWS.DEFAULTS.REGION, accountId, accountDetails, env_key, credsId);
                     }
 
                     def apiArns = getSwaggerResourceARNs(aws_api_id, current_environment, "aws")
@@ -409,7 +412,7 @@ node() {
                     events.sendStartedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment started for APIGEE', context_map, environment_logical_id)
                     apiHostName = "${configLoader.APIGEE.API_ENDPOINTS[env_key].SERVICE_HOSTNAME}"
                     updateSwagger(apiHostName, environment_logical_id, current_environment, env_key, config, accountDetails)
-                    endpointUrl = apigeeModule.deploy("swagger/swagger.json", lambdaARN, env_key, environment_logical_id, config, context_map)
+                    endpointUrl = apigeeModule.deploy("swagger/swagger.json", lambdaArnInfo, env_key, environment_logical_id, config, context_map)
                     echo "API Proxy created at: ${endpointUrl}"
                     events.sendCompletedEvent('DEPLOY_TO_GCP_APIGEE', 'Deployment complete for APIGEE', context_map, environment_logical_id)
                     //adding svc, domain and environment as the provider id since that is used as apiproxy(resource)
@@ -477,14 +480,14 @@ node() {
               // initialize aws credentials
               def randomString = utilModule.generateRequestId();
               credsId = "jazz-${randomString}";
-              sh "aws configure set profile.${credsId}.region ${service_config.region}"
+              sh "aws configure set profile.${credsId}.region ${config.region}"
               sh "aws configure set profile.${credsId}.aws_access_key_id $AWS_ACCESS_KEY_ID"
               sh "aws configure set profile.${credsId}.aws_secret_access_key $AWS_SECRET_ACCESS_KEY"
           
               def environment = environmentDeploymentMetadata.getEnvironmentInfo()
               if (environment && environment.metadata && environment.metadata.safe) {
                 def safeName = environment.metadata.safe.name
-                vaultUtilityModule.updateSafeDetails(safeName, lambdaARN.arn, credsId)
+                vaultUtilityModule.updateSafeDetails(safeName, lambdaArnInfo.arn, credsId)
               }
               events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
             } catch (ex) {
@@ -541,42 +544,15 @@ def updateSwagger(){
     }
 }
 
-def getLambdaARN(stackName, credsId) {
-  def ARN = "";
-  try {
-    def cloudformation_resources = "";
-    cloudformation_resources = sh(returnStdout: true, script: "aws cloudformation describe-stacks --output json --stack-name ${stackName} --profile ${credsId} --region ${config.region}")
-
-    def parsedObject = parseJson(cloudformation_resources);
-    def outputs = parsedObject.Stacks[0].Outputs;
-
-    for (output in outputs) {
-      if (output.OutputKey == "HandlerLambdaFunctionQualifiedArn") {
-        ARN = output.OutputValue
-      }
-    }
-  } catch (ex) {
-    error ex.getMessage();
-  }
-
-  def tokens = ARN.split(':')
-  def version
-  def alias
-  if (tokens[7].substring(0, 1).isNumber()) {
-    version = tokens[7]
-    alias = ""
-  } else {
-    version = ""
-    alias = tokens[7]
-  }
-  if (alias || version) {
-    ARN = ARN.substring(0, ARN.lastIndexOf(':'));
-  }
-  return [arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6], version: version, alias: alias]
+def getLambdaARN(lambdaArns) {
+  def ARN = lambdaArns[0];  
+  def tokens = ARN.split(':')  
+   
+  return [arn: ARN, region: tokens[3], accountId: tokens[4], functionName: tokens[6]]
 }
 
 def getApiIDNameUserService(stage, service_config, accountDetails) {
-	return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, service_config)
+  return awsAPIGatewayModule.getApigatewayInfo(stage, service_config['domain'], service_config['service'], accountDetails, service_config)
 }
 
 /**
@@ -804,14 +780,9 @@ def generateSwaggerEnv(env, deploymentNode, apiHostName, config, accountDetails)
   sh "sed -i -- 's/{domain}/${config['domain']}/g' swagger/swagger.json" // {domain}
   sh "sed -i -- 's/{envPrefix}/${configLoader.INSTANCE_PREFIX}/g' swagger/swagger.json" // {domain}
   sh "sed -i -- 's/{envmnt}/${current_environment}/g' swagger/swagger.json" // {environment}
-
-
-  // TODO: the below couple of statements will be replaced with regular expression in very near future;
-  def roleId = iamRoleArnData.substring(iamRoleArnData.indexOf("::") + 2, iamRoleArnData.lastIndexOf(":"))
-
   sh "sed -i -- 's|{conf-role}|${platformRoleValue}|g' ./swagger/swagger.json"
   sh "sed -i -- 's/{conf-region}/${regionValue}/g' ./swagger/swagger.json"
-  sh "sed -i -- 's/{conf-accId}/${roleId}/g' ./swagger/swagger.json"
+  sh "sed -i -- 's/{conf-accId}/${config['accountId']}/g' ./swagger/swagger.json"
 }
 
 /* method to read the file and add operation id */
@@ -861,10 +832,6 @@ def updateOperationId(swaggerFileContent) {
 
 def writeServerlessFile(config, environment_logical_id, accountDetails){
 
-  def iamRoleArnValue;
-  if(config['domain'] == 'jazz') iamRoleArnValue = config['iamRoleARN']
-  else iamRoleArnValue = accountDetails.IAM.USERSERVICES_ROLEID;  
-
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
   sh "sed -i -- 's/\${functionName}/${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}/g' serverless.yml"
   sh "sed -i -- 's/{inst_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' serverless.yml"
@@ -889,18 +856,19 @@ def writeServerlessFile(config, environment_logical_id, accountDetails){
     sh "sed -i -- 's/\${file(deployment-env.yml):mainClass}/${config['mainClass']}/g' serverless.yml"
   }
 
-  if (config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ) {
+ //Jazz will create roles for services per environments for user services with no user specified roles
+  if (config['domain'] == 'jazz' || config['iamRoleARN'] ) { 
+    sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"       
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"
+  } else  {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
     if (config['require_internal_access']) {
-      sh "sed -i -- '/#Start:isVaultEnabled/,/#End:isVaultEnabled/d' ./serverless.yml"  
+      sh "sed -i -- '/#Start:isBasicRole/,/#End:isBasicRole/d' ./serverless.yml"  
       sh "sed -i -- '/#Start:isS3EventRoleEnabled/,/#End:resources/d' ./serverless.yml"
     }  
     else 
-      sh "sed -i -- '/#Start:isVaultAndVpcEnabled/,/#End:resources/d' ./serverless.yml"    
-  } else  {
-    sh "sed -i -- '/#Start:resources/,/#End:resources/d' ./serverless.yml"       
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${iamRoleArnValue}|g' serverless.yml"
+      sh "sed -i -- '/#Start:isVpcEnabled/,/#End:resources/d' ./serverless.yml"    
   }
 }
 
@@ -1018,8 +986,8 @@ def loadServerlessConfig(config) {
     sh "cp _config/serverless-go.yml ./serverless.yml"
   }
 
-  if (config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ) {
-    sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
+  if (config['domain'] != 'jazz' ) {
+    sh "cp _config/aws-events-policies/custom-roles.yml ./customRoles.yml"
   }
 
   removeEventResources()
@@ -1064,7 +1032,7 @@ def updateApiDocUrl(String env) {
 /**
 	Create the subscription filters and loggroup if not existing
 **/
-def createSubscriptionFilters(config, region, roleId, accountDetails, env_key, credsId) {
+def createSubscriptionFilters(config, region, accountId, accountDetails, env_key, credsId) {
   def logGroupName = "${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${environment_logical_id}"
   def lambda = "/aws/lambda/${logGroupName}"
   def logStreamer = configLoader.JAZZ.PLATFORM.AWS.KINESIS_LOGS_STREAM.PROD
@@ -1208,10 +1176,10 @@ def clearVirtualEnv() {
   sh "rm -rf venv" // just delete the venv folder
 }
 
-def updatePlatformServiceTemplate(config, roleARN, roleId, environment_logical_id, repo_name)	{
+def updatePlatformServiceTemplate(config, roleARN, accountId, environment_logical_id, repo_name)	{
   echo "loadServerlessConfig......."
   def jenkinsURL = JenkinsLocationConfiguration.get().getUrl().replaceAll("/", "\\\\/")
-  serviceConfigdata.initialize(configLoader, roleARN, config['region'], roleId, jenkinsURL, environment_logical_id, repo_name, utilModule, awsAPIGatewayModule)
+  serviceConfigdata.initialize(configLoader, roleARN, config['region'], accountId, jenkinsURL, environment_logical_id, repo_name, utilModule, awsAPIGatewayModule)
   serviceConfigdata.loadServiceConfigurationData()
 }
 
@@ -1269,6 +1237,10 @@ def loadBuildModules(buildModuleUrl){
 
     utilModule = load "utility-loader.groovy"
     echo "Util module loaded successfully."
+
+    whiteListModule = load "sls-app/whitelist-validator-module.groovy"
+    whiteListModule.initialize()
+    echo "whitelist-validator-module module loaded successfully"
 
     environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
     echo "Environment deployment data loader module loaded successfully."

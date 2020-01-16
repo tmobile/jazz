@@ -26,6 +26,7 @@ import groovy.transform.Field
 @Field def sonarModule
 @Field def azureDeployer
 @Field def vaultUtilityModule
+@Field def whiteListModule
 
 @Field def auth_token = ''
 @Field def config
@@ -82,6 +83,7 @@ node() {
 
       if (configObj.service_id) {
         config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
+        config << configObj
       } else {
         error "Service Id is not available."
       }
@@ -321,7 +323,7 @@ node() {
                 }
               }
 
-              writeServerlessFile(config, environment_logical_id, accountDetails)
+              writeServerlessFile(config, environment_logical_id, isEventSchdld, accountDetails)
               echoServerlessFile()
               def deployOutput = servelessDeploy(environment_logical_id, credsId, env_key, accountDetails)
 
@@ -357,21 +359,14 @@ node() {
                 }
               }
 
-              def function_arn = getLambdaARN(stackName, credsId);
-              lambdaARN = function_arn.split(":(?!.*:.*)")[0]
-              events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], lambdaARN, "lambda", config), environment_logical_id);
-
+              def stackResources = utilModule.getStackResources(stackName, config['region'], credsId)
+              lambdaARN = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)[0]
+             
               echo "lambdaARN: ${lambdaARN}"
 
               if (isLambdaUpdateRequired) {
                 def event_source_s3 = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_s3'], environment_logical_id, "-")
                 lambdaEvents.updateLambdaPermissionAndNotification(lambdaARN, event_source_s3, config['event_action_s3'], credsId)
-              }
-
-              if (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3']) {
-                def role_name = "${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}-${environment_logical_id}"
-                def role_arn = lambdaEvents.getRoleArn(role_name, credsId)
-                events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(config['provider'], role_arn, "iam_role", config), environment_logical_id);
               }
 
               if (domain != "jazz") {
@@ -624,11 +619,11 @@ def addEvents(def isScheduleEnabled, def isEc2EventEnabled, def isS3EventEnabled
     sedCommand = sedCommand + "; /#Start:isDynamoDbEnabled/,/#End:isDynamoDbEnabled/d"
   }
 
-  if (isScheduleEnabled && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED && config['domain'] != 'jazz') {
+  if (isScheduleEnabled && config['domain'] != 'jazz') {
     // scheduled event does not have custome role so we need the vault custom role
-    if (config['require_internal_access']) sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultEnabled/d" 
-    else sedCommand = sedCommand + "; /#Start:isVaultAndVpcEnabled/,/#End:isVaultAndVpcEnabled/d" 
-  } else sedCommand = sedCommand + "; /#Start:isVaultEnabled/,/#End:isVaultAndVpcEnabled/d"  // Removing vault role since all other events has custom role
+    if (config['require_internal_access']) sedCommand = sedCommand + "; /#Start:isBasicRole/,/#End:isBasicRole/d" 
+    else sedCommand = sedCommand + "; /#Start:isVpcEnabled/,/#End:isVpcEnabled/d" 
+  } else sedCommand = sedCommand + "; /#Start:isBasicRole/,/#End:isVpcEnabled/d"  // Removing vault role since all other events has custom role
   
 
   sh "sed -i -- '$sedCommand' ./serverless.yml"
@@ -844,11 +839,11 @@ def loadServerlessConfig(String runtime, def isEventSchdld, def isScheduleEnable
     addEvents(isScheduleEnabled, isEc2EventEnabled, isS3EventEnabled, isSQSEventEnabled, isStreamEnabled, isDynamoDbEnabled)
   }
 
-  if (isS3EventEnabled || isSQSEventEnabled || isDynamoDbEnabled || isStreamEnabled || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED && config['domain'] != 'jazz')) {
-    sh "cp _config/aws-events-policies/custom-policy.yml ./policyFile.yml"
+  if ( config['domain'] != 'jazz' ) {
+    sh "cp _config/aws-events-policies/custom-roles.yml ./customRoles.yml"
   }
 
-  if((!isEventSchdld && ( configLoader.TVAULT && !configLoader.TVAULT.IS_ENABLED )) || config['domain'] == 'jazz') {
+  if(!isEventSchdld || config['domain'] == 'jazz') {
     removeEventResources()
   }
 
@@ -925,11 +920,7 @@ def createSubscriptionFilters(config, env_key, credsId, accountDetails) {
   }
 }
 
-def writeServerlessFile(config, env, accountDetails) {
-
-  def iamRoleArnValue = accountDetails.IAM.USERSERVICES_ROLEID;
-  if(config['iamRoleARN'] != null && !config['iamRoleARN'].equals("")) iamRoleArnValue = config['iamRoleARN']
-
+def writeServerlessFile(config, env, isEventSchdld, accountDetails) {
   sh "pwd"
   sh "sed -i -- 's/\${file(deployment-env.yml):service}/${configLoader.INSTANCE_PREFIX}-${config['domain']}-${config['service']}/g' serverless.yml"
   sh "sed -i -- 's/\${functionName}/${configLoader.INSTANCE_PREFIX}_${config['domain']}_${config['service']}_${env}/g' serverless.yml"
@@ -961,7 +952,7 @@ def writeServerlessFile(config, env, accountDetails) {
     def event_s3_arn = "arn:aws:s3:::${event_source_s3}"
     sh "sed -i -- 's/{event_source_s3}/${event_source_s3}/g' ./serverless.yml"
     sh "sed -i -- 's/{event_action_s3}/${config['event_action_s3']}/g' ./serverless.yml"
-    sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' policyFile.yml"
+    sh "sed -i -- 's|{event_s3_arn}|${event_s3_arn}|g' customRoles.yml"
   }
 
   if (config['event_source_sqs']) {
@@ -969,7 +960,7 @@ def writeServerlessFile(config, env, accountDetails) {
     def event_sqs_arn = lambdaEvents.getEventResourceNamePerEnvironment(config['event_source_sqs'], env, "_")
     sh "sed -i -- 's/{event_source_sqs}/${event_source_sqs}/g' ./serverless.yml"
     sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' ./serverless.yml"
-    sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' policyFile.yml"
+    sh "sed -i -- 's|{event_sqs_arn}|${event_sqs_arn}|g' customRoles.yml"
   }
 
   if (config['event_source_kinesis']) {
@@ -982,12 +973,22 @@ def writeServerlessFile(config, env, accountDetails) {
     sh "sed -i -- 's|{event_source_dynamodb}|${event_source_dynamodb}|g' serverless.yml"
   } 
   
-  if (config['domain'] != 'jazz' && (config['event_source_dynamodb'] || config['event_source_sqs'] || config['event_source_kinesis'] || config['event_source_s3'] 
-  || ( configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED ))) {
+
+  //Jazz will create roles for services per environments for user services with no user specified roles
+  if (config['domain'] == 'jazz' || config['iamRoleARN'] ) { 
+    if (isEventSchdld) sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"  
+    sh "sed -i -- '/#Start:customRoles/,/#End:customRoles/d' ./serverless.yml"  
+    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${config['iamRoleARN']}|g' serverless.yml"    
+  } else  {
     sh "sed -i -- 's/resourcesDisabled/resources/g' ./serverless.yml"
     sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|customRole|g' serverless.yml"
-  } else {        
-    sh "sed -i -e 's|\${file(deployment-env.yml):iamRoleARN}|${iamRoleArnValue}|g' serverless.yml"
+    if (!isEventSchdld) {
+      if (config['require_internal_access']) {
+        sh "sed -i -- '/#Start:isBasicRole/,/#End:isBasicRole/d' ./serverless.yml"  
+        sh "sed -i -- '/#Start:isS3EventRoleEnabled/,/#End:resources/d' ./serverless.yml"
+      }  else 
+        sh "sed -i -- '/#Start:isVpcEnabled/,/#End:resources/d' ./serverless.yml"    
+    } 
   }
 }
 
@@ -1213,6 +1214,10 @@ def loadBuildModules(buildModuleUrl) {
     def resourceUtility = load "resource-utility.groovy"
     resourceUtility.initialize(configLoader)
     echo "resource util init successfully."
+
+    whiteListModule = load "sls-app/whitelist-validator-module.groovy"
+    whiteListModule.initialize()
+    echo "whitelist-validator-module module loaded successfully"
 
     def azureUtility = load "azure-utility.groovy"
     azureUtility.initialize(configLoader, resourceUtility, utilModule)

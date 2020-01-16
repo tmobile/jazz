@@ -88,6 +88,7 @@ node() {
 
       if (configObj.service_id) {
         config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
+        config << configObj
       } else {
         error "Service Id is not available."
       }
@@ -350,31 +351,9 @@ node() {
               createAssetForHttpEvents(deployOutput)
               attachTagstoLogGroup(config, environment_logical_id, credsId)
 
-              def describeResources = getStackResources(environment_logical_id, credsId)
-              def resources = describeResources['StackResources']
-              if( resources != null ) {
-                def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
-                for( resource in resources ) {
-                  def resourceType = resource['ResourceType']
-                  if( whiteListModule.checkAssetType(resourceType)){
-                    def arn = constructArn(resource['PhysicalResourceId'], resourceType)
-                    if(arn.startsWith('arn')) {
-                      def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
-                      if(arnAsArray.size() > 2) { // Making sure that the third element exists
-                        def artifactType = arnAsArray[2]
-                        if (assetCatalogTypes[artifactType] == 'lambda') lambdaArns.add(arn)
-                        events.sendCompletedEvent('CREATE_ASSET',
-                                                  null,
-                                                  utilModule.generateAssetMap("aws",
-                                                                              arn,
-                                                                              assetCatalogTypes[artifactType],
-                                                                              config),
-                                                  environment_logical_id)
-                      }
-                    }
-                  }
-                }
-              }
+              def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${environment_logical_id}"
+              def stackResources = utilModule.getStackResources(cfStackName, config['region'], credsId)
+              lambdaArns = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
               //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
               send_status_email('COMPLETED', '')
             } catch (ex) {
@@ -497,36 +476,6 @@ def createAssetForHttpEvents (deployOutput) {
     events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", apigatewayArn, "apigateway", config), environment_logical_id)
     events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap("aws", endpoint, "endpoint_url", config), environment_logical_id)
   }
-}
-
-def constructArn(resourceName, resourceType) {
-  def arn = null
-  try{
-    arn = whiteListModule.getarnTemplates(resourceType)
-    //Get queueName from url
-    if( resourceType == "AWS::SQS::Queue"){
-      resourceName  = resourceName.substring(resourceName.lastIndexOf("/") + 1)
-    }
-    if( arn != null ) {
-      arn = arn.replaceAll("\\{region\\}", "${config['region']}")
-      arn = arn.replaceAll("\\{account-id\\}", "${config['accountId']}")
-      arn = arn.replaceAll("\\{resourceName\\}", "${resourceName}")
-    } else {
-      error "Arn Templates not found for Resource Type : ${resourceType}"
-    }
-  } catch (ex){
-    echo "Exception occured on getting Arn templates for Resource Type : ${resourceType}"
-    error "Exception occured on getting Arn templates for Resource Type : ${resourceType}"
-  }
-  return arn
-}
-
-def getStackResources(env, credsId){
-  def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${env}"
-  def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${cfStackName} --region ${config.region} --profile ${credsId}", returnStdout: true)
-  echo "Describe Stacks are ${stackResources}"
-  def parsedResources = parseJson(stackResources)
-  return parsedResources
 }
 
 def echoServerlessFile() {

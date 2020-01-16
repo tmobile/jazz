@@ -152,7 +152,7 @@ kinesisRole:
                 - "logs:PutLogEvents"
               Resource: "*"
 
-#Vault Role
+#Basic Role
 basicRole:
   Type: AWS::IAM::Role
   Properties:
@@ -170,7 +170,7 @@ basicRole:
     Path: "/"
     Policies:
       -
-        PolicyName: "vault-custom-logs"
+        PolicyName: "basic-custom-logs"
         PolicyDocument:
           Version: "2012-10-17"
           Statement:
@@ -181,7 +181,7 @@ basicRole:
                 - "logs:PutLogEvents"
               Resource: "*"
 
-#Vault VPC Role
+#VPC Role
 vpcRole:
   Type: AWS::IAM::Role
   Properties:
@@ -199,7 +199,7 @@ vpcRole:
     Path: "/"
     Policies:
       -
-        PolicyName: "vault-custom-logs"
+        PolicyName: "vpc-custom-logs"
         PolicyDocument:
           Version: "2012-10-17"
           Statement:
