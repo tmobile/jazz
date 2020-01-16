@@ -26,6 +26,7 @@ import groovy.transform.Field
 @Field def sonarModule
 @Field def azureDeployer
 @Field def vaultUtilityModule
+@Field def whiteListModule
 
 @Field def azureRG
 @Field def azureApim
@@ -1249,6 +1250,10 @@ def loadBuildModules(buildModuleUrl){
 
     utilModule = load "utility-loader.groovy"
     echo "Util module loaded successfully."
+
+    whiteListModule = load "sls-app/whitelist-validator-module.groovy"
+    whiteListModule.initialize()
+    echo "whitelist-validator-module module loaded successfully"
 
     environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
     echo "Environment deployment data loader module loaded successfully."

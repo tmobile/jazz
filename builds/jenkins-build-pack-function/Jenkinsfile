@@ -26,6 +26,7 @@ import groovy.transform.Field
 @Field def sonarModule
 @Field def azureDeployer
 @Field def vaultUtilityModule
+@Field def whiteListModule
 
 @Field def auth_token = ''
 @Field def config
@@ -1219,6 +1220,10 @@ def loadBuildModules(buildModuleUrl) {
     def resourceUtility = load "resource-utility.groovy"
     resourceUtility.initialize(configLoader)
     echo "resource util init successfully."
+
+    whiteListModule = load "sls-app/whitelist-validator-module.groovy"
+    whiteListModule.initialize()
+    echo "whitelist-validator-module module loaded successfully"
 
     def azureUtility = load "azure-utility.groovy"
     azureUtility.initialize(configLoader, resourceUtility, utilModule)
