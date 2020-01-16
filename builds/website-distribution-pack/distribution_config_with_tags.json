@@ -58,23 +58,27 @@
   "Tags": {
     "Items": [
       {
-        "Key": "application",
-        "Value": "jazz"
+        "Key": "Application",
+        "Value": "Jazz"
       },
       {
-        "Key": "service",
+        "Key": "Platform",
+        "Value": "Jazz"
+      },
+      {
+        "Key": "Service",
         "Value": "{service_name}"
       },
       {
-        "Key": "domain",
+        "Key": "Domain",
         "Value": "{domain_name}"
       },
       {
-        "Key": "environment",
+        "Key": "Environment",
         "Value": "{env}"
       },
       {
-        "Key": "owner",
+        "Key": "Owner",
         "Value": "{owner}"
       }
     ]
