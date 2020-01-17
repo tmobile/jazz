@@ -1,0 +1,46 @@
+{
+  "API": {
+    "LOGIN": "/auth/tvault/login",
+    "SAFE": "/ss/sdb",
+    "SAFE_USERS": "/user",
+    "SAFE_ROLES": "/role",
+    "DELETE_SAFE": "/delete?path=shared/",
+    "GET_SAFE": "?path=shared/",
+    "GET_ROLE": "/auth/aws/role/",
+    "USERS": "/auth/userpass/users",
+    "VAULT_ROLES": "/auth/aws/iam/role"
+  },
+  "CREATE_SAFE_REQUIRED_FIELDS": [
+    "name",
+    "owner",
+    "description"
+  ],
+  "CREATE_USER_IN_SAFE_REQUIRED_FIELDS": [
+    "username",
+    "permission"
+  ],
+  "CREATE_ROLE_IN_SAFE_REQUIRED_FIELDS": [
+    "arn",
+    "permission"
+  ],
+  "CREATE_USER_IN_VAULT_REQUIRED_FIELDS": [
+    "username",
+    "password"
+  ],
+  "USER_IN_VAULT_REQUIRED_FIELDS": [
+    "username"
+  ],
+  "PERMISSION_LEVELS": {
+    "permission": [
+      "read",
+      "write"
+    ]
+  },
+  "FIELD_LENGTH_CONSTRAINTS": {
+    "name": 3,
+    "description": 10
+  },
+  "PATH_TO_SAFE": "shared/",
+  "ACCESS_LEVEL_IN_SAFE": "write",
+  "DEFAULT_USER_POLICY": "default"
+}

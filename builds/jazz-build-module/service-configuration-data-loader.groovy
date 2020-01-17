@@ -59,26 +59,30 @@ def loadServiceConfigurationData() {
         updateConfigValue("{casbin_password}", PWD)
       }
 
+      updateCoreAPI()
+      updateConfigValueInGlobalFile("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValueInGlobalFile("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)      
       updateConfigValue("{casbin_host}", config_loader.ACL.DATABASE.ENDPOINT)
       updateConfigValue("{casbin_port}", config_loader.ACL.DATABASE.PORT)
       updateConfigValue("{casbin_database}", config_loader.ACL.DATABASE.NAME)
       updateConfigValue("{casbin_type}", config_loader.ACL.DATABASE.TYPE_DB)
-      updateConfigValue("{casbin_timeout}", config_loader.ACL.DATABASE.TIMEOUT)
+      updateConfigValue("{casbin_timeout}", config_loader.ACL.DATABASE.TIMEOUT)      
+      updateConfigValue("{scm_type}", config_loader.SCM.TYPE)
+      updateConfigValue("{scm_base_url}", "http://${config_loader.REPOSITORY.BASE_URL}")
       updateConfigValue("{inst_stack_prefix}", config_loader.INSTANCE_PREFIX)
       updateConfigValue("{conf-region}", region)
 
-      sh "sed -i -- 's/{scm_type}/${config_loader.SCM.TYPE}/g' ./config/global-config.json"
-      sh "sed -i -- 's,{scm_base_url},http://${config_loader.REPOSITORY.BASE_URL},g' ./config/global-config.json"
-
+      sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/global-config.json"
+    
       if (config_loader.SCM.TYPE == "bitbucket") {
         withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.REPOSITORY.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]) {
-          sh "sed -i -- 's/{bb_username}/${UNAME}/g' ./config/global-config.json"
-          sh "sed -i -- 's/{bb_password}/${PWD}/g' ./config/global-config.json"
+          updateConfigValueInGlobalFile("{bb_username}", UNAME)
+          updateConfigValueInGlobalFile("{bb_password}", PWD)
         }
       }
 
       if (config_loader.SCM.TYPE == "gitlab") {
-        sh "sed -i -- 's/{private_token}/${config_loader.SCM.PRIVATE_TOKEN}/g' ./config/global-config.json"
+         updateConfigValueInGlobalFile("{private_token}", config_loader.SCM.PRIVATE_TOKEN)
       }
     }
 
@@ -94,7 +98,7 @@ def loadServiceConfigurationData() {
       sh "sed -i -- 's/{conf-apikey-prod}/${getApigatewayInfoCore('jazz','PROD')}/g' ./config/global-config.json"
       sh "sed -i -- 's/{conf_stack_prefix}/${config_loader.INSTANCE_PREFIX}/g' ./config/global-config.json"
 
-      if (configLoader.APIGEE && configLoader.APIGEE.ENABLE_APIGEE instanceof Boolean && configLoader.APIGEE.ENABLE_APIGEE) {
+      if (config_loader.APIGEE && config_loader.APIGEE.ENABLE_APIGEE instanceof Boolean && config_loader.APIGEE.ENABLE_APIGEE) {
         sh "sed -i -- 's|{apigee_mgmt_host}|${config_loader.APIGEE.API_ENDPOINTS.DEV.MGMT_HOST}|g' ./config/dev-config.json"
         sh "sed -i -- 's|{apigee_mgmt_host}|${config_loader.APIGEE.API_ENDPOINTS.PROD.MGMT_HOST}|g' ./config/prod-config.json"
 
@@ -145,6 +149,14 @@ def loadServiceConfigurationData() {
       }
     }
 
+    if (service_name.trim() == "jazz_t-vault" && config_loader.TVAULT && config_loader.TVAULT.IS_ENABLED instanceof Boolean && config_loader.TVAULT.IS_ENABLED ) {
+      updateConfigValue("{tvault-host-name}", config_loader.TVAULT.HOSTNAME)      
+      withCredentials([[$class: 'UsernamePasswordMultiBinding', credentialsId: config_loader.TVAULT.CREDENTIAL_ID, passwordVariable: 'PWD', usernameVariable: 'UNAME']]){
+        updateConfigValue("{tvault-username}", UNAME)
+        updateConfigValue("{tvault-password}", PWD)
+      }
+    }
+
     if (service_name.trim() == "jazz_codeq") {
       updateCoreAPI()
       updateConfigValue("{conf-region}", region)
@@ -187,6 +199,10 @@ def loadServiceConfigurationData() {
       updateConfigValue("{conf-region}", region)
       updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
       updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
+      updateConfigValue("{tvault-host-name}", config_loader.TVAULT.HOSTNAME)
+      sh "sed -i -- 's#\"{tvault-enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/dev-config.json"
+      sh "sed -i -- 's#\"{tvault-enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/stg-config.json"
+      sh "sed -i -- 's#\"{tvault-enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/prod-config.json"
     }
 
     if (service_name.trim() == "jazz_asset-event-handler") {
@@ -222,8 +238,7 @@ def loadServiceConfigurationData() {
       }
     }
 
-    if ((service_name.trim() == "jazz_services-handler") || (service_name.trim() == "jazz_create-serverless-service")
-      || (service_name.trim() == "jazz_acl")) {
+    if ((service_name.trim() == "jazz_services-handler") || (service_name.trim() == "jazz_create-serverless-service")) {
       updateCoreAPI()
       updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
       updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
@@ -304,6 +319,13 @@ def loadServiceConfigurationData() {
       updateConfigValue("{user_pool_id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.USER_POOL_ID)
       updateConfigValue("{user_client_id}", config_loader.JAZZ.PLATFORM.AWS.COGNITO.CLIENT_ID)
       updateConfigValue("{region}", region)
+      updateCoreAPI()
+      updateConfigValue("{conf-region}", region)
+      updateConfigValue("{jazz_admin}", config_loader.JAZZ.STACK_ADMIN)
+      updateConfigValue("{jazz_admin_creds}", config_loader.JAZZ.STACK_PASSWORD)
+      sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/dev-config.json"
+      sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/stg-config.json"
+      sh "sed -i -- 's#\"{vault_is_enabled}\"#${config_loader.TVAULT.IS_ENABLED}#g' ./config/prod-config.json"
     }
 
     if ((service_name.trim() == "jazz_usermanagement") ) {
@@ -406,6 +428,10 @@ def loadServiceConfigurationData() {
     echo "error occured while loading service configuration: " + e.getMessage()
     error "error occured while loading service configuration: " + e.getMessage()
   }
+}
+
+def updateConfigValueInGlobalFile(key, val) {
+  sh "sed -i -- 's#${key}#${val}#g' ./config/global-config.json"
 }
 
 def updateConfigValue(key, val) {

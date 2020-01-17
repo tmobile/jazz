@@ -1,4 +1,18 @@
 {
+  "API": {
+    "SERVICE_API": "/jazz/services",
+    "LOGIN_API": "/jazz/login",
+    "ENVIRONMENTS": "/jazz/environments",
+    "SAFE": "/jazz/t-vault/safes/",
+    "USER_TO_SAFE": "/user"
+  },
+  "VAULT": {
+    "IS_ENABLED": "{vault_is_enabled}"
+  },
+  "CREDENTIAL": {
+    "SERVICE_USER": "{jazz_admin}",
+    "TOKEN_CREDS": "{jazz_admin_creds}"
+  },
   "POLICY": {
     "MANAGE_ADMIN": [
       {

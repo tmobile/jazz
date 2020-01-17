@@ -1,0 +1,22 @@
+{
+  "name": "jazz_t-vault",
+  "version": "0.0.1",
+  "description": "Specification for APIs to manage secrets using Jazz & T-Vault",
+  "main": "index.js",
+  "private": true,
+  "author": [],
+  "scripts": {
+    "test": "nyc mocha",
+    "coverage": "nyc npm run test"
+  },
+  "dependencies": {
+    "request": "*"
+  },
+  "devDependencies": {
+    "aws-lambda-mock-context": "^3.2.1",
+    "chai": "^3.5.0",
+    "mocha": "^v3.0.0",
+    "nyc": "^13.3.0",
+    "sinon": "^5.0.7"
+  }
+}

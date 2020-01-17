@@ -6,7 +6,8 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "mocha"
+    "test": "nyc mocha",
+    "coverage": "nyc npm run test"
   },
   "dependencies": {
     "request-promise-native": "^1.0.5",
@@ -21,6 +22,7 @@
     "lambda-local": "^1.4.2",
     "mocha": "^v3.0.0",
     "sinon": "^1.15.4",
+    "nyc": "^13.3.0",
     "es6-promise": "^2.3.0",
     "sinon-as-promised": "^4.0.0",
     "sinon-test": "^2.1.3"

@@ -1,4 +1,14 @@
 {
+  "API": {
+    "BASE_API_URL": "https://{conf-apikey}.execute-api.{conf-region}.amazonaws.com/prod",
+    "VAULT_API": "/jazz/t-vault/user",
+    "LOGIN_API": "/jazz/login",
+    "SERVICE_USER": "{jazz_admin}",
+    "TOKEN_CREDS": "{jazz_admin_creds}"
+  },
+  "VAULT": {
+    "IS_ENABLED": "{vault_is_enabled}"
+  },
   "USER_POOL_ID": "{user_pool_id}",
   "REGION": "{region}",
   "USER_CLIENT_ID": "{user_client_id}",

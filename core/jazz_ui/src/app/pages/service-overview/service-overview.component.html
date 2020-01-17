@@ -108,7 +108,7 @@
 <section class= "service-metadata-wrap relative" [class.extra-bottom-padding]='!disp_show2' hide>
   <div>
     <div class='metadata-body metadata-body-border'>
-      <div [class]="service.serviceType != 'function' ? 'metadata-column fullWidth' : 'metadata-column'">
+      <div [class]="service.serviceType != 'function' ? 'metadata-column ' : 'metadata-column'" [ngClass]="service.serviceType != 'function'?'column-style':''">
         <div class="metadata-heading-wrap">
          <div class="metadata-heading" [ngClass]="showGeneralField ? 'update-color' : ''">
             General

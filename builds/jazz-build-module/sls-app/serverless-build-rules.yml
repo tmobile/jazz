@@ -599,7 +599,7 @@ function:
       sbr-type: arn-iam
       sbr-render: user-only
       sbr-value:
-        sbr-formula: ${config.role}
+        sbr-formula: ${config.iamRoleARN}
         sbr-example: arn:aws:iam::XXXXXX:role/role
 
     onError: # Optional SNS topic / SQS arn (Ref, Fn::GetAtt and Fn::ImportValue are supported as well) which will be used for the DeadLetterConfig

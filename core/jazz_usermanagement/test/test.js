@@ -20,14 +20,11 @@ const awsContext = require('aws-lambda-mock-context');
 const AWS = require('aws-sdk-mock');
 const sinon = require('sinon');
 const index = require('../index');
-const logger = require("../components/logger.js");
-const errorHandlerModule = require("../components/error-handler.js");
-const scmFactory = require("../scm/scmFactory.js");
 const configModule = require("../components/config.js");
 const responseObj = require("../components/response.js");
 const rp = require('request-promise-native');
-const getList = require("../components/getList.js");
-
+const getList = require("../components/utils/getList.js");
+const vault = require("../components/utils/vault.js");
 
 describe('User Management', function () {
   //Setting up default values for the aws event and context needed for handler params
@@ -203,6 +200,82 @@ describe('User Management', function () {
         errorType: 'BadRequest',
         message: 'status is invalid'
       }));
+  });
+});
+
+describe("Create User in TVault", function () {
+  beforeEach(function () {
+    event = {
+      "method": "POST",
+      "stage": "test",
+      "resourcePath": "test/service",
+      "body": {
+        "userid": "test@tst.com",
+        "userpassword": "test",
+        "verificationCode": "123"
+      }
+    };
+    context = awsContext();
+    config = configModule.getConfig(event, context);
+    config.required_fields = ['userid', 'email', 'verificationCode'];
+    response = {
+      statusCode: 200,
+      body: { "data": { "message": `User with username test@tst.com is successfully created.` } }
+    }
+
+    callback = (err, responseObj) => {
+      if (err) {
+        return err;
+      } else {
+        return response;
+      }
+    };
+  });
+
+  it('should create user in t-vault', function () {
+    service_data = event.body;
+    var createUserInVaultStub = sinon.stub(vault, "createUserInVault").callsFake((config, service_data, cb) => {
+      return cb(null, response);
+    });
+
+    index.createUserInVault(config, service_data)
+      .then((result) => {
+        expect(result.body.data).to.include({
+          message: 'User with username test@tst.com is successfully created.'
+        })
+        sinon.assert.calledOnce(createUserInVaultStub);
+        createUserInVaultStub.restore();
+      });
+  });
+
+  it('should rejects if user creation in tvault fails', function () {
+    service_data = event.body;
+    var createUserInVaultStub = sinon.stub(vault, "createUserInVault").callsFake((config, service_data, cb) => {
+      return cb({ message: "Intenal server error" });
+    });
+
+    index.createUserInVault(config, service_data)
+      .catch((error) => {
+        expect(error).to.include({
+          message: "Intenal server error"
+        })
+        sinon.assert.calledOnce(createUserInVaultStub);
+        createUserInVaultStub.restore();
+      });
+  });
+
+  it('should not try to create user in tvault if the tvault is not enabled', function () {
+    service_data = event.body;
+    config.VAULT.IS_ENABLED = false
+    var createUserInVaultStub = sinon.stub(vault, "createUserInVault").callsFake((config, service_data, cb) => {
+      return cb({ message: "Intenal server error" });
+    });
+
+    index.createUserInVault(config, service_data)
+      .then((result) => {
+        sinon.assert.neverCalledWith(createUserInVaultStub);
+        createUserInVaultStub.restore();
+      });
   });
 });
 
@@ -443,7 +516,7 @@ describe("inside index handler else condition", function () {
       "resourcePath": "test/service/user/something",
       "body": {
         "username": "username",
-        "userid": "username",
+        "userid": "test@tst.com",
         "usercode": "123",
         "email": "abc@xyz.com",
         "userpassword": "Passord"
@@ -458,7 +531,6 @@ describe("inside index handler else condition", function () {
         return JSON.stringify(responseObj);
       }
     };
-
   });
 
   it('Should return createUser ', function () {
@@ -466,6 +538,7 @@ describe("inside index handler else condition", function () {
     const createUser = sinon.stub(index, "createUser").resolves("success");
     const rpStub = sinon.stub(rp, 'Request').returns(Promise.resolve("Success"));
     const getRequestToCreateSCMUser = sinon.stub(index, "getRequestToCreateSCMUser").resolves();
+    const createUserInVaultStub = sinon.stub(index, "createUserInVault").resolves("success");
 
     index.handler(event, context, (err, res) => {
       expect(res.data.result).to.eq("success");
@@ -473,16 +546,19 @@ describe("inside index handler else condition", function () {
       sinon.assert.calledOnce(createUser);
       sinon.assert.calledOnce(getRequestToCreateSCMUser);
       sinon.assert.calledOnce(rpStub);
+      sinon.assert.calledOnce(createUserInVaultStub);
       validateCreaterUserParams.restore();
       createUser.restore();
       getRequestToCreateSCMUser.restore();
       rpStub.restore();
+      createUserInVaultStub.restore();
     });
   });
 
   it('Should return createUser error ', function () {
     const validateCreaterUserParams = sinon.stub(index, "validateCreaterUserParams").resolves("success");
     const createUser = sinon.stub(index, "createUser").resolves("success");
+    const createUserInVaultStub = sinon.stub(index, "createUserInVault").resolves("success");
     const rpStub = sinon.stub(rp, 'Request').returns(Promise.reject({
       result: 'reject'
     }));
@@ -497,6 +573,7 @@ describe("inside index handler else condition", function () {
       validateCreaterUserParams.restore();
       createUser.restore();
       getRequestToCreateSCMUser.restore();
+      createUserInVaultStub.restore()
       rpStub.restore();
     });
   });
@@ -509,6 +586,7 @@ describe("inside index handler else condition", function () {
       message: "error"
     }));
     const getRequestToCreateSCMUser = sinon.stub(index, "getRequestToCreateSCMUser").resolves();
+    const createUserInVaultStub = sinon.stub(index, "createUserInVault").resolves("success");
 
     index.handler(event, context, (err, res) => {
       expect(JSON.parse(err).errorCode).to.eq("102");
@@ -517,6 +595,7 @@ describe("inside index handler else condition", function () {
       sinon.assert.calledOnce(rpStub);
       validateCreaterUserParams.restore();
       createUser.restore();
+      createUserInVaultStub.restore();
       getRequestToCreateSCMUser.restore();
       rpStub.restore();
     });
@@ -525,6 +604,7 @@ describe("inside index handler else condition", function () {
   it('Should return createUser error ', function () {
     const validateCreaterUserParams = sinon.stub(index, "validateCreaterUserParams").resolves("success");
     const createUser = sinon.stub(index, "createUser").resolves();
+    const createUserInVaultStub = sinon.stub(index, "createUserInVault").resolves("success");
     const rpStub = sinon.stub(rp, 'Request').returns(Promise.reject({
       errorType: "102",
       message: "error"
@@ -536,6 +616,7 @@ describe("inside index handler else condition", function () {
       sinon.assert.calledOnce(createUser);
       sinon.assert.calledOnce(rpStub);
       validateCreaterUserParams.restore();
+      createUserInVaultStub.restore();
       createUser.restore();
       getRequestToCreateSCMUser.restore();
       rpStub.restore();
