@@ -1065,12 +1065,13 @@ def createWebsite(stackName, resourceGroup, storageName, framework){
       storageName       : storageName,
       appName           : stackName,
       tags: [
-        "application"   : configLoader.INSTANCE_PREFIX,
-        "owner"         : service_config['created_by'],
-        "domain"        : service_config['domain'],
-        "STAGE"         : environment_logical_id,
-        "environment"   : environment_logical_id,
-        "service"       : stackName
+        "Application"   : "Jazz",
+        "Platform"      : "Jazz",
+        "StackId"       : configLoader.INSTANCE_PREFIX,
+        "Owner"         : service_config['created_by'],
+        "Domain"        : service_config['domain'],
+        "Environment"   : environment_logical_id,
+        "Service"       : stackName
       ],
       "tenantId"          : AZURE_TENANT_ID,
       "subscriptionId"    : AZURE_SUBSCRIPTION_ID,
