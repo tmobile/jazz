@@ -158,7 +158,7 @@ node() {
 
       def internalAccess = config['require_internal_access']
 
-      if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+      if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
         vaultUtilityModule.initialize(configLoader,config, g_base_url, auth_token, environment_logical_id, events, utilModule)      
       }
 
@@ -471,7 +471,7 @@ node() {
       }//stage of deployment to an environment ends here
 
       //Udating safe details
-      if (config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+      if (config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
         stage('Update Safe') {
           events.sendStartedEvent('UPDATE_SAFE', 'safe updation started', context_map, environment_logical_id)
           withCredentials([
@@ -1248,7 +1248,7 @@ def loadBuildModules(buildModuleUrl){
     sonarModule = load "sonar-module.groovy"
     echo "Sonar module loaded successfully."
 
-    if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+    if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
       vaultUtilityModule = load "vault-utility-module.groovy"      
       echo "Vault utility module loaded successfully."
     }
