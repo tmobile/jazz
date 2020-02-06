@@ -42,7 +42,7 @@
       "ErrorCachingMinTTL": 300
     }]
   },
-  "SmoothStreaming": true,
+  "SmoothStreaming": false,
   "Compress": true,
   "Comment": "",
   "Logging": {

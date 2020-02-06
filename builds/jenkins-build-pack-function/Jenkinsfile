@@ -168,7 +168,7 @@ node() {
       roleARN = accountDetails.IAM.PLATFORMSERVICES_ROLEID.replaceAll("/", "\\\\/")
     } 
 
-    if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+    if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
       vaultUtilityModule.initialize(configLoader,config, g_base_url, auth_token, environment_logical_id, events, utilModule)      
     }
 
@@ -400,7 +400,7 @@ node() {
       } //end of deployment to an environment
 
       //Udating safe details
-      if (config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+      if (config['domain'] != 'jazz' && configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
         stage('Update Safe') {
           events.sendStartedEvent('UPDATE_SAFE', 'safe updation started', context_map, environment_logical_id)
           withCredentials([
@@ -741,42 +741,42 @@ def resetCredentials(credsId) {
 	missing.
 */
 def validateDeploymentConfigurations(def prop) {
-  if (prop.containsKey("service")) {
-    if (prop['service'] == "") {
-      error "Wrong configuration. Value for Key 'service' is missing in the configuration"
-    }
-  } else {
-    error "Wrong configuration. Key 'service' is missing in the configuration"
-  }
-  if (prop.containsKey("providerRuntime")) {
-    def _runtime = prop['providerRuntime']
-    if (_runtime == "") {
-      error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
-    } else {
-      def validRuntimes = ["nodejs8.10", "nodejs10.x", "python3.6", "java8", "go1.x", "c#"]
-      def flag = false
+	if (prop.containsKey("service")) {
+		if (prop['service'] == "") {
+			error "Wrong configuration. Value for Key 'service' is missing in the configuration"
+		}
+	} else {
+		error "Wrong configuration. Key 'service' is missing in the configuration"
+	}
+	if (prop.containsKey("providerRuntime")) {
+		def _runtime = prop['providerRuntime']
+		if (_runtime == "") {
+			error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
+		} else {
+			def validRuntimes = ["nodejs10.x", "python3.6", "java8", "go1.x", "c#"]
+			def flag = false
 
-      for (int i = 0; i < validRuntimes.size(); i++) {
-        if (_runtime == validRuntimes[i]) {
-          flag = true
-        }
-      }
+			for (int i = 0; i < validRuntimes.size(); i++) {
+				if (_runtime == validRuntimes[i]) {
+					flag = true
+				}
+			}
 
-      if (!flag) {
-        echo "$flag"
-        error "Runtime given in the configuration is not valid."
-      }
-    }
-  } else {
-    error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
-  }
-  if (prop.containsKey("providerTimeout")) {
-    if (prop['providerTimeout'] == "") {
-      error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
-    } else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
-      error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
-    }
-  } else if (config['provider'] == "azure") {
+			if (!flag) {
+				echo "$flag"
+				error "Runtime given in the configuration is not valid."
+			}
+		}
+	} else {
+		error "Wrong configuration. Key 'providerRuntime' is missing in the configuration"
+	}
+	if (prop.containsKey("providerTimeout")) {
+		if (prop['providerTimeout'] == "") {
+			error "Wrong configuration. Value for Key 'providerTimeout' is missing in the configuration"
+		} else if (Integer.parseInt(prop['providerTimeout']) > 300) { // Should not be a high
+			error "Wrong configuration. Value for Key 'providerTimeout' should be a less than 160"
+		}
+	} else if (config['provider'] == "azure") {
     // we use azure default timeout
   } else {
     error "Wrong configuration. Key 'providerTimeout' is missing in the configuration"
@@ -1200,7 +1200,7 @@ def loadBuildModules(buildModuleUrl) {
     lambdaEvents.initialize(configLoader, utilModule)
     echo "Lambda event module loaded successfully."
 
-    if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED) {
+    if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
       vaultUtilityModule = load "vault-utility-module.groovy"      
       echo "Vault utility module loaded successfully."
     }
