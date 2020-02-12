@@ -54,6 +54,7 @@ node() {
     def branch = params.scm_branch
     def domain = params.domain
     def repo_name = domain + "_" + params.service_name
+    def arnsMap
     
     def gitCommitOwner
     def gitCommitHash
@@ -347,8 +348,13 @@ node() {
               }              
 
               def stackResources = utilModule.getStackResources(stackName, config['region'], credsId)
-              def lambdaArns = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
-               lambdaArnInfo = getLambdaARN(lambdaArns);
+              arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
+              lambdaArnInfo = getLambdaARN(arnsMap['lambda']);
+
+              if (config['iamRoleARN']) {
+                def assets_api = g_base_url + "/jazz/assets"
+                utilModule.archiveCustomRole(assets_api, auth_token, config, environment_logical_id, events)
+              }
 
               if (fileExists('swagger/swagger.json')) {
                 echo "Generating swagger file for environment: ${env_key}"
@@ -487,7 +493,7 @@ node() {
               def environment = environmentDeploymentMetadata.getEnvironmentInfo()
               if (environment && environment.metadata && environment.metadata.safe) {
                 def safeName = environment.metadata.safe.name
-                vaultUtilityModule.updateSafeDetails(safeName, lambdaArnInfo.arn, credsId)
+                vaultUtilityModule.updateSafeDetails(safeName, lambdaArnInfo.arn, null, credsId)
               }
               events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
             } catch (ex) {

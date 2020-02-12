@@ -52,7 +52,7 @@ node() {
     def gitCommitOwner
     def gitCommitHash
     def context_map
-    def lambdaArns = []
+    def arnsMap
 
     accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 
@@ -353,7 +353,7 @@ node() {
 
               def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${environment_logical_id}"
               def stackResources = utilModule.getStackResources(cfStackName, config['region'], credsId)
-              lambdaArns = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
+              arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
               //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
               send_status_email('COMPLETED', '')
             } catch (ex) {
@@ -393,7 +393,7 @@ node() {
                 def environment = environmentDeploymentMetadata.getEnvironmentInfo()
                 if (environment && environment.metadata && environment.metadata.safe) {
                   def safeName = environment.metadata.safe.name
-                  vaultUtilityModule.updateCustomServicesSafeDetails(safeName, lambdaArns, credsId)                
+                  vaultUtilityModule.updateCustomServicesSafeDetails(safeName, arnsMap['lambda'], arnsMap['iam_role'], credsId)                
                 }
                 events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
               } catch (ex) {

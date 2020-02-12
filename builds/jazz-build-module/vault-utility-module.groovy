@@ -25,28 +25,34 @@ def initialize(config_loader,service_config, base_url, auth_token, env, event_mo
 	utilModule = util_module
 }
 
-def updateCustomServicesSafeDetails(safeName, lambdaArns, credsId) {
+def updateCustomServicesSafeDetails(safeName, lambdaArns, current_roles, credsId) {
 	for (arn in lambdaArns) {
-		updateSafeDetails(safeName, arn, credsId)
+		updateSafeDetails(safeName, arn, current_roles, credsId)
 	}
 }
 
-def updateSafeDetails(safeName, lambdaARN, credsId) {
-	def iamRoleArn	
-	def safeDetails = getSafeDetails(safeName)
+def updateSafeDetails(safeName, lambdaARN, current_roles, credsId) {
+	def iamRoleArn
+	def otherRolesList	
+	def safeDetails = getSafeDetails(safeName)	
 
 	if (safeDetails) {
 		iamRoleArn = getRoleDetails(lambdaARN, credsId)
-		if(safeDetails.data.roles && safeDetails.data.roles.length != 0) {
+		if(safeDetails.data.roles && safeDetails.data.roles.length > 0) {
 			def isRoleArnExists = safeDetails.data.roles.find{it -> it.value.arn == iamRoleArn}
 			if(!isRoleArnExists) {
 				addRoleToSafe(iamRoleArn, safeName)
-				events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceConfig['provider'], iamRoleArn, "iam_role", serviceConfig), environmentLogicalId);
 			} else echo "Role already exists"
+
+			if (!current_roles) otherRolesList = safeDetails.data.roles.findAll { it.value.arn != iamRoleArn }				
+			} else {
+				otherRolesList = safeDetails.data.roles.findAll {  !current_roles.contains(it.value.arn) }
+			}
+			echo "otherRolesList: $otherRolesList"
+			removeAssociationOfOtherRolesFromSafe(otherRolesList)
 		} else {
 			addRoleToSafe(iamRoleArn, safeName)
-			events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceConfig['provider'], iamRoleArn, "iam_role", serviceConfig), environmentLogicalId);
-		}
+		}		
 	} else {
 		echo "Safe not configured yet."
 	}
@@ -101,6 +107,10 @@ def deleteSafe(safeName) {
 
 	if(statusCode == '200') echo "Successfully deleted safe ${safeName}" 
 	else echo "Error in deleting safe ${safeName}"
+}
+
+def removeAssociationOfOtherRolesFromSafe(otherRolesList) {
+	if ()
 }
 
 def getRoleDetails(lambdaARN, credsId) {

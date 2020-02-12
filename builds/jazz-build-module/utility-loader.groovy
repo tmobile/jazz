@@ -233,7 +233,7 @@ def getStackResources (stackName, region, credsId) {
 }
 
 def createAllStackResources (whiteListModule, events, config, stackResources, env) {
-	def lambdaArns = []
+	def arnsMap = [:]
 	def resources = stackResources['StackResources']
 	if( resources != null ) {
 		def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
@@ -246,7 +246,13 @@ def createAllStackResources (whiteListModule, events, config, stackResources, en
 					def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
 					if(arnAsArray.size() > 2) { // Making sure that the third element exists
 					def artifactType = arnAsArray[2]
-					if (assetCatalogTypes[artifactType] == 'lambda') lambdaArns.add(arn)
+					if (arnsMap[assetCatalogTypes[artifactType]] && arnsMap[assetCatalogTypes[artifactType]].size() > 0) 
+						arnsMap[assetCatalogTypes[artifactType]].add(arn)
+					else {
+						arnsMap[assetCatalogTypes[artifactType]] = new ArrayList()
+						arnsMap[assetCatalogTypes[artifactType]].add(arn)
+					}
+					
 					events.sendCompletedEvent('CREATE_ASSET',
 												null,
 												generateAssetMap("aws", arn, assetCatalogTypes[artifactType], config),
@@ -256,7 +262,18 @@ def createAllStackResources (whiteListModule, events, config, stackResources, en
 			}
 		}
 	}
-	return lambdaArns
+	echo "arnsMap: $arnsMap"
+	return arnsMap
+}
+
+def archiveCustomRole(assets_api, auth_token, config, env, events) {  
+  def assets = getAssets(assets_api, auth_token, config, env)
+  def assetList = parseJson(assets)
+
+  for (asset in assetList.data.assets) {
+	if (asset.asset_type == 'iam_role')
+      	events.sendCompletedEvent('UPDATE_ASSET', "User specific role is using.", generateAssetMap(asset.provider, asset.provider_id, "iam_role", config), env)
+  }
 }
 
 

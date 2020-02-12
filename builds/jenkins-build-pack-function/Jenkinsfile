@@ -55,6 +55,7 @@ node() {
     def accountDetails
     def accountDetailsPrimary
     def lambdaARN = null
+    def arnsMap
 
     stage('Checkout code base') {
 
@@ -360,8 +361,9 @@ node() {
               }
 
               def stackResources = utilModule.getStackResources(stackName, config['region'], credsId)
-              lambdaARN = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)[0]
+              arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)[0]
              
+              lambdaARN = arnsMap['lambda'][0]
               echo "lambdaARN: ${lambdaARN}"
 
               if (isLambdaUpdateRequired) {
@@ -384,6 +386,11 @@ node() {
               if (domain == "jazz") {
                 serviceConfigdata.setLogStreamPermission(config)
                 serviceConfigdata.setKinesisStream(config)
+              }
+
+              if (config['iamRoleARN']) {
+                def assets_api = g_base_url + "/jazz/assets"
+                utilModule.archiveCustomRole(assets_api, auth_token, config, environment_logical_id, events)
               }
 
             } catch (ex) {
@@ -416,7 +423,7 @@ node() {
               def environment = environmentDeploymentMetadata.getEnvironmentInfo()
               if (environment && environment.metadata && environment.metadata.safe) {
                 def safeName = environment.metadata.safe.name
-                vaultUtilityModule.updateSafeDetails(safeName, lambdaARN, credsId)
+                vaultUtilityModule.updateSafeDetails(safeName, lambdaARN, null, credsId)
               }
               events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
             } catch (ex) {
@@ -435,6 +442,7 @@ node() {
     deleteDir()
   }
 }
+
 
 private void sendFinalCompleteEvent(env_key, servicePlatform, environment_logical_id, config, gitCommitHash, gitCommitOwner, svc_response) {
   def serviceContext = [created_by: config['created_by'], deployed_by: gitCommitOwner]
