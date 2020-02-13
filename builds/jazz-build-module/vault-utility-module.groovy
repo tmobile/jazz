@@ -49,7 +49,7 @@ def updateSafeDetails(safeName, lambdaARN, current_roles, credsId) {
 				otherRolesList = safeDetails.data.roles.findAll { it -> !current_roles.contains(it.value.arn) }
 			}
 			echo "otherRolesList: $otherRolesList"
-			removeAssociationOfOtherRolesFromSafe(otherRolesList)
+			removeAssociationOfOtherRolesFromSafe(otherRolesList, safeName)
 		} else {
 			addRoleToSafe(iamRoleArn, safeName)
 		}		
@@ -109,23 +109,32 @@ def deleteSafe(safeName) {
 	else echo "Error in deleting safe ${safeName}"
 }
 
-def removeAssociationOfOtherRolesFromSafe(otherRolesList) {
-	def rolesList = []
+def removeAssociationOfOtherRolesFromSafe(otherRolesList, safeName) {
 	otherRolesList.each  { key, value ->        
-		removeRoleFromSafe(value.arn) 
+		removeRoleFromSafe(value, safeName) 
 	}
 }
 
-def removeRoleFromSafe(roleArn) {
-	def vaultApi = "${baseUrl}/jazz/t-vault/safes/${safeName}"
-	def statusCode = sh(script: "curl -H \"Content-type: application/json\" \
-		-H \"Jazz-Service-ID: ${serviceConfig['service_id']}\" \
-		-H \"Authorization: $authToken \" \
-		--write-out '%{http_code}\n' --silent --output /dev/null \
-		-X DELETE \"${vaultApi}\" ", returnStdout: true).trim()
+def removeRoleFromSafe(role, safeName) {
+	try {
+		def rolePayload = [
+			'arn': role.arn
+		]
 
-	if(statusCode == '200') echo "Successfully deleted safe ${safeName}" 
-	else echo "Error in deleting safe ${safeName}"
+		def payload = JsonOutput.toJson(rolePayload)
+
+		def vaultApi = "${baseUrl}/jazz/t-vault/safes/${safeName}/role"
+		def statusCode = sh(script: "curl -H \"Content-type: application/json\" \
+			-H \"Jazz-Service-ID: ${serviceConfig['service_id']}\" \
+			-H \"Authorization: $authToken \" -X DELETE \
+			--write-out '%{http_code}\n' --silent --output /dev/null \
+			-d \'${payload}\' \"${vaultApi}\" ", returnStdout: true).trim()
+
+		if(statusCode == '200') echo "Successfully removed role ${roleArn} from safe ${safeName}" 
+		else echo "Error in removing role ${roleArn} from safe ${safeName}"
+	} catch (ex) {
+		echo "Error in removing role ${roleArn} from safe ${safeName}: ${ex}"
+	}
 }
 
 def getRoleDetails(lambdaARN, credsId) {
