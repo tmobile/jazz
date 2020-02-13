@@ -54,7 +54,7 @@ node() {
     def branch = params.scm_branch
     def domain = params.domain
     def repo_name = domain + "_" + params.service_name
-    def arnsMap
+    def arnsMap = [:]
     
     def gitCommitOwner
     def gitCommitHash

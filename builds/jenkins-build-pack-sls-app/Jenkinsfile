@@ -52,7 +52,7 @@ node() {
     def gitCommitOwner
     def gitCommitHash
     def context_map
-    def arnsMap
+    def arnsMap = [:]
 
     accountDetailsPrimary = utilModule.getAccountInfoPrimary();
 

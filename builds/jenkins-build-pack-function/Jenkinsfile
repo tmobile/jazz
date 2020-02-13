@@ -55,7 +55,7 @@ node() {
     def accountDetails
     def accountDetailsPrimary
     def lambdaARN = null
-    def arnsMap
+    def arnsMap = [:]
 
     stage('Checkout code base') {
 

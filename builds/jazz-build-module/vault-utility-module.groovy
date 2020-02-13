@@ -45,7 +45,7 @@ def updateSafeDetails(safeName, lambdaARN, current_roles, credsId) {
 			} else echo "Role already exists"
 
 			if (!current_roles) otherRolesList = safeDetails.data.roles.findAll { it.value.arn != iamRoleArn }				
-			} else {
+			else {
 				otherRolesList = safeDetails.data.roles.findAll {  !current_roles.contains(it.value.arn) }
 			}
 			echo "otherRolesList: $otherRolesList"
@@ -110,7 +110,9 @@ def deleteSafe(safeName) {
 }
 
 def removeAssociationOfOtherRolesFromSafe(otherRolesList) {
-	//if ()
+	// if (otherRolesList ) {
+	// 	for 
+	// }
 }
 
 def getRoleDetails(lambdaARN, credsId) {
