@@ -110,9 +110,22 @@ def deleteSafe(safeName) {
 }
 
 def removeAssociationOfOtherRolesFromSafe(otherRolesList) {
-	// if (otherRolesList ) {
-	// 	for 
-	// }
+	def rolesList = []
+	otherRolesList.each  { key, value ->        
+		removeRoleFromSafe(value.arn) 
+	}
+}
+
+def removeRoleFromSafe(roleArn) {
+	def vaultApi = "${baseUrl}/jazz/t-vault/safes/${safeName}"
+	def statusCode = sh(script: "curl -H \"Content-type: application/json\" \
+		-H \"Jazz-Service-ID: ${serviceConfig['service_id']}\" \
+		-H \"Authorization: $authToken \" \
+		--write-out '%{http_code}\n' --silent --output /dev/null \
+		-X DELETE \"${vaultApi}\" ", returnStdout: true).trim()
+
+	if(statusCode == '200') echo "Successfully deleted safe ${safeName}" 
+	else echo "Error in deleting safe ${safeName}"
 }
 
 def getRoleDetails(lambdaARN, credsId) {
