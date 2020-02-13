@@ -38,8 +38,8 @@ def updateSafeDetails(safeName, lambdaARN, current_roles, credsId) {
 
 	if (safeDetails) {
 		iamRoleArn = getRoleDetails(lambdaARN, credsId)
-		if(safeDetails.data.roles && safeDetails.data.roles.length > 0) {
-			def isRoleArnExists = safeDetails.data.roles.find{it -> it.value.arn == iamRoleArn}
+		if(safeDetails.data.roles && safeDetails.data.roles.length != 0) {
+			def isRoleArnExists = safeDetails.data.roles.find {it -> it.value.arn == iamRoleArn}
 			if(!isRoleArnExists) {
 				addRoleToSafe(iamRoleArn, safeName)
 			} else echo "Role already exists"
