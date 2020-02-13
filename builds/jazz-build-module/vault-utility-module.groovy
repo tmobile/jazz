@@ -110,7 +110,7 @@ def deleteSafe(safeName) {
 }
 
 def removeAssociationOfOtherRolesFromSafe(otherRolesList) {
-	if ()
+	//if ()
 }
 
 def getRoleDetails(lambdaARN, credsId) {
