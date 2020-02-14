@@ -18,8 +18,7 @@ const casbin = require('casbin');
 const TypeORMAdapter = require('typeorm-adapter');
 const logger = require('./logger.js');
 const errorHandlerModule = require("./error-handler.js")();
-const getList = require("./getList.js");
-const globalConfig = require("../config/global-config.json");
+const getList = require("./utils/getList.js");
 
 /* Create a connection to the DB*/
 async function dbConnection(config) {
@@ -84,7 +83,7 @@ async function checkPermissions(userId, serviceId, category, permission, config)
   let result = {};
   let conn;
   try {
-    if (userId === config.SERVICE_USER) {
+    if (userId === global.globalConfig.CREDENTIAL.SERVICE_USER) {
       result.authorized = true;
     } else {
       conn = await dbConnection(config);
@@ -184,7 +183,7 @@ async function addPolicy(serviceId, policies, enforcer) {
 
 /* Get the permissions for a service given a userId */
 async function getPolicyForServiceUser(serviceId, userId, config) {
-  if (userId === config.SERVICE_USER) {
+  if (userId === global.globalConfig.CREDENTIAL.SERVICE_USER) {
     const dbResult = await getList.getSeviceIdList(config, serviceId)
     if (dbResult && dbResult.error) {
       return dbResult
@@ -217,7 +216,7 @@ async function getPolicyForServiceUser(serviceId, userId, config) {
 function attachAdminPolicies(list) {
   let svcIdList = []
   list.forEach(eachId => {
-    let svcIdObj = Object.assign({}, globalConfig.ADMIN_SERVICES_POLICIES);
+    let svcIdObj = Object.assign({}, global.globalConfig.ADMIN_SERVICES_POLICIES);
     svcIdObj.serviceId = eachId;
     svcIdList.push(svcIdObj);
   });
@@ -227,7 +226,7 @@ function attachAdminPolicies(list) {
 /* Get the policies for a userId*/
 async function getPolicyForUser(userId, config) {
   let policies = [];
-  if (userId === config.SERVICE_USER) {
+  if (userId === global.globalConfig.CREDENTIAL.SERVICE_USER) {
     const dbResult = await getList.getSeviceIdList(config, null)
     if (dbResult && dbResult.error) {
       return dbResult

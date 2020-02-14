@@ -8,8 +8,8 @@
     "name": "Jazz"
   },
   "scripts": {
-    "test": "mocha",
-    "jshint": "jshint --exclude ./node_modules ."
+    "test": "nyc mocha",
+    "coverage": "nyc npm run test"
   },
   "dependencies": {
     "lodash": "*",

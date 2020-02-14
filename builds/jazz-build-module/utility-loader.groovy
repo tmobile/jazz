@@ -71,7 +71,7 @@ def getBucket(stage) {
  *
  */
 def jazz_quiet_sh(cmd) {
-    sh('#!/bin/sh -e\n' + cmd)
+	sh('#!/bin/sh -e\n' + cmd)
 }
 
 /**
@@ -86,9 +86,13 @@ def generateRequestId() {
 /**
  * JSON parser
  */
+
 @NonCPS
-def parseJson(def json) {
-    new groovy.json.JsonSlurperClassic().parseText(json)
+def parseJson(jsonString) {
+	def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+	def m = [:]
+	m.putAll(lazyMap)
+	return m
 }
 
 @NonCPS
@@ -105,21 +109,21 @@ def generateAssetMap(provider, providerId, type, service_config) {
 }
 
 def getAssets(assets_api, auth_token, service_config, env) {
-  def assets
-  try{
-      assets = sh (
-      script: "curl GET  \
-			-H \"Content-Type: application/json\" \
-      -H \"Jazz-Service-ID: ${service_config['service_id']}\" \
-			-H \"Authorization: $auth_token\" \
-			\"${assets_api}?domain=${service_config['domain']}&service=${service_config['service']}&environment=${env}\"",
-      returnStdout: true
-    ).trim()
-    echo "Asset details for the service: ${service_config['service']} and domain: ${service_config['domain']} : \n $assets"
-  } catch(ex) {
-      echo "Exception occured while getting the assets. $ex"
-  }
-  return assets
+	def assets
+	try{
+		assets = sh (
+			script: "curl GET  \
+				-H \"Content-Type: application/json\" \
+				-H \"Jazz-Service-ID: ${service_config['service_id']}\" \
+				-H \"Authorization: $auth_token\" \
+				\"${assets_api}?domain=${service_config['domain']}&service=${service_config['service']}&environment=${env}\"",
+			returnStdout: true
+		).trim()
+		echo "Asset details for the service: ${service_config['service']} and domain: ${service_config['domain']} : \n $assets"
+	} catch(ex) {
+		echo "Exception occured while getting the assets. $ex"
+	}
+	return assets
 }
 
 /**
@@ -140,8 +144,8 @@ def getApiToken(){
 }
 
 def isReplayedBuild() {
-  def replayClassName = "org.jenkinsci.plugins.workflow.cps.replay.ReplayCause"
-  currentBuild.rawBuild.getCauses().any{ cause -> cause.toString().contains(replayClassName) }
+	def replayClassName = "org.jenkinsci.plugins.workflow.cps.replay.ReplayCause"
+	currentBuild.rawBuild.getCauses().any{ cause -> cause.toString().contains(replayClassName) }
 }
 
 /*
@@ -161,7 +165,7 @@ def getAccountInfo(service_config){
 * Get the primary account
 */
 def getAccountInfoPrimary(){
-  def dataObjPrimary = {};
+	def dataObjPrimary = {};
 	for (item in configLoader.AWS.ACCOUNTS) {
 		if(item.PRIMARY){
 			dataObjPrimary = item
@@ -200,5 +204,60 @@ def getAzureAccountInfo(service_config){
 	}
 	return dataObj;
 }
+
+def constructArn (arn, resourceName, resourceType, config) {
+	try{		
+		//Get queueName from url
+		if( resourceType == "AWS::SQS::Queue"){
+			resourceName  = resourceName.substring(resourceName.lastIndexOf("/") + 1)
+		}
+		if( arn != null ) {
+			arn = arn.replaceAll("\\{region\\}", "${config['region']}")
+			arn = arn.replaceAll("\\{account-id\\}", "${config['accountId']}")
+			arn = arn.replaceAll("\\{resourceName\\}", "${resourceName}")
+		} else {
+			error "Arn Templates not found for Resource Type : ${resourceType}"
+		}
+	} catch (ex){
+		echo "Exception occured on getting Arn templates for Resource Type : ${resourceType}"
+		error "Exception occured on getting Arn templates for Resource Type : ${resourceType}"
+	}
+	return arn
+}
+
+def getStackResources (stackName, region, credsId) {	
+	def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}", returnStdout: true)
+	echo "Describe Stacks are ${stackResources}"
+	def parsedResources = parseJson(stackResources)
+	return parsedResources
+}
+
+def createAllStackResources (whiteListModule, events, config, stackResources, env) {
+	def lambdaArns = []
+	def resources = stackResources['StackResources']
+	if( resources != null ) {
+		def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
+		for( resource in resources ) {
+			def resourceType = resource['ResourceType']
+			if( whiteListModule.checkAssetType(resourceType)){
+				def arnTemplate = whiteListModule.getarnTemplates(resourceType)
+				def arn = constructArn(arnTemplate, resource['PhysicalResourceId'], resourceType, config)
+				if(arn.startsWith('arn')) {
+					def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
+					if(arnAsArray.size() > 2) { // Making sure that the third element exists
+					def artifactType = arnAsArray[2]
+					if (assetCatalogTypes[artifactType] == 'lambda') lambdaArns.add(arn)
+					events.sendCompletedEvent('CREATE_ASSET',
+												null,
+												generateAssetMap("aws", arn, assetCatalogTypes[artifactType], config),
+												env)
+					}
+				}
+			}
+		}
+	}
+	return lambdaArns
+}
+
 
 return this

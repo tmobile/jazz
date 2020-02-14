@@ -67,6 +67,7 @@ node()  {
 
 		if (configObj.service_id) {
 			service_config = serviceMetadataLoader.loadServiceMetadata(configObj.service_id)
+			service_config << configObj
 		} else {
 			error "Service Id is not available."
 		}
@@ -77,16 +78,16 @@ node()  {
 	}
 
 	if(!service_config.region) {
-  	service_config.region = configLoader.AWS.DEFAULTS.REGION
+		service_config.region = configLoader.AWS.DEFAULTS.REGION
 	}
 
- 	if(!service_config.accountId) {
-    service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
- 	}
+	if(!service_config.accountId) {
+		service_config.accountId = configLoader.AWS.DEFAULTS.ACCOUNTID
+	}
 
- 	if(!service_config.provider) {
-   		service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
- 	}
+	if(!service_config.provider) {
+		service_config.provider = configLoader.JAZZ.DEFAULTS.PROVIDER
+	}
 
 	if(service_config['framework'] == null){
 		websiteType = 'static'
@@ -133,7 +134,7 @@ node()  {
 		}
 	}
 
-  environment = environment_logical_id
+	environment = environment_logical_id
 
 	if (!events) { error "Can't load events module"	} //Fail here
 	events.initialize(configLoader, service_config, "SERVICE_DEPLOYMENT", branch, environment, g_base_url + "/jazz/events")
@@ -1064,12 +1065,13 @@ def createWebsite(stackName, resourceGroup, storageName, framework){
       storageName       : storageName,
       appName           : stackName,
       tags: [
-        "application"   : configLoader.INSTANCE_PREFIX,
-        "owner"         : service_config['created_by'],
-        "domain"        : service_config['domain'],
-        "STAGE"         : environment_logical_id,
-        "environment"   : environment_logical_id,
-        "service"       : stackName
+        "Application"   : "Jazz",
+        "Platform"      : "Jazz",
+        "StackId"       : configLoader.INSTANCE_PREFIX,
+        "Owner"         : service_config['created_by'],
+        "Domain"        : service_config['domain'],
+        "Environment"   : environment_logical_id,
+        "Service"       : stackName
       ],
       "tenantId"          : AZURE_TENANT_ID,
       "subscriptionId"    : AZURE_SUBSCRIPTION_ID,

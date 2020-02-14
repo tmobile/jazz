@@ -282,7 +282,6 @@
           "type": "string",
           "description": "The runtime framework for executing your code",
           "enum": [
-            "nodejs8.10",
             "nodejs10.x",
             "java8",
             "python3.6",

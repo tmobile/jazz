@@ -50,27 +50,9 @@ def updateKinesisResourceServerless(event_stream_arn){
   sh "sed -i -- 's/arnDisabled/arn/g' ./serverless.yml"
   sh "sed -i -- 's|{event_stream_arn}|${event_stream_arn}|g' ./serverless.yml"
 
-  sh "sed -i -- '/#Start:kinesisStreamGetArn/,/#End:kinesisStreamGetArn/d' ./policyFile.yml"
-  sh "sed -i -- 's|{event_kinesis_stream_arn}|${event_stream_arn}|g' ./policyFile.yml"
-  sh  "sed -i -- 's/#ResourceKinesisDisabled/Resource/g' ./policyFile.yml"
-}
-
-def getRoleArn(role_name, credsId) {
-  def role_arn
-  try {
-    def response = sh(
-      script: "aws iam get-role --role-name ${role_name} --profile ${credsId} --output json",
-      returnStdout: true
-    ).trim()
-    def mappings = parseJson(response)
-    echo "role details : $mappings "
-    if(mappings.Role){
-      role_arn = mappings.Role.Arn
-    }
-    return role_arn
-  } catch (ex) {
-    echo "Error occured while describing the role details: " + ex.getMessage()
-  }
+  sh "sed -i -- '/#Start:kinesisStreamGetArn/,/#End:kinesisStreamGetArn/d' ./customRoles.yml"
+  sh "sed -i -- 's|{event_kinesis_stream_arn}|${event_stream_arn}|g' ./customRoles.yml"
+  sh "sed -i -- 's/#ResourceKinesisDisabled/Resource/g' ./customRoles.yml"
 }
 
 def checkSqsQueueExists(queueName, credsId) {
@@ -419,9 +401,9 @@ def updateDynamoDbResourceServerless(event_stream_arn){
   sh "sed -i -- 's/streamArnDisabled/arn/g' ./serverless.yml"
   sh "sed -i -- 's|{event_dynamodb_stream_arn}|${event_stream_arn}|g' ./serverless.yml"
 
-  sh "sed -i -- '/#Start:dynamoDbstreamGetArn/,/#End:dynamoDbstreamGetArn/d' ./policyFile.yml"
-  sh "sed -i -- 's|{event_dynamodb_stream_arn}|${event_stream_arn}|g' ./policyFile.yml"
-  sh  "sed -i -- 's/#ResourceDynamoDbDisabled/Resource/g' ./policyFile.yml"
+  sh "sed -i -- '/#Start:dynamoDbstreamGetArn/,/#End:dynamoDbstreamGetArn/d' ./customRoles.yml"
+  sh "sed -i -- 's|{event_dynamodb_stream_arn}|${event_stream_arn}|g' ./customRoles.yml"
+  sh "sed -i -- 's/#ResourceDynamoDbDisabled/Resource/g' ./customRoles.yml"
 }
 
 def getDynamoDbStreamDetails(event_source_dynamodb) {

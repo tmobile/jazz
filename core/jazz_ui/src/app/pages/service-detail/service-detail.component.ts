@@ -121,9 +121,9 @@ export class ServiceDetailComponent implements OnInit {
         deployment_targets :  service.deployment_targets[service.type].S || service.deployment_targets[service.type],
         is_public_endpoint: service.is_public_endpoint,
         created_by: service.created_by,
-        accountID: service.deployment_accounts[0].accountId,
-        region: service.deployment_accounts[0].region,
-        provider: service.deployment_accounts[0].provider
+        accountID: service.deployment_accounts && service.deployment_accounts[0].accountId,
+        region: service.deployment_accounts && service.deployment_accounts[0].region,
+        provider: service.deployment_accounts && service.deployment_accounts[0].provider
       }
       if(service.type === 'sls-app'){
         service.type = 'custom'

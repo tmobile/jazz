@@ -36,6 +36,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
   public assetList: any = [];
   selectedAssetName: any;
   assetSelected;
+  startTime: any;
+  endTime: any;
   public formFields: any = [
     {
       column: 'View By:',
@@ -156,7 +158,6 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
   ngAfterViewInit() {
     this.sectionStatus = 'loading';
-
     if (!this.activatedRoute.snapshot.params['env']) {
       return (this.getEnvironments() && this.getAssetType())
         .then(() => {
@@ -189,6 +190,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
     }
     this.setPeriodFilters();
   }
+
   setPeriodFilters() {
     if (this.service.deployment_targets === 'gcp_apigee') {
       const periodFilterIndex = this.formFields.findIndex(formField => formField.label === 'PERIOD');
@@ -557,6 +559,12 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         this.assetSelected = changedFilter.selected.replace(/ /g, "_");
         if (this.assetNameFilterWhiteList.indexOf(this.assetSelected) > -1) {
         this.setAssetName(this.assetsNameArray,this.assetSelected);
+        } else {
+          let index = this.findIndexOfObjectWithKey(this.formFields, 'label', 'ASSET NAME');
+          if (index > -1) {
+            this.formFields.splice(index, 1);
+            this.filters.setFields(this.formFields);
+          }
         }
       }
       if (changedFilter.label === 'ASSET NAME') {
@@ -579,44 +587,48 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
 
 
     }
-
     if (changedFilter && (changedFilter.label === 'ASSET' ||
       changedFilter.label === 'METHOD' ||
       changedFilter.label === 'PATH' || changedFilter.label === 'ASSET NAME')) {
       this.setAsset();
-    } else {
+    } else if(changedFilter && changedFilter.label !== 'TIME RANGE' || changedFilter === undefined) {
       return this.queryMetricsData();
-    }
-
+    } 
   }
 
-  massageDateTime(){
-    let endTimeValue;
-    let startTime = this.filters.getFieldValueOfLabel('TIME RANGE').range;
-    let endTime = moment().toISOString();
-    let startTimeMins = startTime.split('.');
-    startTimeMins = startTimeMins[0];
-    let endTimeString = endTime.split('.');
-    endTime = endTimeString[0];
-    startTimeMins = new Date(startTimeMins).getMinutes();
-    let endTimeMins = new Date(endTime).getMinutes();
-    if((endTimeMins - startTimeMins) > 0){
-      endTimeValue = endTime.split('T');
-      endTimeValue = endTimeValue[0] + 'T';
-      let startTimeMoment = startTime.split('T');
-      endTimeValue = endTimeValue + startTimeMoment[1];
-    } else {
-      endTimeValue = moment().toISOString();
-    }
-    return endTimeValue;
+
+  setStartTime(val) {
+    this.formFields.map((item) => {
+      if (item.label === "TIME RANGE") {
+        if (item.selected === "Last 24 Hours") {
+          this.startTime = moment(val).subtract(1, 'day');
+        } else if (item.selected === "Last 15 Minutes") {
+          this.startTime = moment(val).subtract(15, 'minute');
+        } else if (item.selected === "Last 1 Hour") {
+          this.startTime = moment(val).subtract(1, 'hour');
+        } else if (item.selected === "Last 7 Days") {
+          this.startTime = moment(val).subtract(7, 'days');
+        } else if (item.selected === "Last 12 Months") {
+          this.startTime = moment(val).subtract(1, 'year');
+        } else if (item.selected === "Last 3 Months") {
+          this.startTime = moment(val).subtract(3, 'month');
+        } else if (item.selected === "Last 30 Days") {
+          this.startTime = moment(val).subtract(1, 'month');
+        }
+      }
+    })
+  }
+  setEndTime() {
+    this.endTime = moment();
+    this.setStartTime(this.endTime)
   }
 
   queryMetricsData() {
     if (this.metricSubscription) {
       this.metricSubscription.unsubscribe();
     }
+    this.setEndTime()
     this.sectionStatus = 'loading';
-    let endDateTime = this.massageDateTime();
 
     // TODO: Leverage TypeScript interfaces for data contracts at minimum
     let request = {
@@ -625,8 +637,8 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
         domain: this.service.domain,
         service: this.service.name,
         environment: this.filters.getFieldValueOfLabel('ENVIRONMENT') || this.activatedRoute.snapshot.params['env'] || 'prod',
-        start_time: this.filters.getFieldValueOfLabel('TIME RANGE').range,
-        end_time: endDateTime,
+        start_time: this.startTime,
+        end_time: this.endTime,
         interval: this.filters.getFieldValueOfLabel('PERIOD'),
         statistics: this.filters.getFieldValueOfLabel('AGGREGATION')
       }
