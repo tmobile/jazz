@@ -138,7 +138,7 @@ export class ServiceAccessControlComponent implements OnInit {
      this.groupList[category].push(user);
    }
  }
-
+ 
  //function for deleting group
  deletegroup(i,category){
    this.toDelete = {};
@@ -325,7 +325,6 @@ addgroup(category){
    this.getUsersList()
    this.getAclPolicies(this.selectedServiceId);
    this.isValidData();
-
  }
 
  // restructure the response

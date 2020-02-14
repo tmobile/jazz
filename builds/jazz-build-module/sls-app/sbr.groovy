@@ -4,15 +4,17 @@ import org.json.*
 
 @Field def whitelistValidator
 @Field def sbrContent
+@Field def whiteListYml
 
 echo "sbr.groovy is being loaded"
 
 def output
 
-def initialize(output,aWhitelistValidator) {
+def initialize(output, aWhitelistValidator) {
   this.output = output
   sbrContent = readFile("./sls-app/serverless-build-rules.yml")
   whitelistValidator = aWhitelistValidator
+  whiteListYml = whitelistValidator.getWhiteListYml()
 }
 
 
@@ -37,8 +39,8 @@ def Map<String, Object> processServerless(Map<String, Object> origAppYmlFile,
     Map<String, SBR_Rule> rules =  convertRuleForestIntoLinearMap(rulesYmlFile)
     Map<String, SBR_Rule> resolvedRules = rulePostProcessor(rules)
 
-    Transformer transformer = new Transformer(output, config, context, resolvedRules) // Encapsulating the config, context and rules into the class so that they do not have to be passed as an arguments with every call of recursive function
-
+    Transformer transformer = new Transformer(output, config, context, resolvedRules, rulesYmlFile, origAppYmlFile) // Encapsulating the config, context and rules into the class so that they do not have to be passed as an arguments with every call of recursive function
+  
     Map<String, Object> transformedYmlTreelet = transformer.transform(origAppYmlFile);
     Map<String, SBR_Rule> path2MandatoryRuleMap = resolvedRules.inject([:]){acc, item -> if(item.value instanceof SBR_Rule && item.value.isMandatory) acc.put(item.key, item.value); return acc}
 
@@ -63,22 +65,37 @@ def Map<String, String> allRules(Map<String, Object> origAppYmlFile,
 /* This class encapsulates config, context and rules so that they don't have to be carried over with every call of recursive function */
 class Transformer {
   // output is added here only to facilitate echo for easy debugging
-  def output;
+  private def output;
   private def config;
+  private Map<String, String> mandatoryFieldPaths = [:];
   private Map<String, String> context;
   private Map<String, SBR_Rule> path2RulesMap;
   private Map<String, SBR_Rule> templatedPath2RulesMap;
   private Map<String, SBR_Rule> path2MandatoryRuleMap;
   private Map<String, List> path2OrigRuleMap = [:];
 
-  public Transformer(output, aConfig, aContext, aPath2RulesMap) {
-    output = output
+   public Transformer(output, aConfig, aContext, aPath2RulesMap, aRulesYmlFile, origAppYmlFile) {
+    this.output = output
     output.echo("In Transformer Constructor! Test for Echo")
     config = aConfig;
     context = aContext;
     path2RulesMap = aPath2RulesMap;
     templatedPath2RulesMap = path2RulesMap.inject([:]){acc, item -> if(item.key.contains("*")) acc.put(item.key, item.value); return acc} // Copying all path-2-rule entries where a path contains '*' thus it is a template
-  }
+    
+    def functionTemplate = aRulesYmlFile['function']['sbr-template']
+    functionTemplate.each { key, value -> 
+      if (value['sbr-mandatory'] && value['sbr-mandatory'] == true) mandatoryFieldPaths["/functions/*/${key}"] = key 
+    }
+    def originalFunctionMap = origAppYmlFile['functions']
+    originalFunctionMap.each { k, v -> 
+      mandatoryFieldPaths.each  { key, value ->        
+        if(path2OrigRuleMap[key] ) path2OrigRuleMap[key].add("/functions/${k}/${value}")
+        else path2OrigRuleMap[key] = new HashSet(); path2OrigRuleMap[key].add("/functions/${k}/${value}")  
+      } 
+    }
+    
+    this.output.echo("path2OrigRuleMap...$path2OrigRuleMap")
+ }
 
   boolean pathMatcher(String templatedPath, String targetPath) {
     String[] templatedPathSegments = templatedPath.split("/")
@@ -99,8 +116,8 @@ class Transformer {
     targetPathSegments.eachWithIndex{seg, idx -> if(templatedPathSegments[idx] == "*") val2Ret.add(targetPathSegments[idx])}
 
     if(path2OrigRuleMap[(templatedPath)] ) path2OrigRuleMap[(templatedPath)].add(targetPath)
-    else path2OrigRuleMap[(templatedPath)] = new ArrayList(); path2OrigRuleMap[(templatedPath)].add(targetPath)
-
+    else path2OrigRuleMap[(templatedPath)] = new HashSet(); path2OrigRuleMap[(templatedPath)].add(targetPath)
+        
     return val2Ret
   }
 
@@ -1061,10 +1078,10 @@ def makeList(list) {
 
 def getLeafPath (String templatedPath, Map<String, List> path2OrigRuleMap) {
   def pathKeyArr = makeList(templatedPath.split('/'))
-  def maxList = path2OrigRuleMap.findAll { entry -> entry.key.split('/').size() == pathKeyArr.size() }
-  def maxSize = maxList.max { it -> it.value.size() }
+  def maxSizeMap = path2OrigRuleMap.findAll { entry -> entry.key.split('/').size() == pathKeyArr.size() }
+  def maxList = maxSizeMap.collect{ it.value.size() }
+  def maxSize = maxList.max { it -> it.value }
   def pathTempKeyList = path2OrigRuleMap.find {it -> it.value.size() == maxSize}                                       
-
   return pathTempKeyList ? pathTempKeyList.value: []
 }
 
@@ -1177,16 +1194,19 @@ def prepareServerlessYml(aConfig, env, configLoader, envDeploymenDescriptor, acc
           smallResourcesElem['Outputs'] = bigOutputsElem
         }
         def resourceKeys = bigResourcesElem.collect{key, val -> key}
+        def outputResources = smallResourcesElem['Resources']
+        def whitelistedAssetTypes = whiteListYml['assetTypes']
         /* Forming a record that extracts the arn from resulting item for each of resource key extracted from resources:
         UsersTableArn:\n
         Value:\n
         \"Fn::GetAtt\": [ usersTable, Arn ]\n
         */
-        resourceKeys.collect{name ->
-        bigOutputsElem[name+'Arn']=["Value":["Fn::GetAtt":[name, "Arn"]]]
+        resourceKeys.collect { name ->
+          def resourceType = outputResources[name]['Type']
+          if ( whitelistedAssetTypes.contains(resourceType)) bigOutputsElem[name + 'Arn']=["Value":["Fn::GetAtt":[name, "Arn"]]]
+       }       
       }
     }
-  }
 
   // inject log subscription ALWAYS - TODO implement in SBR
   def logSubscriptionMap = [logSubscription:[enabled:true, destinationArn:context.kinesisStreamArn]]

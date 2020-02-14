@@ -14,7 +14,9 @@ module.exports = () => {
         "processEventUpdateEnvironmentError": processEventUpdateEnvironmentError,
         "createBranchError": createBranchError,
         "eventPayload": eventPayload,
-        "deleteBranchSuccess": deleteBranchSuccess
+        "deleteBranchSuccess": deleteBranchSuccess,
+        "envDetailsResponse": envDetailsResponse,
+        "adminsResponse": adminsResponse
     };
 };
 
@@ -81,6 +83,41 @@ var apiResponse = {
     }
 };
 
+var envDetailsResponse = {
+    statusCode: 200,
+    body: {
+        "data": {
+            "count": 1,
+            "environment":[
+                {
+                    "service":"test-vault-user",
+                    "domain":"jazztest",
+                    "last_updated":"2019-11-11T16:06:25:391",
+                    "status":"deletion_started",
+                    "created_by":"bitbucket",
+                    "physical_id":"master",
+                    "created":"2019-11-11T15:55:50:020",
+                    "id":"76e2e72a-ec44-adb3-4cdc-39e79c23d000",
+                    "metadata":{
+                        "safe":
+                            {
+                                "name":"test-vault-user_jazztest",
+                                "link":"https://vault/#!/admin",
+                                "ts":"2019-11-11T15:56:02.290Z"
+                            }
+                    },
+                    "logical_id":"ehrswzx36b-dev"
+                }
+            ]
+        },
+        "input":
+        {
+            "service":"test-vault-user",
+            "domain":"jazztest"
+        }
+    }
+};
+
 var envCreationResponseSuccess = {
     statusCode: 200,
     body: {
@@ -99,6 +136,11 @@ var envCreationResponseSuccess = {
         }
     }
 };
+
+var adminsResponse = {
+    "statusCode": 200,
+    "body": "{\"data\" : {\"serviceId\":\"4b821bae-0300-239b-99c2-a62687a90000\",\"policies\":[{\"userId\":\"test@t-mobile.com\",\"permission\":\"admin\",\"category\":\"manage\"},{\"userId\":\"test@t-mobile.com\",\"permission\":\"write\",\"category\":\"code\"},{\"userId\":\"test@t-mobile.com\",\"permission\":\"write\",\"category\":\"deploy\"}]},\"input\" : \"\"}",
+}
 
 var envCreationResponseError = {
     "error": "Error creating stg environment for jazztesting_test-env-oss-3 in  catalog",
@@ -243,4 +285,9 @@ var processEventUpdateEnvironmentError = {
     body: {
         "message": "Error"
     }
+};
+
+var processEachEvent = {
+    "interested_event":true,
+    "payload":{"EVENT_ID":{"S":"bf12cc7b-7ecd-423e-a902-2f56f8ced1b3"},"TIMESTAMP":{"S":"2018-04-16T16:35:49:539"},"EVENT_HANDLER":{"S":"BITBUCKET"},"EVENT_NAME":{"S":"COMMIT_TEMPLATE"},"SERVICE_NAME":{"S":"test-env-oss-3"},"EVENT_STATUS":{"S":"COMPLETED"},"EVENT_TYPE":{"S":"SERVICE_ONBOARDING"},"USERNAME":{"S":"c1bcc4bbe5b8a159"},"EVENT_TIMESTAMP":{"S":"2018-04-16T16:35:49:186"},"SERVICE_CONTEXT":{"S":"{\"repository\":\"https://testrepo.com/projects/CAS/repos/jazztesting_test-debug-deepu/browse\",\"domain\":\"jazztesting\",\"branch\":\"master\"}"}}
 };

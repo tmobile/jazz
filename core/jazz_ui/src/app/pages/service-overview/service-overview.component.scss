@@ -1137,6 +1137,11 @@ details summary::-webkit-details-marker {
         background-color: #AEB2BB;
     }
 }
+.popupcopy {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
 
 .metadata-buttons-wrap {
     position: absolute;
@@ -1170,6 +1175,52 @@ details summary::-webkit-details-marker {
         display: flex;
         margin: 1rem;
     }
+}
+.popupcopy .tooltip-content {
+    visibility: hidden;
+    width: 185px;
+    background-color: #D5D7D9;
+    color: #4a4a4a;
+    text-align: center;
+    border-radius: 6px;
+    padding: 8px;
+    position: absolute;
+    z-index: 1;
+    bottom: 110%;
+    right: 7%;
+    font-size: 12px;
+  }
+  .popupcopy .tooltip-content::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 89%;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #D5D7D9 transparent transparent transparent;
+}
+.popupcopy:hover .tooltip-content{
+    visibility: visible;
+    -webkit-animation: fadeIn 2s;
+    animation: fadeIn 2s;
+}
+.copyapilinkdev{
+    opacity: 0;
+    position: absolute;
+    z-index: -100000;
+}
+.column-style {
+    width: 100% !important;
+}
+.btn-holder {
+    position: absolute;
+    bottom: 22px;
+    right: 22px;
+}
+
+.link {
+  color: #ed008c;  
+  margin: 5px;
 }
 
 .extra-bottom-padding {}

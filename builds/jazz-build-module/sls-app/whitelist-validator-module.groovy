@@ -226,4 +226,8 @@ def checkAssetType( resourceType ) {
   return status
 }
 
+def getWhiteListYml() {
+  return whiteList;
+}
+
 return this

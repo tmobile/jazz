@@ -5,7 +5,7 @@ import { AuthenticationService } from '../../core/services/authentication.servic
 import 'rxjs/add/operator/map';
 import { ConfigService } from '../../app.config';
 import { Router } from '@angular/router';
-import { environment } from '../../../environments/environment';
+import { environment } from '../../../environments/environment.oss';
 import { UtilsService } from './utils.service';
 
 @Injectable()
@@ -164,6 +164,47 @@ export class RequestService {
             })
 
     }
+    delete(url: string, body: any, serviceId?): Observable<any> {
+        // Make a Delete request to url
+
+        // Construct url
+        url = this.constructUrl(url);
+
+        // Get Authentication token
+        this.token = this.authenticationService.getToken();
+
+        // Add Authentication token to headers
+        let headerObj = {
+            'Authorization': this.token,
+            'Content-Type': 'application/json',
+            'accept': 'application/json'
+        };
+
+        if (serviceId) {
+            headerObj['Jazz-Service-ID'] = serviceId
+        }
+
+        let headers = new Headers(headerObj);
+        let options = new RequestOptions({ headers: headers, body: JSON.stringify(body) });
+        let router = this.router;
+
+        return this.http.delete(url, options)
+            .map((response: Response) => {
+                let responseBody;
+                responseBody = response.json();
+                if (responseBody) {
+                    return responseBody;
+                } else {
+                    // return error responseBody
+                    return responseBody;
+                }
+            })
+            .catch((error: any) => {
+                return this.handleError(error, router);
+            })
+
+    }
+ 
     private handleError(error: any, router: any) {
         console.log(error);
         if (error.status === 401) {

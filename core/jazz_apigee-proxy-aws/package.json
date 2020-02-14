@@ -6,7 +6,8 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "mocha"
+    "test": "nyc mocha",
+    "coverage": "nyc npm run test"
   },
   "dependencies": {
     "aws-sdk": "*"
@@ -14,6 +15,7 @@
   "devDependencies": {
     "chai": "^3.5.0",
     "mocha": "^v3.0.0",
+    "nyc": "^13.3.0",
     "aws-sdk-mock": "*",
     "aws-lambda-mock-context": "*"
   }
