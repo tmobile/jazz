@@ -111,14 +111,14 @@ def deleteSafe(safeName) {
 
 def removeAssociationOfOtherRolesFromSafe(otherRolesList, safeName) {
 	otherRolesList.each  { key, value ->        
-		removeRoleFromSafe(value, safeName) 
+		removeRoleFromSafe(value.arn, safeName) 
 	}
 }
 
-def removeRoleFromSafe(role, safeName) {
+def removeRoleFromSafe(roleArn, safeName) {
 	try {
 		def rolePayload = [
-			'arn': role.arn
+			'arn': roleArn
 		]
 
 		def payload = JsonOutput.toJson(rolePayload)
