@@ -1364,8 +1364,8 @@ def writeSwaggerFileForAzure(stackName, repo_name) {
 }
 
 def removeLogGroup(groupName, credsId) {
-	sh "aws logs delete-log-group --log-group-name $groupName --profile ${credsId}"
-	echo "successfully removed log group $groupName"
+  sh "aws logs delete-log-group --log-group-name $groupName --profile ${credsId}"
+  echo "successfully removed log group $groupName"
 }
 
 def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId, accountDetails, config) {
