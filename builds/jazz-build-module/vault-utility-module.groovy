@@ -158,10 +158,10 @@ def setEnvironmentLogicalId (env) {
 
 @NonCPS
 def parseJson(jsonString) {
-def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-def m = [:]
-m.putAll(lazyMap)
-return m
+	def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+	def m = [:]
+	m.putAll(lazyMap)
+	return m
 }
 
 return this
