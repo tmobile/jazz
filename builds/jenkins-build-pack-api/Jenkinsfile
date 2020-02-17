@@ -872,8 +872,7 @@ def writeServerlessFile(config, environment_logical_id, accountDetails){
     if (config['require_internal_access']) {
       sh "sed -i -- '/#Start:isBasicRole/,/#End:isBasicRole/d' ./serverless.yml"  
       sh "sed -i -- '/#Start:isS3EventRoleEnabled/,/#End:resources/d' ./serverless.yml"
-    }  
-    else 
+    } else 
       sh "sed -i -- '/#Start:isVpcEnabled/,/#End:resources/d' ./serverless.yml"    
   }
 }
