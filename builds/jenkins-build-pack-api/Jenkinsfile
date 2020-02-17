@@ -1371,22 +1371,22 @@ def removeLogGroup(groupName, credsId) {
 def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId, accountDetails, config) {
   def rollbackErrorMessage = "ROLLBACK_COMPLETE state and can not be updated"
   def logGroupErrorMessage = "CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"
-	if(deployOutput.contains(rollbackErrorMessage)){
-		deleteAndRedeployService(env, envBucketKey, accountDetails, config)
-	}
-	else if (deployOutput.contains(logGroupErrorMessage))
-	{
-		def lambda = "/aws/lambda/${envBucketKey}-${env}"
-		if (isExistingLogGroup(lambda, credsId)){
-			removeLogGroup(lambda, credsId)
-			deleteAndRedeployService(env, envBucketKey, accountDetails, config);
-		} else {
-			error "Unable to find existing log groups"
-		}
-	}
-	else {
-			error "Exception occured while serverless deployment to ${env} environment"
-	}
+  if(deployOutput.contains(rollbackErrorMessage)){
+    deleteAndRedeployService(env, envBucketKey, accountDetails, config)
+  }
+  else if (deployOutput.contains(logGroupErrorMessage))
+  {
+    def lambda = "/aws/lambda/${envBucketKey}-${env}"
+    if (isExistingLogGroup(lambda, credsId)){
+      removeLogGroup(lambda, credsId)
+      deleteAndRedeployService(env, envBucketKey, accountDetails, config);
+    } else {
+      error "Unable to find existing log groups"
+    }
+  }
+  else {
+      error "Exception occured while serverless deployment to ${env} environment"
+  }
 }
 
 /**
