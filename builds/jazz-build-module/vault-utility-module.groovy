@@ -52,7 +52,7 @@ def updateSafeDetails(safeName, lambdaARN, current_roles, credsId) {
 			removeAssociationOfOtherRolesFromSafe(otherRolesList, safeName)
 		} else {
 			addRoleToSafe(iamRoleArn, safeName)
-		}		
+		}
 	} else {
 		echo "Safe not configured yet."
 	}
@@ -110,8 +110,8 @@ def deleteSafe(safeName) {
 }
 
 def removeAssociationOfOtherRolesFromSafe(otherRolesList, safeName) {
-	otherRolesList.each  { key, value ->        
-		removeRoleFromSafe(value.arn, safeName) 
+	otherRolesList.each  { key, value -> 
+		removeRoleFromSafe(value.arn, safeName)
 	}
 }
 
@@ -158,10 +158,10 @@ def setEnvironmentLogicalId (env) {
 
 @NonCPS
 def parseJson(jsonString) {
-  def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-  def m = [:]
-  m.putAll(lazyMap)
-  return m
+def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+def m = [:]
+m.putAll(lazyMap)
+return m
 }
 
 return this
