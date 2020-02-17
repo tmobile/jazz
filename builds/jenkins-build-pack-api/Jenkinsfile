@@ -1125,35 +1125,35 @@ def setCredentials() {
  */
 def send_status_email (build_status, email_content) {
   echo "Sending build notification to ${config['created_by']}"
-	// TODO: Use this to make the notification look better?
-	def body_html = ''
-	def body_subject = "[Jazz Build Notification] Deployment ${build_status} for your service: ${config['service']}"
-	def body_text =  'View the complete build log here: ' + env.BUILD_URL + 'console'
-  	if (email_content != '') {
-    	body_text = email_content + '\n\n' + body_text
-	}
-	body = JsonOutput.toJson([
-		from: 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>',
-		to: config['created_by'],
-		subject: body_subject,
-		text: body_text,
-		bcc: configLoader.JAZZ.STACK_ADMIN,
-		html: body_html
-	])
+  // TODO: Use this to make the notification look better?
+  def body_html = ''
+  def body_subject = "[Jazz Build Notification] Deployment ${build_status} for your service: ${config['service']}"
+  def body_text =  'View the complete build log here: ' + env.BUILD_URL + 'console'
+  if (email_content != '') {
+      body_text = email_content + '\n\n' + body_text
+  }
+  body = JsonOutput.toJson([
+    from: 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>',
+    to: config['created_by'],
+    subject: body_subject,
+    text: body_text,
+    bcc: configLoader.JAZZ.STACK_ADMIN,
+    html: body_html
+])
 
-	try {
-		def sendMail = sh(script: "curl -X POST \
-						${g_base_url}/jazz/email \
-						-k -v -H \"Authorization: $auth_token\" \
-						-H \"Content-Type: application/json\" \
-						-d \'${body}\'", returnStdout: true).trim()
+  try {
+    def sendMail = sh(script: "curl -X POST \
+            ${g_base_url}/jazz/email \
+            -k -v -H \"Authorization: $auth_token\" \
+            -H \"Content-Type: application/json\" \
+            -d \'${body}\'", returnStdout: true).trim()
     def responseJSON = parseJson(sendMail)
-		if (responseJSON.data) {
-			echo "successfully sent e-mail to ${config['created_by']}"
-		} else {
-			echo "exception occured while sending e-mail: $responseJSON"
-		}
-	} catch (e) {
+    if (responseJSON.data) {
+      echo "successfully sent e-mail to ${config['created_by']}"
+    } else {
+      echo "exception occured while sending e-mail: $responseJSON"
+    }
+  } catch (e) {
     echo "Failed while sending build status notification  " + e.toString()
   }
 }
