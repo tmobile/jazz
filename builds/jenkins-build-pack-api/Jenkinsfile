@@ -1284,18 +1284,18 @@ def servelessDeploy(env, envBucketKey, s3BucketNameValue, credsId){
 
 
 def isExistingLogGroup (groupName, credsId){
-	def isExistingLogGrp = false
-	def filterLogs = sh (
-		script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile ${credsId}",
-		returnStdout: true
-	).trim()
-	def toJSON = new groovy.json.JsonSlurper()
-	def filterLogsJSON = toJSON.parseText(filterLogs)
-	def logGroups = filterLogsJSON.logGroups
-	if(logGroups.size() > 0  && logGroups[0].logGroupName == groupName){
-		isExistingLogGrp = true
-	}
-	return isExistingLogGrp
+  def isExistingLogGrp = false
+  def filterLogs = sh (
+    script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile ${credsId}",
+    returnStdout: true
+  ).trim()
+  def toJSON = new groovy.json.JsonSlurper()
+  def filterLogsJSON = toJSON.parseText(filterLogs)
+  def logGroups = filterLogsJSON.logGroups
+  if(logGroups.size() > 0  && logGroups[0].logGroupName == groupName){
+    isExistingLogGrp = true
+  }
+  return isExistingLogGrp
 }
 
 def createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name, storageName  ) {
