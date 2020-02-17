@@ -1102,9 +1102,9 @@ def setCredentials() {
 
     try {
       token = sh(script: "curl --silent -X POST -k -v \
-				-H \"Content-Type: application/json\" \
-					$loginUrl \
-				-d \'${payload}\'", returnStdout: true).trim()
+                          -H \"Content-Type: application/json\" \
+                            $loginUrl \
+                          -d \'${payload}\'", returnStdout: true).trim()
 
       def tokenJson = parseJson(token)
       tokenJson_token = tokenJson.data.token
