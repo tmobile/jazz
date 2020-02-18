@@ -15,7 +15,7 @@ echo "Vault utility module loaded successfully"
 @Field def events
 @Field def utilModule
 
-def initialize(config_loader,service_config, base_url, auth_token, env, event_module, util_module) {
+def initialize(config_loader, service_config, base_url, auth_token, env, event_module, util_module) {
 	configLoader = config_loader
 	serviceConfig = service_config
 	baseUrl = base_url
@@ -25,13 +25,13 @@ def initialize(config_loader,service_config, base_url, auth_token, env, event_mo
 	utilModule = util_module
 }
 
-def updateCustomServicesSafeDetails(safeName, lambdaArns, current_roles, credsId) {
+def updateCustomServicesSafeDetails(safeName, lambdaArns, currentRoles, credsId) {
 	for (arn in lambdaArns) {
-		updateSafeDetails(safeName, arn, current_roles, credsId)
+		updateSafeDetails(safeName, arn, currentRoles, credsId)
 	}
 }
 
-def updateSafeDetails(safeName, lambdaARN, current_roles, credsId) {
+def updateSafeDetails(safeName, lambdaARN, currentRoles, credsId) {
 	def iamRoleArn
 	def otherRolesList	
 	def safeDetails = getSafeDetails(safeName)	
@@ -44,9 +44,9 @@ def updateSafeDetails(safeName, lambdaARN, current_roles, credsId) {
 				addRoleToSafe(iamRoleArn, safeName)
 			} else echo "Role ${iamRoleArn} already has access to safe!"
 
-			if (!current_roles) otherRolesList = safeDetails.data.roles.findAll {it -> it.value.arn != iamRoleArn }				
+			if (!currentRoles) otherRolesList = safeDetails.data.roles.findAll {it -> it.value.arn != iamRoleArn }				
 			else {
-				otherRolesList = safeDetails.data.roles.findAll { it -> !current_roles.contains(it.value.arn) }
+				otherRolesList = safeDetails.data.roles.findAll { it -> !currentRoles.contains(it.value.arn) }
 			}
 			echo "otherRolesList: $otherRolesList"
 			removeAssociationOfOtherRolesFromSafe(otherRolesList, safeName)
