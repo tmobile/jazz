@@ -13,6 +13,7 @@ echo "whitelist-validator-module has been successfully loaded"
 @Field def arnTemplates
 @Field def assetTypes
 @Field def assetCatalogTypes
+@Field def allowedIamManagedPolicies
 
 def initialize() {
   whitelistContent = readFile("sls-app/whitelist.yml")
@@ -22,6 +23,7 @@ def initialize() {
   allowedActions = whiteList['actions'].collect{key, val -> val.collect{action -> "$key:$action".toString()}}.flatten()
   allowedEvents = whiteList['events'].keySet()
   allowedPlugins = whiteList['plugins']
+  allowedIamManagedPolicies = whiteList['iamManagedPolicies']
   def arnMaps = whiteList['arnTemplate']
   assetTypes = whiteList['assetTypes']
   arnTemplates = parsedArnTemplate(arnMaps)
@@ -211,7 +213,7 @@ def getPluginsfromYaml(deploymentDescriptor) {
 }
 
 def whitelistIamManagedPolicies(policyName) {
-  def status = allowedIamManagedPolicies.find{val -> val == pluginName}
+  def status = allowedIamManagedPolicies.find{val -> val == policyName}
   return status ? true: false
 }
 
