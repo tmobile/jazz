@@ -715,6 +715,7 @@ class SBR_Whitelist_Constraint implements SBR_Constraint {
       case "events": return whitelistValidator.validateWhitelistEvents(val); break;
       case "plugins": return whitelistValidator.validateWhitelistPlugins(val); break;
       case "actions": return whitelistValidator.validateWhitelistActions(val); break;
+      case "iamManagedPolicies": return whitelistValidator.iamManagedPolicies(val); break;
       default: throw new IllegalStateException("SBR_Whitelist_Constraint contains an unknown $elementPointer inside as follows: $val")
     }
   }
