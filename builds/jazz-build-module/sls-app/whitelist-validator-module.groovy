@@ -212,7 +212,7 @@ def getPluginsfromYaml(deploymentDescriptor) {
   }
 }
 
-def whitelistIamManagedPolicies(policyName) {
+def validateWhitelistIamManagedPolicies(policyName) {
   def status = allowedIamManagedPolicies.find{val -> val == policyName}
   return status ? true: false
 }
