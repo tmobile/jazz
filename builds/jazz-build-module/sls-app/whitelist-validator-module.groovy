@@ -210,6 +210,17 @@ def getPluginsfromYaml(deploymentDescriptor) {
   }
 }
 
+def whitelistIamManagedPolicies(deploymentDescriptor) {
+  def deploymentDescriptorDoc = readYaml(text: deploymentDescriptor)
+  def pluginsElem = deploymentDescriptorDoc['plugins']
+  if(pluginsElem) {
+    def outstandingPlugins = pluginsElem.clone()
+    return outstandingPlugins
+  } else {
+    return []
+  }
+}
+
 def getassetCatalogTypes(){
   return assetCatalogTypes
 }
