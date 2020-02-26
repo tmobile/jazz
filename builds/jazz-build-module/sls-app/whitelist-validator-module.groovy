@@ -210,8 +210,8 @@ def getPluginsfromYaml(deploymentDescriptor) {
   }
 }
 
-def whitelistIamManagedPolicies(deploymentDescriptor) {
-  def status = allowedPlugins.find{val -> val == pluginName}
+def whitelistIamManagedPolicies(policyName) {
+  def status = allowedIamManagedPolicies.find{val -> val == pluginName}
   return status ? true: false
 }
 
