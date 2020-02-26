@@ -355,7 +355,7 @@ provider:
     sbr-type: "[arn-iam-policy]"
     sbr-render: user-only
     sbr-constraint:
-        sbr-whitelist: resource
+        sbr-whitelist: iamManagedPolicies
     sbr-value:
       sbr-example:
         - arn:aws:iam:*****:policy/some-managed-policy
