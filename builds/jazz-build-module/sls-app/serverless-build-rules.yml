@@ -355,7 +355,6 @@ provider:
     sbr-type: "[arn-iam-policy]"
     sbr-render: user-only
     sbr-value:
-      sbr-formula: ${config.iamRoleARN}
       sbr-example:
         - arn:aws:iam:*****:policy/some-managed-policy
 
