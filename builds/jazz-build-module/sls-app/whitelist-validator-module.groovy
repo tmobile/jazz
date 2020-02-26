@@ -212,9 +212,9 @@ def getPluginsfromYaml(deploymentDescriptor) {
   }
 }
 
-def validateWhitelistIamManagedPolicies(policyName) {
-  def status = allowedIamManagedPolicies.find{val -> val == policyName}
-  return status ? true: false
+def validateWhitelistIamManagedPolicies(iamManagedPolicies) {
+  def outstandingPolicies = iamManagedPolicies.findAll { it -> !allowedIamManagedPolicies.contains(it) }
+  return outstandingPolicies.size() > 0 ? false: true
 }
 
 def getassetCatalogTypes(){
