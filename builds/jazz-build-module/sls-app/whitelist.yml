@@ -483,3 +483,7 @@ assetTypes:
   - AWS::Kinesis::Stream
   - AWS::SQS::Queue
   - AWS::Events::Rule
+
+iamManagedPolicies:
+  - arn:aws:iam::aws:policy/IAMFullAccess12
+    - arn:aws:iam::aws:policy/AWSLambdaExecute13
