@@ -485,7 +485,5 @@ assetTypes:
   - AWS::Events::Rule
 
 iamManagedPolicies:
-  - arn:aws:iam::aws:policy/IAMFullAccess12
-  - arn:aws:iam::aws:policy/AWSLambdaExecute13
-  - arn:aws:iam::aws:policy/IAMFullAccess123
-  - arn:aws:iam::aws:policy/AWSLambdaExecute133
+  - arn:aws:iam::aws:policy/AWSLambdaExecute
+  - arn:aws:iam::aws:policy/AWSLambdaReadOnlyAccess
