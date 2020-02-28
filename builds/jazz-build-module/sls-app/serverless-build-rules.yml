@@ -353,7 +353,7 @@ provider:
 
   iamManagedPolicies: # Optional IAM Managed Policies, which allows to include the policies into IAM Role
     sbr-type: "[arn-iam-policy]"
-    sbr-render: user-only
+    sbr-render: merge
     sbr-constraint:
         sbr-whitelist: iamManagedPolicies
     sbr-value:
