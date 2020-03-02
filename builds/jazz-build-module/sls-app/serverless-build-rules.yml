@@ -357,6 +357,7 @@ provider:
     sbr-constraint:
         sbr-whitelist: iamManagedPolicies
     sbr-value:
+      sbr-formula: ${config.iamManagedPolicies}
       sbr-example:
         - arn:aws:iam:*****:policy/some-managed-policy
 

@@ -487,3 +487,5 @@ assetTypes:
 iamManagedPolicies:
   - arn:aws:iam::aws:policy/AWSLambdaExecute
   - arn:aws:iam::aws:policy/AWSLambdaReadOnlyAccess
+  - arn:aws:iam::aws:policy/AWSLambdaInvocation-DynamoDB
+  - arn:aws:iam::aws:policy/AWSLambdaFullAccess
