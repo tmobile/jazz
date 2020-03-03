@@ -802,7 +802,8 @@ class SBR_Formula_Value implements SBR_Value {
     } else if(formula instanceof Map) {
       result = formula.inject([:]){acc, item -> acc.put(item.key, shell.evaluate('"'+item.value+'"')); return acc}
     } else if(formula instanceof List) {
-      result = formula.collect{item -> shell.evaluate('"'+item+'"')}
+      def res = formula.collect{item -> shell.evaluate('"'+item+'"')}
+      result = res[0].trim().replaceAll(~/^\[|\]$/, '').split(',').collect{ it.trim()}
     } else {
       throw new IllegalStateException("The formula is of unknown type "+formula.getClass().getName())
     }
