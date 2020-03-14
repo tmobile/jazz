@@ -354,8 +354,11 @@ provider:
   iamManagedPolicies: # Optional IAM Managed Policies, which allows to include the policies into IAM Role
     sbr-type: "[arn-iam-policy]"
     sbr-render: merge
+    sbr-constraint:
+        sbr-whitelist: iamManagedPolicies
     sbr-value:
-      sbr-formula: ${config.iamRoleARN}
+      # sbr-formula: 
+      #   - ${config.iamManagedPolicies} # Keep the config.iamManagedPolicies as a LIST
       sbr-example:
         - arn:aws:iam:*****:policy/some-managed-policy
 
