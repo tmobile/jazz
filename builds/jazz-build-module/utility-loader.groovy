@@ -256,18 +256,19 @@ def createAllStackResources (whiteListModule, events, config, stackResources, en
 				if(arn.startsWith('arn')) {
 					def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
 					if(arnAsArray.size() > 2) { // Making sure that the third element exists
-					def artifactType = arnAsArray[2]
-					if (arnsMap[assetCatalogTypes[artifactType]] && arnsMap[assetCatalogTypes[artifactType]].size() > 0) 
-						arnsMap[assetCatalogTypes[artifactType]].add(arn)
-					else {
-						arnsMap[assetCatalogTypes[artifactType]] = new ArrayList()
-						arnsMap[assetCatalogTypes[artifactType]].add(arn)
-					}
-					
-					events.sendCompletedEvent('CREATE_ASSET',
+						def artifactType = arnAsArray[2]
+						if (arnsMap[assetCatalogTypes[artifactType]] && arnsMap[assetCatalogTypes[artifactType]].size() > 0) 
+							arnsMap[assetCatalogTypes[artifactType]].add(arn)
+						else {
+							arnsMap[assetCatalogTypes[artifactType]] = new ArrayList()
+							arnsMap[assetCatalogTypes[artifactType]].add(arn)
+						}
+						if (isSendEvent) {
+							events.sendCompletedEvent('CREATE_ASSET',
 												null,
 												generateAssetMap("aws", arn, assetCatalogTypes[artifactType], config),
 												env)
+						}					
 					}
 				}
 			}
