@@ -229,7 +229,7 @@ def constructArn (arn, resourceName, resourceType, config) {
 def getStackResources (stackName, region, credsId) {
 	def stackResources = null	
 	try {
-		def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}  --output json 2<&1", returnStdout: true)
+		stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}  --output json 2<&1", returnStdout: true)
 		echo "Describe Stacks are ${stackResources}"
 		def parsedResources = parseJson(stackResources)
 		return parsedResources
@@ -243,7 +243,7 @@ def getStackResources (stackName, region, credsId) {
 	}
 }
 
-def createAllStackResources (whiteListModule, events, config, stackResources, env) {
+def createAllStackResources (whiteListModule, events, config, stackResources, env, isSendEvent) {
 	def arnsMap = [:]
 	def resources = stackResources['StackResources']
 	if( resources != null ) {
