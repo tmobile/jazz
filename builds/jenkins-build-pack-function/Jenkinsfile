@@ -361,7 +361,7 @@ node() {
               }
 
               def stackResources = utilModule.getStackResources(stackName, config['region'], credsId)
-              arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id, true)
+              arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
              
               lambdaARN = arnsMap['lambda'][0]
               echo "lambdaARN: ${lambdaARN}"
