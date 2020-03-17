@@ -354,7 +354,7 @@ node() {
               createAssetForHttpEvents(deployOutput)
               attachTagstoLogGroup(config, environment_logical_id, credsId)
 
-              def stackResources = utilModule.getStackResources(cfStackName, config['region'], credsId)
+              def newCloudformationStackResources = utilModule.getStackResources(cfStackName, config['region'], credsId)
               arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
               //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
               send_status_email('COMPLETED', '')
