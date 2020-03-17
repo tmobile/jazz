@@ -357,6 +357,9 @@ node() {
 
               def newCloudformationStackResources = utilModule.getStackResources(cfStackName, config['region'], credsId)
               arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, newCloudformationStackResources, environment_logical_id, true)
+              
+              utilModule.archiveOldAssets(assets_api, auth_token, config, env, events, arnsMap, oldArnsMap)
+
               //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
               send_status_email('COMPLETED', '')
             } catch (ex) {
