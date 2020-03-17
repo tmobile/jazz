@@ -233,7 +233,7 @@ def listStackResources (stackName, region, credsId) {
 		def parsedResources = parseJson(stackResources)
 		return parsedResources
 	} catch (ex) {
-		error "ERRRRRRRRRRRRRRRRRRRRR...${ex}"
+		echo "stack not exists..."
 	}
 	 
 }
