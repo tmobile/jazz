@@ -226,7 +226,8 @@ def constructArn (arn, resourceName, resourceType, config) {
 }
 
 
-def getStackResources (stackName, region, credsId) {	
+def getStackResources (stackName, region, credsId) {
+		
 	try {
 		def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}  --output json 2<&1", returnStdout: true)
 		echo "Describe Stacks are ${stackResources}"
@@ -237,7 +238,7 @@ def getStackResources (stackName, region, credsId) {
 		try {
 			def resp = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}  --output json 2<&1 | grep -c 'ValidationError'", returnStdout: true)
 			if(resp != 1) error "describe stack failed."
-			else return null
+			else return {}
 		} catch (e) {}
 	}
 }
