@@ -289,15 +289,28 @@ def archiveCustomRole(assets_api, auth_token, config, env, events) {
 	}
 }
 
-def archiveOldAssets(assets_api, auth_token, config, env, events, arnsMap, oldArnsMap) {  
-	def assets = getAssets(assets_api, auth_token, config, env)
-	def assetList = parseJson(assets)
+def archiveOldAssets(assets_api, auth_token, config, env, events, newMap, oldMap) {  
+	def newKeys = newMap*.key
+	def oldKeys = oldMap*.key
+	
+	def removedKeys = oldKeys-newKeys
+	def addedKeys = newKeys - oldKeys
+	def commonKeys =newKeys - removedKeys - addedKeys
+	def changedKeys = commonKeys.findAll { oldMap[it] != newMap[it] }
 
-	for (asset in assetList.data.assets) {
-		if (asset.asset_type == 'iam_role') { 
-			events.sendCompletedEvent('UPDATE_ASSET', "Archiving the custom role since user specific role is being used.", generateAssetMap(asset.provider, asset.provider_id, "iam_role", config), env)
-		}
-	}
+	def removed = oldMap.findAll { it.key in removedKeys }
+	def added = newMap.findAll { it.key in addedKeys }
+	def changed = oldMap.findAll { it.key in changedKeys }
+	
+
+	// def assets = getAssets(assets_api, auth_token, config, env)
+	// def assetList = parseJson(assets)
+
+	// for (asset in assetList.data.assets) {
+	// 	if (asset.asset_type == 'iam_role') { 
+	// 		events.sendCompletedEvent('UPDATE_ASSET', "Archiving the custom role since user specific role is being used.", generateAssetMap(asset.provider, asset.provider_id, "iam_role", config), env)
+	// 	}
+	// }
 }
 
 
