@@ -483,3 +483,9 @@ assetTypes:
   - AWS::Kinesis::Stream
   - AWS::SQS::Queue
   - AWS::Events::Rule
+
+iamManagedPolicies:
+  - arn:aws:iam::aws:policy/AWSLambdaExecute
+  - arn:aws:iam::aws:policy/AWSLambdaReadOnlyAccess
+  - arn:aws:iam::aws:policy/AWSLambdaInvocation-DynamoDB
+  - arn:aws:iam::aws:policy/AWSLambdaFullAccess

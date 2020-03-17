@@ -54,6 +54,7 @@ node() {
     def branch = params.scm_branch
     def domain = params.domain
     def repo_name = domain + "_" + params.service_name
+    def arnsMap = [:]
     
     def gitCommitOwner
     def gitCommitHash
@@ -347,8 +348,13 @@ node() {
               }              
 
               def stackResources = utilModule.getStackResources(stackName, config['region'], credsId)
-              def lambdaArns = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
-               lambdaArnInfo = getLambdaARN(lambdaArns);
+              arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
+              lambdaArnInfo = getLambdaARN(arnsMap['lambda']);
+
+              if (config['iamRoleARN']) {
+                def assets_api = g_base_url + "/jazz/assets"
+                utilModule.archiveCustomRole(assets_api, auth_token, config, environment_logical_id, events)
+              }
 
               if (fileExists('swagger/swagger.json')) {
                 echo "Generating swagger file for environment: ${env_key}"
@@ -487,7 +493,7 @@ node() {
               def environment = environmentDeploymentMetadata.getEnvironmentInfo()
               if (environment && environment.metadata && environment.metadata.safe) {
                 def safeName = environment.metadata.safe.name
-                vaultUtilityModule.updateSafeDetails(safeName, lambdaArnInfo.arn, credsId)
+                vaultUtilityModule.updateSafeDetails(safeName, lambdaArnInfo.arn, null, credsId)
               }
               events.sendCompletedEvent('UPDATE_SAFE', 'safe updation completed', context_map, environment_logical_id)          
             } catch (ex) {
@@ -866,8 +872,7 @@ def writeServerlessFile(config, environment_logical_id, accountDetails){
     if (config['require_internal_access']) {
       sh "sed -i -- '/#Start:isBasicRole/,/#End:isBasicRole/d' ./serverless.yml"  
       sh "sed -i -- '/#Start:isS3EventRoleEnabled/,/#End:resources/d' ./serverless.yml"
-    }  
-    else 
+    } else 
       sh "sed -i -- '/#Start:isVpcEnabled/,/#End:resources/d' ./serverless.yml"    
   }
 }
@@ -1097,9 +1102,9 @@ def setCredentials() {
 
     try {
       token = sh(script: "curl --silent -X POST -k -v \
-				-H \"Content-Type: application/json\" \
-					$loginUrl \
-				-d \'${payload}\'", returnStdout: true).trim()
+                          -H \"Content-Type: application/json\" \
+                            $loginUrl \
+                          -d \'${payload}\'", returnStdout: true).trim()
 
       def tokenJson = parseJson(token)
       tokenJson_token = tokenJson.data.token
@@ -1120,35 +1125,35 @@ def setCredentials() {
  */
 def send_status_email (build_status, email_content) {
   echo "Sending build notification to ${config['created_by']}"
-	// TODO: Use this to make the notification look better?
-	def body_html = ''
-	def body_subject = "[Jazz Build Notification] Deployment ${build_status} for your service: ${config['service']}"
-	def body_text =  'View the complete build log here: ' + env.BUILD_URL + 'console'
-  	if (email_content != '') {
-    	body_text = email_content + '\n\n' + body_text
-	}
-	body = JsonOutput.toJson([
-		from: 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>',
-		to: config['created_by'],
-		subject: body_subject,
-		text: body_text,
-		bcc: configLoader.JAZZ.STACK_ADMIN,
-		html: body_html
-	])
+  // TODO: Use this to make the notification look better?
+  def body_html = ''
+  def body_subject = "[Jazz Build Notification] Deployment ${build_status} for your service: ${config['service']}"
+  def body_text =  'View the complete build log here: ' + env.BUILD_URL + 'console'
+  if (email_content != '') {
+      body_text = email_content + '\n\n' + body_text
+  }
+  body = JsonOutput.toJson([
+    from: 'Jazz Admin <' + configLoader.JAZZ.STACK_ADMIN + '>',
+    to: config['created_by'],
+    subject: body_subject,
+    text: body_text,
+    bcc: configLoader.JAZZ.STACK_ADMIN,
+    html: body_html
+])
 
-	try {
-		def sendMail = sh(script: "curl -X POST \
-						${g_base_url}/jazz/email \
-						-k -v -H \"Authorization: $auth_token\" \
-						-H \"Content-Type: application/json\" \
-						-d \'${body}\'", returnStdout: true).trim()
+  try {
+    def sendMail = sh(script: "curl -X POST \
+            ${g_base_url}/jazz/email \
+            -k -v -H \"Authorization: $auth_token\" \
+            -H \"Content-Type: application/json\" \
+            -d \'${body}\'", returnStdout: true).trim()
     def responseJSON = parseJson(sendMail)
-		if (responseJSON.data) {
-			echo "successfully sent e-mail to ${config['created_by']}"
-		} else {
-			echo "exception occured while sending e-mail: $responseJSON"
-		}
-	} catch (e) {
+    if (responseJSON.data) {
+      echo "successfully sent e-mail to ${config['created_by']}"
+    } else {
+      echo "exception occured while sending e-mail: $responseJSON"
+    }
+  } catch (e) {
     echo "Failed while sending build status notification  " + e.toString()
   }
 }
@@ -1279,18 +1284,18 @@ def servelessDeploy(env, envBucketKey, s3BucketNameValue, credsId){
 
 
 def isExistingLogGroup (groupName, credsId){
-	def isExistingLogGrp = false
-	def filterLogs = sh (
-		script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile ${credsId}",
-		returnStdout: true
-	).trim()
-	def toJSON = new groovy.json.JsonSlurper()
-	def filterLogsJSON = toJSON.parseText(filterLogs)
-	def logGroups = filterLogsJSON.logGroups
-	if(logGroups.size() > 0  && logGroups[0].logGroupName == groupName){
-		isExistingLogGrp = true
-	}
-	return isExistingLogGrp
+  def isExistingLogGrp = false
+  def filterLogs = sh (
+    script: "aws logs describe-log-groups --log-group-name-prefix $groupName --output json --profile ${credsId}",
+    returnStdout: true
+  ).trim()
+  def toJSON = new groovy.json.JsonSlurper()
+  def filterLogsJSON = toJSON.parseText(filterLogs)
+  def logGroups = filterLogsJSON.logGroups
+  if(logGroups.size() > 0  && logGroups[0].logGroupName == groupName){
+    isExistingLogGrp = true
+  }
+  return isExistingLogGrp
 }
 
 def createApi(stackName, environment_logical_id, logicalId, scmModule, repo_name, storageName  ) {
@@ -1359,29 +1364,29 @@ def writeSwaggerFileForAzure(stackName, repo_name) {
 }
 
 def removeLogGroup(groupName, credsId) {
-	sh "aws logs delete-log-group --log-group-name $groupName --profile ${credsId}"
-	echo "successfully removed log group $groupName"
+  sh "aws logs delete-log-group --log-group-name $groupName --profile ${credsId}"
+  echo "successfully removed log group $groupName"
 }
 
 def handleDeploymentErrors(deployOutput, envBucketKey, env, credsId, accountDetails, config) {
   def rollbackErrorMessage = "ROLLBACK_COMPLETE state and can not be updated"
   def logGroupErrorMessage = "CloudFormation - CREATE_FAILED - AWS::Logs::LogGroup - HandlerLogGroup"
-	if(deployOutput.contains(rollbackErrorMessage)){
-		deleteAndRedeployService(env, envBucketKey, accountDetails, config)
-	}
-	else if (deployOutput.contains(logGroupErrorMessage))
-	{
-		def lambda = "/aws/lambda/${envBucketKey}-${env}"
-		if (isExistingLogGroup(lambda, credsId)){
-			removeLogGroup(lambda, credsId)
-			deleteAndRedeployService(env, envBucketKey, accountDetails, config);
-		} else {
-			error "Unable to find existing log groups"
-		}
-	}
-	else {
-			error "Exception occured while serverless deployment to ${env} environment"
-	}
+  if(deployOutput.contains(rollbackErrorMessage)){
+    deleteAndRedeployService(env, envBucketKey, accountDetails, config)
+  }
+  else if (deployOutput.contains(logGroupErrorMessage))
+  {
+    def lambda = "/aws/lambda/${envBucketKey}-${env}"
+    if (isExistingLogGroup(lambda, credsId)){
+      removeLogGroup(lambda, credsId)
+      deleteAndRedeployService(env, envBucketKey, accountDetails, config);
+    } else {
+      error "Unable to find existing log groups"
+    }
+  }
+  else {
+      error "Exception occured while serverless deployment to ${env} environment"
+  }
 }
 
 /**
