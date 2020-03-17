@@ -225,6 +225,13 @@ def constructArn (arn, resourceName, resourceType, config) {
 	return arn
 }
 
+def listStackResources (stackName, region, credsId) {	
+	def stackResources = sh(script: "aws cloudformation list-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}", returnStdout: true)
+	echo "Describe Stacks are ${stackResources}"
+	def parsedResources = parseJson(stackResources)
+	return parsedResources
+}
+
 def getStackResources (stackName, region, credsId) {	
 	def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}", returnStdout: true)
 	echo "Describe Stacks are ${stackResources}"
