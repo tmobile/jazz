@@ -289,7 +289,7 @@ def archiveCustomRole(assets_api, auth_token, config, env, events) {
 	}
 }
 
-def archiveCustomRole(assets_api, auth_token, config, env, events) {  
+def archiveOldAssets(assets_api, auth_token, config, env, events) {  
 	def assets = getAssets(assets_api, auth_token, config, env)
 	def assetList = parseJson(assets)
 
