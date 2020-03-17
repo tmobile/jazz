@@ -354,7 +354,6 @@ node() {
               createAssetForHttpEvents(deployOutput)
               attachTagstoLogGroup(config, environment_logical_id, credsId)
 
-              def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${environment_logical_id}"
               def stackResources = utilModule.getStackResources(cfStackName, config['region'], credsId)
               arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id)
               //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
