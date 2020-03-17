@@ -301,7 +301,14 @@ def archiveOldAssets(assets_api, auth_token, config, env, events, newMap, oldMap
 	def removed = oldMap.findAll { it.key in removedKeys }
 	def added = newMap.findAll { it.key in addedKeys }
 	def changed = oldMap.findAll { it.key in changedKeys }
-	
+
+	echo "removedKeys: $removedKeys"
+	echo "addedKeys: $addedKeys"
+	echo "commonKeys: $commonKeys"
+	echo "changedKeys: $changedKeys"
+	echo "removed: $removed"
+	echo "added: $added"
+	echo "changed: $changed"
 
 	// def assets = getAssets(assets_api, auth_token, config, env)
 	// def assetList = parseJson(assets)
