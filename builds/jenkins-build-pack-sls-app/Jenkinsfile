@@ -358,7 +358,7 @@ node() {
               def newCloudformationStackResources = utilModule.getStackResources(cfStackName, config['region'], credsId)
               arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, newCloudformationStackResources, environment_logical_id, true)
               
-              utilModule.archiveOldAssets(g_base_url + "/jazz/assets", auth_token, config, env, events, arnsMap, oldArnsMap)
+              utilModule.archiveOldAssets(g_base_url + "/jazz/assets", auth_token, config, environment_logical_id, events, arnsMap, oldArnsMap)
 
               //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
               send_status_email('COMPLETED', '')
