@@ -236,8 +236,8 @@ def listStackResources (stackName, region, credsId) {
 		echo "stack not exists..."
 		try {
 			def stackResources = sh(script: "aws cloudformation list-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}  --output json 2<&1 | grep -c 'ValidationError'", returnStdout: true)
-		echo "Describe Stacks are ${stackResources}"
-		}
+			echo "Describe Stacks are ${stackResources}"
+		} catch (ex) {}
 		
 	}
 	 
