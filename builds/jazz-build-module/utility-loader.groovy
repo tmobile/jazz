@@ -227,6 +227,10 @@ def constructArn (arn, resourceName, resourceType, config) {
 
 
 def listStackResources (stackName, region, credsId) {
+		 
+}
+
+def getStackResources (stackName, region, credsId) {	
 	try {
 		def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}  --output json 2<&1", returnStdout: true)
 		echo "Describe Stacks are ${stackResources}"
@@ -238,14 +242,7 @@ def listStackResources (stackName, region, credsId) {
 			def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}  --output json 2<&1 | grep -c 'ValidationError'", returnStdout: true)
 			echo "Describe Stacks are ${stackResources}"
 		} catch (e) {}		
-	}	 
-}
-
-def getStackResources (stackName, region, credsId) {	
-	def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}", returnStdout: true)
-	echo "Describe Stacks are ${stackResources}"
-	def parsedResources = parseJson(stackResources)
-	return parsedResources
+	}
 }
 
 def createAllStackResources (whiteListModule, events, config, stackResources, env) {
