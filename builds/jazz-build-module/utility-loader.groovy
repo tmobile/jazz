@@ -290,10 +290,15 @@ def archiveCustomRole(assets_api, auth_token, config, env, events) {
 }
 
 def archiveOldAssets(assets_api, auth_token, config, env, events, newMap, oldMap) {  
-	def newKeys = newMap*.key
-	def oldKeys = oldMap*.key
+	def newKeys = newMap.keySet()
+	def oldKeys = oldMap.keySet()
+
+	echo "newMap: $newMap"
+	echo "oldMap: $oldMap"
+	echo "newKeys: $newKeys"
+	echo "oldKeys: $oldKeys"
 	
-	def removedKeys = oldKeys-newKeys
+	def removedKeys = oldKeys - newKeys
 	def addedKeys = newKeys - oldKeys
 	def commonKeys =newKeys - removedKeys - addedKeys
 	def changedKeys = commonKeys.findAll { oldMap[it] != newMap[it] }
