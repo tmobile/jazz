@@ -305,7 +305,7 @@ def archiveOldAssets(assets_api, auth_token, config, env, events, newMap, oldMap
 
 	def removed = oldMap.findAll { it.key in removedKeys }
 	def added = newMap.findAll { it.key in addedKeys }
-	def changed = oldMap.findAll { it.key in changedKeys }
+	def changed = oldMap.findAll { it.key in changedKeys }.each {key, list -> list.plus(newMap[key]) }
 
 	echo "removedKeys: $removedKeys"
 	echo "addedKeys: $addedKeys"
