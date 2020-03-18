@@ -292,11 +292,6 @@ def archiveCustomRole(assets_api, auth_token, config, env, events) {
 def archiveOldAssets(assets_api, auth_token, config, env, events, newMap, oldMap) {  
 	def newKeys = newMap.keySet()
 	def oldKeys = oldMap.keySet()
-
-	echo "newMap: $newMap"
-	echo "oldMap: $oldMap"
-	echo "newKeys: $newKeys"
-	echo "oldKeys: $oldKeys"
 	
 	def removedKeys = oldKeys - newKeys
 	def addedKeys = newKeys - oldKeys
@@ -306,26 +301,18 @@ def archiveOldAssets(assets_api, auth_token, config, env, events, newMap, oldMap
 	def removed = oldMap.findAll { it.key in removedKeys }
 	def added = newMap.findAll { it.key in addedKeys }
 	def changed = oldMap.findAll { it.key in changedKeys }
-	echo "changed: $changed"
 	def changedLists = changed.each {key, list -> list.removeAll(newMap[key]) }
 
 	echo "removedKeys: $removedKeys"
 	echo "addedKeys: $addedKeys"
-	echo "commonKeys: $commonKeys"
 	echo "changedKeys: $changedKeys"
 	echo "removed: $removed"
 	echo "added: $added"
-	echo "changedLists: $changedLists"
 	changedLists << removed
-
-	// def assets = getAssets(assets_api, auth_token, config, env)
-	// def assetList = parseJson(assets)
-
-	// for (asset in assetList.data.assets) {
-	// 	if (asset.asset_type == 'iam_role') { 
-	// 		events.sendCompletedEvent('UPDATE_ASSET', "Archiving the custom role since user specific role is being used.", generateAssetMap(asset.provider, asset.provider_id, "iam_role", config), env)
-	// 	}
-	// }
+	echo "changedLists: $changedLists"
+	changedLists.each {key, list -> list.each {it -> 
+		events.sendCompletedEvent('UPDATE_ASSET', "Archiving the old assets since user changed the yml.", generateAssetMap("aws", it, key, config), env)
+	}}	
 }
 
 
