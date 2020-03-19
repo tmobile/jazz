@@ -61,7 +61,7 @@ module.exports = (query, asset_table, onComplete) => {
                 filterString = filterString.substring(0, filterString.length - 3);
                 filterString += " )";
 
-                filter = filter + key_name + " IN " + filterString + insertAndString;
+                filter = filter + "#s IN " + filterString + insertAndString;
                 statusList.forEach(function (value) {
                     // params.ExpressionAttributeValues[(":" + value)] = {
                     //     'S': value
