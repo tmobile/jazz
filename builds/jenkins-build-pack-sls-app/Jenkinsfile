@@ -347,7 +347,7 @@ node() {
               echoServerlessFile()
               def cfStackName = "${instance_prefix}-${config['domain']}-${config['service']}-${environment_logical_id}"
               def oldCloudformationStackResources = utilModule.getStackResources(cfStackName, config['region'], credsId)
-              oldArnsMap = utilModule.createAllStackResources(whiteListModule, events, config, oldCloudformationStackResources, environment_logical_id, false)
+              if (oldCloudformationStackResources) oldArnsMap = utilModule.createAllStackResources(whiteListModule, events, config, oldCloudformationStackResources, environment_logical_id, false)
 
               def deployOutput = servelessDeploy(environment_logical_id, envBucketKey, credsId)
               // After stack Deployment
@@ -358,7 +358,7 @@ node() {
               def newCloudformationStackResources = utilModule.getStackResources(cfStackName, config['region'], credsId)
               arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, newCloudformationStackResources, environment_logical_id, true)
               
-              utilModule.archiveOldAssets(g_base_url + "/jazz/assets", auth_token, config, environment_logical_id, events, arnsMap, oldArnsMap)
+              if (oldCloudformationStackResources) utilModule.archiveOldAssets(g_base_url + "/jazz/assets", auth_token, config, environment_logical_id, events, arnsMap, oldArnsMap)
 
               //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
               send_status_email('COMPLETED', '')
