@@ -52,7 +52,7 @@ module.exports = (query, asset_table, onComplete) => {
     keys_list.forEach((key) => {
         if (key !== "limit" && key !== "offset") { // LIMIT is a reserved keyword
             let key_name = utils.getDatabaseKeyName(key);
-            if (key_name === 'STATUS') {
+            if (key_name === 'STATUS' && query.status !== undefined) {
                 let statusList = query.status.split(',')
                 let filterString = "( ";
                 statusList.forEach(function (value) {
