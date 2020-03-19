@@ -31,6 +31,7 @@ module.exports = (query, asset_table, onComplete) => {
 
     let filter = "";
     let insertAndString = " AND ";
+    var attributeValues = {};
 
     let params = {
         TableName: asset_table,
@@ -50,17 +51,17 @@ module.exports = (query, asset_table, onComplete) => {
     // Generate filter string
     keys_list.forEach((key) => {
         if (key !== "limit" && key !== "offset") { // LIMIT is a reserved keyword
-            var key_name = utils.getDatabaseKeyName(key);
+            let key_name = utils.getDatabaseKeyName(key);
             if (key_name === 'STATUS') {
                 let statusList = query.status.split(',')
-                var filterString = "( ";
+                let filterString = "( ";
                 statusList.forEach(function (value) {
                     filterString += " :" + value + " , ";
                 });
                 filterString = filterString.substring(0, filterString.length - 3);
                 filterString += " )";
 
-                filter = filter + key_name + " IN " + filterString + " AND ";
+                filter = filter + key_name + " IN " + filterString + insertAndString;
                 statusList.forEach(function (value) {
                     attributeValues[(":" + value)] = {
                         'S': value
