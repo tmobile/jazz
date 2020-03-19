@@ -52,8 +52,9 @@ module.exports = (query, asset_table, onComplete) => {
         if (key !== "limit" && key !== "offset") { // LIMIT is a reserved keyword
             var key_name = utils.getDatabaseKeyName(key);
             if(key_name === 'STATUS') {
-                let status = query.status;
-                let statusList = status.split(',')
+                let statusList = query.status.split(',')
+                filter = filter + key_name + " = :" + key_name + insertAndString;
+                params.ExpressionAttributeValues[":" + key_name] = query[key];
             } else if (query[key] && key_name) {
                 filter = filter + key_name + " = :" + key_name + insertAndString;
                 params.ExpressionAttributeValues[":" + key_name] = query[key];
