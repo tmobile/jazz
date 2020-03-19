@@ -388,7 +388,7 @@ node() {
                 serviceConfigdata.setKinesisStream(config)
               }
 
-              if (config['iamRoleARN']) {
+              if (config['iamRoleARN'] && domain != "jazz") {
                 def assets_api = g_base_url + "/jazz/assets"
                 utilModule.archiveCustomRole(assets_api, auth_token, config, environment_logical_id, events)
               }
