@@ -218,6 +218,7 @@ export class EnvironmentDetailComponent implements OnInit {
       service: this.service.service || this.service.name,
       domain: this.service.domain,
       environment: this.envSelected,
+      status: "active",
       limit: undefined
     },this.service.id).subscribe((assetsResponse) => {
       this.assets = assetsResponse.data.assets;
