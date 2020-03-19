@@ -280,13 +280,15 @@ def createAllStackResources (whiteListModule, events, config, stackResources, en
 
 def archiveCustomRole(assets_api, auth_token, config, env, events) {  
 	def assets = getAssets(assets_api, auth_token, config, env)
-	def assetList = parseJson(assets)
+	if(assets) {
+		def assetList = parseJson(assets)
 
-	for (asset in assetList.data.assets) {
-		if (asset.asset_type == 'iam_role') { 
-			events.sendCompletedEvent('UPDATE_ASSET', "Archiving the custom role since user specific role is being used.", generateAssetMap(asset.provider, asset.provider_id, "iam_role", config), env)
+		for (asset in assetList.data.assets) {
+			if (asset.asset_type == 'iam_role') { 
+				events.sendCompletedEvent('UPDATE_ASSET', "Archiving the custom role since user specific role is being used.", generateAssetMap(asset.provider, asset.provider_id, "iam_role", config), env)
+			}
 		}
-	}
+	}	
 }
 
 def archiveOldAssets(assets_api, auth_token, config, env, events, newMap, oldMap) {  
