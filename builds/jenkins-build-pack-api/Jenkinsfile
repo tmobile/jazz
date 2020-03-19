@@ -351,7 +351,7 @@ node() {
               arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, stackResources, environment_logical_id, true)
               lambdaArnInfo = getLambdaARN(arnsMap['lambda']);
 
-              if (config['iamRoleARN']) {
+              if (config['iamRoleARN'] && domain != "jazz") {
                 def assets_api = g_base_url + "/jazz/assets"
                 utilModule.archiveCustomRole(assets_api, auth_token, config, environment_logical_id, events)
               }
