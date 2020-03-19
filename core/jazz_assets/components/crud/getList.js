@@ -31,7 +31,6 @@ module.exports = (query, asset_table, onComplete) => {
 
     let filter = "";
     let insertAndString = " AND ";
-    let attributeValues = {};
 
     let params = {
         TableName: asset_table,
@@ -47,6 +46,7 @@ module.exports = (query, asset_table, onComplete) => {
     };
 
     let keys_list = global.global_config.ASSET_SEARCH_OPTIONAL_FILTER_PARAMS;
+    logger.info("Query params: " + JSON.stringify(query));
 
     // Generate filter string
     keys_list.forEach((key) => {
@@ -63,18 +63,16 @@ module.exports = (query, asset_table, onComplete) => {
 
                 filter = filter + key_name + " IN " + filterString + insertAndString;
                 statusList.forEach(function (value) {
-                    attributeValues[(":" + value)] = {
+                    params.ExpressionAttributeValues[(":" + value)] = {
                         'S': value
                     };
                 });
             } else if (query[key] && key_name) {
                 filter = filter + key_name + " = :" + key_name + insertAndString;
-                attributeValues[":" + key_name] = query[key];
+                params.ExpressionAttributeValues[":" + key_name] = query[key];
             }
         }
     });
-
-    params.ExpressionAttributeValues = attributeValues
 
     filter = filter.substring(0, filter.length - insertAndString.length); // remove the " AND " at the end
 
