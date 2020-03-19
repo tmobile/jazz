@@ -63,10 +63,12 @@ module.exports = (query, asset_table, onComplete) => {
 
                 filter = filter + key_name + " IN " + filterString + insertAndString;
                 statusList.forEach(function (value) {
-                    params.ExpressionAttributeValues[(":" + value)] = {
-                        'S': value
-                    };
+                    // params.ExpressionAttributeValues[(":" + value)] = {
+                    //     'S': value
+                    // };
+                    params.ExpressionAttributeValues[":" + value] = value;
                 });
+                params.ExpressionAttributeNames["#s"] = "STATUS"
             } else if (query[key] && key_name) {
                 filter = filter + key_name + " = :" + key_name + insertAndString;
                 params.ExpressionAttributeValues[":" + key_name] = query[key];
