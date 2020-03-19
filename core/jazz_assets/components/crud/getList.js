@@ -51,10 +51,21 @@ module.exports = (query, asset_table, onComplete) => {
     keys_list.forEach((key) => {
         if (key !== "limit" && key !== "offset") { // LIMIT is a reserved keyword
             var key_name = utils.getDatabaseKeyName(key);
-            if(key_name === 'STATUS') {
+            if (key_name === 'STATUS') {
                 let statusList = query.status.split(',')
-                filter = filter + key_name + " = :" + key_name + insertAndString;
-                params.ExpressionAttributeValues[":" + key_name] = query[key];
+                var filterString = "( ";
+                statusList.forEach(function (value) {
+                    filterString += " :" + value + " , ";
+                });
+                filterString = filterString.substring(0, filterString.length - 3);
+                filterString += " )";
+
+                filter = filter + key_name + " IN " + filterString + " AND ";
+                statusList.forEach(function (value) {
+                    attributeValues[(":" + value)] = {
+                        'S': value
+                    };
+                });
             } else if (query[key] && key_name) {
                 filter = filter + key_name + " = :" + key_name + insertAndString;
                 params.ExpressionAttributeValues[":" + key_name] = query[key];
@@ -90,7 +101,7 @@ module.exports = (query, asset_table, onComplete) => {
                     queryExecute(onComplete);
                 } else {
                     count = items.length;
-                    if (pagination.limit >= 0 && pagination.offset >=0 ) {
+                    if (pagination.limit >= 0 && pagination.offset >= 0) {
                         items = utils.paginateUtil(items, parseInt(pagination.limit), parseInt(pagination.offset));
                     }
 
