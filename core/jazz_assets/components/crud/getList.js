@@ -31,7 +31,7 @@ module.exports = (query, asset_table, onComplete) => {
 
     let filter = "";
     let insertAndString = " AND ";
-    var attributeValues = {};
+    let attributeValues = {};
 
     let params = {
         TableName: asset_table,
@@ -73,6 +73,7 @@ module.exports = (query, asset_table, onComplete) => {
             }
         }
     });
+    params.ExpressionAttributeValues = attributeValues
 
     filter = filter.substring(0, filter.length - insertAndString.length); // remove the " AND " at the end
 
