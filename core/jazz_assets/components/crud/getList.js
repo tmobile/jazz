@@ -69,10 +69,11 @@ module.exports = (query, asset_table, onComplete) => {
                 });
             } else if (query[key] && key_name) {
                 filter = filter + key_name + " = :" + key_name + insertAndString;
-                params.ExpressionAttributeValues[":" + key_name] = query[key];
+                attributeValues[":" + key_name] = query[key];
             }
         }
     });
+
     params.ExpressionAttributeValues = attributeValues
 
     filter = filter.substring(0, filter.length - insertAndString.length); // remove the " AND " at the end
@@ -88,7 +89,7 @@ module.exports = (query, asset_table, onComplete) => {
     }
     pagination.offset = query.offset || global.global_config.PAGINATION_DEFAULTS.offset;
 
-    logger.debug("Query params generated from the search request: " + JSON.stringify(params));
+    logger.info("Query params generated from the search request: " + JSON.stringify(params));
 
     let items = [];
     let queryExecute = (onComplete) => {
