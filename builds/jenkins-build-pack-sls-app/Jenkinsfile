@@ -364,7 +364,7 @@ node() {
               //Getting the stack resources as map
               arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, newCloudformationStackResources, environment_logical_id, true)
               
-              //If 
+              //If there is old CF stack resources, comparing the old and new stack resources
               if (oldCloudformationStackResources) utilModule.archiveOldAssets(g_base_url + "/jazz/assets", auth_token, config, environment_logical_id, events, arnsMap, oldArnsMap)
 
               //createSubscriptionFilters(config, accountDetails, environment_logical_id, credsId)
