@@ -46,7 +46,7 @@ module.exports = (query, asset_table, onComplete) => {
     };
 
     let keys_list = global.global_config.ASSET_SEARCH_OPTIONAL_FILTER_PARAMS;
-    logger.info("Query params: " + JSON.stringify(query));
+    logger.debug("Query params: " + JSON.stringify(query));
 
     // Generate filter string
     keys_list.forEach((key) => {
