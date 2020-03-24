@@ -93,7 +93,7 @@ module.exports = (query, asset_table, onComplete) => {
         docClient.query(params, (err, data) => {
             let count;
             if (err) {
-                logger.info("GETLIST err: "+ JSON.stringify(err));
+                logger.debug("GETLIST err: "+ JSON.stringify(err));
                 onComplete(err, null);
             } else {
                 logger.info("GETLIST data: "+ JSON.stringify(data));
