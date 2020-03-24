@@ -360,6 +360,7 @@ node() {
               //Getting the list of aws resources associated with the CF stack after deployment. This is for comparing the 
               // the stack resources with the CF stack after deployment
               def newCloudformationStackResources = utilModule.getStackResources(cfStackName, config['region'], credsId)
+              //Comparing the old and new stack resources
               arnsMap = utilModule.createAllStackResources(whiteListModule, events, config, newCloudformationStackResources, environment_logical_id, true)
               
               if (oldCloudformationStackResources) utilModule.archiveOldAssets(g_base_url + "/jazz/assets", auth_token, config, environment_logical_id, events, arnsMap, oldArnsMap)
