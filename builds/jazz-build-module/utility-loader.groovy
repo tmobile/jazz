@@ -243,7 +243,7 @@ def getStackResources (stackName, region, credsId) {
 	}
 }
 
-def createAllStackResources (whiteListModule, events, config, stackResources, env, isSendEvent) {
+def createAllStackResources (whiteListModule, events, config, stackResources, env, isCreateAsset) {
 	def arnsMap = [:]
 	def resources = stackResources['StackResources']
 	if( resources != null ) {
@@ -263,7 +263,7 @@ def createAllStackResources (whiteListModule, events, config, stackResources, en
 							arnsMap[assetCatalogTypes[artifactType]] = new ArrayList()
 							arnsMap[assetCatalogTypes[artifactType]].add(arn)
 						}
-						if (isSendEvent) {
+						if (isCreateAsset) {
 							events.sendCompletedEvent('CREATE_ASSET',
 												null,
 												generateAssetMap("aws", arn, assetCatalogTypes[artifactType], config),
