@@ -86,7 +86,7 @@ module.exports = (query, asset_table, onComplete) => {
     }
     pagination.offset = query.offset || global.global_config.PAGINATION_DEFAULTS.offset;
 
-    logger.info("Query params generated from the search request: " + JSON.stringify(params));
+    logger.debug("Query params generated from the search request: " + JSON.stringify(params));
 
     let items = [];
     let queryExecute = (onComplete) => {
