@@ -263,6 +263,7 @@ def createAllStackResources (whiteListModule, events, config, stackResources, en
 							arnsMap[assetCatalogTypes[artifactType]] = new ArrayList()
 							arnsMap[assetCatalogTypes[artifactType]].add(arn)
 						}
+						// We need to send events only after deployment, and we dont need to send the event while we are calling this method only for creating the resouce map
 						if (isCreateAsset) {
 							events.sendCompletedEvent('CREATE_ASSET',
 												null,
