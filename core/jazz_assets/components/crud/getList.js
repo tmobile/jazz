@@ -96,7 +96,7 @@ module.exports = (query, asset_table, onComplete) => {
                 logger.debug("GETLIST err: "+ JSON.stringify(err));
                 onComplete(err, null);
             } else {
-                logger.info("GETLIST data: "+ JSON.stringify(data));
+                logger.debug("GETLIST data: "+ JSON.stringify(data));
                 items = items.concat(data.Items);
                 if (data.LastEvaluatedKey) {
                     params.ExclusiveStartKey = data.LastEvaluatedKey;
