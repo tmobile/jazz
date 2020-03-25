@@ -533,6 +533,7 @@ export class EnvLogsSectionComponent implements OnInit {
 	return this.http.get('/jazz/assets',{
 		domain: self.service.domain,
 		service: self.service.name,
+		status: "active"
 	}, self.service.id).toPromise().then((response:any)=>{
 		if(response&&response.data&&response.data.assets){
 			this.assetsNameArray.push(response);

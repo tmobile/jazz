@@ -145,6 +145,7 @@ export class EnvAssetsSectionComponent {
 		this.payload['domain'] = this.service.domain;
 		this.payload['environment'] = this.env;
 		this.payload['offset'] = this.offsetval;
+		this.payload['status'] = 'active';
     this.subscription = this.http.get(this.relativeUrl, this.payload, this.service.id).subscribe(
       (response) => {
 		var res = response.data.assets;
