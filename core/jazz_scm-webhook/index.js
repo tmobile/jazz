@@ -241,7 +241,7 @@ var gitlabScmContextDetails = function (eventKey, body, config) {
 			var branch = origins[2];
 			result.branch = branch;
 
-			if (body.before && parseInt(body.before, 10) === 0) {
+			if (body.before && body.before === '0000000000000000000000000000000000000000') {
 				if (eventKey === 'tag_push') {
 					result.event_name = 'CREATE_TAG';
 					resolve(result);
@@ -253,7 +253,7 @@ var gitlabScmContextDetails = function (eventKey, body, config) {
 					result.event_name = 'CREATE_BRANCH';
 					resolve(result);
 				}
-			} else if (body.after && parseInt(body.after, 10) === 0) {
+			} else if (body.after && body.after === '0000000000000000000000000000000000000000') {
 				if (eventKey === 'tag_push') {
 					result.event_name = 'DELETE_TAG';
 					resolve(result);
