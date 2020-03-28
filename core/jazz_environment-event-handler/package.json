@@ -11,7 +11,7 @@
     },
     "dependencies": {
         "string-template": "*",
-        "nanoid": "*",
+        "nanoid": "2.1.11",
         "request": "*",
         "request-promise-native": "^1.0.5"
     },
