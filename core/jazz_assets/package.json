@@ -9,14 +9,17 @@
   },
   "scripts": {
     "test": "nyc mocha",
-    "coverage": "nyc npm run test"
+    "coverage": "nyc npm run test",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "dependencies": {
     "json-query": "*",
     "lodash": "*",
     "moment": "*",
     "request": "*",
-    "uuid": "*"
+    "uuid": "*",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.1.1",
@@ -27,5 +30,6 @@
     "chai-as-promised": "^7.1.1",
     "mocha": "^v3.0.0",
     "sinon": "^5.0.10"
-  }
+  },
+  "snyk": true
 }
