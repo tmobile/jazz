@@ -9,12 +9,15 @@
   },
   "scripts": {
     "test": "nyc mocha",
-    "coverage": "nyc npm run test"
+    "coverage": "nyc npm run test",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "dependencies": {
     "lodash": "*",
     "request": "*",
-    "request-promise-native": "^1.0.5"
+    "request-promise-native": "^1.0.5",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "amazon-cognito-identity-js": "^3.0.2",
@@ -29,5 +32,6 @@
   },
   "engines": {
     "node": "6.10"
-  }
+  },
+  "snyk": true
 }
