@@ -7,12 +7,15 @@
   "author": [],
   "scripts": {
     "test": "nyc mocha",
-    "coverage": "nyc npm run test"
+    "coverage": "nyc npm run test",
+    "snyk-protect": "snyk protect",
+    "prepublish": "npm run snyk-protect"
   },
   "dependencies": {
     "lodash": "*",
     "request": "*",
-    "request-promise-native": "^1.0.5"
+    "request-promise-native": "^1.0.5",
+    "snyk": "^1.316.1"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.1.1",
@@ -23,5 +26,6 @@
     "nyc": "^13.3.0",
     "sinon": "^5.0.7",
     "lambda-local": "^1.4.2"
-  }
+  },
+  "snyk": true
 }
