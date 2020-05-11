@@ -99,8 +99,10 @@ function handler(event, context, cb) {
 
 function post(config, body, callback) {  
   let requestParams = utils.buildRequest(config, body);
-
+  console.log('Request params..')
+  console.log(requestParams)
   request(requestParams, (err, response, body) => {
+    console.log(err)
     logger.debug("response from ES :" + JSON.stringify(response));
     if (err) {
       logger.error("error: " + JSON.stringify(err));

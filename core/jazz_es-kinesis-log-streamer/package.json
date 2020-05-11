@@ -14,7 +14,7 @@
   "dependencies": {
     "unicode-byte-truncate": "*",
     "request": "*",
-    "uuid": "*"
+    "uuid": "^3.3.2"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.2.1",

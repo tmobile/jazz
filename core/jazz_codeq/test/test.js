@@ -329,7 +329,7 @@ describe('validation tests', () => {
   });
 
   it('should return null when from date is invalid', () => {
-    const validFrom = validation.validateFromDate(1234);
+    const validFrom = validation.validateFromDate('BAD 123 - 1date');
 
     expect(validFrom).to.eql(null);
   });
@@ -351,7 +351,7 @@ describe('validation tests', () => {
   });
 
   it('should return null when to date is invalid', () => {
-    const validFrom = validation.validateToDate(1234);
+    const validFrom = validation.validateToDate('BAD 123 - 1date');
 
     expect(validFrom).to.eql(null);
   });
