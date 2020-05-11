@@ -363,6 +363,7 @@ export class ServiceLogsComponent implements OnInit {
 		return this.http.get('/jazz/assets', {
 			domain: self.service.domain,
 			service: self.service.name,
+			status: "active",
 			limit: 1e3, // TODO: Address design shortcomings
 			offset: 0,
 		}, self.service.id).toPromise().then((response: any) => {
