@@ -225,15 +225,26 @@ def constructArn (arn, resourceName, resourceType, config) {
 	return arn
 }
 
-def getStackResources (stackName, region, credsId) {	
-	def stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}", returnStdout: true)
-	echo "Describe Stacks are ${stackResources}"
-	def parsedResources = parseJson(stackResources)
-	return parsedResources
+
+def getStackResources (stackName, region, credsId) {
+	def stackResources = null	
+	try {
+		stackResources = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}  --output json 2<&1", returnStdout: true)
+		echo "Describe Stacks are ${stackResources}"
+		def parsedResources = parseJson(stackResources)
+		return parsedResources
+	} catch (ex) {
+		echo "stack does not exist."
+		try {
+			def resp = sh(script: "aws cloudformation describe-stack-resources --stack-name ${stackName} --region ${region} --profile ${credsId}  --output json 2<&1 | grep -c 'ValidationError'", returnStdout: true)
+			if(resp != 1) error "describe stack failed."
+			else return stackResources
+		} catch (e) {}
+	}
 }
 
-def createAllStackResources (whiteListModule, events, config, stackResources, env) {
-	def lambdaArns = []
+def createAllStackResources (whiteListModule, events, config, stackResources, env, isCreateAsset) {
+	def arnsMap = [:]
 	def resources = stackResources['StackResources']
 	if( resources != null ) {
 		def assetCatalogTypes = whiteListModule.getassetCatalogTypes()
@@ -245,18 +256,66 @@ def createAllStackResources (whiteListModule, events, config, stackResources, en
 				if(arn.startsWith('arn')) {
 					def arnAsArray = arn.split(':') // Here we splitting the arn itself in hope to obtain type of the resource. Should be the third element: arn:aws:dynamodb:us-east-1:123456:table/jazzUsersTable53
 					if(arnAsArray.size() > 2) { // Making sure that the third element exists
-					def artifactType = arnAsArray[2]
-					if (assetCatalogTypes[artifactType] == 'lambda') lambdaArns.add(arn)
-					events.sendCompletedEvent('CREATE_ASSET',
+						def artifactType = arnAsArray[2]
+						if (arnsMap[assetCatalogTypes[artifactType]] && arnsMap[assetCatalogTypes[artifactType]].size() > 0) 
+							arnsMap[assetCatalogTypes[artifactType]].add(arn)
+						else {
+							arnsMap[assetCatalogTypes[artifactType]] = new ArrayList()
+							arnsMap[assetCatalogTypes[artifactType]].add(arn)
+						}
+						// We need to send events only after deployment, and we don't need to send the event while we are calling this method only for creating the resource map
+						if (isCreateAsset) {
+							events.sendCompletedEvent('CREATE_ASSET',
 												null,
 												generateAssetMap("aws", arn, assetCatalogTypes[artifactType], config),
 												env)
+						}					
 					}
 				}
 			}
 		}
 	}
-	return lambdaArns
+	echo "arnsMap: $arnsMap"
+	return arnsMap
+}
+
+def archiveCustomRole(assets_api, auth_token, config, env, events) {  
+	def assets = getAssets(assets_api, auth_token, config, env)
+	if(assets) {
+		def assetList = parseJson(assets)
+
+		for (asset in assetList.data.assets) {
+			if (asset.asset_type == 'iam_role') { 
+				events.sendCompletedEvent('UPDATE_ASSET', "Archiving the custom role since user specific role is being used.", generateAssetMap(asset.provider, asset.provider_id, "iam_role", config), env)
+			}
+		}
+	}	
+}
+
+def archiveOldAssets(assets_api, auth_token, config, env, events, newMap, oldMap) {  
+	def newKeys = newMap.keySet()
+	def oldKeys = oldMap.keySet()
+	
+	def removedKeys = oldKeys - newKeys
+	def addedKeys = newKeys - oldKeys
+	def commonKeys =newKeys - removedKeys - addedKeys
+	def changedKeys = commonKeys.findAll { oldMap[it] != newMap[it] }
+
+	def removed = oldMap.findAll { it.key in removedKeys }
+	def added = newMap.findAll { it.key in addedKeys }
+	def changed = oldMap.findAll { it.key in changedKeys }
+	def changedLists = changed.each {key, list -> list.removeAll(newMap[key]) }
+
+	echo "removedKeys: $removedKeys"
+	echo "addedKeys: $addedKeys"
+	echo "changedKeys: $changedKeys"
+	echo "removed: $removed"
+	echo "added: $added"
+	changedLists << removed
+	echo "changedLists: $changedLists"
+	changedLists.each {key, list -> list.each {it -> 
+		events.sendCompletedEvent('UPDATE_ASSET', "Archiving the old assets since user changed the yml.", generateAssetMap("aws", it, key, config), env)
+	}}	
 }
 
 

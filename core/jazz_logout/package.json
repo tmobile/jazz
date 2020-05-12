@@ -10,7 +10,7 @@
     "coverage": "nyc npm run test"
   },
   "dependencies": {
-    "amazon-cognito-identity-js": "^2.0.0"
+    "amazon-cognito-identity-js": "^3.0.1"
   },
   "devDependencies": {
     "aws-lambda-mock-context": "^3.1.1",

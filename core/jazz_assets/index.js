@@ -27,6 +27,7 @@ const logger = require("./components/logger.js")();
 const crud = require("./components/crud")();
 const global_config = require("./config/global-config.json");
 const validateutils = require("./components/validation");
+const utils = require("./components/utils.js");
 global.global_config = global_config;
 
 function handler(event, context, cb) {
@@ -226,8 +227,9 @@ function processAssetsUpdate(assets_id, update_data, asset_table) {
 
 function processAssetCreation(assets_data, asset_table) {
   return new Promise((resolve, reject) => {
-    validateutils.validateCreatePayload(assets_data, asset_table)
-      .then(() => exportable.createNewAsset(assets_data, asset_table))
+    let create_data = utils.toLowercase(assets_data);
+    validateutils.validateCreatePayload(create_data, asset_table)
+      .then(() => exportable.createNewAsset(create_data, asset_table))
       .then(res => {
         resolve(res);
       })

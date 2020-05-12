@@ -15,7 +15,7 @@ echo "Vault utility module loaded successfully"
 @Field def events
 @Field def utilModule
 
-def initialize(config_loader,service_config, base_url, auth_token, env, event_module, util_module) {
+def initialize(config_loader, service_config, base_url, auth_token, env, event_module, util_module) {
 	configLoader = config_loader
 	serviceConfig = service_config
 	baseUrl = base_url
@@ -25,27 +25,33 @@ def initialize(config_loader,service_config, base_url, auth_token, env, event_mo
 	utilModule = util_module
 }
 
-def updateCustomServicesSafeDetails(safeName, lambdaArns, credsId) {
+def updateCustomServicesSafeDetails(safeName, lambdaArns, currentRoles, credsId) {
 	for (arn in lambdaArns) {
-		updateSafeDetails(safeName, arn, credsId)
+		updateSafeDetails(safeName, arn, currentRoles, credsId)
 	}
 }
 
-def updateSafeDetails(safeName, lambdaARN, credsId) {
-	def iamRoleArn	
-	def safeDetails = getSafeDetails(safeName)
+def updateSafeDetails(safeName, lambdaARN, currentRoles, credsId) {
+	def iamRoleArn
+	def otherRolesList	
+	def safeDetails = getSafeDetails(safeName)	
 
 	if (safeDetails) {
 		iamRoleArn = getRoleDetails(lambdaARN, credsId)
 		if(safeDetails.data.roles && safeDetails.data.roles.length != 0) {
-			def isRoleArnExists = safeDetails.data.roles.find{it -> it.value.arn == iamRoleArn}
+			def isRoleArnExists = safeDetails.data.roles.find {it -> it.value.arn == iamRoleArn}
 			if(!isRoleArnExists) {
 				addRoleToSafe(iamRoleArn, safeName)
-				events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceConfig['provider'], iamRoleArn, "iam_role", serviceConfig), environmentLogicalId);
-			} else echo "Role already exists"
+			} else echo "Role ${iamRoleArn} already has access to safe!"
+
+			if (!currentRoles) otherRolesList = safeDetails.data.roles.findAll {it -> it.value.arn != iamRoleArn }				
+			else {
+				otherRolesList = safeDetails.data.roles.findAll { it -> !currentRoles.contains(it.value.arn) }
+			}
+			echo "otherRolesList: $otherRolesList"
+			removeAssociationOfOtherRolesFromSafe(otherRolesList, safeName)
 		} else {
 			addRoleToSafe(iamRoleArn, safeName)
-			events.sendCompletedEvent('CREATE_ASSET', null, utilModule.generateAssetMap(serviceConfig['provider'], iamRoleArn, "iam_role", serviceConfig), environmentLogicalId);
 		}
 	} else {
 		echo "Safe not configured yet."
@@ -103,6 +109,34 @@ def deleteSafe(safeName) {
 	else echo "Error in deleting safe ${safeName}"
 }
 
+def removeAssociationOfOtherRolesFromSafe(otherRolesList, safeName) {
+	otherRolesList.each  { key, value -> 
+		removeRoleFromSafe(value.arn, safeName)
+	}
+}
+
+def removeRoleFromSafe(roleArn, safeName) {
+	try {
+		def rolePayload = [
+			'arn': roleArn
+		]
+
+		def payload = JsonOutput.toJson(rolePayload)
+
+		def vaultApi = "${baseUrl}/jazz/t-vault/safes/${safeName}/role"
+		def statusCode = sh(script: "curl -H \"Content-type: application/json\" \
+			-H \"Jazz-Service-ID: ${serviceConfig['service_id']}\" \
+			-H \"Authorization: $authToken \" -X DELETE \
+			--write-out '%{http_code}\n' --silent --output /dev/null \
+			-d \'${payload}\' \"${vaultApi}\" ", returnStdout: true).trim()
+
+		if(statusCode == '200') echo "Successfully removed role ${roleArn} from safe ${safeName}" 
+		else echo "Error in removing role ${roleArn} from safe ${safeName}"
+	} catch (ex) {
+		echo "Error in removing role ${roleArn} from safe ${safeName}: ${ex}"
+	}
+}
+
 def getRoleDetails(lambdaARN, credsId) {
 	def iamRoleArn
 	def functionDetails
@@ -124,10 +158,10 @@ def setEnvironmentLogicalId (env) {
 
 @NonCPS
 def parseJson(jsonString) {
-  def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
-  def m = [:]
-  m.putAll(lazyMap)
-  return m
+	def lazyMap = new groovy.json.JsonSlurperClassic().parseText(jsonString)
+	def m = [:]
+	m.putAll(lazyMap)
+	return m
 }
 
 return this

@@ -81,7 +81,8 @@
 		"provider",
 		"provider_id",
 		"limit",
-		"offset"
+		"offset",
+		"status"
 	],
 	"ASSET_SEARCH_REQUIRED_FILTER_PARAMS": [
 		"service",

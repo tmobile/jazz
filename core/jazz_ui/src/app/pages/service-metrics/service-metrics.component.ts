@@ -307,6 +307,7 @@ export class ServiceMetricsComponent implements OnInit, AfterViewInit {
       return self.http.get('/jazz/assets', {
         domain: self.service.domain,
         service: self.service.name,
+        status: "active",
         limit: 1e3, // TODO: Address design shortcomings
         offset: 0,
       }, self.service.id).toPromise().then((response: any) => {

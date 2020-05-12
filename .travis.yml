@@ -14,6 +14,7 @@ env:
  - PLATFORM_SERVICE=core/jazz_email
  - PLATFORM_SERVICE=core/jazz_environment-event-handler
  - PLATFORM_SERVICE=core/jazz_environments
+ - PLATFORM_SERVICE=core/jazz_es-kinesis-log-streamer
  - PLATFORM_SERVICE=core/jazz_events
  - PLATFORM_SERVICE=core/jazz_events-handler
  - PLATFORM_SERVICE=core/jazz_is-service-available

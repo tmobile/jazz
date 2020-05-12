@@ -46,13 +46,27 @@ module.exports = (query, asset_table, onComplete) => {
     };
 
     let keys_list = global.global_config.ASSET_SEARCH_OPTIONAL_FILTER_PARAMS;
+    logger.debug("Query params: " + JSON.stringify(query));
 
     // Generate filter string
     keys_list.forEach((key) => {
         if (key !== "limit" && key !== "offset") { // LIMIT is a reserved keyword
-            var key_name = utils.getDatabaseKeyName(key);
+            let key_name = utils.getDatabaseKeyName(key);
+            if (key_name === 'STATUS' && query.status !== undefined) {
+                let statusList = query.status.split(',')
+                let filterString = "( ";
+                statusList.forEach(function (value) {
+                    filterString += " :" + value + " , ";
+                });
+                filterString = filterString.substring(0, filterString.length - 3);
+                filterString += " )";
 
-            if (query[key] && key_name) {
+                filter = filter + "#s IN " + filterString + insertAndString;
+                statusList.forEach(function (value) {
+                    params.ExpressionAttributeValues[":" + value] = value;
+                });
+                params.ExpressionAttributeNames["#s"] = "STATUS"
+            } else if (query[key] && key_name) {
                 filter = filter + key_name + " = :" + key_name + insertAndString;
                 params.ExpressionAttributeValues[":" + key_name] = query[key];
             }
@@ -79,15 +93,17 @@ module.exports = (query, asset_table, onComplete) => {
         docClient.query(params, (err, data) => {
             let count;
             if (err) {
+                logger.debug("GETLIST err: "+ JSON.stringify(err));
                 onComplete(err, null);
             } else {
+                logger.debug("GETLIST data: "+ JSON.stringify(data));
                 items = items.concat(data.Items);
                 if (data.LastEvaluatedKey) {
                     params.ExclusiveStartKey = data.LastEvaluatedKey;
                     queryExecute(onComplete);
                 } else {
                     count = items.length;
-                    if (pagination.limit >= 0 && pagination.offset >=0 ) {
+                    if (pagination.limit >= 0 && pagination.offset >= 0) {
                         items = utils.paginateUtil(items, parseInt(pagination.limit), parseInt(pagination.offset));
                     }
 
