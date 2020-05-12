@@ -150,9 +150,8 @@ describe('jazz_es-kinesis-log-stream', function () {
     let payload, expected, response, request, data;
     beforeEach(function () {
       payload = {
-        "host": config.ES_ENDPOINT,
+        "url": 'https://' + config.ES_ENDPOINT + '/_bulk',
         "method": "POST",
-        "path": "/_bulk",
         "body": "Sample data",
         "headers": {
           "Content-Type": "application/json",
@@ -221,11 +220,12 @@ describe('jazz_es-kinesis-log-stream', function () {
       response.write(JSON.stringify(expected));
       response.end();
 
+      let buildRequest = sinon.stub(utils, "buildRequest").returns(payload);
       this.request = sinon.stub(https, 'request');
       this.request.callsArgWith(1, response)
         .returns(request);
 
-      let buildRequest = sinon.stub(utils, "buildRequest").returns(payload);
+      
       index.post(config, "hello world", (error, success, response, failedItems) => {
 
         expect(error).to.have.all.keys('statusCode', 'responseBody');
@@ -418,7 +418,7 @@ describe('jazz_es-kinesis-log-stream', function () {
     describe('buildRequest', () => {
       it('should successfully return build request payload', () => {
         let res = utils.buildRequest(config.ES_ENDPOINT, "sample text");
-        expect(res).to.have.all.keys('host', 'method', 'path', 'body', 'headers');
+        expect(res).to.have.all.keys('url', 'method', 'body', 'headers');
       })
     })
 
