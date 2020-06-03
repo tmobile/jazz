@@ -8,7 +8,7 @@
       "Quantity": 1,
       "Items": [{
         "Id": "{conf_stack_prefix}-{env}-static-website-origin-{service_name}",
-        "DomainName": "{conf_s3bucketname}.s3.amazonaws.com",
+        "DomainName": "{conf_s3bucketname}.s3.{region}.amazonaws.com",
         "OriginPath": "/{origin_path}",
         "S3OriginConfig": {
           "OriginAccessIdentity": "{conf_origin_id}"
