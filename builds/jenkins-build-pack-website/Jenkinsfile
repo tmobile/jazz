@@ -804,6 +804,7 @@ def generateDistributionConfig(originAccessIdentity) {
 	def cloudFrontOriginAccessIdentity = "origin-access-identity/cloudfront/"+originAccessIdentity
 	sh "sed -i -- 's/{service_name}/${service_config['domain']}-${service_config['service']}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{env}/${environment}/g' distribution_config_with_tags.json"
+	sh "sed -i -- 's/{region}/${service_config['region']}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{conf_s3bucketname}/${s3Bucket}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's/{conf_stack_prefix}/${configLoader.INSTANCE_PREFIX}/g' distribution_config_with_tags.json"
 	sh "sed -i -- 's:{conf_origin_id}:${cloudFrontOriginAccessIdentity}:g' distribution_config_with_tags.json"
