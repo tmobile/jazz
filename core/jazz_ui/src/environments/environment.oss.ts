@@ -56,7 +56,7 @@ export const environment = {
   aws: {
     account_number: '{account_number}',
     region: '{region}',
-    envLists: {"nodejs12.x": "Nodejs 12.x", "python3.8": "Python 3.8", "java8": "Java 11", "go1.x": "Go 1.x", "c#": "C#"},
+    envLists: {"nodejs12.x": "Nodejs 12.x", "python3.8": "Python 3.8", "java11": "Java 11", "go1.x": "Go 1.x", "c#": "C#"},
     accountMap: {accountMap},
     default_region: '{default_region}',
     default_account: '{default_account}'
