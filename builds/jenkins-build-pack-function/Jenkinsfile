@@ -695,9 +695,7 @@ def buildFunction(String runtime, String repo_name) {
   if (runtime.indexOf("nodejs") > -1) {
     sh "npm install --save"
   } else if (runtime.indexOf("java") > -1) {
-    withEnv(["JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"]) {
-      sh "mvn package"
-    }
+    sh "mvn package"
   } else if (runtime.indexOf("python") > -1) {
     // install requirements.txt in library folder, these python modules will be a part of deployment package
     sh "rm -rf library"
@@ -1149,9 +1147,7 @@ def runValidation(String runtime) {
   if (runtime.indexOf("nodejs") > -1) {
     sh "jshint *.js"
   } else if (runtime.indexOf("java") > -1) {
-    withEnv(["JAVA_HOME=/usr/lib/jvm/java-11-openjdk-amd64"]) {
-      sh "java -cp ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB} com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src"
-    }
+    sh "java -cp ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB} com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src"
   } else if (runtime.indexOf("python") > -1) {
     // placeholder for adding runtime specific validations
   } else if (runtime.indexOf("go") > -1) {
