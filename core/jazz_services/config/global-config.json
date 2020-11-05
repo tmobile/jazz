@@ -132,8 +132,11 @@
   ],
   "SERVICE_RUNTIMES": [
     "nodejs10.x",
+    "nodejs12.x",
     "python3.6",
+    "python3.8",
     "java8",
+    "java11",
     "go1.x",
     "c#"
   ],

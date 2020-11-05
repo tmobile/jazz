@@ -702,7 +702,7 @@ def buildFunction(String runtime, String repo_name) {
     sh "mkdir library"
     sh "touch library/__init__.py"
 
-    if (runtime == 'python3.6'){
+    if (runtime == 'python3.6' || runtime == 'python3.8'){
       // Installing dependencies
       sh "pip3 install -r requirements.txt -t library"
       // create virtual environment and install pytest
@@ -761,7 +761,7 @@ def validateDeploymentConfigurations(def prop) {
     if (_runtime == "") {
       error "Wrong configuration. Value for Key 'providerRuntime' is missing in the configuration"
     } else {
-      def validRuntimes = ["nodejs10.x", "python3.6", "java8", "go1.x", "c#"]
+      def validRuntimes = ["nodejs10.x", "nodejs12.x", "python3.6", "python3.8", "java8", "java11", "go1.x", "c#"]
       def flag = false
 
       for (int i = 0; i < validRuntimes.size(); i++) {

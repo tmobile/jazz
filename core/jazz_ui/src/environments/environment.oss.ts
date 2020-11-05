@@ -8,7 +8,8 @@ export const environment = {
   multi_env: {multi_env},
   slack_support: {slack_support},
   webLists: { "html": "Static", "angular": "Angular", "react": "ReactJS" },
-  envLists: { "nodejs10.x": "Nodejs 10.x", "python3.6": "Python 3.6", "java8": "Java 8", "go1.x": "Go 1.x", "c#": "C#" },
+  envLists: {"nodejs12.x": "Nodejs 12.x", "python3.8": "Python 3.8", "java11": "Java 11", "go1.x": "Go 1.x", "c#": "C#" },
+  runtimeLists: {"nodejs": ["Nodejs 10.x", "Nodejs 12.x"], "python": ["Python 3.6", "Python 3.8"], "java": ["Java 8", "Java 11"], "go": ["Go 1.x"], "c": ["C#"]},
   serviceTabs: ["{overview}", "{access control}", "{metrics}", "{logs}", "{cost}"],
   environmentTabs: ["{env_overview}", "{deployments}", "{code quality}", "{metrics}", "{assets}", "{env_logs}"],
   assetTypeList: [
@@ -55,7 +56,7 @@ export const environment = {
   aws: {
     account_number: '{account_number}',
     region: '{region}',
-    envLists: {"nodejs10.x": "Nodejs 10.x", "python3.6": "Python 3.6", "java8": "Java 8", "go1.x": "Go 1.x"},
+    envLists: {"nodejs12.x": "Nodejs 12.x", "python3.8": "Python 3.8", "java11": "Java 11", "go1.x": "Go 1.x", "c#": "C#"},
     accountMap: {accountMap},
     default_region: '{default_region}',
     default_account: '{default_account}'
