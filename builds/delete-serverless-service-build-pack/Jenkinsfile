@@ -217,7 +217,9 @@ node {
 									events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
 									echo 'undeploying service for environment: ' + _envId
 									
-									vaultUtilityModule.setEnvironmentLogicalId(_envId)
+									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
+										vaultUtilityModule.setEnvironmentLogicalId(_envId)
+									}
 									
 									switch(apiPlatform) {
 										case 'aws_apigateway':
@@ -270,7 +272,9 @@ node {
 									events.setEnvironment(_envId)
 									events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
 									
-									vaultUtilityModule.setEnvironmentLogicalId(_envId)
+									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
+										vaultUtilityModule.setEnvironmentLogicalId(_envId)
+									}
 
 									if (service_config['event_source_s3']) { // check service for S3 Bucket and make empty if not. //
 										checkBucket(current_environment_id);
@@ -347,7 +351,9 @@ node {
 									events.sendStartedEvent('DELETE_ENVIRONMENT', "Environment cleanup for " + _envId + " started", null, _envId)
 									echo 'undeploying sls service for environment: ' + _envId
 
-									vaultUtilityModule.setEnvironmentLogicalId(_envId)
+									if (configLoader.TVAULT && configLoader.TVAULT.IS_ENABLED instanceof Boolean && configLoader.TVAULT.IS_ENABLED) {
+										vaultUtilityModule.setEnvironmentLogicalId(_envId)
+									}
 
 									cleanupEventSourceMapping(_envId)
 									if (has_serverless_yml) {
