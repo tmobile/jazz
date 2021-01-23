@@ -34,7 +34,7 @@ var cognitoUserPoolEndpoint;
 async function handler(event, context, cb) {
 
   var config = configModule.getConfig(event, context);
-  logger.init(event, context);
+  logger.init();
 
   logger.info('event: ' + JSON.stringify(event));
   let headers = exportable.changeToLowerCase(event.headers);

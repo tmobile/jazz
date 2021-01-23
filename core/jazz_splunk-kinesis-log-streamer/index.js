@@ -33,8 +33,8 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 function handler(event, context, callback) {
 
-  logger.init (event, context);
-  logger.debug('Received event:' + JSON.stringify(event));
+  logger.init();
+  logger.debug('Incoming event:' + JSON.stringify(event));
   let errorHandler = errorHandlerModule();
   let config = configData.getConfig(event, context);
   let isSplunkEnabled = (global_config.ENABLE_SPLUNK && (global_config.ENABLE_SPLUNK).toString().toLowerCase() === 'true') ? true : false;

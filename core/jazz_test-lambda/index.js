@@ -34,7 +34,7 @@ const execStatus = utils.execStatus();
 function handler(event, context, cb) {
   //Initializations
   var errorHandler = errorHandlerModule();
-  logger.init(event, context);
+  logger.init();
   var awsRegion;
   try {
     var responseObject = {

@@ -30,7 +30,7 @@ const crud = require("./components/crud")();
 var handler = (event, context, cb) => {
 	var errorHandler = errorHandlerModule();
 	var config = configModule.getConfig(event, context);
-	logger.init(event, context);
+	logger.init();
 	global.config = config;
 
 	try {

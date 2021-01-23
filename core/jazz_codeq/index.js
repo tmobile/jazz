@@ -29,7 +29,7 @@ function handler(event, context, cb) {
   let errorHandler = errorHandlerModule();
   let config = configModule.getConfig(event, context);
 
-  logger.init(serviceContext, context);
+  logger.init();
 
   try {
     logger.debug(serviceContext.resourcePath);

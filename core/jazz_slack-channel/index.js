@@ -32,7 +32,7 @@ function handler(event, context, cb) {
   //Initializations
   let errorHandler = errorHandlerModule(),
   config = configObj.getConfig(event, context);
-  logger.init(event, context);
+  logger.init();
   let isServAccRequested = false;
 
   exportable.genericInputValidation(event, config)

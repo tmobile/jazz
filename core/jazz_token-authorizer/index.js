@@ -29,7 +29,7 @@ var cognitoUserPoolEndpoint;
 module.exports.handler = function (event, context, cb) {
 
     var config = configModule.getConfig(event, context);
-    logger.init(event, context);
+    logger.init();
     var errorHandler = errorHandlerModule(logger);
 
     if (!event || !event.authorizationToken) {

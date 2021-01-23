@@ -31,7 +31,7 @@ function handler(event, context, cb) {
   //Initializations
   var errorHandler = errorHandlerModule();
   var config = configModule.getConfig(event, context);
-  logger.init(event, context);
+  logger.init();
 
 
   try {
