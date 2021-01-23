@@ -23,7 +23,7 @@
     "@azure/cosmos": "^2.1.2",
     "@azure/arm-cosmosdb": "3.2.0",
     "adm-zip": "^0.4.13",
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "@azure/arm-apimanagement": "5.1.0",
     "@azure/arm-cdn": "4.2.0",
     "@azure/ms-rest-nodeauth": "2.0.3",
