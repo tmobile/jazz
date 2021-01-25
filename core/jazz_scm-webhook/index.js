@@ -33,7 +33,7 @@ var handler = function (event, context, cb) {
 	//Initializations
 	var errorHandler = errorHandlerModule();
 	var config = configModule.getConfig(event, context);
-	logger.init(event, context);
+	logger.init();
 	logger.info("Webhook-events: " + JSON.stringify(event));
 
 	if (!event || !event.body) {

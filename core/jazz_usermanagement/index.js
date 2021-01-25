@@ -36,7 +36,7 @@ const scmFactory = require("./scm/scmFactory.js");
 function handler(event, context, cb) {
 
   var errorHandler = errorHandlerModule();
-  logger.init(event, context);
+  logger.init();
 
   var config = configModule.getConfig(event, context);
 

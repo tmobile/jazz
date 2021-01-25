@@ -30,6 +30,7 @@ var errorHandler = errorHandlerModule(logger);
 
 function handler(event, context, cb) {
   var config = configModule.getConfig(event, context);
+  logger.init();
   logger.info("event: " + JSON.stringify(event))
 
   rp(getTokenRequest(config))

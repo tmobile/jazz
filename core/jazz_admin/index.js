@@ -32,7 +32,7 @@ const handler = (event, context, cb) => {
   //Initializations
   let config = configObj.getConfig(event, context);
   global.config = config;
-  logger.init(event, context);
+  logger.init();
 
   try {
 

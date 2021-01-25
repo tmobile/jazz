@@ -33,7 +33,7 @@ let authToken, serviceData;
 async function handler(event, context) {
   //Initializations
   const config = configModule.getConfig(event, context);
-  logger.init(event, context);
+  logger.init();
 
   try {
     validation.validateBasicInput(event);

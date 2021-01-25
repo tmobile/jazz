@@ -37,7 +37,7 @@ var failedEvents = [];
 
 function handler(event, context, cb) {
 	var config = configModule.getConfig(event, context);
-
+	logger.init();
 	rp(utils.getTokenRequest(config))
 		.then(result => {
 			return exportable.getAuthResponse(result);

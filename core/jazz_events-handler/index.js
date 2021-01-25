@@ -26,6 +26,7 @@ var failureCodes = fcodes();
 function handler(event, context, cb) {
   //Initializations
   let config = configModule.getConfig(event, context);
+  logger.init();
 
   exportable.getEvents(config)
     .then(res => exportable.processRecords(config, event, res))

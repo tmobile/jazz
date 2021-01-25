@@ -33,8 +33,8 @@ function handler(event, context, cb) {
 
   let errorHandler = errorHandlerModule();
   let config = configObj.getConfig(event, context)
-  logger.init(event, context);
-  logger.debug("event:" + JSON.stringify(event));
+  logger.init();
+  logger.debug("Incoming event: " + JSON.stringify(event));
 
   try {
     if (event && event.Records && event.Records.length) {

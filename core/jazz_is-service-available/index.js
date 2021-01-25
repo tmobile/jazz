@@ -31,7 +31,7 @@ const utils = require("./components/utils.js")();
 
 module.exports.handler = (event, context, cb) => {
     var errorHandler = errorHandlerModule();
-    logger.init(event, context);
+    logger.init();
 
     if (!event || !event.method || event.method != 'GET') {
         return cb(JSON.stringify(errorHandler.throwInputValidationError("101", "Service isn't invoked as a GET API.")));

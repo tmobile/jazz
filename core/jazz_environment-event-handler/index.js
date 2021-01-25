@@ -33,7 +33,7 @@ var processedEvents = [];
 var failedEvents = [];
 
 function handler(event, context, cb) {
-  logger.init(event, context);
+  logger.init();
   
   var configData = config(context);
 

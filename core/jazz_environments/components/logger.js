@@ -14,113 +14,67 @@
 // limitations under the License.
 // =========================================================================
 
-/**
-    Nodejs Template Project
-    @module: logger.js
-    @description: a simple logging module for nodejs
-    @author:
-    @version: 1.0
-**/
-
-module.exports = function () {
+module.exports = function() {
     var logLevels = {
-        error: 4,
-        warn: 3,
-        info: 2,
-        verbose: 1,
+        error: 3,
+        warn: 2,
+        info: 1,
         debug: 0
     };
 
     var config = {
-        curLogLevel: 'info',
-        requestDetails: ''
+        curLogLevel: 'info'
     };
 
-    // set logLevel, RequestDetails
-    var init = function (event, context) {
-        setLevel();
+    var init = function() {
+        // Get LOG_LEVEL from the environment variables (if defined)
+        try {
+            level = process.env.LOG_LEVEL;
+        } catch (e) {
+            // error trying to access LOG_LEVEL environment variable
+            // Do nothing!
+        }
+        if (level) {
+            config.curLogLevel = level;
+        }
     };
 
-    // To add request specific details, which will be prepended in all the logs for ease of debugging in CloudWatch logs
-    var setRequestDetails = function (someContextSpecificId) {
+    var log = function(level, message) {
+        if (logLevels[level] >= logLevels[config.curLogLevel]) {
+            if (level === 'error') {
+                console.error(message);
+            } else if (level === 'warn') {
+                console.warn(message);
+            } else if (level === 'info') {
+                console.info(message);
+            } else if (level === 'debug') {
+                console.debug(message);
+            } else {
+                console.log(message);
+            }
+        }
         return;
     };
 
-    // set current logLevel; Only logs which are above the curLogLevel will be logged;
-    var setLevel = function (level) {
-        // LOG_LEVEL is 'info' by default
-
-        if (level && logLevels[level]) {
-            // If LOG_LEVEL if explicitly specified , set it as the curLogLevel
-            config.curLogLevel = level;
-            return level;
-        } else {
-            // Get LOG_LEVEL from the environment variables (if defined)
-            try {
-                level = process.env.LOG_LEVEL;
-            } catch (e) {
-                error('error trying to access LOG_LEVEL');
-            }
-            if (level && logLevels[level]) {
-                config.curLogLevel = level;
-                return level;
-            }
-        }
-        return null;
-    };
-
-    var log = function (level, message) {
-        /*
-            @TODO: format message as per requirement.
-            Will it be just a string / json. Should we except error object also?
-        */
-        var timestamp = new Date().toISOString();
-        if (logLevels[level] >= logLevels[config.curLogLevel]) {
-            if (level == 'error') {
-                console.error(timestamp, 'ERROR \t', config.requestDetails, message);
-                /*
-                    If required, add custom actions here; Such as send a mail, etc...
-                */
-            } else if (level == 'warn') {
-                console.warn(timestamp, 'WARN  \t', config.requestDetails, message);
-            } else if (level == 'info') {
-                console.info(timestamp, 'INFO  \t', config.requestDetails, message);
-            } else if (level == 'verbose') {
-                console.info(timestamp, 'VERBOSE  \t', config.requestDetails, message);
-            } else if (level == 'debug') {
-                console.info(timestamp, 'DEBUG  \t', config.requestDetails, message);
-            } else {
-                console.log(timestamp, level, '\t', config.requestDetails, message);
-            }
-        }
-        return null;
-    };
-
-    var error = function (message) {
+    var error = function(message) {
         log('error', message);
     };
-    var warn = function (message) {
+    var warn = function(message) {
         log('warn', message);
     };
-    var info = function (message) {
+    var info = function(message) {
         log('info', message);
     };
-    var verbose = function (message) {
-        log('verbose', message);
-    };
-    var debug = function (message) {
+    var debug = function(message) {
         log('debug', message);
     };
 
     return {
         init: init,
-        setLevel: setLevel,
         log: log,
         error: error,
         warn: warn,
         info: info,
-        verbose: verbose,
-        debug: debug,
-        logLevel: config.curLogLevel
+        debug: debug
     };
 }();

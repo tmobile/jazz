@@ -39,8 +39,8 @@ var handler = (event, context, cb) => {
 	var config = configModule.getConfig(event, context);
 	processedEvents = [];
 	failedEvents = [];
-
-	logger.info("event : " + JSON.stringify(event));
+	logger.init();
+	logger.debug("Incoming event: " + JSON.stringify(event));
 	rp(getToken(config))
 		.then(result => { return validateAuthToken(result); })
 		.then(authToken => { return processRecords(event, config, authToken); })

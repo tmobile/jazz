@@ -105,7 +105,6 @@ const removeRepoUser = async (config, repo_name, user) => {
 
 const sendRequest = async (payload) => {
   return new Promise((resolve, reject) => {
-    logger.debug("payload: " + JSON.stringify(payload));
     request(payload, (error, response, body) => {
       logger.debug("Response: " + JSON.stringify(response));
       if (error) {

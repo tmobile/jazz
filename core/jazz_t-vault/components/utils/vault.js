@@ -525,7 +525,6 @@ function createUserInVault(userDetails, configData, vaultToken, onComplete) {
     rejectUnauthorized: false
   };
 
-  logger.debug("createUserInVault payload: " + JSON.stringify(payload));
   request(payload, function (error, response, body) {
     logger.debug("createUserInVault response: " + JSON.stringify(response));
     if (response.statusCode && response.statusCode === 200) {

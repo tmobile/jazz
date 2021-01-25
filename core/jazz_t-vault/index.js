@@ -35,7 +35,7 @@ const errorHandler = errorHandlerModule();
 global.globalConfig = globalConfig;
 
 function handler(event, context, cb) {
-  logger.init(event, context);
+  logger.init();
 
   try {
     const configData = configModule.getConfig(event, context);

@@ -40,7 +40,7 @@ function handler(event, context, cb) {
       config = configModule.getConfig(event, context);
 
   global.config = config;
-  logger.init(event, context);
+  logger.init();
 
 	//validate inputs
 	exportable.genericInputValidation(event)

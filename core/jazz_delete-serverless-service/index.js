@@ -38,7 +38,7 @@ module.exports.handler = (event, context, cb) => {
   var errorHandler = errorHandlerModule();
   var eventHandler = eventHandlerModule(tracking_id);
   var config = configModule.getConfig(event, context);
-  logger.init(event, context);
+  logger.init();
 
   if (!config.DELETE_SERVICE_JOB_URL) {
     logger.error("Service configuration missing JOB URL" + JSON.stringify(event));
