@@ -36,8 +36,8 @@ function handler(event, context, cb) {
     logger.error("Cannot load config object, will stop processing");
     return cb(JSON.stringify(errorHandler.throwInternalServerError("101", "Internal error, please reach out to admins")));
   }
-  logger.init(event, context);
-  logger.debug("Event :" + JSON.stringify(event));
+  logger.init();
+  logger.debug("Incoming event:" + JSON.stringify(event));
 
   rp(getTokenRequest(configData))
     .then(result => {

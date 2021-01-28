@@ -35,7 +35,7 @@ module.exports.handler = (event, context, cb) => {
 
     //Initializations
     var errorHandler = errorHandlerModule();
-    logger.init(event, context);
+    logger.init();
     var config = configModule.getConfig(event, context);
     global.config = config;
     global.global_config = global_config;

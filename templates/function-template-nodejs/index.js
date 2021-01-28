@@ -14,7 +14,7 @@ module.exports.handler = (event, context, cb) => {
   //Initializations
   const config = configModule.getConfig(event, context);
   const errorHandler = errorHandlerModule();
-  logger.init(event, context);
+  logger.init();
 
   try {
 

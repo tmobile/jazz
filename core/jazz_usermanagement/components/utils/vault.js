@@ -42,7 +42,6 @@ function getAuthToken(configData) {
       rejectUnauthorized: false
     };
 
-    logger.debug("getAuthToken payload : " + JSON.stringify(payload));
     request(payload, function (error, response, body) {
       logger.debug("getAuthToken response : " + JSON.stringify(response));
       if (response.statusCode === 200 && response.body && response.body.data) {
@@ -70,7 +69,6 @@ function userInVault(configData, service_data, authToken) {
       rejectUnauthorized: false
     };
 
-    logger.debug("userInVault payload : " + JSON.stringify(payload));
     request(payload, function (error, response, body) {
       logger.debug("userInVault response : " + JSON.stringify(response));
       if (response.statusCode === 200 && response.body && response.body.data) {

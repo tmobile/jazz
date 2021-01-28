@@ -20,7 +20,7 @@ const logger = require("./components/logger.js");
 const validation = require("./components/validation.js");
 
 module.exports.handler = (event, context, callback) => {
-  logger.init(event, context);
+  logger.init();
   const errorHandler = errorHandlerModule();
 
   try {

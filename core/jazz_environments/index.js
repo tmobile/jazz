@@ -34,8 +34,8 @@ var errorHandler = errorHandlerModule();
 var handler = (event, context, cb) => {
   //Initializations
   var config = configModule.getConfig(event, context);
-  logger.init(event, context);
-  logger.info("event:" + JSON.stringify(event));
+  logger.init();
+  logger.debug("Incoming event: " + JSON.stringify(event));
   global.config = config;
   global.userId = event.principalId;
   global.authorization = event.headers.Authorization;

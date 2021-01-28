@@ -14,11 +14,9 @@ module.exports = function(context, req) {
     //Initializations
     const config = configModule.getConfig(req, context);
     const errorHandler = errorHandlerModule();
-    logger.init(req, context);
-
+    logger.init();
 
     context.log('Node.js HTTP trigger function processed a request. RequestUri=%s', req.originalUrl);
-
 
   try {
 
