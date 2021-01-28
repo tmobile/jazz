@@ -6,11 +6,23 @@
   "private": true,
   "author": [],
   "scripts": {
-    "test": "mocha"
+    "test": "mocha",
+    "coverage": "./node_modules/.bin/jest --coverage"
   },
   "dependencies": {},
   "devDependencies": {
     "mocha": "^v3.0.0",
-    "chai": "^3.5.0"
+    "chai": "^3.5.0",
+    "jest-sonar-reporter": "^2.0.0",
+    "jscover": "^1.0.0"
+  },
+  "jest": {
+    "testEnvironment": "node",
+    "collectCoverage": true,
+    "testResultsProcessor": "jest-sonar-reporter",
+    "coveragePathIgnorePatterns": [
+      "/node_modules/",
+      "/test/"
+    ]
   }
 }
