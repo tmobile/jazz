@@ -46,7 +46,7 @@ node() {
     def jazzBuildModuleURL = getBuildModuleUrl()
     loadBuildModules(jazzBuildModuleURL)
 
-    g_base_url_for_swagger = "http://${configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/"
+    g_base_url_for_swagger = "https://${configLoader.JAZZ.STACK_URL}/"
 
     echo "Build triggered via branch: " + params.scm_branch + " with params: " + params
 
