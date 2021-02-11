@@ -583,6 +583,7 @@ def buildSlsApp(String runtime, String repo_name) {
     sh "npm install --save"
   } else if (runtime.indexOf("java") > -1) {
     sh "mvn package"
+    sh "mvn verify > outputMvnVerify.log 2>&1"
   } else if (runtime.indexOf("python") > -1) {
     // install requirements.txt in library folder, these python modules will be a part of deployment package
     sh "rm -rf library"
@@ -596,6 +597,9 @@ def buildSlsApp(String runtime, String repo_name) {
       python3 -m venv virtualenv
       . virtualenv/bin/activate
       pip3 install pytest
+      pip3 install coverage
+      coverage run -m pytest --ignore=library
+      coverage xml -i
       pytest --pyargs functions/*
       """
     } else {
@@ -605,6 +609,9 @@ def buildSlsApp(String runtime, String repo_name) {
       virtualenv venv
       . venv/bin/activate
       pip install pytest
+      pip install coverage
+      coverage run -m pytest --ignore=library
+      coverage xml -i
       pytest --pyargs functions/*
       """
     }
@@ -622,6 +629,8 @@ def buildSlsApp(String runtime, String repo_name) {
           def functionpath = "$GOPATH/src/${repo_name}/${item}"
           sh "env GOOS=linux GOARCH=amd64 go build -o ${item}/main ${functionpath}/main.go"
         }
+        sh "cd $GOPATH/src/" + repo_name + " && go test -short -coverprofile=bin/cov.out"
+        sh "cd $GOPATH/src/" + repo_name + " && go tool cover -func=bin/cov.out"
       } else {
         error "No Functions Found..skipping build"
       }
