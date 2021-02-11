@@ -16,6 +16,7 @@ echo "Sonar code analyzer module loaded successfully"
 @Field def g_sonar_projectVersion = "1.0"
 @Field def g_sonar_sources = "."
 @Field def g_sonar_java_binaries = "target/"
+@Field def g_sonar_java_coverage_reports = "target/site/jacoco/jacoco.xml"
 @Field def g_sonar_login = ""
 @Field def g_sonar_password = ""
 @Field def g_sonar_project_properties
@@ -43,6 +44,29 @@ def configureSonarProperties() {
 
 		if (service_config['runtime'].indexOf("java") > -1) {
 			g_sonar_project_properties["sonar.java.binaries"] = g_sonar_java_binaries
+			g_sonar_project_properties["sonar.coverage.jacoco.xmlReportPaths"] = g_sonar_java_coverage_reports
+		}
+
+		if (service_config['runtime'].indexOf("go") > -1) {
+			sonarProjectProperties["sonar.tests"] = "."
+			sonarProjectProperties["sonar.test.inclusions"] = "**/*_test.go"
+			sonarProjectProperties["sonar.go.coverage.reportPaths"] = "src/${g_sonar_projectKey}/bin/cov.out"
+		}
+
+		if (service_config['runtime'].indexOf("node") > -1) {
+			sonarProjectProperties["sonar.javascript.lcov.reportPaths"] = "coverage/lcov.info"
+		}
+
+		if (service_config['runtime'].indexOf("python") > -1) {
+			sonarProjectProperties["sonar.python.coverage.reportPath"] = "coverage.xml"
+		}
+
+		if (service_config['framework'].indexOf("angular") > -1) {
+			sonarProjectProperties["sonar.javascript.lcov.reportPaths"] = "app/coverage/${g_sonar_projectKey}/lcov.info"
+		}
+
+		if (service_config['framework'].indexOf("react") > -1) {
+			onarProjectProperties["sonar.javascript.lcov.reportPaths"] = "app/coverage/lcov.info"
 		}
 
 		if (config_loader.CODE_QUALITY.SONAR.JAZZ_PROFILE) {
@@ -110,12 +134,12 @@ def setCredentials(username, password) {
  */
 def runReport() {
 	try {
-		cleanUpWorkspace()
 		def sonar_scanner_cl = "sonar-scanner"
 		for (item in g_sonar_project_properties) {
 			sonar_scanner_cl += " -D${item.key}=${item.value} "
 		}
 		jazz_quiet_sh(sonar_scanner_cl)
+		cleanUpWorkspace()
 	} catch (ex) {
 		error "runReport failed: " + ex.getMessage()
 	}
