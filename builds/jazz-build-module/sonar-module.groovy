@@ -61,11 +61,11 @@ def configureSonarProperties() {
 			g_sonar_project_properties["sonar.python.coverage.reportPath"] = "coverage.xml"
 		}
 
-		if (service_config['framework'].indexOf("angular") > -1) {
+		if (service_config['framework'] && service_config['framework'].indexOf("angular") > -1) {
 			g_sonar_project_properties["sonar.javascript.lcov.reportPaths"] = "app/coverage/${g_sonar_projectKey}/lcov.info"
 		}
 
-		if (service_config['framework'].indexOf("react") > -1) {
+		if (service_config['framework'] && service_config['framework'].indexOf("react") > -1) {
 			g_sonar_project_properties["sonar.javascript.lcov.reportPaths"] = "app/coverage/lcov.info"
 		}
 
