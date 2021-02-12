@@ -48,25 +48,25 @@ def configureSonarProperties() {
 		}
 
 		if (service_config['runtime'].indexOf("go") > -1) {
-			sonarProjectProperties["sonar.tests"] = "."
-			sonarProjectProperties["sonar.test.inclusions"] = "**/*_test.go"
-			sonarProjectProperties["sonar.go.coverage.reportPaths"] = "src/${g_sonar_projectKey}/bin/cov.out"
+			g_sonar_project_properties["sonar.tests"] = "."
+			g_sonar_project_properties["sonar.test.inclusions"] = "**/*_test.go"
+			g_sonar_project_properties["sonar.go.coverage.reportPaths"] = "src/${g_sonar_projectKey}/bin/cov.out"
 		}
 
 		if (service_config['runtime'].indexOf("node") > -1) {
-			sonarProjectProperties["sonar.javascript.lcov.reportPaths"] = "coverage/lcov.info"
+			g_sonar_project_properties["sonar.javascript.lcov.reportPaths"] = "coverage/lcov.info"
 		}
 
 		if (service_config['runtime'].indexOf("python") > -1) {
-			sonarProjectProperties["sonar.python.coverage.reportPath"] = "coverage.xml"
+			g_sonar_project_properties["sonar.python.coverage.reportPath"] = "coverage.xml"
 		}
 
 		if (service_config['framework'].indexOf("angular") > -1) {
-			sonarProjectProperties["sonar.javascript.lcov.reportPaths"] = "app/coverage/${g_sonar_projectKey}/lcov.info"
+			g_sonar_project_properties["sonar.javascript.lcov.reportPaths"] = "app/coverage/${g_sonar_projectKey}/lcov.info"
 		}
 
 		if (service_config['framework'].indexOf("react") > -1) {
-			onarProjectProperties["sonar.javascript.lcov.reportPaths"] = "app/coverage/lcov.info"
+			g_sonar_project_properties["sonar.javascript.lcov.reportPaths"] = "app/coverage/lcov.info"
 		}
 
 		if (config_loader.CODE_QUALITY.SONAR.JAZZ_PROFILE) {
