@@ -723,7 +723,6 @@ def buildLambda(String runtime, String repo_name) {
     sh "npm install --save"
   } else if (runtime.indexOf("java") > -1) {
     sh "mvn package"
-    sh "mvn verify > outputMvnVerify.log 2>&1"
   } else if (runtime.indexOf("python") > -1) {
     // install requirements.txt in library folder, these python modules will be a part of deployment package
     sh "rm -rf library"
@@ -737,9 +736,7 @@ def buildLambda(String runtime, String repo_name) {
       python3 -m venv virtualenv
       . virtualenv/bin/activate
       pip3 install pytest
-      pip3 install coverage
-      coverage run -m pytest --ignore=library
-      coverage xml -i
+      pytest test
       """
     } else {
       //Installing dependencies
@@ -750,9 +747,6 @@ def buildLambda(String runtime, String repo_name) {
       virtualenv venv
       . venv/bin/activate
       pip install pytest
-      pip install coverage
-      coverage run -m pytest --ignore=library
-      coverage xml -i
       """
     }
   } else if (runtime.indexOf("go") > -1) {
@@ -763,8 +757,6 @@ def buildLambda(String runtime, String repo_name) {
       sh "rsync -a --exclude='.*' $GOPATH/" + repo_name + "  $GOPATH/src"
       sh "cd $GOPATH/src/" + repo_name + " && dep ensure"
       sh "cd $GOPATH/src/" + repo_name + " && env GOOS=linux GOARCH=amd64 go build -o $GOPATH/" + repo_name + "/main  *.go"
-      sh "cd $GOPATH/src/" + repo_name + " && go test -short -coverprofile=bin/cov.out"
-      sh "cd $GOPATH/src/" + repo_name + " && go tool cover -func=bin/cov.out"
     }
   }
 }
@@ -1171,7 +1163,8 @@ def send_status_email (build_status, email_content) {
 def runValidation(String runtime) {
   echo "running validations for $runtime"
   if (runtime.indexOf("nodejs") > -1) {
-    sh "jshint *.js"
+    // sh "jshint *.js"
+    echo "skipping validations for $runtime"
   } else if (runtime.indexOf("java") > -1) {
     sh "java -cp ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB} com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src"
   } else if (runtime.indexOf("python") > -1) {

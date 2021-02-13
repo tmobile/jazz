@@ -21,6 +21,7 @@ import groovy.transform.Field
 @Field def awsAPIGatewayModule
 @Field def utilModule
 @Field def environmentDeploymentMetadata
+@Field def sonarModule
 
 @Field def auth_token = ''
 @Field def g_base_url = ''
@@ -138,6 +139,8 @@ node()  {
 
 	if (!events) { error "Can't load events module"	} //Fail here
 	events.initialize(configLoader, service_config, "SERVICE_DEPLOYMENT", branch, environment, g_base_url + "/jazz/events")
+	
+	sonarModule.initialize(configLoader, service_config, branch)
 
 	def create_cloudfront_url
 	context_map = [created_by : service_config['created_by']]
@@ -191,6 +194,20 @@ node()  {
 				error ex.getMessage()
 			}
 			events.sendCompletedEvent('VALIDATE_PRE_BUILD_CONF', 'pre-build validation completed', context_map)
+		}
+
+		if (service_config['domain'] != 'jazz' && configLoader.CODE_QUALITY.SONAR.ENABLE_SONAR == "true") {
+			stage('Code Quality Check') {
+			events.sendStartedEvent('CODE_QUALITY_CHECK', 'code quality check starts', context_map, environment_logical_id)
+			try {
+				sonarModule.doAnalysis()
+			} catch (ex) {
+				events.sendFailureEvent('CODE_QUALITY_CHECK', ex.getMessage(), context_map, environment_logical_id)
+				events.sendFailureEvent('UPDATE_DEPLOYMENT', ex.getMessage(), environmentDeploymentMetadata.generateDeploymentMap("failed", environment_logical_id, gitCommitHash), environment_logical_id)
+				error ex.getMessage()
+			}
+			events.sendCompletedEvent('CODE_QUALITY_CHECK', 'code quality check completed', context_map, environment_logical_id)
+			}
 		}
 
 		stage("Build ${websiteType}") {
@@ -1005,6 +1022,9 @@ def loadBuildModules(buildModuleUrl){
     utilModule = load "utility-loader.groovy"
 
     environmentDeploymentMetadata = load "environment-deployment-metadata-loader.groovy"
+
+	sonarModule = load "sonar-module.groovy"
+    echo "Sonar module loaded successfully."
 
   }
 }

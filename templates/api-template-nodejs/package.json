@@ -9,7 +9,9 @@
     "test": "mocha",
     "coverage": "./node_modules/.bin/jest --coverage"
   },
-  "dependencies": {},
+  "dependencies": {
+    "jest": "^26.6.3"
+  },
   "devDependencies": {
     "mocha": "^v3.0.0",
     "chai": "^3.5.0",
