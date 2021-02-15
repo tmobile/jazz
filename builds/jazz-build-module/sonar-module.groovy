@@ -168,8 +168,7 @@ def cleanUpWorkspace() {
 * Run Unit Tests and generate Code Coverage Reports
  */
 def generateCoverageReports() {
-	def domain = service_config['domain']
-    def repo_name = domain + "_" + service_config['service']
+  def repo_name = service_config['domain'] + "_" + service_config['service']
 	
 	if (service_config['runtime'].indexOf("nodejs") > -1) {
 		sh "npm install"
