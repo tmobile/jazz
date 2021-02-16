@@ -173,7 +173,6 @@ def generateCoverageReports() {
 	if (service_config['runtime'].indexOf("nodejs") > -1) {
 		sh "npm install"
 		sh "npm run coverage"
-		sh "rm -rf ./node_modules"
 	} else if (service_config['runtime'].indexOf("java") > -1) {
 		sh "mvn verify > outputMvnVerify.log 2>&1"
 	} else if (service_config['runtime'].indexOf("python") > -1) {
@@ -192,7 +191,6 @@ def generateCoverageReports() {
 			coverage run -m pytest --ignore=library
 			coverage xml -i
 			"""
-			sh "rm -rf ./library"
 		} else {
 			// create virtual environment and install pytest
 			sh """
@@ -204,7 +202,6 @@ def generateCoverageReports() {
 			coverage run -m pytest --ignore=library
 			coverage xml -i
 			"""
-			sh "rm -rf ./library"
 		}
 	}  else if (service_config['runtime'].indexOf("go") > -1 ) {
 		// Installing dependencies using dep ensure
@@ -243,14 +240,12 @@ def generateCoverageReports() {
 		cd app/
 		npm install
 		npm run test -- --no-watch --code-coverage > outputTest.log 2>&1
-		rm -rf ./node_modules
 		"""
 	} else if (service_config['framework'] && service_config['framework'].indexOf("react") > -1) {
 		sh """
 		cd app/
 		npm install
 		npm test -- --coverage > outputTest.log 2>&1
-		rm -rf ./node_modules
 		"""
 	}
 }
