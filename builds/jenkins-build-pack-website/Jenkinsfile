@@ -1228,16 +1228,12 @@ def buildWebsite(framework, angularVersion) {
 				} else {
 					sh "ng build --prod --output-path=dist"
 				}
-				sh "wget -O /opt/google-chrome-stable_current_x86_64.rpm https://dl.google.com/linux/direct/google-chrome-stable_current_x86_64.rpm && yum install -y /opt/google-chrome-stable_current_x86_64.rpm"
-				sh "npm run test -- --no-watch --code-coverage > outputTest.log 2>&1"
-				
 			break
 			case "react":
 				sh "rm -rf build"
 				sh "npm cache clean --force"
 				sh "npm install"
 				sh "npm run build"
-				sh "npm test -- --coverage > outputTest.log 2>&1"
 			break
 			default:
 			break
