@@ -38,7 +38,8 @@ const metricConfig = require("./components/metrics.json");
 function handler(event, context, cb) {
   var errorHandler = errorHandlerModule();
   var config = configObj.getConfig(event, context);
-  logger.debug("EVENT: " + JSON.stringify(event));
+  logger.init();
+  logger.debug("Incoming event: " + JSON.stringify(event));
 
   try {
     /*

@@ -46,7 +46,7 @@ node() {
     def jazzBuildModuleURL = getBuildModuleUrl()
     loadBuildModules(jazzBuildModuleURL)
 
-    g_base_url_for_swagger = "http://${configLoader.JAZZ.PLATFORM.AWS.S3.API_DOC}.s3-website-${configLoader.AWS.DEFAULTS.REGION}.amazonaws.com/"
+    g_base_url_for_swagger = "https://${configLoader.JAZZ.STACK_URL}/"
 
     echo "Build triggered via branch: " + params.scm_branch + " with params: " + params
 
@@ -1163,7 +1163,8 @@ def send_status_email (build_status, email_content) {
 def runValidation(String runtime) {
   echo "running validations for $runtime"
   if (runtime.indexOf("nodejs") > -1) {
-    sh "jshint *.js"
+    // sh "jshint *.js"
+    echo "skipping validations for $runtime"
   } else if (runtime.indexOf("java") > -1) {
     sh "java -cp ${configLoader.CODE_QUALITY.SONAR.CHECKSTYLE_LIB} com.puppycrawl.tools.checkstyle.Main -c sun_checks.xml src"
   } else if (runtime.indexOf("python") > -1) {

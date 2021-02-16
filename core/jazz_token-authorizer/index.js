@@ -29,7 +29,7 @@ var cognitoUserPoolEndpoint;
 module.exports.handler = function (event, context, cb) {
 
     var config = configModule.getConfig(event, context);
-    logger.init(event, context);
+    logger.init();
     var errorHandler = errorHandlerModule(logger);
 
     if (!event || !event.authorizationToken) {
@@ -230,9 +230,9 @@ module.exports.handler = function (event, context, cb) {
          *
          * @property pathRegex
          * @type {RegExp}
-         * @default '^\/[/.a-zA-Z0-9-\*]+$'
+         * @default '^\/[/.a-zA-Z0-9-*]+$'
          */
-        this.pathRegex = new RegExp('^[/.a-zA-Z0-9-_\*]+$');
+        this.pathRegex = new RegExp('^[/.a-zA-Z0-9-_*]+$');
 
         // these are the internal lists of allowed and denied methods. These are lists
         // of objects and each object has 2 properties: A resource ARN and a nullable

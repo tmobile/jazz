@@ -33,8 +33,9 @@ global.global_config = global_config;
 function handler(event, context, cb) {
   //Initializations
   var errorHandler = errorHandlerModule();
-  logger.init(event, context);
-  logger.info(event);
+  logger.init();
+  logger.debug('Incoming event: ' + JSON.stringify(event));
+  
   var config = configModule.getConfig(event, context);
   global.config = config;
   var assets_id;

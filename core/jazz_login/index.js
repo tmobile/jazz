@@ -34,7 +34,7 @@ const logger = require("./components/logger.js");
 module.exports.handler = (event, context, callback) => {
 
 	var config = configModule.getConfig(event, context);
-	logger.init(event, context);
+	logger.init();
 	var errorHandler = errorHandlerModule(logger);
 
 	try {

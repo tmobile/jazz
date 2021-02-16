@@ -37,10 +37,10 @@ var serviceDataObject;
 var authToken;
 var handler = (event, context, cb) => {
 
+  logger.init();
   let deploymentTargets = {};
   let deploymentAccounts = [];
   var config = configModule.getConfig(event, context);
-  logger.init(event, context);
   var service_creation_data = event.body;
   try {
     var isValidName = function (name) {
