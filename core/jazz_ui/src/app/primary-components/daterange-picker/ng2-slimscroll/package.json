@@ -57,7 +57,7 @@
         "@angular/common": "^4.0.0",
         "@angular/compiler": "^4.0.0",
         "@angular/compiler-cli": "^4.0.0",
-        "@angular/core": "^4.0.0",
+        "@angular/core": "^11.0.5",
         "@angular/platform-browser": "^4.0.0",
         "@angular/router": "^4.0.0",
         "@types/node": "7.0.11",
